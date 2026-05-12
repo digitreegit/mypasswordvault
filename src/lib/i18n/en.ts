@@ -1,0 +1,138 @@
+/** Base strings (English). Other locales spread this and override. */
+export const MESSAGES_EN: Record<string, string> = {
+  "app.loading": "Loading…",
+
+  "common.cancel": "Cancel",
+  "common.confirm": "Confirm",
+  "common.save": "Save",
+
+  "autoLock.m1": "1 min",
+  "autoLock.m5": "5 min",
+  "autoLock.m15": "15 min",
+  "autoLock.m30": "30 min",
+  "autoLock.off": "Off",
+  "autoLock.offBad": "Off (not recommended)",
+
+  "setup.title": "Set up MyPasswordApp",
+  "setup.subtitle":
+    "Create a new vault on this device. Your master password is never stored anywhere.",
+  "setup.masterPw": "Master password",
+  "setup.masterPwConfirm": "Confirm master password",
+  "setup.placeholderMin": "At least 10 characters",
+  "setup.autoLock": "Auto-lock (minutes)",
+  "setup.next2fa": "Next — set up two-factor authentication",
+  "setup.forgetWarn":
+    "If you forget your password, the vault cannot be recovered. You will lose all data and must start over.",
+  "setup.2faIntro":
+    "Scan the QR code with Google Authenticator, 1Password, Authy, etc., or enter the secret key manually. Then enter the 6-digit code shown in the app to confirm.",
+  "setup.secretKey": "Secret key (manual entry)",
+  "setup.openOtpauth": "Open otpauth:// link",
+  "setup.totpCode": "6-digit code from the app",
+  "setup.back": "Back",
+  "setup.confirmStart": "Confirm and start",
+  "setup.errMin": "Master password must be at least 10 characters.",
+  "setup.errMismatch": "Passwords do not match.",
+  "setup.errGeneric": "Something went wrong.",
+
+  "lock.title": "Vault locked",
+  "lock.subtitle": "Enter your master password and 6-digit authentication code.",
+  "lock.masterPw": "Master password",
+  "lock.totp": "Two-factor code",
+  "lock.unlock": "Unlock",
+  "lock.forget": "Forgot password? Reset vault…",
+  "lock.resetWarn":
+    "Resetting will permanently delete all saved passwords. Are you sure you want to continue?",
+  "lock.deleteAll": "Delete everything and start over",
+  "lock.errFailed": "Unlock failed",
+
+  "errors.masterTooShort": "Master password must be at least 10 characters.",
+  "errors.noPendingSetup": "No setup in progress.",
+  "errors.invalidOtp": "Invalid authentication code.",
+  "errors.notInitialized": "Vault is not initialized.",
+  "errors.wrongMaster": "Incorrect master password.",
+  "errors.wrongTotp": "Incorrect two-factor code.",
+  "errors.locked": "Vault is locked.",
+  "errors.invalidBackup": "This file is not a valid vault backup.",
+
+  "strength.0": "Empty",
+  "strength.1": "Weak",
+  "strength.2": "Fair",
+  "strength.3": "Strong",
+  "strength.4": "Very strong",
+
+  "settings.title": "Settings",
+  "settings.autoLock": "Auto-lock (minutes)",
+  "settings.autoLockHint":
+    "Locks automatically when there is no mouse or keyboard activity.",
+  "settings.language": "Language",
+  "settings.danger": "Danger zone",
+  "settings.resetVault": "Reset vault (delete all data)",
+  "settings.resetDesc":
+    "All saved passwords and 2FA settings will be deleted. This cannot be undone.",
+  "settings.permanentDelete": "Delete permanently",
+
+  "settings.syncTitle": "Devices & web",
+  "settings.syncHint":
+    "Clipboards do not sync between phone and browser. Export an encrypted backup file, move it with AirDrop, cloud storage, email, or USB, then import on the other device. The same master password and authenticator app work everywhere.",
+  "settings.exportBackup": "Download backup (.json)",
+  "settings.copyBackup": "Copy backup to clipboard",
+  "settings.copyBackupOk": "Backup copied. Paste it into a note or chat on the other device, then import there.",
+  "settings.copyBackupFail": "Could not copy (size or permission). Use download instead.",
+  "settings.importBackup": "Import backup…",
+  "settings.importConfirm": "Replace this device’s vault with the backup? Unsaved changes here will be lost. You will need to unlock again.",
+  "settings.importApply": "Replace and lock",
+  "settings.importCancel": "Cancel import",
+
+  "lock.syncTitle": "Another device or browser",
+  "lock.exportBackup": "Download encrypted backup",
+  "lock.importBackup": "Restore from backup file…",
+  "lock.importConfirm": "Replace the vault on this device with the selected backup?",
+
+  "setup.restoreBackup": "Restore from backup file instead",
+  "setup.restoreConfirm":
+    "This backup file will replace the empty vault on this device. Continue?",
+  "setup.restoreApply": "Load backup",
+
+  "vault.search": "Search (site, URL, username, notes)",
+  "vault.ttPasswords": "Show or hide all passwords in the grid",
+  "vault.revealAll": "Show all",
+  "vault.maskAll": "Hide all",
+  "vault.addRow": "Add entry",
+  "vault.settings": "Settings",
+  "vault.lock": "Lock",
+  "vault.colSite": "Site",
+  "vault.colUrl": "URL",
+  "vault.colUser": "Username",
+  "vault.colPass": "Password",
+  "vault.colNotes": "Notes",
+  "vault.colActions": "Actions",
+  "vault.empty": "No entries yet.",
+  "vault.emptyCta": "Add your first entry.",
+  "vault.footer":
+    "{{count}} items · Passwords are encrypted with AES-GCM-256 and stored only on this device. Copied passwords are cleared from the clipboard after 20 seconds.",
+  "vault.newEntry": "New entry",
+
+  "vault.phUrl": "https://…",
+  "vault.phUser": "user@example.com",
+  "vault.phPass": "Password",
+
+  "vault.ttOpenTab": "Open in new tab",
+  "vault.ttCopyUser": "Copy username",
+  "vault.hide": "Hide",
+  "vault.show": "Show",
+  "vault.ttCopyPass": "Copy password",
+  "vault.ttGenPass": "Generate password",
+  "vault.ttDelete": "Delete",
+
+  "pwdGen.title": "Generate password",
+  "pwdGen.length": "Length",
+  "pwdGen.regen": "Regenerate",
+  "pwdGen.copy": "Copy",
+  "pwdGen.copied": "Copied",
+  "pwdGen.use": "Use",
+  "pwdGen.cLower": "Lowercase a–z",
+  "pwdGen.cUpper": "Uppercase A–Z",
+  "pwdGen.cDigits": "Digits 0–9",
+  "pwdGen.cSymbols": "Symbols !@#$",
+  "pwdGen.cAmbiguous": "Exclude ambiguous characters",
+};
