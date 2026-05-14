@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -23,6 +24,7 @@ import {
   newId,
   putEntry,
   putMeta,
+  type VaultCategory,
   type VaultEntry,
   type VaultMeta,
   wipeAll,
@@ -37,16 +39,27 @@ import {
   type Locale,
 } from "./i18n/locale";
 import { buildVaultBackupJson, parseVaultBackup } from "./vaultBackup";
+import {
+  deleteRemoteVaultBackup,
+  forcePullRemoteVault,
+  reconcileCloudAtStartup,
+  upsertRemoteVaultBackup,
+} from "./cloudVault";
+
+/** After "Download from account", require master password then new TOTP enrollment (lost old phone). */
+const TOTP_REBIND_AFTER_PULL_KEY = "mpv_totp_rebind_after_pull";
 
 export type VaultStatus = "loading" | "fresh" | "locked" | "unlocked";
 
 export interface DecryptedEntry {
   id: string;
+  categoryId: string;
   site: string;
   url: string;
   username: string;
   password: string;
   notes: string;
+  memo: string;
   updatedAt: number;
 }
 
@@ -70,16 +83,33 @@ interface VaultContextValue {
   setLocale: (l: Locale) => Promise<void>;
   t: (key: string, vars?: Record<string, string | number>) => string;
 
-  /** Encrypted vault snapshot (JSON). Use on any device with the same master password + 2FA. */
+  /** Encrypted vault snapshot (JSON). Optional offline copy; same master password + 2FA. */
   exportBackup: () => Promise<string>;
-  /** Replace local vault with backup; locks the app. */
+  /** Replace local vault with backup; locks the app. Prefer pullVaultFromCloud when signed in. */
   importBackup: (jsonText: string) => Promise<void>;
+  /** Re-download encrypted vault from the signed-in account and lock (same master + TOTP as before). */
+  pullVaultFromCloud: () => Promise<void>;
+  /** True after cloud pull until unlock or dismiss — user should re-enroll TOTP or use normal unlock. */
+  needsTotpRebindAfterCloudPull: boolean;
+  dismissTotpRebindAfterCloudPull: () => void;
+  /** Verify master password only; returns new TOTP secret for QR (after cloud pull). */
+  beginTotpRebindAfterCloudPull: (
+    masterPassword: string
+  ) => Promise<{ totpSecretBase32: string }>;
+  /** Confirm new TOTP code, replace encrypted secret in meta, unlock. */
+  confirmTotpRebindAfterCloudPull: (code: string) => Promise<void>;
+  /** Clear pending rebind (e.g. back from QR step). */
+  abortTotpRebindProgress: () => void;
 
   upsertEntry: (
     partial: Partial<DecryptedEntry> & { id?: string }
   ) => Promise<void>;
   removeEntry: (id: string) => Promise<void>;
   touchActivity: () => void;
+
+  categories: VaultCategory[];
+  setCategories: (next: VaultCategory[]) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
 }
 
 const VaultContext = createContext<VaultContextValue | null>(null);
@@ -90,7 +120,13 @@ interface Session {
   totpSecret: string;
 }
 
-export function VaultProvider({ children }: { children: React.ReactNode }) {
+export function VaultProvider({
+  userId,
+  children,
+}: {
+  userId: string | null;
+  children: React.ReactNode;
+}) {
   const [status, setStatus] = useState<VaultStatus>("loading");
   const [meta, setMeta] = useState<VaultMeta | null>(null);
   const [entries, setEntries] = useState<DecryptedEntry[]>([]);
@@ -102,8 +138,13 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     totpSecret: string;
     autoLockMinutes: number;
   } | null>(null);
+  const pendingTotpRebindRef = useRef<{
+    key: CryptoKey;
+    totpSecret: string;
+  } | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
   const localeRef = useRef<Locale>("en");
+  const pushDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function readStoredLocale(): Locale | null {
     try {
@@ -118,16 +159,59 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(
     () => readStoredLocale() ?? detectBrowserLocale()
   );
+  const [needsTotpRebindAfterCloudPull, setNeedsTotpRebindAfterCloudPull] =
+    useState(false);
 
   useEffect(() => {
     localeRef.current = locale;
   }, [locale]);
 
+  const flushCloudPush = useCallback(async () => {
+    if (!userId) return;
+    const m = await getMeta();
+    if (!m) return;
+    try {
+      const json = buildVaultBackupJson(m, await listEntries());
+      await upsertRemoteVaultBackup(userId, json);
+    } catch (e) {
+      console.error("Cloud vault push failed", e);
+    }
+  }, [userId]);
+
+  const scheduleCloudPush = useCallback(() => {
+    if (!userId) return;
+    if (pushDebounceRef.current) clearTimeout(pushDebounceRef.current);
+    pushDebounceRef.current = setTimeout(() => {
+      pushDebounceRef.current = null;
+      void flushCloudPush();
+    }, 700);
+  }, [userId, flushCloudPush]);
+
   useEffect(() => {
+    return () => {
+      if (pushDebounceRef.current) clearTimeout(pushDebounceRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
     (async () => {
+      try {
+        if (userId) await reconcileCloudAtStartup(userId);
+      } catch (e) {
+        console.error("Cloud vault reconcile failed", e);
+      }
+      if (cancelled) return;
       const m = await getMeta();
       if (!m) {
+        setNeedsTotpRebindAfterCloudPull(false);
+        try {
+          sessionStorage.removeItem(TOTP_REBIND_AFTER_PULL_KEY);
+        } catch {
+          /* ignore */
+        }
         setStatus("fresh");
+        setMeta(null);
       } else {
         setMeta(m);
         if (m.locale) {
@@ -140,9 +224,36 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
           }
         }
         setStatus("locked");
+        try {
+          setNeedsTotpRebindAfterCloudPull(
+            sessionStorage.getItem(TOTP_REBIND_AFTER_PULL_KEY) === "1"
+          );
+        } catch {
+          setNeedsTotpRebindAfterCloudPull(false);
+        }
       }
     })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const lockInternal = useCallback(() => {
+    sessionRef.current = null;
+    setEntries([]);
+    setStatus("locked");
   }, []);
+
+  const lock = useCallback(() => {
+    try {
+      sessionStorage.removeItem(TOTP_REBIND_AFTER_PULL_KEY);
+    } catch {
+      /* ignore */
+    }
+    setNeedsTotpRebindAfterCloudPull(false);
+    pendingTotpRebindRef.current = null;
+    lockInternal();
+  }, [lockInternal]);
 
   // Auto-lock on inactivity.
   useEffect(() => {
@@ -156,35 +267,39 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       }
     }, 15_000);
     return () => clearInterval(interval);
-  }, [status, meta?.autoLockMinutes]);
+  }, [status, meta?.autoLockMinutes, lockInternal]);
 
-  // Lock when tab/window is hidden for too long, and on beforeunload clear in-memory.
+  // bfcache / tab restore can revive the old React tree while beforeunload cleared the
+  // in-memory crypto session — force lock so the grid is never shown without a key.
   useEffect(() => {
     const onVisibility = () => {
       if (document.hidden) lastActivityRef.current = Date.now();
     };
     const onBeforeUnload = () => {
-      sessionRef.current = null;
+      lockInternal();
+    };
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) lockInternal();
     };
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("beforeunload", onBeforeUnload);
+    window.addEventListener("pageshow", onPageShow);
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("beforeunload", onBeforeUnload);
+      window.removeEventListener("pageshow", onPageShow);
     };
-  }, []);
+  }, [lockInternal]);
+
+  useLayoutEffect(() => {
+    if (status === "unlocked" && !sessionRef.current) {
+      lockInternal();
+    }
+  }, [status, lockInternal]);
 
   const touchActivity = useCallback(() => {
     lastActivityRef.current = Date.now();
   }, []);
-
-  const lockInternal = useCallback(() => {
-    sessionRef.current = null;
-    setEntries([]);
-    setStatus("locked");
-  }, []);
-
-  const lock = useCallback(() => lockInternal(), [lockInternal]);
 
   const setLocale = useCallback(async (next: Locale) => {
     const L = normalizeLocale(next);
@@ -199,8 +314,9 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       const updated: VaultMeta = { ...m, locale: L, updatedAt: Date.now() };
       await putMeta(updated);
       setMeta(updated);
+      await flushCloudPush();
     }
-  }, []);
+  }, [flushCloudPush]);
 
   const t = useCallback(
     (key: string, vars?: Record<string, string | number>) =>
@@ -222,11 +338,13 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       }
       decrypted.push({
         id: e.id,
+        categoryId: typeof e.categoryId === "string" ? e.categoryId : "",
         site: e.site,
         url: e.url,
         username: e.username,
         password,
         notes: e.notes,
+        memo: typeof e.memo === "string" ? e.memo : "",
         updatedAt: e.updatedAt,
       });
     }
@@ -273,6 +391,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       totpLabel: "vault",
       autoLockMinutes: pending.autoLockMinutes,
       locale: localeRef.current,
+      categories: [],
       createdAt: now,
       updatedAt: now,
     };
@@ -283,7 +402,8 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     setEntries([]);
     lastActivityRef.current = Date.now();
     setStatus("unlocked");
-  }, []);
+    await flushCloudPush();
+  }, [flushCloudPush]);
 
   const unlock = useCallback(
     async (masterPassword: string, totpCode: string) => {
@@ -307,6 +427,12 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       sessionRef.current = { key, totpSecret };
       setMeta(m);
       lastActivityRef.current = Date.now();
+      try {
+        sessionStorage.removeItem(TOTP_REBIND_AFTER_PULL_KEY);
+      } catch {
+        /* ignore */
+      }
+      setNeedsTotpRebindAfterCloudPull(false);
       await loadEntries(key);
       setStatus("unlocked");
     },
@@ -314,13 +440,27 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   );
 
   const resetVault = useCallback(async () => {
+    if (userId) {
+      try {
+        await deleteRemoteVaultBackup(userId);
+      } catch (e) {
+        console.error("Cloud vault delete failed", e);
+      }
+    }
     await wipeAll();
     sessionRef.current = null;
     pendingSetupRef.current = null;
+    pendingTotpRebindRef.current = null;
+    try {
+      sessionStorage.removeItem(TOTP_REBIND_AFTER_PULL_KEY);
+    } catch {
+      /* ignore */
+    }
+    setNeedsTotpRebindAfterCloudPull(false);
     setMeta(null);
     setEntries([]);
     setStatus("fresh");
-  }, []);
+  }, [userId]);
 
   const setAutoLockMinutes = useCallback(
     async (mins: number) => {
@@ -332,8 +472,9 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       };
       await putMeta(next);
       setMeta(next);
+      await flushCloudPush();
     },
-    [meta]
+    [meta, flushCloudPush]
   );
 
   const upsertEntry = useCallback(
@@ -344,11 +485,13 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       const existing = entries.find((e) => e.id === id);
       const merged: DecryptedEntry = {
         id,
+        categoryId: partial.categoryId ?? existing?.categoryId ?? "",
         site: partial.site ?? existing?.site ?? "",
         url: partial.url ?? existing?.url ?? "",
         username: partial.username ?? existing?.username ?? "",
         password: partial.password ?? existing?.password ?? "",
         notes: partial.notes ?? existing?.notes ?? "",
+        memo: partial.memo ?? existing?.memo ?? "",
         updatedAt: Date.now(),
       };
       const passwordEnc = merged.password
@@ -356,11 +499,13 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         : "";
       const persisted: VaultEntry = {
         id: merged.id,
+        categoryId: merged.categoryId,
         site: merged.site,
         url: merged.url,
         username: merged.username,
         passwordEnc,
         notes: merged.notes,
+        memo: merged.memo,
         updatedAt: merged.updatedAt,
       };
       await putEntry(persisted);
@@ -372,15 +517,63 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         return copy;
       });
       lastActivityRef.current = Date.now();
+      scheduleCloudPush();
     },
-    [entries]
+    [entries, scheduleCloudPush]
   );
 
   const removeEntry = useCallback(async (id: string) => {
     await deleteEntry(id);
     setEntries((prev) => prev.filter((e) => e.id !== id));
     lastActivityRef.current = Date.now();
-  }, []);
+    await flushCloudPush();
+  }, [flushCloudPush]);
+
+  const setCategories = useCallback(
+    async (next: VaultCategory[]) => {
+      const m = await getMeta();
+      if (!m) return;
+      const updated: VaultMeta = {
+        ...m,
+        categories: next,
+        updatedAt: Date.now(),
+      };
+      await putMeta(updated);
+      setMeta(updated);
+      scheduleCloudPush();
+    },
+    [scheduleCloudPush]
+  );
+
+  const deleteCategory = useCallback(
+    async (id: string) => {
+      const session = sessionRef.current;
+      const m = await getMeta();
+      if (!m || !session) return;
+      const cats = m.categories ?? [];
+      const updated: VaultMeta = {
+        ...m,
+        categories: cats.filter((c) => c.id !== id),
+        updatedAt: Date.now(),
+      };
+      await putMeta(updated);
+      setMeta(updated);
+      const raw = await listEntries();
+      for (const e of raw) {
+        if (e.categoryId === id) {
+          await putEntry({
+            ...e,
+            categoryId: "",
+            updatedAt: Date.now(),
+          });
+        }
+      }
+      await loadEntries(session.key);
+      lastActivityRef.current = Date.now();
+      scheduleCloudPush();
+    },
+    [loadEntries, scheduleCloudPush]
+  );
 
   const exportBackup = useCallback(async () => {
     const m = await getMeta();
@@ -393,12 +586,22 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     const { meta, entries } = parseVaultBackup(jsonText);
     sessionRef.current = null;
     pendingSetupRef.current = null;
+    pendingTotpRebindRef.current = null;
     await wipeAll();
-    await putMeta(meta);
+    const metaNorm: VaultMeta = {
+      ...meta,
+      categories: meta.categories ?? [],
+    };
+    await putMeta(metaNorm);
     for (const e of entries) {
-      await putEntry(e);
+      const row: VaultEntry = {
+        ...e,
+        categoryId: typeof e.categoryId === "string" ? e.categoryId : "",
+        memo: typeof e.memo === "string" ? e.memo : "",
+      };
+      await putEntry(row);
     }
-    setMeta(meta);
+    setMeta(metaNorm);
     if (meta.locale) {
       const L = normalizeLocale(meta.locale);
       setLocaleState(L);
@@ -410,7 +613,120 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     }
     setEntries([]);
     setStatus("locked");
+    try {
+      sessionStorage.removeItem(TOTP_REBIND_AFTER_PULL_KEY);
+    } catch {
+      /* ignore */
+    }
+    setNeedsTotpRebindAfterCloudPull(false);
+    await flushCloudPush();
+  }, [flushCloudPush]);
+
+  const pullVaultFromCloud = useCallback(async () => {
+    if (!userId) throw new AppError("errors.notInitialized");
+    sessionRef.current = null;
+    pendingSetupRef.current = null;
+    pendingTotpRebindRef.current = null;
+    const ok = await forcePullRemoteVault(userId);
+    if (!ok) throw new AppError("errors.noCloudBackup");
+    const m = await getMeta();
+    if (!m) throw new AppError("errors.notInitialized");
+    setMeta(m);
+    if (m.locale) {
+      const L = normalizeLocale(m.locale);
+      setLocaleState(L);
+      try {
+        localStorage.setItem(LOCALE_STORAGE_KEY, L);
+      } catch {
+        /* ignore */
+      }
+    }
+    setEntries([]);
+    setStatus("locked");
+    try {
+      sessionStorage.setItem(TOTP_REBIND_AFTER_PULL_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+    setNeedsTotpRebindAfterCloudPull(true);
+  }, [userId]);
+
+  const dismissTotpRebindAfterCloudPull = useCallback(() => {
+    pendingTotpRebindRef.current = null;
+    try {
+      sessionStorage.removeItem(TOTP_REBIND_AFTER_PULL_KEY);
+    } catch {
+      /* ignore */
+    }
+    setNeedsTotpRebindAfterCloudPull(false);
   }, []);
+
+  const abortTotpRebindProgress = useCallback(() => {
+    pendingTotpRebindRef.current = null;
+  }, []);
+
+  const beginTotpRebindAfterCloudPull = useCallback(
+    async (masterPassword: string) => {
+      let allowed = false;
+      try {
+        allowed = sessionStorage.getItem(TOTP_REBIND_AFTER_PULL_KEY) === "1";
+      } catch {
+        /* ignore */
+      }
+      if (!allowed) throw new AppError("errors.noPendingSetup");
+      const m = await getMeta();
+      if (!m) throw new AppError("errors.notInitialized");
+      const salt = fromBase64(m.salt);
+      const key = await deriveKey(masterPassword, salt);
+      let verified: string;
+      try {
+        verified = await decryptString(key, m.verifier);
+      } catch {
+        throw new AppError("errors.wrongMaster");
+      }
+      if (verified !== VERIFIER_PLAINTEXT) {
+        throw new AppError("errors.wrongMaster");
+      }
+      const newTotp = generateTotpSecretBase32();
+      pendingTotpRebindRef.current = { key, totpSecret: newTotp };
+      return { totpSecretBase32: newTotp };
+    },
+    []
+  );
+
+  const confirmTotpRebindAfterCloudPull = useCallback(
+    async (code: string) => {
+      const pending = pendingTotpRebindRef.current;
+      if (!pending) throw new AppError("errors.noPendingSetup");
+      if (!verifyTotp(pending.totpSecret, code)) {
+        throw new AppError("errors.invalidOtp");
+      }
+      const m = await getMeta();
+      if (!m) throw new AppError("errors.notInitialized");
+      const totpEnc = await encryptString(pending.key, pending.totpSecret);
+      const updated: VaultMeta = {
+        ...m,
+        totpSecret: totpEnc,
+        totpLabel: m.totpLabel ?? "vault",
+        updatedAt: Date.now(),
+      };
+      await putMeta(updated);
+      sessionRef.current = { key: pending.key, totpSecret: pending.totpSecret };
+      pendingTotpRebindRef.current = null;
+      try {
+        sessionStorage.removeItem(TOTP_REBIND_AFTER_PULL_KEY);
+      } catch {
+        /* ignore */
+      }
+      setNeedsTotpRebindAfterCloudPull(false);
+      setMeta(updated);
+      lastActivityRef.current = Date.now();
+      await loadEntries(pending.key);
+      setStatus("unlocked");
+      await flushCloudPush();
+    },
+    [loadEntries, flushCloudPush]
+  );
 
   const value = useMemo<VaultContextValue>(
     () => ({
@@ -430,15 +746,25 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       t,
       exportBackup,
       importBackup,
+      pullVaultFromCloud,
+      needsTotpRebindAfterCloudPull,
+      dismissTotpRebindAfterCloudPull,
+      beginTotpRebindAfterCloudPull,
+      confirmTotpRebindAfterCloudPull,
+      abortTotpRebindProgress,
       upsertEntry,
       removeEntry,
       touchActivity,
+      categories: meta?.categories ?? [],
+      setCategories,
+      deleteCategory,
     }),
     [
       status,
       meta,
       entries,
       locale,
+      needsTotpRebindAfterCloudPull,
       setup,
       confirmTotpEnrollment,
       abortSetup,
@@ -450,9 +776,16 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       t,
       exportBackup,
       importBackup,
+      pullVaultFromCloud,
+      dismissTotpRebindAfterCloudPull,
+      beginTotpRebindAfterCloudPull,
+      confirmTotpRebindAfterCloudPull,
+      abortTotpRebindProgress,
       upsertEntry,
       removeEntry,
       touchActivity,
+      setCategories,
+      deleteCategory,
     ]
   );
 

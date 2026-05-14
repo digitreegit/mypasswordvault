@@ -1,26 +1,21 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useVault } from "../lib/vault";
 import { otpauthQrDataUrl, otpauthUri } from "../lib/totp";
 import { passwordStrengthScore } from "../lib/passwordGenerator";
-import { Shield, Check } from "./Icons";
+import { Shield, Check, Eye, EyeOff, ChevronDown } from "./Icons";
 import { LanguageMenu } from "./LanguageMenu";
 import { isAppError } from "../lib/errors";
 
 type Stage = "password" | "enroll-2fa";
 
 export function SetupScreen() {
-  const {
-    setup,
-    confirmTotpEnrollment,
-    abortSetup,
-    locale,
-    setLocale,
-    importBackup,
-    t,
-  } = useVault();
+  const { setup, confirmTotpEnrollment, abortSetup, locale, setLocale, t } =
+    useVault();
   const [stage, setStage] = useState<Stage>("password");
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
+  const [showMasterPw, setShowMasterPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [autoLock, setAutoLock] = useState(5);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -28,10 +23,6 @@ export function SetupScreen() {
   const [totpSecret, setTotpSecret] = useState<string>("");
   const [qrUrl, setQrUrl] = useState<string>("");
   const [code, setCode] = useState("");
-
-  const setupFileRef = useRef<HTMLInputElement>(null);
-  const [restoreDraft, setRestoreDraft] = useState<string | null>(null);
-  const [restoreBusy, setRestoreBusy] = useState(false);
 
   const strengthScore = useMemo(() => passwordStrengthScore(pw), [pw]);
 
@@ -79,25 +70,9 @@ export function SetupScreen() {
     }
   }
 
-  async function applyRestore() {
-    if (!restoreDraft) return;
-    setRestoreBusy(true);
-    setError(null);
-    try {
-      await importBackup(restoreDraft);
-      setRestoreDraft(null);
-    } catch (e: unknown) {
-      setError(
-        isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
-      );
-    } finally {
-      setRestoreBusy(false);
-    }
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-ink-50 to-ink-100">
-      <div className="card w-full max-w-md p-8">
+    <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-ink-50 to-ink-100">
+      <div className="card w-full max-w-md p-5 sm:p-8">
         <div className="flex justify-end mb-2">
           <LanguageMenu
             value={locale}
@@ -115,14 +90,27 @@ export function SetupScreen() {
           <div className="space-y-4">
             <div>
               <label className="label">{t("setup.masterPw")}</label>
-              <input
-                type="password"
-                className="input font-mono"
-                value={pw}
-                onChange={(e) => setPw(e.target.value)}
-                placeholder={t("setup.placeholderMin")}
-                autoFocus
-              />
+              <div className="relative">
+                <input
+                  type={showMasterPw ? "text" : "password"}
+                  className="input pr-10"
+                  value={pw}
+                  onChange={(e) => setPw(e.target.value)}
+                  placeholder={t("setup.placeholderMin")}
+                  autoFocus
+                  spellCheck={false}
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-ink-400 hover:text-accent-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30"
+                  onClick={() => setShowMasterPw((v) => !v)}
+                  title={showMasterPw ? t("vault.hide") : t("vault.show")}
+                  aria-label={showMasterPw ? t("vault.hide") : t("vault.show")}
+                >
+                  {showMasterPw ? <EyeOff /> : <Eye />}
+                </button>
+              </div>
               <div className="mt-1 flex items-center gap-2 text-xs">
                 <div className="flex-1 h-1.5 rounded bg-ink-100 overflow-hidden">
                   <div
@@ -146,26 +134,47 @@ export function SetupScreen() {
             </div>
             <div>
               <label className="label">{t("setup.masterPwConfirm")}</label>
-              <input
-                type="password"
-                className="input font-mono"
-                value={pw2}
-                onChange={(e) => setPw2(e.target.value)}
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPw ? "text" : "password"}
+                  className="input pr-10"
+                  value={pw2}
+                  onChange={(e) => setPw2(e.target.value)}
+                  spellCheck={false}
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-ink-400 hover:text-accent-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30"
+                  onClick={() => setShowConfirmPw((v) => !v)}
+                  title={showConfirmPw ? t("vault.hide") : t("vault.show")}
+                  aria-label={showConfirmPw ? t("vault.hide") : t("vault.show")}
+                >
+                  {showConfirmPw ? <EyeOff /> : <Eye />}
+                </button>
+              </div>
             </div>
             <div>
               <label className="label">{t("setup.autoLock")}</label>
-              <select
-                className="input"
-                value={autoLock}
-                onChange={(e) => setAutoLock(Number(e.target.value))}
-              >
-                <option value={1}>{t("autoLock.m1")}</option>
-                <option value={5}>{t("autoLock.m5")}</option>
-                <option value={15}>{t("autoLock.m15")}</option>
-                <option value={30}>{t("autoLock.m30")}</option>
-                <option value={0}>{t("autoLock.off")}</option>
-              </select>
+              <div className="relative">
+                <select
+                  className="input w-full appearance-none pr-10"
+                  value={autoLock}
+                  onChange={(e) => setAutoLock(Number(e.target.value))}
+                >
+                  <option value={1}>{t("autoLock.m1")}</option>
+                  <option value={5}>{t("autoLock.m5")}</option>
+                  <option value={15}>{t("autoLock.m15")}</option>
+                  <option value={30}>{t("autoLock.m30")}</option>
+                  <option value={0}>{t("autoLock.off")}</option>
+                </select>
+                <span
+                  className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-ink-400"
+                  aria-hidden
+                >
+                  <ChevronDown />
+                </span>
+              </div>
             </div>
             {error && <div className="text-sm text-red-600">{error}</div>}
             <button
@@ -189,7 +198,7 @@ export function SetupScreen() {
                   alt="TOTP QR"
                   width={200}
                   height={200}
-                  className="rounded-md bg-white p-2"
+                  className="rounded-md bg-white p-2 max-w-full h-auto w-[min(100%,200px)]"
                 />
               ) : (
                 <div className="w-[200px] h-[200px] bg-white rounded-md animate-pulse" />
@@ -248,57 +257,6 @@ export function SetupScreen() {
             </div>
           </div>
         )}
-
-        <div className="mt-6 pt-4 border-t border-ink-100 space-y-2">
-          <p className="text-xs font-medium text-ink-700">{t("lock.syncTitle")}</p>
-          <input
-            ref={setupFileRef}
-            type="file"
-            accept="application/json,.json"
-            className="hidden"
-            onChange={async (e) => {
-              const f = e.target.files?.[0];
-              e.target.value = "";
-              if (!f) return;
-              try {
-                setRestoreDraft(await f.text());
-              } catch {
-                setError(t("settings.copyBackupFail"));
-              }
-            }}
-          />
-          <button
-            type="button"
-            className="btn-secondary text-sm w-full"
-            onClick={() => setupFileRef.current?.click()}
-            disabled={restoreBusy || busy}
-          >
-            {t("setup.restoreBackup")}
-          </button>
-          {restoreDraft && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm space-y-2">
-              <p className="text-amber-900">{t("setup.restoreConfirm")}</p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  className="btn-secondary text-xs flex-1"
-                  onClick={() => setRestoreDraft(null)}
-                  disabled={restoreBusy}
-                >
-                  {t("common.cancel")}
-                </button>
-                <button
-                  type="button"
-                  className="btn-primary text-xs flex-1 bg-amber-700 hover:bg-amber-800"
-                  onClick={() => void applyRestore()}
-                  disabled={restoreBusy}
-                >
-                  {t("setup.restoreApply")}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

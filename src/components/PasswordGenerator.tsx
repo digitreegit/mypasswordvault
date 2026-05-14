@@ -52,16 +52,16 @@ export function PasswordGenerator({ initial, onUse, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-ink-900/40 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-ink-900/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
       onClick={onClose}
     >
       <div
-        className="card w-full max-w-md p-6 space-y-4"
+        className="card w-full max-w-md max-h-[min(90dvh,90vh)] overflow-y-auto p-4 sm:p-6 space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold">{t("pwdGen.title")}</h2>
 
-        <div className="rounded-lg border border-ink-200 bg-ink-50 p-3 font-mono text-sm break-all min-h-[64px] flex items-center">
+        <div className="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm break-all min-h-[64px] flex items-center">
           {value}
         </div>
 
@@ -121,16 +121,17 @@ export function PasswordGenerator({ initial, onUse, onClose }: Props) {
           ))}
         </div>
 
-        <div className="flex gap-2 pt-2">
-          <button className="btn-secondary" onClick={regen}>
+        <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap sm:justify-end">
+          <button type="button" className="btn-secondary w-full sm:w-auto" onClick={regen}>
             <Refresh /> {t("pwdGen.regen")}
           </button>
-          <button className="btn-secondary" onClick={copyNow}>
+          <button type="button" className="btn-secondary w-full sm:w-auto" onClick={copyNow}>
             {copied ? <Check /> : <Copy />}
             {copied ? t("pwdGen.copied") : t("pwdGen.copy")}
           </button>
           <button
-            className="btn-primary ml-auto"
+            type="button"
+            className="btn-primary w-full sm:w-auto sm:min-w-[7rem]"
             onClick={() => onUse(value)}
           >
             {t("pwdGen.use")}

@@ -1,7 +1,7 @@
 import * as OTPAuth from "otpauth";
 import QRCode from "qrcode";
 
-const ISSUER = "MyPasswordApp";
+const ISSUER = "My Password Vault";
 
 export function generateTotpSecretBase32(): string {
   // 160-bit secret, base32 encoded — standard for TOTP

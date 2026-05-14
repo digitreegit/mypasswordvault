@@ -1,0 +1,10 @@
+# Supabase CLI (https://supabase.com/docs/guides/cli)
+# Run `supabase link` in this repo, then deploy functions.
+
+# Auth "Send Email" hook calls this function server-to-server (signed webhook).
+[functions.send-auth-email]
+verify_jwt = false
+
+# Forgot password: browser invokes with anon key; uses service role + Resend only.
+[functions.send-password-reset]
+verify_jwt = false

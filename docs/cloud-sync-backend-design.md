@@ -1,4 +1,4 @@
-# MyPasswordApp — 자동 클라우드 동기화 백엔드 설계
+# My Password Vault — 자동 클라우드 동기화 백엔드 설계
 
 ## 1. 목표와 제약
 

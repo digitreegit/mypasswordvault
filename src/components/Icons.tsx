@@ -83,6 +83,42 @@ export const Check = (p: P) => (
   </svg>
 );
 
+export const ChevronDown = (p: P) => (
+  <svg {...base} {...p}>
+    <polyline points="6 9 12 15 18 9" />
+  </svg>
+);
+export const ChevronUp = (p: P) => (
+  <svg {...base} {...p}>
+    <polyline points="18 15 12 9 6 15" />
+  </svg>
+);
+
+export const Folder = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+  </svg>
+);
+
+/** Vertical grip for drag handles (filled dots). */
+export const GripVertical = (p: P) => (
+  <svg
+    width={16}
+    height={16}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden
+    {...p}
+  >
+    <circle cx="9" cy="6" r="1.75" />
+    <circle cx="15" cy="6" r="1.75" />
+    <circle cx="9" cy="12" r="1.75" />
+    <circle cx="15" cy="12" r="1.75" />
+    <circle cx="9" cy="18" r="1.75" />
+    <circle cx="15" cy="18" r="1.75" />
+  </svg>
+);
+
 export const Globe = (p: P) => (
   <svg {...base} {...p}>
     <circle cx="12" cy="12" r="10" />

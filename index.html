@@ -1,13 +1,666 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="referrer" content="no-referrer" />
-    <title>MyPasswordApp — Secure Vault</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="My Password Vault — local-first password manager. AES-GCM-256, TOTP 2FA, optional encrypted sync. Spreadsheet-simple."
+    />
+    <title>My Password Vault — Secure passwords, zero clutter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg0: #0a0a0f;
+        --bg1: #12121a;
+        --ink: #e8e8f0;
+        --muted: #9898a8;
+        --line: rgba(255, 255, 255, 0.08);
+        --accent: #6366f1;
+        --accent2: #818cf8;
+        --glow: rgba(99, 102, 241, 0.35);
+        --card: rgba(18, 18, 26, 0.75);
+        --radius: 1rem;
+        --max: 72rem;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        .orb {
+          animation: none !important;
+        }
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Outfit", system-ui, sans-serif;
+        background: var(--bg0);
+        color: var(--ink);
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+      .bg-grid {
+        position: fixed;
+        inset: 0;
+        background-image: linear-gradient(var(--line) 1px, transparent 1px),
+          linear-gradient(90deg, var(--line) 1px, transparent 1px);
+        background-size: 64px 64px;
+        mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 20%, transparent 70%);
+        pointer-events: none;
+        z-index: 0;
+      }
+      .orb {
+        position: fixed;
+        width: 42rem;
+        height: 42rem;
+        border-radius: 50%;
+        background: radial-gradient(circle, var(--glow) 0%, transparent 65%);
+        top: -12rem;
+        right: -8rem;
+        filter: blur(2px);
+        animation: float 18s ease-in-out infinite;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .orb2 {
+        width: 36rem;
+        height: 36rem;
+        top: auto;
+        bottom: -10rem;
+        left: -10rem;
+        animation-delay: -9s;
+      }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translate(0, 0) scale(1);
+        }
+        50% {
+          transform: translate(-2rem, 1.5rem) scale(1.05);
+        }
+      }
+      .wrap {
+        position: relative;
+        z-index: 1;
+        max-width: var(--max);
+        margin: 0 auto;
+        padding: 0 1.25rem 5rem;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem 0;
+        gap: 1rem;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        font-size: 1.05rem;
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .logo-mark {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.5rem;
+        background: linear-gradient(135deg, var(--accent), #4f46e5);
+        display: grid;
+        place-items: center;
+        box-shadow: 0 0 24px var(--glow);
+      }
+      .logo-mark svg {
+        width: 1.1rem;
+        height: 1.1rem;
+        color: white;
+      }
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.55rem 1.1rem;
+        border-radius: 0.65rem;
+        font-family: inherit;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s, transform 0.12s;
+      }
+      .btn:active {
+        transform: scale(0.98);
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--muted);
+        border-color: var(--line);
+      }
+      .btn-ghost:hover {
+        color: var(--ink);
+        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, var(--accent), #4f46e5);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 4px 24px var(--glow);
+      }
+      .btn-primary:hover {
+        filter: brightness(1.06);
+      }
+      .hero {
+        padding: 3.5rem 0 4.5rem;
+        text-align: center;
+      }
+      @media (min-width: 640px) {
+        .hero {
+          padding: 5rem 0 5.5rem;
+        }
+      }
+      .eyebrow {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent2);
+        margin-bottom: 1rem;
+      }
+      h1 {
+        margin: 0 auto 1.25rem;
+        max-width: 16ch;
+        font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        line-height: 1.08;
+      }
+      .hero-lead {
+        margin: 0 auto 2.25rem;
+        max-width: 40rem;
+        font-size: 1.1rem;
+        color: var(--muted);
+        font-weight: 400;
+      }
+      .hero-cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+      }
+      .mono {
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 0.82rem;
+      }
+      section {
+        margin-top: 4rem;
+      }
+      section:first-of-type {
+        margin-top: 0;
+      }
+      h2 {
+        margin: 0 0 0.5rem;
+        font-size: clamp(1.5rem, 3vw, 2rem);
+        font-weight: 600;
+        letter-spacing: -0.03em;
+      }
+      .section-desc {
+        margin: 0 0 2rem;
+        max-width: 42rem;
+        color: var(--muted);
+        font-size: 1rem;
+      }
+      .cards {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 720px) {
+        .cards {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .cards.wide {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 1.35rem 1.4rem;
+        backdrop-filter: blur(12px);
+      }
+      .card h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+      .card p {
+        margin: 0;
+        font-size: 0.92rem;
+        color: var(--muted);
+      }
+      .card-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.6rem;
+        background: rgba(99, 102, 241, 0.15);
+        color: var(--accent2);
+        display: grid;
+        place-items: center;
+        margin-bottom: 1rem;
+      }
+      .card-icon svg {
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+      }
+      .stack-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.85rem 1rem;
+        border-radius: 0.65rem;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .stack-row strong {
+        display: block;
+        font-size: 0.88rem;
+        color: var(--ink);
+      }
+      .stack-row span {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+      .diagram {
+        margin-top: 1.5rem;
+        padding: 1.25rem 1.35rem;
+        border-radius: var(--radius);
+        border: 1px solid var(--line);
+        background: rgba(0, 0, 0, 0.35);
+        overflow-x: auto;
+      }
+      .diagram pre {
+        margin: 0;
+        color: var(--accent2);
+        line-height: 1.5;
+      }
+      .steps {
+        counter-reset: step;
+        list-style: none;
+        padding: 0;
+        margin: 1.5rem 0 0;
+      }
+      .steps li {
+        position: relative;
+        padding-left: 3.25rem;
+        margin-bottom: 1.35rem;
+        min-height: 2.5rem;
+      }
+      .steps li::before {
+        counter-increment: step;
+        content: counter(step);
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 0.55rem;
+        background: linear-gradient(135deg, var(--accent), #4f46e5);
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: grid;
+        place-items: center;
+      }
+      .steps li strong {
+        display: block;
+        color: var(--ink);
+        margin-bottom: 0.2rem;
+      }
+      .steps li span {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+      .cta-panel {
+        margin-top: 4.5rem;
+        padding: 2.25rem 1.75rem;
+        border-radius: 1.25rem;
+        border: 1px solid var(--line);
+        background: linear-gradient(145deg, rgba(99, 102, 241, 0.12), rgba(18, 18, 26, 0.9));
+        text-align: center;
+      }
+      .cta-panel h2 {
+        margin-bottom: 0.5rem;
+      }
+      .cta-panel p {
+        margin: 0 auto 1.5rem;
+        max-width: 28rem;
+        color: var(--muted);
+      }
+      footer {
+        margin-top: 4rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--line);
+        text-align: center;
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+      footer a {
+        color: var(--accent2);
+        text-decoration: none;
+      }
+      footer a:hover {
+        text-decoration: underline;
+      }
+      .file-protocol-banner {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        padding: 0.75rem 1.25rem 0.85rem;
+        background: linear-gradient(90deg, #422006, #713f12);
+        border-bottom: 1px solid rgba(250, 204, 21, 0.35);
+        color: #fef3c7;
+        font-size: 0.84rem;
+        line-height: 1.5;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      }
+      .file-protocol-banner.is-visible {
+        display: block;
+      }
+      .file-protocol-banner code {
+        background: rgba(0, 0, 0, 0.35);
+        padding: 0.12em 0.4em;
+        border-radius: 0.25rem;
+        font-size: 0.9em;
+      }
+      .file-protocol-banner a {
+        color: #fde68a;
+        font-weight: 600;
+      }
+      html.file-protocol-landing .wrap {
+        padding-top: 5.25rem;
+      }
+    </style>
   </head>
-  <body class="bg-ink-50 text-ink-900 antialiased">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+  <body>
+    <div id="file-protocol-banner" class="file-protocol-banner" role="alert">
+      <strong style="display: block; margin-bottom: 0.35rem">Opened as a local file (file://)</strong>
+      Absolute paths like <code>/app/</code> do not work from disk. Run
+      <code>npm run dev</code> in this project folder, then use
+      <a href="http://127.0.0.1:5173/">http://127.0.0.1:5173/</a>
+      — <strong>Sign in</strong> links below switch to the dev server while this page stays on
+      <code>file://</code>.
+    </div>
+    <script>
+      (function () {
+        if (location.protocol !== "file:") return;
+        document.documentElement.classList.add("file-protocol-landing");
+        var b = document.getElementById("file-protocol-banner");
+        if (b) b.classList.add("is-visible");
+        document.querySelectorAll('a[href="/app/"]').forEach(function (a) {
+          a.setAttribute("href", "http://127.0.0.1:5173/app/");
+        });
+      })();
+    </script>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <div class="orb" aria-hidden="true"></div>
+    <div class="orb orb2" aria-hidden="true"></div>
+
+    <div class="wrap">
+      <header>
+        <a class="logo" href="#" aria-label="My Password Vault home">
+          <span class="logo-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </span>
+          My Password Vault
+        </a>
+        <div class="nav-actions">
+          <a class="btn btn-ghost" href="#get-started">Getting started</a>
+          <a class="btn btn-primary" href="/app/">Sign in</a>
+        </div>
+      </header>
+
+      <section class="hero">
+        <span class="eyebrow">mypasswordvault.skyface.com</span>
+        <h1>Passwords you control.<br />Clarity you feel.</h1>
+        <p class="hero-lead">
+          A local-first vault that works like a spreadsheet — fast edits, categories, one-tap copy — while
+          your secrets stay encrypted on-device. Optional sync stores <strong>only ciphertext</strong> in
+          your database; your master password never leaves your hands.
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#get-started">Getting started</a>
+          <a class="btn btn-ghost" href="/app/">Sign in</a>
+        </div>
+      </section>
+
+      <section id="features">
+        <h2>Built for flow</h2>
+        <p class="section-desc">
+          No vault-inside-vault navigation. One grid: site, URL, username, password, notes — edit inline,
+          expand rows for URL &amp; memo, filter and sort. Categories keep teams and life buckets tidy.
+        </p>
+        <div class="cards">
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18M9 21V9" />
+              </svg>
+            </div>
+            <h3>Spreadsheet brain, vault muscle</h3>
+            <p>
+              Type directly in the grid. Reveal or mask passwords per row or globally. Copy username or
+              password in one click; copied passwords auto-clear from the clipboard after 20 seconds.
+            </p>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+              </svg>
+            </div>
+            <h3>Categories &amp; search</h3>
+            <p>
+              Drag to reorder folders in settings. Search spans site, URL, username, notes, memo, and
+              category — find the right row without hunting through menus.
+            </p>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12a9 9 0 1 1-3-6.7" />
+                <polyline points="21 3 21 9 15 9" />
+              </svg>
+            </div>
+            <h3>Strong passwords, fast</h3>
+            <p>
+              Built-in generator with length and character-class controls, CSPRNG-backed generation, and
+              bias-mitigated modulo — then drop the result straight into the row.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="security">
+        <h2>Security that earns the name “vault”</h2>
+        <p class="section-desc">
+          Cryptography runs in your browser via the Web Crypto API. Data at rest in IndexedDB is encrypted;
+          the key material derived from your master password exists in memory only while unlocked.
+        </p>
+        <div class="cards wide">
+          <article class="card">
+            <h3>Key derivation &amp; encryption</h3>
+            <p style="margin-bottom: 1rem">
+              <span class="mono">PBKDF2-SHA256</span> with a per-vault salt and
+              <strong>310,000 iterations</strong> stretches your master password into a 256-bit key. Entry
+              passwords and the TOTP secret are sealed with <span class="mono">AES-GCM-256</span> and a
+              random 12-byte IV per encryption — modern AEAD, not home-grown crypto.
+            </p>
+            <div class="diagram">
+              <pre>master password + salt
+        │
+  PBKDF2-SHA256 (310k)
+        ▼
+ AES-GCM key (memory only)
+   ├── verifier (proves master password)
+   ├── TOTP secret
+   └── each entry password (own IV)</pre>
+            </div>
+          </article>
+          <article class="card">
+            <h3>What never gets stored</h3>
+            <div class="stack">
+              <div class="stack-row">
+                <div>
+                  <strong>Master password</strong>
+                  <span>Neither plaintext nor a reusable hash is written to disk or sent to a server.</span>
+                </div>
+              </div>
+              <div class="stack-row">
+                <div>
+                  <strong>Derived AES key</strong>
+                  <span>Lives in memory for your session; discarded on lock or when you close the tab.</span>
+                </div>
+              </div>
+              <div class="stack-row">
+                <div>
+                  <strong>Server-side knowledge</strong>
+                  <span
+                    >Google sign-in only proves identity. Optional sync uploads the same ciphertext JSON you
+                    could export — never your master password or keys.</span
+                  >
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="sync">
+        <h2>Optional sync — encrypted blobs, not trust</h2>
+        <p class="section-desc">
+          When signed in, your vault can sync automatically as encrypted data in your database (e.g. Supabase
+          with row-level security). The server stores what your browser already had: ciphertext. Unlocking
+          still requires your master password and 6-digit TOTP on every device.
+        </p>
+        <div class="cards">
+          <article class="card">
+            <h3>Conflict handling</h3>
+            <p>
+              Reconciliation uses vault metadata timestamps so the newest snapshot wins when merging local and
+              remote — predictable behavior for a personal vault.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Portable backups</h3>
+            <p>
+              Export a JSON backup anytime from settings or the lock screen. Import replaces or restores a
+              device — ideal for migration or cold storage alongside sync.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Auto-lock</h3>
+            <p>
+              Idle timeout (1–30 minutes or off) locks the vault automatically. Activity resets the timer so
+              brief walks away don’t leave rows exposed.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="get-started">
+        <h2>Getting started</h2>
+        <p class="section-desc">
+          First launch walks you through a vault you actually own — no vendor password to forget on top of
+          your own.
+        </p>
+        <ol class="steps">
+          <li>
+            <strong>Sign in with Google</strong>
+            <span>Identity for sync only — it doesn’t unlock your vault.</span>
+          </li>
+          <li>
+            <strong>Create a strong master password</strong>
+            <span>10+ characters; strength meter nudges you toward better entropy.</span>
+          </li>
+          <li>
+            <strong>Scan the TOTP QR</strong>
+            <span>Use Authenticator, 1Password, Authy, etc., then confirm with a 6-digit code.</span>
+          </li>
+          <li>
+            <strong>Add rows like a sheet</strong>
+            <span>Sites, passwords, categories — save and sync when you’re ready.</span>
+          </li>
+        </ol>
+        <div class="hero-cta" style="margin-top: 2rem">
+          <a class="btn btn-primary" href="/app/">Open the app</a>
+          <a class="btn btn-ghost" href="/app/">Sign in</a>
+        </div>
+      </section>
+
+      <div class="cta-panel" id="cta">
+        <h2>Ready when you are</h2>
+        <p>
+          Same tool for weekend admins and daily operators: fewer clicks, fewer tabs, more confidence that
+          your credentials never left encryption you control.
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#get-started">Getting started</a>
+          <a class="btn btn-ghost" href="/app/">Sign in</a>
+        </div>
+      </div>
+
+      <footer>
+        <p>
+          <strong>My Password Vault</strong> ·
+          <a href="https://mypasswordvault.skyface.com">mypasswordvault.skyface.com</a>
+        </p>
+        <p style="margin-top: 0.5rem; opacity: 0.85">
+          The React app (Google sign-in) lives at
+          <span class="mono">/app/</span>. Supabase redirect URLs must include
+          <span class="mono">https://your-domain/app/**</span> (and dev
+          <span class="mono">http://127.0.0.1:5173/app/**</span>).
+        </p>
+      </footer>
+    </div>
   </body>
 </html>

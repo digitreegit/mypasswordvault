@@ -12,7 +12,7 @@ export const MESSAGES_ES: Record<string, string> = {
   "autoLock.m30": "30 min",
   "autoLock.off": "Desactivado",
   "autoLock.offBad": "Desactivado (no recomendado)",
-  "setup.title": "Configurar MyPasswordApp",
+  "setup.title": "Configurar My Password Vault",
   "setup.subtitle":
     "Crea una bóveda nueva en este dispositivo. La contraseña maestra no se guarda en ningún sitio.",
   "setup.masterPw": "Contraseña maestra",
@@ -82,7 +82,8 @@ export const MESSAGES_ES: Record<string, string> = {
   "vault.empty": "No hay entradas.",
   "vault.emptyCta": "Añada su primera entrada.",
   "vault.footer":
-    "{{count}} entradas · Las contraseñas se cifran con AES-GCM-256 y solo se guardan en este dispositivo. El portapapeles se borra a los 20 s.",
+    "Las contraseñas se cifran con AES-GCM-256 y solo se guardan en este dispositivo. El portapapeles se borra a los 20 s.",
+  "vault.totalItems": "Total: {{count}} entradas",
   "vault.newEntry": "Nueva entrada",
   "vault.phUrl": "https://…",
   "vault.phUser": "usuario@ejemplo.com",
@@ -119,7 +120,7 @@ export const MESSAGES_DE: Record<string, string> = {
   "autoLock.m30": "30 Min.",
   "autoLock.off": "Aus",
   "autoLock.offBad": "Aus (nicht empfohlen)",
-  "setup.title": "MyPasswordApp einrichten",
+  "setup.title": "My Password Vault einrichten",
   "setup.subtitle":
     "Neuen Tresor auf diesem Gerät anlegen. Das Masterpasswort wird nirgends gespeichert.",
   "setup.masterPw": "Masterpasswort",
@@ -187,7 +188,8 @@ export const MESSAGES_DE: Record<string, string> = {
   "vault.empty": "Keine Einträge.",
   "vault.emptyCta": "Ersten Eintrag hinzufügen.",
   "vault.footer":
-    "{{count}} Einträge · Passwörter mit AES-GCM-256 verschlüsselt, nur lokal. Zwischenablage nach 20 s geleert.",
+    "Passwörter mit AES-GCM-256 verschlüsselt, nur lokal. Zwischenablage nach 20 s geleert.",
+  "vault.totalItems": "Gesamt: {{count}} Einträge",
   "vault.newEntry": "Neuer Eintrag",
   "vault.phUrl": "https://…",
   "vault.phUser": "user@example.com",
@@ -224,7 +226,7 @@ export const MESSAGES_FR: Record<string, string> = {
   "autoLock.m30": "30 min",
   "autoLock.off": "Désactivé",
   "autoLock.offBad": "Désactivé (non recommandé)",
-  "setup.title": "Configurer MyPasswordApp",
+  "setup.title": "Configurer My Password Vault",
   "setup.subtitle":
     "Créer un nouveau coffre sur cet appareil. Le mot de passe maître n’est stocké nulle part.",
   "setup.masterPw": "Mot de passe maître",
@@ -294,7 +296,8 @@ export const MESSAGES_FR: Record<string, string> = {
   "vault.empty": "Aucune entrée.",
   "vault.emptyCta": "Ajoutez votre première entrée.",
   "vault.footer":
-    "{{count}} entrées · Mots de passe chiffrés en AES-GCM-256, stockés localement. Presse-papiers effacé après 20 s.",
+    "Mots de passe chiffrés en AES-GCM-256, stockés localement. Presse-papiers effacé après 20 s.",
+  "vault.totalItems": "Total : {{count}} entrées",
   "vault.newEntry": "Nouvelle entrée",
   "vault.phUrl": "https://…",
   "vault.phUser": "user@example.com",
@@ -331,7 +334,7 @@ export const MESSAGES_IT: Record<string, string> = {
   "autoLock.m30": "30 min",
   "autoLock.off": "Off",
   "autoLock.offBad": "Off (sconsigliato)",
-  "setup.title": "Configura MyPasswordApp",
+  "setup.title": "Configura My Password Vault",
   "setup.subtitle":
     "Crea una nuova cassaforte su questo dispositivo. La password principale non viene mai memorizzata.",
   "setup.masterPw": "Password principale",
@@ -401,7 +404,8 @@ export const MESSAGES_IT: Record<string, string> = {
   "vault.empty": "Nessuna voce.",
   "vault.emptyCta": "Aggiungi la prima voce.",
   "vault.footer":
-    "{{count}} voci · Password crittografate con AES-GCM-256 solo in locale. Appunti cancellati dopo 20 s.",
+    "Password crittografate con AES-GCM-256 solo in locale. Appunti cancellati dopo 20 s.",
+  "vault.totalItems": "Totale: {{count}} voci",
   "vault.newEntry": "Nuova voce",
   "vault.phUrl": "https://…",
   "vault.phUser": "user@example.com",

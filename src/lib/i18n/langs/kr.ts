@@ -3,6 +3,19 @@ import { MESSAGES_EN as en } from "../en";
 export const MESSAGES_KR: Record<string, string> = {
   ...en,
   "app.loading": "불러오는 중…",
+  "app.authLoading": "로그인 상태 확인 중…",
+
+  "auth.title": "로그인",
+  "auth.subtitle":
+    "계정으로 암호화된 금고를 기기 간에 동기화합니다. 마스터 비밀번호는 서버로 전송되지 않습니다.",
+  "auth.google": "Google로 계속하기",
+  "auth.errGeneric": "문제가 발생했습니다. 다시 시도하세요.",
+  "auth.securityNote":
+    "마스터 비밀번호는 업로드되지 않습니다. Google 로그인은 본인 확인용이며, 금고 비밀은 마스터 비밀번호와 인증 앱으로 잠금 해제할 때만 풀립니다.",
+  "auth.notConfiguredTitle": "Supabase가 설정되지 않았습니다",
+  "auth.notConfiguredBody":
+    "프로젝트 루트의 .env 파일에 VITE_SUPABASE_URL과 VITE_SUPABASE_ANON_KEY를 넣은 뒤 개발 서버를 다시 시작하세요. DB 테이블 생성과 Google 로그인 설정은 README.md를 참고하세요.",
+
   "common.cancel": "취소",
   "common.confirm": "확인",
   "common.save": "저장",
@@ -12,9 +25,9 @@ export const MESSAGES_KR: Record<string, string> = {
   "autoLock.m30": "30분",
   "autoLock.off": "사용 안 함",
   "autoLock.offBad": "사용 안 함 (권장하지 않음)",
-  "setup.title": "MyPasswordApp 설정",
+  "setup.title": "My Password Vault 설정",
   "setup.subtitle":
-    "이 기기에 새 vault를 생성합니다. 마스터 비밀번호는 절대 어디에도 저장되지 않습니다.",
+    "로그인한 뒤 여기서 새 vault를 만듭니다. 마스터 비밀번호는 어떤 서버에도 저장되지 않습니다.",
   "setup.masterPw": "마스터 비밀번호",
   "setup.masterPwConfirm": "마스터 비밀번호 확인",
   "setup.placeholderMin": "10자 이상",
@@ -50,6 +63,10 @@ export const MESSAGES_KR: Record<string, string> = {
   "errors.wrongTotp": "2단계 인증 코드가 올바르지 않습니다.",
   "errors.locked": "잠금 상태입니다.",
   "errors.invalidBackup": "올바른 vault 백업 파일이 아닙니다.",
+  "errors.missingUserVaultsTable":
+    "Supabase에 user_vaults 테이블이 없습니다. 대시보드 → SQL Editor에서 이 저장소의 supabase/migrations/20260513120000_user_vaults.sql 내용을 붙여넣어 실행한 뒤 다시 시도하세요.",
+  "errors.noCloudBackup":
+    "이 계정에 저장된 암호화 금고가 아직 없습니다. 이미 금고가 있는 기기에서 사용하거나, 아래 고급 메뉴의 오프라인 파일을 사용하세요.",
   "strength.0": "비어 있음",
   "strength.1": "약함",
   "strength.2": "보통",
@@ -65,20 +82,48 @@ export const MESSAGES_KR: Record<string, string> = {
     "저장된 모든 비밀번호와 2FA 설정이 삭제됩니다. 되돌릴 수 없습니다.",
   "settings.permanentDelete": "영구 삭제",
 
-  "settings.syncTitle": "기기·웹 연동",
+  "settings.syncTitle": "기기·백업",
   "settings.syncHint":
-    "휴대폰과 PC 브라우저의 클립보드는 서로 이어지지 않습니다. 암호화된 백업 파일을 보낸 뒤 AirDrop, 클라우드, 메일, USB 등으로 옮기고 다른 기기에서 가져오세요. 어디서나 같은 마스터 비밀번호와 인증 앱을 사용합니다.",
+    "로그인한 동안 이 앱은 데이터베이스에 암호화된 사본을 둡니다(서버는 내용을 읽을 수 없습니다). 새 브라우저나 휴대폰에서는 같은 계정으로 로그인한 뒤, 필요하면 「계정에서 최신 받기」를 누르고, 예전과 같은 마스터 비밀번호와 인증 앱 6자리로 잠금 해제하세요.",
+  "settings.pullCloud": "계정에서 최신 받기",
+  "settings.pullCloudHint":
+    "이 기기에만 있던 금고를 계정에 저장된 암호화 스냅샷으로 바꿉니다. 잠금 해제가 안 되거나 기기를 바꾼 직후에 사용하세요.",
+  "settings.pullCloudDone": "계정에서 받았습니다. 설정 창이 열려 있으면 아래에서 다시 잠금 해제하세요.",
+  "settings.fileBackupAdvanced": "오프라인 JSON 파일 (고급)",
+  "settings.fileBackupAdvancedHint":
+    "선택 사항입니다. 이 앱에서 보낸 .json만 가져오세요. 데이터는 동일하게 암호화되어 있으며, 마스터 비밀번호·6자리 코드는 그 파일을 만든 당시의 금고와 같아야 합니다.",
   "settings.exportBackup": "백업 다운로드 (.json)",
-  "settings.copyBackup": "백업을 클립보드에 복사",
-  "settings.copyBackupOk": "복사했습니다. 다른 기기의 메모·채팅에 붙여넣은 뒤 그쪽에서 가져오기 하세요.",
   "settings.copyBackupFail": "복사에 실패했습니다(용량 또는 권한). 다운로드를 사용하세요.",
   "settings.importBackup": "백업 가져오기…",
   "settings.importConfirm": "이 기기의 vault를 백업으로 바꿀까요? 저장하지 않은 변경은 사라지며 다시 잠금 해제해야 합니다.",
   "settings.importApply": "바꾸고 잠금",
   "settings.importCancel": "가져오기 취소",
 
-  "lock.syncTitle": "다른 기기·브라우저",
-  "lock.exportBackup": "암호화 백업 다운로드",
+  "settings.accountTitle": "계정",
+  "settings.signedInAs": "로그인: {{email}}",
+  "settings.signOut": "계정에서 로그아웃",
+  "settings.signOutHint":
+    "클라우드 동기화만 종료합니다. 이 기기의 로컬 금고는 초기화하기 전까지 유지됩니다.",
+
+  "lock.syncTitle": "계정에서 불러오기 (권장)",
+  "lock.pullCloud": "계정에서 최신 받기",
+  "lock.pullCloudHint":
+    "계정에 저장된 암호화 금고를 이 브라우저로 받습니다. 받은 뒤에는 마스터 비밀번호 확인 → QR로 이 기기에서 인증 앱을 다시 등록합니다(처음 설정할 때와 같은 순서).",
+  "lock.pullCloudDone":
+    "받기 완료. 아래에 마스터 비밀번호를 입력한 뒤 QR을 스캔해 마무리하세요.",
+  "lock.rebindTitle": "이 기기에서 복구 마무리",
+  "lock.rebindSubtitleMaster":
+    "금고 데이터는 이 기기에 있습니다. 금고를 만들 때 쓰던 마스터 비밀번호를 입력하세요. 다음 화면에서 새 QR을 스캔하면 됩니다. 확인을 마치면 예전·분실한 휴대폰의 인증 코드는 더 이상 쓰이지 않습니다.",
+  "lock.rebindContinue": "다음",
+  "lock.rebindUseOldTotp":
+    "예전 인증 앱이 그대로 있어요 — 건너뛰고 마스터 + 6자리로 잠금 해제",
+  "lock.rebind2faIntro":
+    "Google Authenticator, 1Password, Authy 등으로 QR을 스캔한 뒤, 표시되는 6자리 코드를 입력해 확인하세요. 이 금고의 이전 인증기는 교체됩니다.",
+  "lock.rebindConfirm": "확인하고 금고 열기",
+  "lock.fileBackupAdvanced": "오프라인 JSON 파일 (고급)",
+  "lock.fileBackupAdvancedHint":
+    "선택 사항입니다. 이 앱에서 보낸 .json만 가져오세요. 마스터 비밀번호·6자리 코드는 그 파일을 만들 당시의 금고와 같아야 합니다.",
+  "lock.exportBackup": "암호화 백업 다운로드 (.json)",
   "lock.importBackup": "백업 파일에서 복원…",
   "lock.importConfirm": "선택한 백업으로 이 기기의 vault를 바꿀까요?",
 
@@ -87,7 +132,20 @@ export const MESSAGES_KR: Record<string, string> = {
     "이 백업으로 이 기기의 빈 vault 자리를 채웁니다. 계속할까요?",
   "setup.restoreApply": "백업 불러오기",
 
-  "vault.search": "검색 (사이트, URL, 사용자명, 메모)",
+  "vault.search": "검색 (사이트, URL, 사용자명, 메모, 상세, 카테고리)",
+  "vault.colCategory": "카테고리",
+  "vault.manageCategories": "카테고리 관리",
+  "vault.categoriesTitle": "카테고리",
+  "vault.categoriesHint":
+    "이름을 추가·수정한 뒤 저장하세요. 표의 카테고리 열에서 항목에 지정할 수 있습니다.",
+  "vault.addCategory": "카테고리 추가",
+  "vault.deleteCategory": "카테고리 삭제",
+  "vault.deleteCategoryConfirm":
+    "이 카테고리를 삭제할까요? 사용 중인 항목은 분류 없음으로 바뀝니다.",
+  "vault.categoryName": "카테고리 이름",
+  "vault.dragToReorder": "끌어서 순서 변경",
+  "vault.newCategory": "새 카테고리",
+  "vault.uncategorized": "—",
   "vault.ttPasswords": "표의 모든 비밀번호 보이기/가리기",
   "vault.revealAll": "모두 보기",
   "vault.maskAll": "모두 숨기기",
@@ -99,12 +157,19 @@ export const MESSAGES_KR: Record<string, string> = {
   "vault.colUser": "사용자명",
   "vault.colPass": "비밀번호",
   "vault.colNotes": "메모",
+  "vault.colMemo": "상세 메모",
   "vault.colActions": "동작",
   "vault.empty": "저장된 항목이 없습니다.",
   "vault.emptyCta": "새 항목을 추가하세요.",
   "vault.footer":
-    "{{count}}개 항목 · 비밀번호는 AES-GCM-256으로 암호화되어 로컬에만 저장됩니다. 복사된 비밀번호는 20초 후 클립보드에서 자동 지워집니다.",
+    "비밀번호는 AES-GCM-256으로 암호화됩니다. 로그인 시 암호문이 계정에 동기화되며 서버는 내용을 읽을 수 없습니다. 복사된 비밀번호는 20초 후 클립보드에서 지워집니다.",
+  "vault.totalItems": "전체 {{count}}개",
+  "vault.summaryUncategorized": "분류 없음",
   "vault.newEntry": "새 항목",
+  "vault.phMemo": "메모 입력",
+  "vault.ttExpandRow": "URL·상세 메모 펼치기",
+  "vault.ttCollapseRow": "URL·상세 메모 접기",
+
   "vault.phUrl": "https://…",
   "vault.phUser": "user@example.com",
   "vault.phPass": "비밀번호",

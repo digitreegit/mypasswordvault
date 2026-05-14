@@ -7,6 +7,11 @@ const DB_VERSION = 1;
 const STORE_META = "meta";
 const STORE_ENTRIES = "entries";
 
+export interface VaultCategory {
+  id: string;
+  name: string;
+}
+
 export interface VaultMeta {
   id: "vault";
   // base64 PBKDF2 salt
@@ -19,6 +24,8 @@ export interface VaultMeta {
   totpLabel: string;
   // app settings
   autoLockMinutes: number;
+  /** Optional folder labels for entries (`VaultEntry.categoryId`). */
+  categories?: VaultCategory[];
   /** UI language (plaintext; not secret). */
   locale?: Locale;
   createdAt: number;
@@ -27,12 +34,16 @@ export interface VaultMeta {
 
 export interface VaultEntry {
   id: string;
+  /** References `VaultMeta.categories[].id`; empty = uncategorized. */
+  categoryId: string;
   site: string;
   url: string;
   username: string;
   // base64 (AES-GCM) encrypted password
   passwordEnc: string;
   notes: string;
+  /** Long-form notes; shown in expanded accordion (distinct from short `notes`). */
+  memo: string;
   updatedAt: number;
 }
 

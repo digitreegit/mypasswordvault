@@ -12,7 +12,7 @@ export const MESSAGES_CN: Record<string, string> = {
   "autoLock.m30": "30 分钟",
   "autoLock.off": "关闭",
   "autoLock.offBad": "关闭（不推荐）",
-  "setup.title": "设置 MyPasswordApp",
+  "setup.title": "设置 My Password Vault",
   "setup.subtitle": "在此设备创建新保险库。主密码绝不会被保存。",
   "setup.masterPw": "主密码",
   "setup.masterPwConfirm": "确认主密码",
@@ -75,7 +75,8 @@ export const MESSAGES_CN: Record<string, string> = {
   "vault.empty": "暂无条目。",
   "vault.emptyCta": "添加第一条。",
   "vault.footer":
-    "{{count}} 条 · 密码使用 AES-GCM-256 加密，仅保存在本机。复制后 20 秒清除剪贴板。",
+    "密码使用 AES-GCM-256 加密，仅保存在本机。复制后 20 秒清除剪贴板。",
+  "vault.totalItems": "共 {{count}} 条",
   "vault.newEntry": "新条目",
   "vault.phUrl": "https://…",
   "vault.phUser": "user@example.com",
@@ -112,7 +113,7 @@ export const MESSAGES_JP: Record<string, string> = {
   "autoLock.m30": "30 分",
   "autoLock.off": "オフ",
   "autoLock.offBad": "オフ（非推奨）",
-  "setup.title": "MyPasswordApp のセットアップ",
+  "setup.title": "My Password Vault のセットアップ",
   "setup.subtitle":
     "このデバイスに新しいボールトを作成します。マスターパスワードはどこにも保存されません。",
   "setup.masterPw": "マスターパスワード",
@@ -179,7 +180,8 @@ export const MESSAGES_JP: Record<string, string> = {
   "vault.empty": "エントリがありません。",
   "vault.emptyCta": "最初のエントリを追加",
   "vault.footer":
-    "{{count}} 件 · パスワードは AES-GCM-256 で暗号化され、この端末のみに保存されます。コピー後 20 秒でクリップボードを消去します。",
+    "パスワードは AES-GCM-256 で暗号化され、この端末のみに保存されます。コピー後 20 秒でクリップボードを消去します。",
+  "vault.totalItems": "合計 {{count}} 件",
   "vault.newEntry": "新しいエントリ",
   "vault.phUrl": "https://…",
   "vault.phUser": "user@example.com",
@@ -216,7 +218,7 @@ export const MESSAGES_ID: Record<string, string> = {
   "autoLock.m30": "30 mnt",
   "autoLock.off": "Mati",
   "autoLock.offBad": "Mati (tidak disarankan)",
-  "setup.title": "Siapkan MyPasswordApp",
+  "setup.title": "Siapkan My Password Vault",
   "setup.subtitle":
     "Buat brankas baru di perangkat ini. Kata sandi utama tidak pernah disimpan.",
   "setup.masterPw": "Kata sandi utama",
@@ -284,7 +286,8 @@ export const MESSAGES_ID: Record<string, string> = {
   "vault.empty": "Belum ada entri.",
   "vault.emptyCta": "Tambahkan entri pertama.",
   "vault.footer":
-    "{{count}} entri · Kata sandi dienkripsi AES-GCM-256 hanya di perangkat ini. Papan klip dikosongkan setelah 20 dtk.",
+    "Kata sandi dienkripsi AES-GCM-256 hanya di perangkat ini. Papan klip dikosongkan setelah 20 dtk.",
+  "vault.totalItems": "Total: {{count}} entri",
   "vault.newEntry": "Entri baru",
   "vault.phUrl": "https://…",
   "vault.phUser": "user@example.com",
@@ -321,7 +324,7 @@ export const MESSAGES_TH: Record<string, string> = {
   "autoLock.m30": "30 นาที",
   "autoLock.off": "ปิด",
   "autoLock.offBad": "ปิด (ไม่แนะนำ)",
-  "setup.title": "ตั้งค่า MyPasswordApp",
+  "setup.title": "ตั้งค่า My Password Vault",
   "setup.subtitle":
     "สร้างตู้นิรภัยใหม่บนอุปกรณ์นี้ รหัสผ่านหลักจะไม่ถูกเก็บไว้ที่ใดเลย",
   "setup.masterPw": "รหัสผ่านหลัก",
@@ -386,7 +389,8 @@ export const MESSAGES_TH: Record<string, string> = {
   "vault.empty": "ยังไม่มีรายการ",
   "vault.emptyCta": "เพิ่มรายการแรก",
   "vault.footer":
-    "{{count}} รายการ · รหัสผ่านเข้ารหัสด้วย AES-GCM-256 เก็บเฉพาะบนเครื่องนี้ ล้างคลิปบอร์ดหลัง 20 วินาที",
+    "รหัสผ่านเข้ารหัสด้วย AES-GCM-256 เก็บเฉพาะบนเครื่องนี้ ล้างคลิปบอร์ดหลัง 20 วินาที",
+  "vault.totalItems": "ทั้งหมด {{count}} รายการ",
   "vault.newEntry": "รายการใหม่",
   "vault.phUrl": "https://…",
   "vault.phUser": "user@example.com",
@@ -423,7 +427,7 @@ export const MESSAGES_VI: Record<string, string> = {
   "autoLock.m30": "30 phút",
   "autoLock.off": "Tắt",
   "autoLock.offBad": "Tắt (không khuyến nghị)",
-  "setup.title": "Thiết lập MyPasswordApp",
+  "setup.title": "Thiết lập My Password Vault",
   "setup.subtitle":
     "Tạo kho mới trên thiết bị này. Mật khẩu chính không bao giờ được lưu trữ.",
   "setup.masterPw": "Mật khẩu chính",
@@ -490,7 +494,8 @@ export const MESSAGES_VI: Record<string, string> = {
   "vault.empty": "Chưa có mục nào.",
   "vault.emptyCta": "Thêm mục đầu tiên.",
   "vault.footer":
-    "{{count}} mục · Mật khẩu mã hóa AES-GCM-256, chỉ lưu trên thiết bị này. Xóa bộ nhớ tạm sau 20 giây.",
+    "Mật khẩu mã hóa AES-GCM-256, chỉ lưu trên thiết bị này. Xóa bộ nhớ tạm sau 20 giây.",
+  "vault.totalItems": "Tổng: {{count}} mục",
   "vault.newEntry": "Mục mới",
   "vault.phUrl": "https://…",
   "vault.phUser": "user@example.com",
