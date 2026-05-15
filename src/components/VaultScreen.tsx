@@ -259,7 +259,7 @@ export function VaultScreen() {
       </header>
 
       <main className="flex-1 p-2 sm:p-4 min-w-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <div className="mb-1.5 flex justify-end px-0.5 sm:px-0">
+        <div className="mb-1.5 flex justify-end pl-0.5 pr-3 sm:pr-4">
           <p className="text-[11px] sm:text-xs text-ink-500 tabular-nums text-right max-w-full leading-snug">
             {t("vault.totalItems", { count: filtered.length })}
             {categorySummaryParts.length > 0 && (
