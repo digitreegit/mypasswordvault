@@ -448,6 +448,17 @@
       footer a:hover {
         text-decoration: underline;
       }
+      .landing-footer-copy {
+        margin-top: 0.5rem;
+        opacity: 0.92;
+      }
+      .landing-footer-privacy {
+        margin-top: 0.65rem;
+        font-size: 0.84rem;
+      }
+      .landing-footer-privacy a {
+        font-weight: 600;
+      }
       .file-protocol-banner {
         display: none;
         position: fixed;
@@ -978,8 +989,11 @@
         <p>
           <strong>My Password Vault</strong>
         </p>
-        <p style="margin-top: 0.5rem; opacity: 0.85" data-i18n="footerCopy">
-          ©2026 Skyface, LLC. All rights reserved.
+        <p class="landing-footer-copy">
+          <span data-i18n="footerCopy">©2026 Skyface, LLC. All rights reserved.</span>
+        </p>
+        <p class="landing-footer-privacy">
+          <a href="./privacy.html" data-i18n="footerPrivacy">Privacy Policy</a>
         </p>
       </footer>
     </div>

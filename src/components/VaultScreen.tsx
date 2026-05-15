@@ -22,6 +22,7 @@ import {
   Check,
 } from "./Icons";
 import { LanguageMenu } from "./LanguageMenu";
+import { privacyPolicyUrl } from "../lib/privacyPolicyUrl";
 
 type SortKey = "category" | "site" | "username" | "updatedAt";
 
@@ -38,6 +39,7 @@ const heroChevronField =
   "pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 shrink-0 -translate-y-1/2 text-ink-400";
 
 export function VaultScreen() {
+  const privacyHref = useMemo(() => privacyPolicyUrl(), []);
   const { entries, lock, upsertEntry, removeEntry, touchActivity, t, categories, locale, setLocale } =
     useVault();
 
@@ -445,7 +447,15 @@ export function VaultScreen() {
         </div>
 
         <p className="text-xs text-ink-500 mt-2 sm:mt-3 px-0.5 leading-snug">
-          {t("vault.footer")}
+          <span>{t("vault.footer")}</span>{" "}
+          <a
+            href={privacyHref}
+            className="text-accent-600 hover:underline whitespace-nowrap"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t("legal.privacyPolicy")}
+          </a>
         </p>
       </main>
 

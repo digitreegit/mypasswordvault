@@ -9,6 +9,7 @@ import {
 } from "../lib/i18n/locale";
 import { isNativeApp } from "../lib/platform";
 import { ScreenHeader } from "./ScreenHeader";
+import { privacyPolicyUrl } from "../lib/privacyPolicyUrl";
 
 const FAQ_ITEMS: readonly [questionKey: string, answerKey: string][] = [
   ["auth.faqTrustQ", "auth.faqTrustA"],
@@ -30,6 +31,7 @@ export function AuthScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const t = (key: string) => translate(locale, key);
+  const privacyHref = privacyPolicyUrl();
   const brandHomeHref = isNativeApp() ? undefined : "/";
 
   async function onGoogle() {
@@ -60,6 +62,16 @@ export function AuthScreen() {
           />
           <p className="text-sm text-ink-600 leading-snug whitespace-pre-line">
             {t("auth.notConfiguredBody")}
+          </p>
+          <p className="text-xs text-ink-500">
+            <a
+              href={privacyHref}
+              className="text-accent-600 hover:underline font-medium"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t("legal.privacyPolicy")}
+            </a>
           </p>
         </div>
       </div>
@@ -98,6 +110,16 @@ export function AuthScreen() {
 
         <p className="text-xs text-ink-500 leading-snug">
           {t("auth.securityNote")}
+        </p>
+        <p className="text-xs text-ink-500">
+          <a
+            href={privacyHref}
+            className="text-accent-600 hover:underline font-medium"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t("legal.privacyPolicy")}
+          </a>
         </p>
 
         <section

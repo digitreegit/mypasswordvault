@@ -2,6 +2,8 @@ import { MESSAGES_EN as en } from "../en";
 
 export const MESSAGES_KR: Record<string, string> = {
   ...en,
+  "legal.privacyPolicy": "개인정보 처리방침",
+
   "app.loading": "불러오는 중…",
   "app.authLoading": "로그인 상태 확인 중…",
   "app.brandName": "My Password Vault",

@@ -1,5 +1,7 @@
 /** Base strings (English). Other locales spread this and override. */
 export const MESSAGES_EN: Record<string, string> = {
+  "legal.privacyPolicy": "Privacy Policy",
+
   "app.loading": "Loading…",
   "app.authLoading": "Checking your session…",
   "app.brandName": "My Password Vault",

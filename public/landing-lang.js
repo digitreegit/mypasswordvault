@@ -149,6 +149,7 @@
     ctaReadyTitle: "Ready when you are",
     ctaReadyLead:
       "Same tool for weekend admins and daily operators: fewer clicks, fewer tabs, more confidence that\n          your credentials never left encryption you control.",
+    footerPrivacy: "Privacy Policy",
     footerCopy: "©2026 Skyface, LLC. All rights reserved.",
   };
 
@@ -247,6 +248,7 @@
     ctaReadyTitle: "준비되면 시작하세요",
     ctaReadyLead:
       "주말 관리자든 매일 운영하든 같은 도구입니다. 클릭과 탭을 줄이고, 통제 가능한 암호화 안에 자격 증명을 두세요.",
+    footerPrivacy: "개인정보 처리방침",
     footerCopy: "©2026 Skyface, LLC. All rights reserved.",
   };
 
