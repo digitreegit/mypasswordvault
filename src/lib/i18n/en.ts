@@ -46,12 +46,12 @@ export const MESSAGES_EN: Record<string, string> = {
   "setup.errMismatch": "Passwords do not match.",
   "setup.errGeneric": "Something went wrong.",
 
-  "lock.title": "Vault locked",
+  "lock.title": "Vault Locked",
   "lock.subtitle": "Enter your master password and 6-digit authentication code.",
   "lock.masterPw": "Master password",
   "lock.totp": "Two-factor code",
   "lock.unlock": "Unlock",
-  "lock.forget": "Forgot password? Reset vault…",
+  "lock.forget": "Forgot password? Reset vault.",
   "lock.resetWarn":
     "Resetting will permanently delete all saved passwords. Are you sure you want to continue?",
   "lock.deleteAll": "Delete everything and start over",
@@ -110,7 +110,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.signOutHint":
     "Signs out of cloud sync only. This device keeps its local vault until you reset it.",
 
-  "lock.syncTitle": "Load from your account (recommended)",
+  "lock.syncTitle": "Load from your account",
   "lock.pullCloud": "Download latest from account",
   "lock.pullCloudHint":
     "Downloads the encrypted vault stored for this account to this browser. After a successful download, you will confirm your master password and set up your authenticator on this device (same flow as first-time setup).",
