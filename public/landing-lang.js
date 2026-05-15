@@ -1,10 +1,10 @@
 /**
  * Landing page translations. Shares localStorage locale with SPA: mypasswordapp-locale.
- * Overlay locales (e.g. kr) extend English; unsupported codes use EN text with native labels.
+ * Full copy for es/cn/jp/de/fr/it/id lives in landing-overlays.js → MPV_LANDING_OVERLAYS (KR remains here).
  */
 (function () {
   var STORAGE_KEY = "mypasswordapp-locale";
-  var LOCALES = ["en", "es", "kr", "cn", "jp", "de", "fr", "it", "id", "th", "vi"];
+  var LOCALES = ["en", "es", "kr", "cn", "jp", "de", "fr", "it", "id"];
   var LABELS = {
     en: "English",
     es: "Español",
@@ -15,8 +15,6 @@
     fr: "Français",
     it: "Italiano",
     id: "Bahasa Indonesia",
-    th: "ไทย",
-    vi: "Tiếng Việt",
   };
   var HTML_LANG_MAP = {
     en: "en",
@@ -28,8 +26,6 @@
     fr: "fr",
     it: "it",
     id: "id",
-    th: "th",
-    vi: "vi",
   };
 
   function normalizeLocale(raw) {
@@ -50,6 +46,10 @@
       "en-us": "en",
       "en-gb": "en",
       "es-mx": "es",
+      th: "en",
+      "th-th": "en",
+      vi: "en",
+      "vi-vn": "en",
     };
     return alias[k] || alias[short] || "en";
   }
@@ -252,7 +252,13 @@
     footerCopy: "©2026 Skyface, LLC. All rights reserved.",
   };
 
-  var OVERLAYS = { kr: KO };
+  var OVERLAYS = Object.assign(
+    {},
+    typeof globalThis.MPV_LANDING_OVERLAYS === "object" && globalThis.MPV_LANDING_OVERLAYS !== null
+      ? globalThis.MPV_LANDING_OVERLAYS
+      : {},
+    { kr: KO },
+  );
 
   function dictFor(locale) {
     locale = normalizeLocale(locale);

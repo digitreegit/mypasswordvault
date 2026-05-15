@@ -11,8 +11,6 @@ import {
   MESSAGES_CN,
   MESSAGES_ID,
   MESSAGES_JP,
-  MESSAGES_TH,
-  MESSAGES_VI,
 } from "./langs/world_asia";
 
 export const BUNDLES: Record<Locale, Record<string, string>> = {
@@ -25,8 +23,6 @@ export const BUNDLES: Record<Locale, Record<string, string>> = {
   fr: MESSAGES_FR,
   it: MESSAGES_IT,
   id: MESSAGES_ID,
-  th: MESSAGES_TH,
-  vi: MESSAGES_VI,
 };
 
 export function translate(

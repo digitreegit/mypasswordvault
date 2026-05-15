@@ -1,0 +1,607 @@
+/** Run: node scripts/landing-overlay-merge.mjs */
+export default {
+  cn: {
+    metaTitle: "My Password Vault — 安全密码，界面清爽",
+    metaDescription:
+      "My Password Vault — 本地优先的密码管理器。AES-GCM-256、TOTP 两步验证，可选端到端加密同步。像表格一样顺手。",
+    logoAria: "My Password Vault 首页",
+    langAria: "语言",
+    navFaq: "常见问题",
+    navSignIn: "登录",
+    heroEyebrow: "不费心的密码管家",
+    heroH1Line1: "密码由您掌控。",
+    heroH1Line2: "清晰可感的安全。",
+    heroLead_html:
+      "这是一款本地优先的保险库，却像表格一样好用：快捷编辑、分类、一键复制，敏感数据始终在设备侧加密。可选同步只把<strong>密文</strong>放进您的数据库；主密码永远不离开您的手。",
+    ctaGettingStarted: "快速上手",
+    featTitle: "为流畅打造的体验",
+    featDesc:
+      "没有层层嵌套的保险柜。一页网格囊括网站、网址、用户名、密码与备注——行内编辑、展开行查看网址与备忘录、筛选与排序。分类让工作与生活的条目各得其所。",
+    featCard1Title: "表格效率，保险箱强度",
+    featCard1Body:
+      "直接在网格输入；可按行或全局显示/遮盖密码；一键复制用户名或密码，复制密码约 20 秒后自动清空剪贴板。",
+    featCard2Title: "分类与搜索",
+    featCard2Body:
+      "在设置中拖拽文件夹排序；搜索涵盖网站、URL、用户名、备注、备忘录与类别，不靠层层菜单找你需要的行。",
+    featCard3Title: "高强度密码即刻生成",
+    featCard3Body:
+      "内置长度与字符类别控制的安全随机生成器，并做好取模偏差处理，生成的结果可直接落到当前行。",
+    secTitle: "名副其实的「保险箱」级别安全",
+    secDesc:
+      "密码学在浏览器中通过 Web Crypto API 运行。存放在 IndexedDB 的数据已加密；从主密码派生的密钥仅在解锁会话期间存在于内存中。",
+    secDerivTitle: "密钥派生与加密",
+    secDerivLead_html:
+      '<span class="mono">PBKDF2-SHA256</span> 结合每个保险箱唯一的盐并经 <strong>310,000</strong> 次迭代拉伸主口令，生成 256 位密钥；条目口令与 TOTP 密钥均被 <span class="mono">AES-GCM-256</span> 封装，并使用每次加密独立生成的 12 字节 IV——标准 AEAD，不做自研怪密码。',
+    secDiagram:
+      "主密码 + 盐\n        │\n  PBKDF2-SHA256（31 万次）\n        ▼\n AES-GCM 密钥（仅内存）\n   ├── 校验值（校验主口令）\n   ├── TOTP 密钥\n   └── 每条目口令（各行独立 IV）",
+    secNeverTitle: "我们不会保存的内容",
+    nw1Strong: "主密码",
+    nw1Span: "明文或可复用的哈希既不写入磁盘，也不发往服务器。",
+    nw2Strong: "派生出的 AES 密钥",
+    nw2Span: "仅在会话停留于内存；上锁或关闭标签页后即丢弃。",
+    nw3Strong: "服务端能获知的信息",
+    nw3Span_html:
+      "Google 登录只做身份核验。可选上传的是与导出相同的<strong>加密 JSON</strong>，不包含主密码或可还原密钥的材料。",
+    syncTitle: "可选同步——只有密文，不是盲目信任",
+    syncDesc:
+      "登录后，保险箱可作为密文条目自动同步到你的数据库（例如启用了行级权限的 Supabase）。服务器只看到浏览器里本就存在的密文。每次在新设备解开仍需要你的主密码与六位 TOTP。",
+    syncC1Title: "冲突怎么处理",
+    syncC1Body:
+      "合并时使用保险箱元数据时间戳指向最新快照，让本地与远端的合成结果更可预期。",
+    syncC2Title: "可随时带走的备份",
+    syncC2Body:
+      "从设置或锁屏导出 JSON；导入可在另一台机器整体替换或恢复，也可与云端同步并行使用。",
+    syncC3Title: "自动上锁",
+    syncC3Body:
+      "闲置 1–30 分钟或关闭策略后自动上锁；有操作便会重置计时，短暂走开也不把整张表摊开。",
+    gsTitle: "快速上手",
+    gsDesc:
+      "首次向导会帮助你建立真正属于你自己的保险箱，而不会让你再多记一串厂商口令。",
+    gsStep1Strong: "使用 Google 登录",
+    gsStep1Span: "只是为了同步所用的身份，不能单独解锁保险箱。",
+    gsStep2Strong: "设置强主密码",
+    gsStep2Span: "至少 10 个字符；强度提示会鼓励更高熵值。",
+    gsStep3Strong: "扫描 TOTP 二维码",
+    gsStep3Span: "可用 Authenticator、1Password、Authy 等，随后用 6 位码完成确认。",
+    gsStep4Strong: "像表格一样添加行",
+    gsStep4Span: "填写网站、密码、分类；需要时再开启同步。",
+    faqTitle: "常见问题",
+    faqDesc: "关于信任、日常使用、验证器、备份、价格与联系方式的简要说明。",
+    faq1_sum: "我能信任它吗？数据安全吗？",
+    faq1_html:
+      "密码在离开设备前就被加密，服务器只能看到密文；主密码与明文秘密不会以可读形式脱离你的掌控。Google 登录仅用于把加密保险箱绑定到你的账户。",
+    faq2_sum: "我每天要怎么用？真的简单吗？",
+    faq2_html:
+      "使用 Google 登录，选择强主密码，扫描一次二维码完成双因素设置，然后解锁即可添加或搜索条目。自动上锁在你暂离时关门；在其它浏览器或手机上登录即可拉取同步。",
+    faq3_sum: "什么是验证器应用？做什么用？该选哪个？",
+    faq3_html:
+      "验证器是在手机或电脑上生成短时数字码（通常 6 位）的应用，用来完成第二步验证。配置后通过二维码与保险箱共享密钥；解锁需要主密码加最新动态码，因此单偷密码不够。任何信誉良好的 TOTP 应用即可，例如 Google Authenticator、Microsoft Authenticator、Authy、FreeOTP、1Password／Bitwarden 中的 OTP——选择你信任的出品方并保持更新。",
+    faq4_sum: "验证器损坏、丢了手机或验证码不对怎么办？",
+    faq4_html:
+      "加密保险箱仍留在账户内。换新设备时可先登录，在「设备与备份」下载最新保险箱，输入主口令后按照提示扫描二维码连接新的验证器；旧的时间型验证码随后失效是正常的，并不等于数据已删。若旧验证器仍可访问，往往不必重置即可继续使用。",
+    faq5_sum: "收费还是免费？",
+    faq5_html: "目前可免费使用；若日后调整价格，我们会提前清楚公告。",
+    faq6_sum: "如果我忘了主密码？",
+    faq6_html:
+      "包括我们在内无人能绕过主口令恢复条目；你只能在该设备重置保险箱并清空已有内容。云端恢复与加密备份文件也需要创建备份时使用的那一版主密码。",
+    faq7_sum: "能准备离线备份吗？",
+    faq7_html:
+      "可以。解锁后前往「设置 → 离线 JSON 文件（高级）」下载加密导出；妥善保管，并记得仍需要导出当时的主口令才能解密。",
+    faq8_sum: "遇到问题该联系谁？",
+    faq8_html:
+      '请发送邮件至\n              <a href="mailto:contact@skyface.com">contact@skyface.com</a>\n              ，我们会查阅来信。',
+    ctaReadyTitle: "准备好就开始",
+    ctaReadyLead:
+      "无论周末帮忙维护还是日常值守，同一套工具帮你减少点击与标签堆叠，并让凭据始终留在你可控的加密边界内。",
+    footerPrivacy: "隐私政策",
+    footerCopy: "©2026 Skyface, LLC. All rights reserved.",
+  },
+
+  jp: {
+    metaTitle: "My Password Vault — 安全なパスワード、シンプルに",
+    metaDescription:
+      "My Password Vault — ローカル優先のパスワード管理。AES-GCM-256、TOTP 二要素認証、任意の暗号化同期。表計算ソフト並みに操作しやすい。",
+    logoAria: "My Password Vault ホーム",
+    langAria: "言語を選択",
+    navFaq: "よくある質問",
+    navSignIn: "サインイン",
+    heroEyebrow: "手間いらずのパスワードマネージャー",
+    heroH1Line1: "自分で握るパスワード。",
+    heroH1Line2: "納得感のある運用を。",
+    heroLead_html:
+      "ローカル優先の金庫を、まるで表のように扱えます——素早い編集、カテゴリ、ワンタップコピー。秘密はデバイス上で暗号化されたまま。任意の同期はデータベースに<strong>暗号文だけ</strong>を置き、マスターパスワードはあなたの手から離れません。",
+    ctaGettingStarted: "はじめに",
+    featTitle: "作業の流れに合わせた設計",
+    featDesc:
+      "多重の迷路はありません。サイト・URL・ユーザー名・パスワード・メモを一覧グリッドに集約——インライン編集、URL／メモ付きの開閉可能な行、絞り込みと並べ替え。カテゴリで仕事と生活を整理します。",
+    featCard1Title: "表の感覚、金庫の強度",
+    featCard1Body:
+      "グリッドに直接入力。行単位または全体で表示／マスク。ユーザー名とパスワードをワンクリックでコピーし、パスワードは約 20 秒でクリップボードから消えます。",
+    featCard2Title: "カテゴリと検索",
+    featCard2Body:
+      "設定画面でドラッグしてフォルダを並べ替え。サイト・URL・ユーザー名・メモ・カテゴリまで横断検索し、メニューを追いかけなくて大丈夫。",
+    featCard3Title: "強力なパスワードを即座に",
+    featCard3Body:
+      "長さと文字種を指定するジェネレーター、バイアス対策済みの CSPRNG 由来の乱数、生成結果をその行にそのまま流し込み。",
+    secTitle: "「金庫」の名に恥じないセキュリティ",
+    secDesc:
+      "暗号はブラウザの Web Crypto API 上で動作します。IndexedDB に置くデータは暗号化され、マスターパスワードから導かれる鍵素材はアンロック中のメモリにだけ存在します。",
+    secDerivTitle: "鍵導出と暗号化",
+    secDerivLead_html:
+      'ボールトごとのソルトで <span class="mono">PBKDF2-SHA256</span> を <strong>310,000</strong> 回かけ、マスターパスワードから 256 ビット鍵へ引き伸ばします。各エントリのパスワードと TOTP 秘密情報は <span class="mono">AES-GCM-256</span> と、暗号ごとに新規の 12 バイト IV で保護されます——現代的な AEAD、独自暗号には頼りません。',
+    secDiagram:
+      "マスターパスワード + ソルト\n        │\n  PBKDF2-SHA256（31 万回）\n        ▼\n AES-GCM 鍵（メモリのみ）\n   ├── ベリファイア（マスター検証）\n   ├── TOTP 秘密\n   └── 各エントリのパスワード（それぞれ独自 IV）",
+    secNeverTitle: "保存しないもの",
+    nw1Strong: "マスターパスワード",
+    nw1Span: "平文も再利用できるハッシュもディスクに書かず、サーバーにも送りません。",
+    nw2Strong: "派生 AES 鍵",
+    nw2Span: "セッション中だけメモリに保持し、ロックまたはタブを閉じると破棄します。",
+    nw3Strong: "サーバーが知り得る範囲",
+    nw3Span_html:
+      "Google でのサインインは本人確認に限られます。同期で送るのはエクスポートと同じ暗号化 JSON で、マスターパスワードや鍵は含みません。",
+    syncTitle: "任意の同期——信頼ではなく暗号化データ",
+    syncDesc:
+      "サインインすると、金庫をデータベース（例: 行レベルセキュリティの Supabase）へ暗号データとして同期できます。サーバーが触れるのはブラウザがすでに持っていた暗号文だけ。各端末でアンロックするには引き続きマスターパスワードと 6 桁の TOTP が必要です。",
+    syncC1Title: "競合の扱い",
+    syncC1Body:
+      "メタデータのタイムスタンプで新しいスナップショットを優先し、ローカルとリモートの統合結果を読みやすくします。",
+    syncC2Title: "持ち運べるバックアップ",
+    syncC2Body:
+      "設定またはロック画面からいつでも JSON を書き出し。インポートで端末の置換・復旧ができ、同期と併用できます。",
+    syncC3Title: "自動ロック",
+    syncC3Body:
+      "放置 1～30 分（または無効）で自動ロック；操作があるたびタイマーをリセットし、短時間席を離しても一覧が晒され続けません。",
+    gsTitle: "はじめに",
+    gsDesc:
+      "初回起動で、「本当に自分だけの」金庫を案内します。別途ベンダー用パスワードは不要です。",
+    gsStep1Strong: "Google でサインイン",
+    gsStep1Span: "同期用の本人確認のみ。金庫の解除にはなりません。",
+    gsStep2Strong: "強いマスターパスワードを作る",
+    gsStep2Span: "10 文字以上を推奨し、強度メータがエントロピー向上を助けます。",
+    gsStep3Strong: "TOTP の QR をスキャン",
+    gsStep3Span:
+      "Authenticator、1Password、Authy などで読み込み、6 桁コードで確認します。",
+    gsStep4Strong: "表のように行を追加",
+    gsStep4Span: "サイト・パスワード・カテゴリを保存し、準備ができたら同期しましょう。",
+    faqTitle: "よくある質問",
+    faqDesc:
+      "信頼性、日常的な使い方、認証アプリ、バックアップ、料金、問い合わせ先への短い回答です。",
+    faq1_sum: "このアプリを信用して大丈夫？データは安全？",
+    faq1_html:
+      "同期の前に端末側でパスワードが暗号化されます。サーバーが見られるのは暗号文だけであり、マスターパスワードや平文の秘密が読める形で管理外へ出ることはありません。Google サインインは暗号化された金庫をあなたのアカウントへ紐づけるだけに使います。",
+    faq2_sum: "毎日の使い勝手は？本当に簡単？",
+    faq2_html:
+      "Google でサインインし強いマスターパスを決めて、QR で二要素認証を設定すれば済みです。解除後はエントリの追加／検索。自動ロックは席を離したとき安心。別ブラウザやスマホでサインインすれば変更が追随します。",
+    faq3_sum: "認証アプリって何？何をすべきで、どれを使えばよい？",
+    faq3_html:
+      "認証アプリは短寿命のコード（だいたい 6 桁）を出すための別アプリです。セットアップ後は QR で金庫と秘密を共有し、解除ごとにマスターパスと新しいコードが同時に必要になります（パスだけ盗まれても不十分）。Google Authenticator、Microsoft Authenticator、Authy、FreeOTP、1Password／Bitwarden の OTP など、標準的な TOTP なら問題ありません。信頼できる提供者を選び、常にアップデートしてください。",
+    faq4_sum: "認証アプリ故障・端末紛失・コード不一致のときは？",
+    faq4_html:
+      "暗号化された金庫はアカウント上にそのまま残ります。新端末ではサインイン → デバイスとバックアップから最新版をダウンロード → マスターを入力したうえで、案内どおり QR を再スキャンし代替のアプリへ接続してください。確認後、古いタイムコードが無効になるのは設計どおりであり、データが消されたわけではありません。",
+    faq5_sum: "無料？有料？",
+    faq5_html:
+      "いまは無料でご利用いただけます。変更があれば事前に明示します。",
+    faq6_sum: "マスターパスワードを忘れたら？",
+    faq6_html:
+      "私たちも含め、マスターを知らずに復号はできません。忘れた端末側ではリセットになり既存項目は失われます。クラウド復元や暗号バックアップにも、作成時と同じマスターが必要です。",
+    faq7_sum: "オフラインのバックアップはできる？",
+    faq7_html:
+      "はい。解除後、設定から「オフライン JSON ファイル（詳細設定）」で暗号エクスポートを取得してください。書き出し時点と同じマスターでのみ開けます。",
+    faq8_sum: "不具合はどこへ連絡？",
+    faq8_html:
+      'ご質問・不具合・ご意見は\n              <a href="mailto:contact@skyface.com">contact@skyface.com</a>\n              までご連絡ください。',
+    ctaReadyTitle: "準備できたら、すぐさま",
+    ctaReadyLead:
+      "趣味のインフラ手伝いにも本番運用にも同じ画面。クリックやタブ切り替えを減らし、自分が握る暗号の内側へ資格情報を置き続けられます。",
+    footerPrivacy: "プライバシーポリシー",
+    footerCopy: "©2026 Skyface, LLC. All rights reserved.",
+  },
+
+  de: {
+    metaTitle: "My Password Vault — Sichere Passwörter, klare Oberfläche",
+    metaDescription:
+      "My Password Vault — lokal zuerst: Passwortverwaltung mit AES-GCM-256, TOTP-2FA und optional synchronisierten, verschlüsselten Daten. Bedienbar wie eine Tabelle.",
+    logoAria: "My Password Vault Startseite",
+    langAria: "Sprache",
+    navFaq: "FAQ",
+    navSignIn: "Anmelden",
+    heroEyebrow: "Passwortmanager ohne unnötigen Aufwand",
+    heroH1Line1: "Passwörter unter Ihrer Kontrolle.",
+    heroH1Line2: "Klarheit, die Sie spüren.",
+    heroLead_html:
+      "Ein lokal gedachter Tresor, der sich wie eine Tabelle anfühlt — schnelle Bearbeitung, Kategorien und Kopieren mit einem Tipp — während Geheimnisse auf dem Gerät verschlüsselt bleiben. Optionale Synchronisation speichert in Ihrer Datenbank nur <strong>verschlüsselte Daten</strong>; Ihr Hauptpasswort verlässt nie Ihre Hand.",
+    ctaGettingStarted: "Erste Schritte",
+    featTitle: "Für flüssige Arbeit gebaut",
+    featDesc:
+      "Kein Tresor im Tresor. Ein Raster mit Website, URL, Benutzername, Passwort und Notizen — Inline-Bearbeitung, aufklappbare Zeilen für URL und Memo, Filtern und Sortieren. Kategorien halten Beruf und Privates sortiert.",
+    featCard1Title: "Tabellenlogik, Tresorstärke",
+    featCard1Body:
+      "Direkt im Raster tippen; Passwörter pro Zeile oder global ein- und ausblenden. Benutzername oder Passwort mit einem Klick kopieren — kopierte Passwörter werden nach etwa 20 Sekunden aus der Zwischenablage entfernt.",
+    featCard2Title: "Kategorien und Suche",
+    featCard2Body:
+      "Ordner per Drag-and-drop in den Einstellungen sortieren. Die Suche deckt Website, URL, Benutzername, Notizen, Memo und Kategorie ab.",
+    featCard3Title: "Starke Passwörter in Sekunden",
+    featCard3Body:
+      "Generator mit Länge und Zeichensätzen, kryptographisch sicherer Zufall und vorsichtiger Modulo-Nutzung — Ergebnis direkt in der Zeile.",
+    secTitle: "Sicherheit, die den Namen Tresor verdient",
+    secDesc:
+      "Kryptografie läuft im Browser über die Web Crypto API. Daten in IndexedDB sind verschlüsselt; aus dem Hauptpasswort abgeleitetes Schlüsselmaterial existiert nur im Speicher, solange der Tresor offen ist.",
+    secDerivTitle: "Schlüsselableitung und Verschlüsselung",
+    secDerivLead_html:
+      '<span class="mono">PBKDF2-SHA256</span> mit je Tresor eigenem Salt und <strong>310.000</strong> Iterationen streckt Ihr Hauptpasswort zu einem 256-Bit-Schlüssel. Eintrags-Passwörter und das TOTP-Geheimnis werden mit <span class="mono">AES-GCM-256</span> und jeweils zufälligem 12-Byte-IV pro Verschlüsselung geschützt — modernes AEAD.',
+    secDiagram:
+      "Hauptpasswort + Salt\n        │\n  PBKDF2-SHA256 (310k)\n        ▼\n AES-GCM-Schlüssel (nur im RAM)\n   ├── Prüfwert (Hauptpasswort)\n   ├── TOTP-Geheimnis\n   └── Passwort je Eintrag (eigene IV)",
+    secNeverTitle: "Was wir niemals speichern",
+    nw1Strong: "Hauptpasswort",
+    nw1Span: "Weder Klartext noch wiederverwendbare Hashes auf Datenträger oder an einen Server.",
+    nw2Strong: "Abgeleiteter AES-Schlüssel",
+    nw2Span: "Lebt nur während der Sitzung im Speicher; wird beim Sperren oder Schließen des Tabs verworfen.",
+    nw3Strong: "Serverseitiges Wissen",
+    nw3Span_html:
+      "Google-Anmeldung dient nur der Identität. Optionale Synchronisation lädt dasselbe verschlüsselte JSON wie beim Export — nie Hauptpasswort oder Schlüssel im Klartext.",
+    syncTitle: "Optionale Sync — verschlüsselte Blobs, kein blindes Vertrauen",
+    syncDesc:
+      "Nach Anmeldung kann Ihr Tresor als verschlüsselte Daten in Ihrer Datenbank synchronisieren (z. B. Supabase mit Zeilensicherheit). Der Server sieht nur Chiffretext. Auf jedem Gerät brauchen Sie weiterhin Hauptpasswort und sechsstelliges TOTP.",
+    syncC1Title: "Konflikte",
+    syncC1Body:
+      "Zusammenführung nutzt Zeitstempel in den Tresor-Metadaten, damit der neueste Stand gewinnt.",
+    syncC2Title: "Portable Backups",
+    syncC2Body:
+      "JSON-Export aus Einstellungen oder Sperrbildschirm; Import ersetzt oder stellt ein Gerät wieder her.",
+    syncC3Title: "Automatische Sperre",
+    syncC3Body:
+      "Leerlauf 1–30 Minuten (oder aus) sperrt automatisch; Aktivität setzt den Timer zurück.",
+    gsTitle: "Erste Schritte",
+    gsDesc:
+      "Der Start führt zu einem Tresor, der Ihnen gehört — ohne zusätzliches Anbieterpasswort.",
+    gsStep1Strong: "Mit Google anmelden",
+    gsStep1Span: "Nur Identität für die Sync — entsperrt den Tresor nicht.",
+    gsStep2Strong: "Starkes Hauptpasswort wählen",
+    gsStep2Span: "Mindestens 10 Zeichen; die Stärkeanzeige hilft bei besserer Entropie.",
+    gsStep3Strong: "TOTP-QR scannen",
+    gsStep3Span:
+      "Authenticator, 1Password, Authy usw., dann mit einem 6-stelligen Code bestätigen.",
+    gsStep4Strong: "Zeilen wie in einer Tabelle",
+    gsStep4Span: "Websites, Passwörter, Kategorien — speichern und bei Bedarf synchronisieren.",
+    faqTitle: "Häufige Fragen",
+    faqDesc:
+      "Kurze Antworten zu Vertrauen, Alltag, Authenticator-Apps, Backups, Preisen und Kontakt.",
+    faq1_sum: "Kann ich der App vertrauen? Sind meine Daten sicher?",
+    faq1_html:
+      "Passwörter werden auf Ihrem Gerät verschlüsselt vor jeder Sync. Server sehen nur Chiffretext; Hauptpasswort und Klartextgeheimnisse verlassen Ihre Kontrolle nicht lesbar. Google verknüpft nur das verschlüsselte Vault mit Ihrem Konto.",
+    faq2_sum: "Wie nutze ich es täglich?",
+    faq2_html:
+      "Mit Google anmelden, starkes Hauptpasswort wählen, QR für Zwei-Faktor scannen, entsperren und Einträge anlegen oder suchen. Auto-Lock bei Abwesenheit; Sync auf anderen Geräten.",
+    faq3_sum: "Was ist eine Authenticator-App und welche nehmen?",
+    faq3_html:
+      "Authenticator-Apps erzeugen kurzlebige Codes (meist 6 Ziffern) für zweite Abfrage — nach QR-Setup teilen Sie ein Geheimnis mit dem Tresor; Entsperren braucht Hauptpasswort und frischen Code. Seriöse TOTP-Apps sind z. B. Google Authenticator, Microsoft Authenticator, Authy, FreeOTP sowie OTP-Felder in 1Password/Bitwarden; halten Sie die App aktuell.",
+    faq4_sum: "Authenticator defekt oder Handy weg?",
+    faq4_html:
+      "Der verschlüsselte Tresor bleibt im Konto. Neues Gerät: anmelden, neuesten Stand laden, Hauptpasswort eingeben, neuen QR für Ersatz-Authenticator — alte Codes erlaufen erwartungsgemäß ohne Datenverlust.",
+    faq5_sum: "Kostenlos oder kostenpflichtig?",
+    faq5_html:
+      "Derzeit kostenlos; Preisänderungen kündigen wir transparent an.",
+    faq6_sum: "Hauptpasswort vergessen?",
+    faq6_html:
+      "Niemand kann ohne es wiederherstellen — Tresor auf dem Gerät zurücksetzen. Cloud- und Exportdateien brauchen dasselbe Hauptpasswort wie bei der Erstellung.",
+    faq7_sum: "Offline-Backup?",
+    faq7_html:
+      "Ja: Einstellungen → Offline-JSON (erweitert) für verschlüsselten Export; sicher aufbewahren.",
+    faq8_sum: "Kontakt bei Problemen?",
+    faq8_html:
+      'Schreiben Sie an\n              <a href="mailto:contact@skyface.com">contact@skyface.com</a>\n              für Fragen oder Feedback.',
+    ctaReadyTitle: "Bereit, wenn Sie es sind",
+    ctaReadyLead:
+      "Gleiches Werkzeug für Gelegenheits-Admins und Profis: weniger Klicks, mehr Kontrolle über Ihre Verschlüsselung.",
+    footerPrivacy: "Datenschutz",
+    footerCopy: "©2026 Skyface, LLC. All rights reserved.",
+  },
+
+  fr: {
+    metaTitle: "My Password Vault — Mots de passe sûrs, interface claire",
+    metaDescription:
+      "My Password Vault — gestionnaire local d’abord : AES-GCM-256, 2FA TOTP, synchronisation chiffrée optionnelle. Simple comme un tableur.",
+    logoAria: "Accueil My Password Vault",
+    langAria: "Langue",
+    navFaq: "FAQ",
+    navSignIn: "Connexion",
+    heroEyebrow: "Gestionnaire de mots de passe sans friction",
+    heroH1Line1: "Des mots de passe que vous maîtrisez.",
+    heroH1Line2: "Une clarté tangible.",
+    heroLead_html:
+      "Un coffre local qui se comporte comme un tableur — édition rapide, catégories, copie en un geste — pendant que vos secrets restent chiffrés sur l’appareil. La synchro optionnelle ne stocke que du <strong>texte chiffré</strong> dans votre base ; le mot de passe principal ne quitte jamais votre main.",
+    ctaGettingStarted: "Pour commencer",
+    featTitle: "Pensé pour le flux",
+    featDesc:
+      "Pas de navigation coffre dans le coffre. Une grille : site, URL, identifiant, mot de passe, notes — édition inline, lignes extensibles, filtres et tri. Les catégories séparent pro et perso.",
+    featCard1Title: "Esprit tableur, solidité coffre-fort",
+    featCard1Body:
+      "Tapez dans la grille ; affichez ou masquez les mots de passe par ligne ou globalement. Copie identifiant ou mot de passe en un clic ; presse-papiers effacé après ~20 s pour les mots de passe copiés.",
+    featCard2Title: "Catégories et recherche",
+    featCard2Body:
+      "Réordonnez les dossiers par glisser-déposer dans les réglages. Recherche sur site, URL, identifiant, notes, mémo et catégorie.",
+    featCard3Title: "Mots de passe robustes vite générés",
+    featCard3Body:
+      "Générateur avec longueur et jeux de caractères, entropie sûre et modulo sans biais ; insérez le résultat dans la ligne.",
+    secTitle: "Une sécurité qui mérite le nom de coffre",
+    secDesc:
+      "La cryptographie s’exécute dans le navigateur via Web Crypto API. Les données IndexedDB sont chiffrées ; la clé dérivée du mot de passe principal n’existe en mémoire que pendant le déverrouillage.",
+    secDerivTitle: "Dérivation et chiffrement",
+    secDerivLead_html:
+      '<span class="mono">PBKDF2-SHA256</span> avec un sel par coffre et <strong>310 000</strong> itérations étire votre mot de passe principal en clé 256 bits. Les entrées et le secret TOTP sont protégés par <span class="mono">AES-GCM-256</span> avec IV aléatoire de 12 octets par opération — AEAD moderne.',
+    secDiagram:
+      "mot de passe principal + sel\n        │\n  PBKDF2-SHA256 (310k)\n        ▼\n clé AES-GCM (mémoire seule)\n   ├── vérificateur\n   ├── secret TOTP\n   └── mot de passe par entrée (IV dédiée)",
+    secNeverTitle: "Ce que nous ne stockons jamais",
+    nw1Strong: "Mot de passe principal",
+    nw1Span: "Ni clair ni hash réutilisable sur disque ou vers un serveur.",
+    nw2Strong: "Clé AES dérivée",
+    nw2Span: "Vit en mémoire pendant la session ; jetée au verrouillage ou fermeture d’onglet.",
+    nw3Strong: "Ce que le serveur peut savoir",
+    nw3Span_html:
+      "Google ne sert qu’à prouver l’identité. La synchro envoie le même JSON chiffré qu’à l’export — jamais le mot principal ni vos clés en clair.",
+    syncTitle: "Synchro optionnelle — données chiffrées",
+    syncDesc:
+      "Connecté, votre coffre peut se synchroniser en données chiffrées (ex. Supabase avec RLS). Le serveur ne voit que le texte chiffré du navigateur. Chaque appareil exige mot de passe principal et TOTP à six chiffres.",
+    syncC1Title: "Conflits",
+    syncC1Body:
+      "Horodatage des métadonnées pour que l’instantané le plus récent l’emporte.",
+    syncC2Title: "Sauvegardes portables",
+    syncC2Body:
+      "Export JSON depuis réglages ou écran de verrouillage ; import remplace ou restaure un appareil.",
+    syncC3Title: "Verrouillage auto",
+    syncC3Body:
+      "Inactivité 1 à 30 minutes (ou désactivé) verrouille le coffre ; l’activité réinitialise le minuteur.",
+    gsTitle: "Pour commencer",
+    gsDesc:
+      "Premier lancement pour un coffre vraiment à vous — sans mot de passe fournisseur en plus.",
+    gsStep1Strong: "Connexion avec Google",
+    gsStep1Span: "Uniquement pour la synchro — ne déverrouille pas votre coffre.",
+    gsStep2Strong: "Créez un mot de passe principal fort",
+    gsStep2Span:
+      "10 caractères minimum ; indicateur pour plus d’entropie.",
+    gsStep3Strong: "Scannez le QR TOTP",
+    gsStep3Span:
+      "Authenticator, 1Password, Authy, etc.; confirmez avec un code à six chiffres.",
+    gsStep4Strong: "Ajoutez des lignes comme une feuille",
+    gsStep4Span:
+      "Sites, mots de passe, catégories — puis synchronisez.",
+    faqTitle: "Questions courantes",
+    faqDesc:
+      "Confiance, usage quotidien, apps TOTP, sauvegardes, tarifs et contact.",
+    faq1_sum: "Puis-je faire confiance ? Mes données sont-elles en sécurité ?",
+    faq1_html:
+      "Les mots de passe sont chiffrés localement avant toute synchro. Les serveurs voient uniquement du texte chiffré. Google relie seulement le coffre au compte.",
+    faq2_sum: "Utilisation quotidienne ? Simple ?",
+    faq2_html:
+      "Google, bon mot principal, QR 2FA, déverrouiller et gérer les entrées. Verrouillage auto ; synchro sur d’autres appareils.",
+    faq3_sum: "Qu’est-ce qu’une app d’authentification ?",
+    faq3_html:
+      "Elle génère des codes courts (souvent 6 chiffres) pour une seconde preuve. Choisissez une app TOTP reconnue (Google ou Microsoft Authenticator, Authy, FreeOTP, 1Password ou Bitwarden) et gardez-la à jour.",
+    faq4_sum: "Authenticateur hors service ou téléphone perdu ?",
+    faq4_html:
+      "Le coffre chiffré reste dans le compte. Nouveau matériel : connexion, sauvegarde, mot principal puis nouveau QR — anciens codes invalides comme prévu, données intactes.",
+    faq5_sum: "Gratuit ou payant ?",
+    faq5_html:
+      "Gratuit pour l’instant ; tout changement de prix sera affiché clairement à l’avance.",
+    faq6_sum: "Mot de passe principal oublié ?",
+    faq6_html:
+      "Aucune récupération sans ce secret ; réinitialiser le coffre sur l’appareil concerné. Restauration cloud et fichiers exportés exigent le même mot de passe qu’à la création.",
+    faq7_sum: "Copie hors ligne ?",
+    faq7_html:
+      "Oui : Réglages → fichier JSON hors ligne (avancé). Conservez le mot passe valide au moment de l’export.",
+    faq8_sum: "Qui contacter ?",
+    faq8_html:
+      'Écrivez à\n              <a href="mailto:contact@skyface.com">contact@skyface.com</a>\n              pour aide ou feedback.',
+    ctaReadyTitle: "Prêt quand vous l’êtes",
+    ctaReadyLead:
+      "Moins de clics, la certitude que vos identifiants restent dans un chiffrement que vous maîtrisez.",
+    footerPrivacy: "Politique de confidentialité",
+    footerCopy: "©2026 Skyface, LLC. All rights reserved.",
+  },
+
+  it: {
+    metaTitle: "My Password Vault — Password sicure, zero confusione",
+    metaDescription:
+      "My Password Vault — gestore password locale‑first con AES‑GCM‑256, TOTP e sincronizzazione cifrata opzionale. Semplice come un foglio.",
+    logoAria: "Home My Password Vault",
+    langAria: "Lingua",
+    navFaq: "FAQ",
+    navSignIn: "Accedi",
+    heroEyebrow: "Gestore senza attriti",
+    heroH1Line1: "Password sotto il tuo controllo.",
+    heroH1Line2: "Chiarezza che si sente.",
+    heroLead_html:
+      "Un vault priorità locale che si usa come una tabella — modifiche rapide, cartelle e copia al tocco mentre i segreti restano cifrati sul dispositivo. La sync opzionale salva nel database solo <strong>testo cifrato</strong>; la password principale non lascia le tue mani.",
+    ctaGettingStarted: "Per iniziare",
+    featTitle: "Costruito per scorrere",
+    featDesc:
+      "Senza corridoi dentro corridoi nel vault: un’unica griglia con sito, URL, utente, password e note — modifica in linea, righe espandibili per URL e memo, filtri e ordinamento. Le categorie mantengono distinti lavoro e vita quotidiana.",
+    featCard1Title: "Logica da foglio, solidità da cassaforte",
+    featCard1Body:
+      "Scrivi direttamente nella griglia; mostra o nascondi password per riga o per tutta la vista. Copia utente o password con un clic; le password copiate vengono rimosse dall’area di trasferimento dopo circa 20 secondi.",
+    featCard2Title: "Categorie e ricerca",
+    featCard2Body:
+      "Trascina per riordinare le cartelle nelle impostazioni. La ricerca copre sito, URL, utente, note, memo e categoria così ritrovi una voce senza aprire sottomenu infinite.",
+    featCard3Title: "Password forti generate al volo",
+    featCard3Body:
+      "Generatore con controllo lunghezza e gruppi di caratteri, RNG criptograficamente sicuro e uso attento del modulo per evitare distorsioni; incolla il risultato sulla riga in un lampo.",
+    secTitle: "Sicurezza che meriti il nome di vault",
+    secDesc:
+      "La crittografia gira nel browser con le Web Crypto API. Ciò che riposa in IndexedDB è cifrato; il materiale di chiave ricavato dalla master password esiste in memoria solo finché il vault resta sbloccato.",
+    secDerivTitle: "Derivazione della chiave e cifratura",
+    secDerivLead_html:
+      '<span class="mono">PBKDF2-SHA256</span> con sale distinto per ogni vault e <strong>310.000</strong> iterazioni allunga la master password verso una chiave a 256 bit. Le password delle voci e il segreto TOTP sono protetti con <span class="mono">AES-GCM-256</span> e un IV casuale da 12 byte per ogni operazione: AEAD moderno, niente crittografia artigianale.',
+    secDiagram:
+      "master password + sale\n        │\n  PBKDF2-SHA256 (310k)\n        ▼\n chiave AES-GCM (solo memoria)\n   ├── verifica (prova la master)\n   ├── segreto TOTP\n   └── password per voce (IV dedicata)",
+    secNeverTitle: "Cosa non memorizziamo mai",
+    nw1Strong: "Master password",
+    nw1Span: "Non memorizziamo il testo in chiaro né un hash riusabile su disco o inviato a un server.",
+    nw2Strong: "Chiave AES derivata",
+    nw2Span: "Esiste nella RAM durante la sessione e viene distrutta al blocco o alla chiusura della scheda.",
+    nw3Strong: "Informazioni che può avere il server",
+    nw3Span_html:
+      "L’accesso con Google attesta solo l’identità. La sincronizzazione carica lo stesso JSON cifrato che potresti esportare manualmente — non la master né chiavi in chiaro.",
+    syncTitle: "Sync opzionale — dati cifrati, non cieca fiducia",
+    syncDesc:
+      "Con una sessione attiva il vault può sincronizzarsi come dati cifrati nel tuo database (ad esempio Supabase con regole row-level security). Il server tiene solo ciphertext. Su ogni dispositivo ti servono ancora master password e TOTP a sei cifre.",
+    syncC1Title: "Gestione conflitti",
+    syncC1Body:
+      "La riconciliazione usa il timestamp nei metadati del vault perché allo snapshot più recente prevalga quando unisci copia locale e remota.",
+    syncC2Title: "Backup portatili",
+    syncC2Body:
+      "Esporta un JSON in qualsiasi momento da impostazioni o schermata di blocco; l’import sostituisce o recupera un dispositivo — comodo anche accanto alla sync.",
+    syncC3Title: "Blocca automaticamente",
+    syncC3Body:
+      "Timeout di inattività (1‑30 minuti o disabilitato): il vault si richiude; ogni azione ripristina il timer così pause brevi non lasciano righe esposte.",
+    gsTitle: "Per iniziare",
+    gsDesc:
+      "Al primo accesso ti guidiamo fino a un vault che è davvero tuo — senza ricordarti un altro «password del vendor» sopra alla tua.",
+    gsStep1Strong: "Accedi con Google",
+    gsStep1Span:
+      "Usato solo come identità per la sincronizzazione; non consente da solo di aprire il vault.",
+    gsStep2Strong: "Scegli una master password robusta",
+    gsStep2Span:
+      "Almeno dieci caratteri; l’indicatore ti sprona verso migliore entropia.",
+    gsStep3Strong: "Scannerizza il QR TOTP",
+    gsStep3Span:
+      "Usa Authenticator, 1Password, Authy ecc., poi conferma con un codice a sei cifre.",
+    gsStep4Strong: "Aggiungi righe come in un foglio",
+    gsStep4Span:
+      "Annota siti, password e categorie — salva e attiva il sync quando ti serve.",
+    faqTitle: "Domande frequenti",
+    faqDesc:
+      "Breve sintesi di fiducia, uso quotidiano, authenticator app, backup, pricing e dove scriverci.",
+    faq1_sum: "Posso fidarmi? I dati sono al sicuro?",
+    faq1_html:
+      "Le password vengono cifrate sul dispositivo prima di qualsiasi sincronizzazione. I server ricevono soltanto ciphertext: master password e segreti in chiaro non lasciano il tuo controllo in modo leggibile. Google serve unicamente per legare il vault cifrato al tuo account.",
+    faq2_sum: "Come lo uso giorno dopo giorno? Resta chiaro?",
+    faq2_html:
+      "Entra con Google, imposta una master password forte, scannerizza una volta il QR della 2FA, sblocca e aggiungi o cerca voce dopo voce. L’auto-blocco chiude il vault mentre ti assenti brevemente; accedendo da un altro browser o telefono la sync riallinea gli aggiornamenti.",
+    faq3_sum: "Che cos’è un authenticator, a cosa serve e quale app uso?",
+    faq3_html:
+      "È un’app che sul telefono o sul computer crea codici numerici molto temporanei (di solito sei cifre) per confermare una seconda prova forte. Configurando il QR condivide un segreto con il vault; allo sblocco servono sempre master password più un codice nuovo così bastarebbe rubare solo la password d’ingresso. Qualsiasi app TOTP seria compatibile con i flussi tipo Google Authenticator va bene — Google Authenticator, Microsoft Authenticator, Authy, FreeOTP oppure OTP in 1Password o Bitwarden: scegli un editore affidabile e mantieni gli aggiornamenti.",
+    faq4_sum: "E se l’authenticator smette di funzionare o perdo il telefono?",
+    faq4_html:
+      "Il vault cifrato resta nell’account. Su un terminale fresco accedi di nuovo, scarica dal pannello dispositivi/backup l’istanza più recente, reinserisci la master password e prosegui alla scansione del nuovo QR per collegare un authenticator di ricambio — i codici orari più vecchi smettono di valere è normale, non significa che i contenuti sono stati cancellati.",
+    faq5_sum: "È gratis o si paga?",
+    faq5_html:
+      "Oggi usi tutto gratuitamente; se il modello cambierà annunciamo prima i prezzi in modo trasparente.",
+    faq6_sum: "Cosa succede se dimentico la master password?",
+    faq6_html:
+      "Nessuno — neppure il supporto — può recuperarla: dovrai ripristinare il vault sul dispositivo e perdere gli elementi lì contenuti. Il ripristino cloud e i backup cifrati chiedono la stessa master password usata al momento dell’export.",
+    faq7_sum: "Posso tenere un backup offline?",
+    faq7_html:
+      "Sì. Una volta dentro: Impostazioni → file JSON offline (avanzato) per ottenere un export cifrato; conservalo in luogo affidabile sapendo che serve ancora la master valida allo stesso giorno dell’export.",
+    faq8_sum: "Come vi contatto?",
+    faq8_html:
+      'Scrivi a\n              <a href="mailto:contact@skyface.com">contact@skyface.com</a>\n              per dubbi, segnalazioni bug o idee.',
+    ctaReadyTitle: "Parti quando ti senti pronto",
+    ctaReadyLead:
+      "Stesso workspace sia per gli admin del weekend sia per gli operatori quotidiani: meno clic meno rischi e la certezza che le credenziali restano nel cifrato che controlli tu.",
+    footerPrivacy: "Informativa sulla privacy",
+    footerCopy: "©2026 Skyface, LLC. All rights reserved.",
+  },
+
+  id: {
+    metaTitle: "My Password Vault — Kata sandi aman, tampilan jernih",
+    metaDescription:
+      "My Password Vault — pengelola kata sandi lokal‑dulu: AES‑GCM‑256, TOTP 2FA, sinkron terenkripsi opsional. Sesederhana spreadsheet.",
+    logoAria: "Beranda My Password Vault",
+    langAria: "Bahasa",
+    navFaq: "FAQ",
+    navSignIn: "Masuk",
+    heroEyebrow: "Pengelola kata sandi tanpa kerumitan",
+    heroH1Line1: "Kata sandi di tangan Anda.",
+    heroH1Line2: "Kejelasan yang terasa nyata.",
+    heroLead_html:
+      "Brankas lokal yang berjalan seperti spreadsheet — edit cepat, kategori, salin sekali ketuk — rahasia tetap terenkripsi di perangkat. Sinkron opsional hanya menyimpan <strong>teks terenkripsi</strong> di basis data; kata sandi utama tidak pernah meninggalkan kendali Anda.",
+    ctaGettingStarted: "Memulai",
+    featTitle: "Dibuat untuk alur lancar",
+    featDesc:
+      "Tanpa brankas bertingkat. Satu kisi: situs, URL, pengguna, kata sandi, catatan — sunting inline, baris dapat dibentangkan, filter dan urut. Kategori memisahkan kerja dan pribadi.",
+    featCard1Title: "Otak spreadsheet, otot brankas",
+    featCard1Body:
+      "Ketik di kisi; tunjukkan/sembunyikan kata sandi per baris/global. Salin nama pengguna atau kata sandi sekali ketuk — salinan kata sandi dikosongkan dari papan klip setelah ±20 detik.",
+    featCard2Title: "Folder & pencarian",
+    featCard2Body:
+      "Seret untuk mengatur ulang folder di pengaturan; pencarian meliputi situs, URL, pengguna, catatan, memo, kategori.",
+    featCard3Title: "Kata sandi kuat dengan cepat",
+    featCard3Body:
+      "Pembuat dengan panjang dan jenis karakter, RNG aman secara kriptografi, mitigasi bias mod — langsung masukkan ke baris.",
+    secTitle: "Keamanan yang layak bernama «brankas»",
+    secDesc:
+      "Kriptografi lewat Web Crypto API di browser. Data IndexedDB terenkripsi; bahan kunci dari kata sandi utama hanya di memori saat tidak terkunci.",
+    secDerivTitle: "Derivasi kunci & enkripsi",
+    secDerivLead_html:
+      '<span class="mono">PBKDF2‑SHA256</span> dengan garam per‑brankas dan <strong>310.000</strong> pengulangan menuai kunci 256‑bit dari kata sandi utama. Entri dan rahasia TOTP disegel <span class="mono">AES‑GCM‑256</span> serta IV acak 12 byte per penyegelan — AEAD modern.',
+    secDiagram:
+      "kata sandi utama + garam\n        │\n  PBKDF2‑SHA256 (310k)\n        ▼\n kunci AES‑GCM (hanya RAM)\n   ├── verifikator\n   ├── rahasia TOTP\n   └── kata sandi tiap entri (IV sendiri)",
+    secNeverTitle: "Yang tidak pernah disimpan",
+    nw1Strong: "Kata sandi utama",
+    nw1Span: "Teks jelas atau hash yang bisa dipakai ulang tidak ke disk atau ke server.",
+    nw2Strong: "Kunci AES turunan",
+    nw2Span: "Hanya di RAM selama sesi; dibuang saat kunci layar atau tab tutup.",
+    nw3Strong: "Pengetahuan sisi server",
+    nw3Span_html:
+      "Masuk Google hanya untuk identitas; opsi sinkron mengunggah JSON terenkripsi yang sama seperti ekspor — bukan kata sandi utama atau kunci.",
+    syncTitle: "Sinkron opsional — data terenkripsi, bukan sekadar percaya",
+    syncDesc:
+      "Setelah masuk, brankas dapat menyinkronkan ciphertext ke basis data Anda (mis. Supabase dengan kebijakan tingkat baris). Server menyimpan apa yang sudah ada di browser. Setiap perangkat masih membutuhkan kata sandi utama dan TOTP enam digit.",
+    syncC1Title: "Konflik",
+    syncC1Body:
+      "Rekonsiliasi memakai stempel waktu meta sehingga snapshot terbaru menang ketika gabung.",
+    syncC2Title: "Cadangan portabel",
+    syncC2Body:
+      "Ekspor JSON kapan pun dari pengaturan atau layar kunci — impor mengganti atau memulihkan perangkat.",
+    syncC3Title: "Kunci otomatis",
+    syncC3Body:
+      "Tidak aktif 1–30 menit (atau mati) akan mengunci; aktivitas mengatur ulang pewaktu.",
+    gsTitle: "Memulai",
+    gsDesc:
+      "Peluncuran pertama mendampingi Anda mendapatkan brankas yang benar‑benar milik Anda — tanpa kata sandi vendor lain untuk diingat.",
+    gsStep1Strong: "Masuk dengan Google",
+    gsStep1Span:
+      "Hanya identitas sinkron — tidak membuka brankas.",
+    gsStep2Strong: "Buat kata sandi utama kuat",
+    gsStep2Span:
+      "Minimal 10 karakter; pengukur kekuatan membantu entropi.",
+    gsStep3Strong: "Pindai QR TOTP",
+    gsStep3Span:
+      "Authenticator, 1Password, Authy, dll.; konfirmasi dengan kode enam digit.",
+    gsStep4Strong: "Tambah baris seperti lembar",
+    gsStep4Span:
+      "Situs, kata sandi, kategori — simpan dan sinkronkan saat siap.",
+    faqTitle: "Pertanyaan umum",
+    faqDesc:
+      "Kepercayaan, pemakaian harian, aplikasi autentikator, cadangan, harga, kontak.",
+    faq1_sum: "Apakah aman?",
+    faq1_html:
+      "Kata sandi dienkripsi di perangkat sebelum sync. Server hanya melihat ciphertext. Google hanya menautkan brankas terenkripsi ke akun.",
+    faq2_sum: "Apakah mudah dipakai tiap hari?",
+    faq2_html:
+      "Masuk Google, kata sandi utama kuat, QR 2FA, buka brankas, tambah/cari entri. Kunci otomatis; sinkron di perangkat lain.",
+    faq3_sum: "Apa itu aplikasi autentikator?",
+    faq3_html:
+      "Menghasilkan kode pendek (biasanya 6 digit) untuk verifikasi kedua. Setelah QR, butuh kata sandi utama + kode segar. Gunakan TOTP tepercaya (Google/Microsoft Authenticator, Authy, FreeOTP, 1Password atau Bitwarden) dan pertahankan pembaruan.",
+    faq4_sum: "Aplikasi autentikator rusak atau ponsel hilang?",
+    faq4_html:
+      "Brankas tersemat tetap di akun. Perangkat baru: masuk, unduh cadangan, masukkan kata sandi utama, ikuti langkah QR baru untuk pengganti.",
+    faq5_sum: "Gratis?",
+    faq5_html:
+      "Saat ini gratis; perubahan harga akan diumumkan jelas lebih dulu.",
+    faq6_sum: "Lupa kata sandi utama?",
+    faq6_html:
+      "Tidak ada pemulihan; reset brankas di perangkat itu dan kehilangan entri di sana. Ekspor dan pemulihan awan tetap membutuhkan kata sandi yang sama saat dibuat.",
+    faq7_sum: "Cadangan luring?",
+    faq7_html:
+      "Ya: Pengaturan → berkas JSON luring (lanjutan) setelah buka.",
+    faq8_sum: "Siapa dihubungi?",
+    faq8_html:
+      'Email\n              <a href="mailto:contact@skyface.com">contact@skyface.com</a>\n              untuk pertanyaan atau laporan.',
+    ctaReadyTitle: "Siap ketika Anda siap",
+    ctaReadyLead:
+      "Lebih sedikit klik dan tab — keyakinan kredensial tetap dalam enkripsi yang Anda pegang.",
+    footerPrivacy: "Kebijakan privasi",
+    footerCopy: "©2026 Skyface, LLC. All rights reserved.",
+  },
+};

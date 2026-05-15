@@ -8,8 +8,6 @@ export const LOCALES = [
   "fr",
   "it",
   "id",
-  "th",
-  "vi",
 ] as const;
 
 export type Locale = (typeof LOCALES)[number];
@@ -24,8 +22,6 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   fr: "Français",
   it: "Italiano",
   id: "Bahasa Indonesia",
-  th: "ไทย",
-  vi: "Tiếng Việt",
 };
 
 const ALIAS: Record<string, Locale> = {
@@ -53,10 +49,10 @@ const ALIAS: Record<string, Locale> = {
   "it-it": "it",
   id: "id",
   "id-id": "id",
-  th: "th",
-  "th-th": "th",
-  vi: "vi",
-  "vi-vn": "vi",
+  th: "en",
+  "th-th": "en",
+  vi: "en",
+  "vi-vn": "en",
 };
 
 export const LOCALE_STORAGE_KEY = "mypasswordapp-locale";
@@ -94,8 +90,6 @@ export function localeToHtmlLang(locale: Locale): string {
     fr: "fr",
     it: "it",
     id: "id",
-    th: "th",
-    vi: "vi",
   };
   return map[locale];
 }
