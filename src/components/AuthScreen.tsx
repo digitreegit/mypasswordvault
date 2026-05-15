@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../lib/auth";
 import { translate } from "../lib/i18n/bundles";
 import {
@@ -8,6 +9,16 @@ import {
 } from "../lib/i18n/locale";
 import { LanguageMenu } from "./LanguageMenu";
 import { Shield } from "./Icons";
+
+const FAQ_ITEMS: readonly [questionKey: string, answerKey: string][] = [
+  ["auth.faqTrustQ", "auth.faqTrustA"],
+  ["auth.faqUseQ", "auth.faqUseA"],
+  ["auth.faqAuthenticatorQ", "auth.faqAuthenticatorA"],
+  ["auth.faqPricingQ", "auth.faqPricingA"],
+  ["auth.faqMasterQ", "auth.faqMasterA"],
+  ["auth.faqExportQ", "auth.faqExportA"],
+  ["auth.faqContactQ", "auth.faqContactA"],
+];
 
 export function AuthScreen() {
   const { configured, signInWithGoogle } = useAuth();
@@ -56,8 +67,8 @@ export function AuthScreen() {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-ink-50 to-ink-100">
-      <div className="card w-full max-w-md p-5 sm:p-8 space-y-5">
+    <div className="min-h-[100dvh] flex justify-center px-4 py-10 sm:px-6 sm:py-12 bg-gradient-to-br from-ink-50 to-ink-100">
+      <div className="card w-full max-w-xl p-5 sm:p-8 space-y-5 my-auto">
         <div className="flex justify-end">
           <LanguageMenu
             value={locale}
@@ -90,9 +101,66 @@ export function AuthScreen() {
         <p className="text-xs text-ink-500 leading-snug border-t border-ink-100 pt-4">
           {t("auth.securityNote")}
         </p>
+
+        <section
+          className="border-t border-ink-100 pt-5 space-y-3"
+          aria-labelledby="auth-faq-heading"
+        >
+          <h2 id="auth-faq-heading" className="text-sm font-semibold text-ink-800">
+            {t("auth.faqTitle")}
+          </h2>
+          <div className="space-y-2">
+            {FAQ_ITEMS.map(([qKey, aKey]) => (
+              <details
+                key={qKey}
+                className="group rounded-lg border border-ink-200 bg-ink-50/60"
+              >
+                <summary className="cursor-pointer list-none flex w-full items-start justify-between gap-2 p-3 text-left text-sm font-medium text-ink-800 [&::-webkit-details-marker]:hidden">
+                  <span className="leading-snug pr-1">{t(qKey)}</span>
+                  <span className="inline-flex shrink-0 text-ink-400 mt-0.5" aria-hidden>
+                    <ChevronDownIcon className="h-4 w-4 group-open:hidden" />
+                    <ChevronUpIcon className="hidden h-4 w-4 group-open:block" />
+                  </span>
+                </summary>
+                <div className="px-3 pb-3 text-sm text-ink-600 leading-snug border-t border-ink-100/90 pt-2.5">
+                  {aKey === "auth.faqContactA" ? (
+                    <ContactFaqAnswer text={t(aKey)} />
+                  ) : (
+                    t(aKey)
+                  )}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );
+}
+
+const CONTACT_EMAIL = "contact@skyface.com";
+
+function ContactFaqAnswer({ text }: { text: string }) {
+  const parts = text.split(CONTACT_EMAIL);
+  if (parts.length === 1) {
+    return <>{text}</>;
+  }
+  const out: React.ReactNode[] = [];
+  parts.forEach((part, i) => {
+    out.push(<React.Fragment key={`p-${i}`}>{part}</React.Fragment>);
+    if (i < parts.length - 1) {
+      out.push(
+        <a
+          key={`a-${i}`}
+          href={`mailto:${CONTACT_EMAIL}`}
+          className="text-accent-600 hover:underline font-medium"
+        >
+          {CONTACT_EMAIL}
+        </a>
+      );
+    }
+  });
+  return <>{out}</>;
 }
 
 function GoogleGlyph() {

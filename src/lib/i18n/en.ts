@@ -14,6 +14,30 @@ export const MESSAGES_EN: Record<string, string> = {
   "auth.notConfiguredBody":
     "Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to a .env file in the project root, then restart the dev server. See README.md for creating the database table and enabling Google sign-in.",
 
+  "auth.faqTitle": "Common questions",
+  "auth.faqTrustQ": "Can I trust this app? Is my data safe?",
+  "auth.faqTrustA":
+    "Your passwords are encrypted on your device before anything is synced. Servers only ever see ciphertext—your master password and plain-text secrets never leave your control in readable form. Google sign-in is only used to tie the encrypted vault to your account.",
+  "auth.faqUseQ": "How do I use it? Will it feel simple day to day?",
+  "auth.faqUseA":
+    "Sign in with Google, choose a strong master password, scan one QR code for two-factor authentication, then unlock to add or search entries. Auto-lock keeps the vault closed when you step away; sync picks up changes when you sign in on another browser or phone.",
+  "auth.faqAuthenticatorQ":
+    "What if my authenticator app breaks, I lose my phone, or codes stop working?",
+  "auth.faqAuthenticatorA":
+    "Your encrypted vault remains in your account. On a new or reset device: sign in, download the latest vault from Devices & backup, enter your master password, then follow the prompts to scan a new QR code and link a replacement authenticator. After you confirm, old time-based codes stop working—that is expected—but your encrypted data was not erased. If you still have access to your previous authenticator, you can often unlock normally without resetting it.",
+  "auth.faqPricingQ": "Is this free or paid?",
+  "auth.faqPricingA":
+    "The service is free to use for now. If that ever changes, we will announce pricing clearly beforehand.",
+  "auth.faqContactQ": "Who do I contact if something goes wrong?",
+  "auth.faqContactA":
+    "Email contact@skyface.com for questions, bug reports, or feedback—we read incoming mail.",
+  "auth.faqMasterQ": "What if I forget my master password?",
+  "auth.faqMasterA":
+    "Nobody (including us) can recover your passwords without your master password. If you lose it you must reset the vault and lose existing entries on that device. Cloud restore and encrypted backup files always require the same master password used when those backups were made.",
+  "auth.faqExportQ": "Can I keep an offline backup?",
+  "auth.faqExportA":
+    "Yes. After you unlock, open Settings → Offline JSON file (advanced) to download an encrypted export. Store it somewhere safe; you will still need the master password from the time of export to open it.",
+
   "common.cancel": "Cancel",
   "common.close": "Close",
   "common.confirm": "Confirm",
