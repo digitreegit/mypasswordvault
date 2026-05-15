@@ -84,7 +84,7 @@ export function SetupScreen() {
           <Shield className="text-accent-500 w-8" />
           <h1 className="text-xl font-semibold">{t("setup.title")}</h1>
         </div>
-        <p className="text-sm text-ink-500 mb-6">{t("setup.subtitle")}</p>
+        <p className="text-sm text-ink-500 mb-6 leading-snug">{t("setup.subtitle")}</p>
 
         {stage === "password" && (
           <div className="space-y-4">
@@ -184,13 +184,13 @@ export function SetupScreen() {
             >
               {t("setup.next2fa")}
             </button>
-            <p className="text-xs text-ink-500">{t("setup.forgetWarn")}</p>
+            <p className="text-xs text-ink-500 leading-snug">{t("setup.forgetWarn")}</p>
           </div>
         )}
 
         {stage === "enroll-2fa" && (
           <div className="space-y-4">
-            <p className="text-sm text-ink-700">{t("setup.2faIntro")}</p>
+            <p className="text-sm text-ink-700 leading-snug">{t("setup.2faIntro")}</p>
             <div className="flex flex-col items-center gap-3 p-4 rounded-lg bg-ink-50 border border-ink-200">
               {qrUrl ? (
                 <img

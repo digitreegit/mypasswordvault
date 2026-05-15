@@ -64,6 +64,14 @@ npm run build      # dist/ 정적 빌드
 npm run preview    # 빌드 결과 미리보기
 ```
 
+### iOS 앱 (App Store)
+
+네이티브 빌드는 **랜딩 없이** 바로 React 앱(`Auth` → 보관함)을 로드합니다. `npm run dev`에 붙인 **라이브 리로드**만 Vite가 루트에 마케팅 페이지를 두기 때문에 `capacitor.config.ts`가 개발 서버 URL에 자동으로 `/app/`을 붙입니다.
+
+```bash
+npm run cap:ios    # 빌드 → ios 동기화 → Xcode 열기
+```
+
 `index.html`을 Finder에서 더블클릭해 `file://`로 열면 `/app/`(Sign in)이 브라우저에서 열리지 않습니다. 위처럼 `npm run dev` 또는 `npm run preview`로 접속하세요.
 
 > 최신 브라우저(Web Crypto API + IndexedDB + Clipboard API 지원) 필요.

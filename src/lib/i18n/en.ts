@@ -52,7 +52,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "lock.masterPw": "Master password",
   "lock.totp": "Two-factor code",
   "lock.unlock": "Unlock",
-  "lock.forget": "Forgot password? Reset vault.",
+  "lock.forget": "Forgot master password? Reset vault…",
   "lock.resetWarn":
     "Resetting will permanently delete all saved passwords. Are you sure you want to continue?",
   "lock.deleteAll": "Delete everything and start over",
@@ -172,6 +172,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "vault.totalItems": "Total: {{count}} items",
   "vault.summaryUncategorized": "Uncategorized",
   "vault.newEntry": "New entry",
+  "vault.sortBy": "Sort by",
+  "vault.sortRecent": "Recently updated",
 
   "vault.phMemo": "Enter memo",
   "vault.ttExpandRow": "Show URL and memo",

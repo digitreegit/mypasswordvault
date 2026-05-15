@@ -167,6 +167,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "vault.totalItems": "전체 {{count}}개",
   "vault.summaryUncategorized": "분류 없음",
   "vault.newEntry": "새 항목",
+  "vault.sortBy": "정렬",
+  "vault.sortRecent": "최근 수정순",
   "vault.phMemo": "메모 입력",
   "vault.ttExpandRow": "URL·상세 메모 펼치기",
   "vault.ttCollapseRow": "URL·상세 메모 접기",

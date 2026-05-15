@@ -47,7 +47,7 @@ export function AuthScreen() {
             <Shield className="text-accent-500 w-8" />
             <h1 className="text-xl font-semibold">{t("auth.notConfiguredTitle")}</h1>
           </div>
-          <p className="text-sm text-ink-600 leading-relaxed whitespace-pre-line">
+          <p className="text-sm text-ink-600 leading-snug whitespace-pre-line">
             {t("auth.notConfiguredBody")}
           </p>
         </div>
@@ -69,7 +69,7 @@ export function AuthScreen() {
           <Shield className="text-accent-500 w-8" />
           <h1 className="text-xl font-semibold">{t("auth.title")}</h1>
         </div>
-        <p className="text-sm text-ink-500 leading-relaxed">{t("auth.subtitle")}</p>
+        <p className="text-sm text-ink-500 leading-snug">{t("auth.subtitle")}</p>
 
         <button
           type="button"
@@ -87,7 +87,7 @@ export function AuthScreen() {
           <p className="text-sm text-red-600 bg-red-50 rounded-md px-3 py-2">{error}</p>
         )}
 
-        <p className="text-xs text-ink-500 leading-relaxed border-t border-ink-100 pt-4">
+        <p className="text-xs text-ink-500 leading-snug border-t border-ink-100 pt-4">
           {t("auth.securityNote")}
         </p>
       </div>

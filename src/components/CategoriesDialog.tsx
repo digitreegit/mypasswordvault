@@ -82,8 +82,8 @@ export function CategoriesDialog({ onClose }: { onClose: () => void }) {
           </button>
         </div>
         <div className="px-5 py-3 overflow-y-auto flex-1 space-y-2">
-          <p className="text-sm text-ink-600">{t("vault.categoriesHint")}</p>
-          <p className="text-xs text-ink-500">{t("vault.dragToReorder")}</p>
+          <p className="text-sm text-ink-600 leading-snug">{t("vault.categoriesHint")}</p>
+          <p className="text-xs text-ink-500 leading-snug">{t("vault.dragToReorder")}</p>
           <ul className="space-y-2">
             {draft.map((c) => (
               <li

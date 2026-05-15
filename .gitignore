@@ -1,5 +1,12 @@
 node_modules
 dist
+dist-capacitor
+ios/App/Pods
+ios/App/build
+ios/DerivedData
+android/.gradle
+android/app/build
+android/build
 .DS_Store
 *.local
 .env

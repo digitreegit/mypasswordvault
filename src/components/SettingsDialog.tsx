@@ -159,25 +159,25 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
               <ChevronDown />
             </span>
           </div>
-          <p className="text-xs text-ink-500 mt-1">
+          <p className="text-xs text-ink-500 mt-1 leading-snug">
             {t("settings.autoLockHint")}
           </p>
         </div>
 
         {backupToast && (
-          <p className="text-xs text-ink-600 bg-ink-50 rounded-md p-2">{backupToast}</p>
+          <p className="text-xs text-ink-600 bg-ink-50 rounded-md p-2 leading-snug">{backupToast}</p>
         )}
 
         <div className="pt-2 border-t border-ink-100 space-y-2">
           <h3 className="text-sm font-semibold text-ink-800">
             {t("settings.syncTitle")}
           </h3>
-          <p className="text-xs text-ink-600 leading-relaxed">
+          <p className="text-xs text-ink-600 leading-snug">
             {t("settings.syncHint")}
           </p>
           {configured && user && (
             <div className="space-y-2 rounded-lg border border-ink-200 bg-ink-50/80 p-3">
-              <p className="text-xs text-ink-600 leading-relaxed">
+              <p className="text-xs text-ink-600 leading-snug">
                 {t("settings.pullCloudHint")}
               </p>
               <button
@@ -198,7 +198,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
               {t("settings.fileBackupAdvanced")}
             </summary>
             <div className="px-3 pb-3 pt-0 space-y-2 border-t border-ink-100">
-              <p className="text-xs text-ink-600 leading-relaxed pt-2">
+              <p className="text-xs text-ink-600 leading-snug pt-2">
                 {t("settings.fileBackupAdvancedHint")}
               </p>
               <div className="flex flex-col gap-2">
@@ -238,7 +238,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
               </div>
               {importDraft && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm space-y-2">
-                  <p className="text-amber-900">{t("settings.importConfirm")}</p>
+                  <p className="text-amber-900 leading-snug">{t("settings.importConfirm")}</p>
                   <div className="flex gap-2">
                     <button
                       type="button"
@@ -268,7 +268,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
             <h3 className="text-sm font-semibold text-ink-800">
               {t("settings.accountTitle")}
             </h3>
-            <p className="text-xs text-ink-600 break-all">
+            <p className="text-xs text-ink-600 break-all leading-snug">
               {t("settings.signedInAs", {
                 email: user.email ?? user.id,
               })}
@@ -289,7 +289,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
             >
               {t("settings.signOut")}
             </button>
-            <p className="text-xs text-ink-500 leading-relaxed">
+            <p className="text-xs text-ink-500 leading-snug">
               {t("settings.signOutHint")}
             </p>
           </div>

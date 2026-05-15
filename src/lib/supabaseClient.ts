@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const url = import.meta.env.VITE_SUPABASE_URL ?? "";
@@ -22,7 +23,7 @@ export function getSupabase(): SupabaseClient | null {
         flowType: "pkce",
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: true,
+        detectSessionInUrl: !Capacitor.isNativePlatform(),
         storage: typeof window !== "undefined" ? window.localStorage : undefined,
       },
     });

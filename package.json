@@ -6,9 +6,17 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/postbuild.mjs",
+    "build:capacitor": "tsc -b && vite build --config vite.capacitor.config.ts && node scripts/capacitor-postbuild.mjs",
+    "cap:sync": "npm run build:capacitor && npx cap sync && node scripts/patch-ios-url-scheme.mjs",
+    "cap:ios": "npm run cap:sync && npx cap open ios",
+    "cap:run:ios": "npm run cap:sync && npx cap run ios",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/app": "^7.0.1",
+    "@capacitor/browser": "^7.0.1",
+    "@capacitor/core": "^7.0.1",
+    "@heroicons/react": "^2.2.0",
     "@supabase/supabase-js": "^2.105.4",
     "idb": "^8.0.0",
     "otpauth": "^9.3.4",
@@ -17,6 +25,8 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.0.1",
+    "@capacitor/ios": "^7.0.1",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

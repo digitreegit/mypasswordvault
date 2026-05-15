@@ -8,6 +8,8 @@ import React, {
 } from "react";
 import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 import { getSupabase, isSupabaseConfigured } from "./supabaseClient";
+import { getOAuthRedirectUrl } from "./platform";
+import { isNativeApp, signInWithGoogleNative } from "./nativeAuth";
 
 interface AuthContextValue {
   configured: boolean;
@@ -67,9 +69,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
+    if (isNativeApp()) {
+      await signInWithGoogleNative();
+      return;
+    }
     const supabase = getSupabase();
     if (!supabase) throw new Error("Supabase not configured");
-    const redirectTo = `${window.location.origin}${window.location.pathname || "/"}`;
+    const redirectTo = getOAuthRedirectUrl();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

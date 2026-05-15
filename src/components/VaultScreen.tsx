@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { useVault, type DecryptedEntry } from "../lib/vault";
 import type { VaultCategory } from "../lib/storage";
 import { PasswordGenerator } from "./PasswordGenerator";
@@ -24,6 +25,16 @@ import {
 type SortKey = "category" | "site" | "username" | "updatedAt";
 
 type TFn = (key: string, vars?: Record<string, string | number>) => string;
+
+/** Mobile entry card: single column, full-width fields */
+const MOBILE_CARD_STACK = "flex flex-col gap-3 min-w-0 w-full";
+
+/** Sort dropdown: compact gray chevron toward the trailing edge */
+const heroChevronSort =
+  "pointer-events-none absolute right-2 top-1/2 h-4 w-4 shrink-0 -translate-y-1/2 text-ink-400";
+/** Category-style selects inside cards */
+const heroChevronField =
+  "pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 shrink-0 -translate-y-1/2 text-ink-400";
 
 export function VaultScreen() {
   const { entries, lock, upsertEntry, removeEntry, touchActivity, t, categories } =
@@ -267,8 +278,77 @@ export function VaultScreen() {
             )}
           </p>
         </div>
-        <div className="card overflow-hidden rounded-lg sm:rounded-xl">
-          <div className="overflow-x-auto overscroll-x-contain touch-pan-x">
+        <div className="md:hidden flex items-center gap-2 mb-3 min-w-0">
+          <label
+            className="text-xs font-medium text-ink-600 shrink-0"
+            htmlFor="vault-mobile-sort"
+          >
+            {t("vault.sortBy")}
+          </label>
+          <div className="relative min-w-0 flex-1">
+            <select
+              id="vault-mobile-sort"
+              className="input w-full appearance-none py-1.5 pl-3 pr-9 text-sm min-w-0"
+              value={sortKey}
+              onChange={(e) => {
+                const k = e.target.value as SortKey;
+                setSortKey(k);
+                setSortDir(k === "updatedAt" ? "desc" : "asc");
+              }}
+            >
+              <option value="updatedAt">{t("vault.sortRecent")}</option>
+              <option value="site">{t("vault.colSite")}</option>
+              <option value="username">{t("vault.colUser")}</option>
+              <option value="category">{t("vault.colCategory")}</option>
+            </select>
+            <ChevronDownIcon className={heroChevronSort} aria-hidden />
+          </div>
+          <button
+            type="button"
+            className="btn-secondary text-sm px-2.5 min-w-[2.5rem] shrink-0"
+            onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+            aria-label={sortDir === "asc" ? "Ascending" : "Descending"}
+          >
+            {sortDir === "asc" ? "↑" : "↓"}
+          </button>
+        </div>
+
+        <ul className="md:hidden space-y-3 list-none p-0 m-0">
+          {filtered.length === 0 ? (
+            <li className="card rounded-lg p-8 text-center text-ink-500 text-sm">
+              {t("vault.empty")}{" "}
+              <button
+                type="button"
+                className="text-accent-600 hover:underline"
+                onClick={addEntry}
+              >
+                {t("vault.emptyCta")}
+              </button>
+            </li>
+          ) : (
+            filtered.map((e) => (
+              <li key={e.id}>
+                <MobileEntryCard
+                  entry={e}
+                  expanded={expandedIds.has(e.id)}
+                  onToggleExpand={() => toggleExpanded(e.id)}
+                  revealed={showAll || revealed.has(e.id)}
+                  toggleReveal={() => toggleReveal(e.id)}
+                  onChange={(patch) => upsertEntry({ id: e.id, ...patch })}
+                  onDelete={() => removeEntry(e.id)}
+                  onGenerate={() => setGeneratorFor(e.id)}
+                  onCopy={copyText}
+                  copiedKey={copiedKey}
+                  categories={categories}
+                  t={t}
+                />
+              </li>
+            ))
+          )}
+        </ul>
+
+        <div className="card overflow-hidden rounded-lg sm:rounded-xl hidden md:block">
+          <div className="overflow-x-auto overscroll-x-contain">
             <table className="w-full text-sm min-w-[56rem]">
               <colgroup>
                 <col style={{ width: "10%" }} />
@@ -350,7 +430,7 @@ export function VaultScreen() {
           </div>
         </div>
 
-        <p className="text-xs text-ink-500 mt-2 sm:mt-3 px-0.5 leading-relaxed">
+        <p className="text-xs text-ink-500 mt-2 sm:mt-3 px-0.5 leading-snug">
           {t("vault.footer")}
         </p>
       </main>
@@ -371,6 +451,300 @@ export function VaultScreen() {
         <CategoriesDialog onClose={() => setShowCategories(false)} />
       )}
     </div>
+  );
+}
+
+interface RowProps {
+  entry: DecryptedEntry;
+  categories: VaultCategory[];
+  expanded: boolean;
+  onToggleExpand: () => void;
+  revealed: boolean;
+  toggleReveal: () => void;
+  onChange: (patch: Partial<DecryptedEntry>) => void;
+  onDelete: () => void;
+  onGenerate: () => void;
+  onCopy: (text: string, key: string) => void;
+  copiedKey: string | null;
+  t: TFn;
+}
+
+function MobileEntryCard({
+  entry,
+  categories,
+  expanded,
+  onToggleExpand,
+  revealed,
+  toggleReveal,
+  onChange,
+  onDelete,
+  onGenerate,
+  onCopy,
+  copiedKey,
+  t,
+}: RowProps) {
+  const [confirmDel, setConfirmDel] = useState(false);
+
+  return (
+    <article className={`card rounded-lg p-3 sm:p-4 min-w-0 w-full ${MOBILE_CARD_STACK}`}>
+      <BlurInput
+        id={`m-site-${entry.id}`}
+        className="input w-full min-w-0 font-medium text-base"
+        value={entry.site}
+        placeholder={t("vault.newEntry")}
+        onCommit={(site) => onChange({ site })}
+      />
+
+      <div className="space-y-1 w-full">
+        <span className="text-xs font-medium text-ink-600 block">
+          {t("vault.colCategory")}
+        </span>
+        <div className="relative w-full min-w-0">
+          <select
+            className="input w-full cursor-pointer appearance-none pr-9"
+            value={entry.categoryId}
+            onChange={(e) => onChange({ categoryId: e.target.value })}
+            aria-label={t("vault.colCategory")}
+          >
+            <option value="">{t("vault.uncategorized")}</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <ChevronDownIcon className={heroChevronField} aria-hidden />
+        </div>
+      </div>
+
+      <div className="space-y-1 w-full min-w-0">
+        <label
+          className="text-xs font-medium text-ink-600 block"
+          htmlFor={`m-user-${entry.id}`}
+        >
+          {t("vault.colUser")}
+        </label>
+        <div className="flex w-full min-w-0 items-center gap-0.5">
+          <BlurInput
+            id={`m-user-${entry.id}`}
+            className="input min-w-0 flex-1 w-0"
+            value={entry.username}
+            placeholder={t("vault.phUser")}
+            onCommit={(username) => onChange({ username })}
+          />
+          <IconBtn
+            onClick={() => onCopy(entry.username, `un:${entry.id}`)}
+            title={t("vault.ttCopyUser")}
+          >
+            {copiedKey === `un:${entry.id}` ? <Check /> : <Copy />}
+          </IconBtn>
+        </div>
+      </div>
+
+      <div className="space-y-1 w-full min-w-0">
+        <label
+          className="text-xs font-medium text-ink-600 block"
+          htmlFor={`m-pass-${entry.id}`}
+        >
+          {t("vault.colPass")}
+        </label>
+        <div className="flex w-full min-w-0 items-center gap-0.5">
+          <BlurInput
+            id={`m-pass-${entry.id}`}
+            className="input min-w-0 flex-1 w-0 font-mono text-sm"
+            type={revealed ? "text" : "password"}
+            value={entry.password}
+            placeholder={t("vault.phPass")}
+            spellCheck={false}
+            autoComplete="off"
+            onCommit={(password) => onChange({ password })}
+          />
+          <IconBtn
+            onClick={toggleReveal}
+            title={revealed ? t("vault.hide") : t("vault.show")}
+          >
+            {revealed ? <EyeOff /> : <Eye />}
+          </IconBtn>
+          <IconBtn
+            onClick={() => onCopy(entry.password, `pw:${entry.id}`)}
+            title={t("vault.ttCopyPass")}
+          >
+            {copiedKey === `pw:${entry.id}` ? <Check /> : <Copy />}
+          </IconBtn>
+          <IconBtn onClick={onGenerate} title={t("vault.ttGenPass")}>
+            <Refresh />
+          </IconBtn>
+        </div>
+      </div>
+
+      <div className="space-y-1 w-full min-w-0">
+        <label
+          className="text-xs font-medium text-ink-600 block"
+          htmlFor={`m-notes-${entry.id}`}
+        >
+          {t("vault.colNotes")}
+        </label>
+        <BlurInput
+          id={`m-notes-${entry.id}`}
+          className="input w-full min-w-0"
+          value={entry.notes}
+          onCommit={(notes) => onChange({ notes })}
+        />
+      </div>
+
+      {expanded ? (
+        <div className="w-full border-t border-ink-100 pt-3 space-y-3">
+          <div className="space-y-1 w-full min-w-0">
+            <label
+              className="text-xs font-medium text-ink-600 block"
+              htmlFor={`m-url-${entry.id}`}
+            >
+              {t("vault.colUrl")}
+            </label>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center min-w-0 w-full">
+              <ExpandTextInput
+                id={`m-url-${entry.id}`}
+                value={entry.url}
+                onCommit={(url) => onChange({ url })}
+                placeholder={t("vault.phUrl")}
+              />
+              {entry.url ? (
+                <a
+                  className="shrink-0 self-start p-2.5 text-ink-400 hover:text-accent-600 rounded-md border border-ink-200 bg-white touch-manipulation inline-flex"
+                  href={
+                    /^https?:\/\//i.test(entry.url)
+                      ? entry.url
+                      : `https://${entry.url}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={t("vault.ttOpenTab")}
+                >
+                  <ExternalLink />
+                </a>
+              ) : null}
+            </div>
+          </div>
+          <div className="space-y-1 w-full min-w-0">
+            <label
+              className="text-xs font-medium text-ink-600 block"
+              htmlFor={`m-memo-${entry.id}`}
+            >
+              {t("vault.colMemo")}
+            </label>
+            <ExpandMemoArea
+              id={`m-memo-${entry.id}`}
+              value={entry.memo}
+              onCommit={(memo) => onChange({ memo })}
+              placeholder={t("vault.phMemo")}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      <div className="flex w-full items-center justify-between gap-2 pt-1 border-t border-ink-100">
+        {!confirmDel ? (
+          <button
+            type="button"
+            className="text-sm text-red-600 hover:text-red-700 inline-flex items-center gap-1.5 py-2 touch-manipulation"
+            onClick={() => setConfirmDel(true)}
+          >
+            <Trash />
+            {t("vault.ttDelete")}
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 text-sm">
+            <button
+              type="button"
+              className="text-ink-500 hover:text-ink-700 px-2 py-1"
+              onClick={() => setConfirmDel(false)}
+            >
+              {t("common.cancel")}
+            </button>
+            <button
+              type="button"
+              className="text-red-600 font-medium px-2 py-1"
+              onClick={onDelete}
+            >
+              {t("common.confirm")}
+            </button>
+          </div>
+        )}
+        <button
+          type="button"
+          className="text-xs text-accent-600 hover:underline py-2 touch-manipulation shrink-0"
+          onClick={onToggleExpand}
+        >
+          {expanded ? t("vault.ttCollapseRow") : t("vault.ttExpandRow")}
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function IconBtn({
+  children,
+  onClick,
+  title,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  title: string;
+}) {
+  return (
+    <button
+      type="button"
+      className="shrink-0 text-ink-400 hover:text-accent-600 touch-manipulation h-9 w-9 inline-flex items-center justify-center rounded-md"
+      onClick={onClick}
+      title={title}
+    >
+      {children}
+    </button>
+  );
+}
+
+function BlurInput({
+  id,
+  className,
+  value,
+  placeholder,
+  type = "text",
+  spellCheck,
+  autoComplete,
+  onCommit,
+}: {
+  id: string;
+  className?: string;
+  value: string;
+  placeholder?: string;
+  type?: string;
+  spellCheck?: boolean;
+  autoComplete?: string;
+  onCommit: (v: string) => void;
+}) {
+  const [local, setLocal] = useState(value);
+  React.useEffect(() => setLocal(value), [value]);
+  return (
+    <input
+      id={id}
+      type={type}
+      className={className}
+      value={local}
+      placeholder={placeholder}
+      spellCheck={spellCheck}
+      autoComplete={autoComplete}
+      onChange={(e) => setLocal(e.target.value)}
+      onBlur={() => {
+        if (local !== value) onCommit(local);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+        if (e.key === "Escape") {
+          setLocal(value);
+          (e.target as HTMLInputElement).blur();
+        }
+      }}
+    />
   );
 }
 
@@ -398,21 +772,6 @@ function Th({
       </span>
     </th>
   );
-}
-
-interface RowProps {
-  entry: DecryptedEntry;
-  categories: VaultCategory[];
-  expanded: boolean;
-  onToggleExpand: () => void;
-  revealed: boolean;
-  toggleReveal: () => void;
-  onChange: (patch: Partial<DecryptedEntry>) => void;
-  onDelete: () => void;
-  onGenerate: () => void;
-  onCopy: (text: string, key: string) => void;
-  copiedKey: string | null;
-  t: TFn;
 }
 
 function Row({
@@ -628,7 +987,7 @@ function ExpandTextInput({
   return (
     <input
       id={id}
-      className="input flex-1 min-w-0"
+      className="input min-w-0 w-full flex-1"
       value={local}
       onChange={(e) => setLocal(e.target.value)}
       placeholder={placeholder}
@@ -665,7 +1024,7 @@ function ExpandMemoArea({
   return (
     <textarea
       id={id}
-      className="input w-full min-h-[6.5rem] resize-y text-sm leading-relaxed"
+      className="input w-full min-h-[6.5rem] resize-y text-sm leading-snug"
       value={local}
       onChange={(e) => setLocal(e.target.value)}
       placeholder={placeholder}

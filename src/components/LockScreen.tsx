@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { useVault } from "../lib/vault";
 import { Shield, Lock, Check } from "./Icons";
 import { LanguageMenu } from "./LanguageMenu";
@@ -6,6 +7,10 @@ import { isAppError } from "../lib/errors";
 import { otpauthQrDataUrl, otpauthUri } from "../lib/totp";
 
 type RebindStage = "master" | "totp";
+
+/** “Restore complete…” banner after cloud pull (shared lock + rebind flows). */
+const PULL_CLOUD_DONE_BANNER =
+  "text-xs text-blue-800 bg-blue-50 border border-blue-200 rounded-md p-2";
 
 export function LockScreen() {
   const {
@@ -136,14 +141,12 @@ export function LockScreen() {
             <h1 className="text-xl font-semibold">{t("lock.rebindTitle")}</h1>
           </div>
           {syncMsg && (
-            <p className="text-xs text-ink-700 bg-ink-50 border border-ink-200 rounded-md p-2">
-              {syncMsg}
-            </p>
+            <p className={PULL_CLOUD_DONE_BANNER}>{syncMsg}</p>
           )}
 
           {rebindStage === "master" && (
             <div className="space-y-4">
-              <p className="text-sm text-ink-600 leading-relaxed">
+              <p className="text-sm text-ink-600 leading-snug">
                 {t("lock.rebindSubtitleMaster")}
               </p>
               <div>
@@ -182,7 +185,7 @@ export function LockScreen() {
 
           {rebindStage === "totp" && (
             <div className="space-y-4">
-              <p className="text-sm text-ink-700">{t("lock.rebind2faIntro")}</p>
+              <p className="text-sm text-ink-700 leading-snug">{t("lock.rebind2faIntro")}</p>
               <div className="flex flex-col items-center gap-3 p-4 rounded-lg bg-ink-50 border border-ink-200">
                 {rebindQrUrl ? (
                   <img
@@ -271,7 +274,7 @@ export function LockScreen() {
           <Shield className="text-accent-500 w-8" />
           <h1 className="text-xl font-semibold">{t("lock.title")}</h1>
         </div>
-        <p className="text-sm text-ink-500">{t("lock.subtitle")}</p>
+        <p className="text-sm text-ink-500 leading-snug">{t("lock.subtitle")}</p>
 
         <form onSubmit={handle} className="space-y-4">
           <div>
@@ -299,9 +302,7 @@ export function LockScreen() {
           </div>
           {error && <div className="text-sm text-red-600">{error}</div>}
           {syncMsg && (
-            <p className="text-xs text-ink-700 bg-ink-50 border border-ink-200 rounded-md p-2">
-              {syncMsg}
-            </p>
+            <p className={PULL_CLOUD_DONE_BANNER}>{syncMsg}</p>
           )}
           <button
             type="submit"
@@ -347,14 +348,15 @@ export function LockScreen() {
         </form>
 
         <details className="pt-2 border-t border-ink-100 text-sm group">
-          <summary className="cursor-pointer text-xs font-medium text-ink-600 hover:text-ink-800 list-none flex items-center gap-1 [&::-webkit-details-marker]:hidden">
-            <span className="text-ink-400 group-open:rotate-90 transition-transform inline-block">
-              ▸
+          <summary className="cursor-pointer text-xs font-medium text-ink-600 hover:text-ink-800 list-none flex w-full items-center justify-between gap-2 [&::-webkit-details-marker]:hidden">
+            <span>{t("lock.syncTitle")}</span>
+            <span className="inline-flex shrink-0 text-ink-400" aria-hidden>
+              <ChevronDownIcon className="h-3.5 w-3.5 group-open:hidden" />
+              <ChevronUpIcon className="hidden h-3.5 w-3.5 group-open:block" />
             </span>
-            {t("lock.syncTitle")}
           </summary>
           <div className="mt-3 space-y-2 pl-1">
-            <p className="text-xs text-ink-600 leading-relaxed">{t("lock.pullCloudHint")}</p>
+            <p className="text-xs text-ink-600 leading-snug">{t("lock.pullCloudHint")}</p>
             <button
               type="button"
               className="btn-secondary text-sm w-full"
