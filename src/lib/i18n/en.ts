@@ -111,11 +111,11 @@ export const MESSAGES_EN: Record<string, string> = {
     "Signs out of cloud sync only. This device keeps its local vault until you reset it.",
 
   "lock.syncTitle": "Load from your account",
-  "lock.pullCloud": "Download latest from account",
+  "lock.pullCloud": "Restore from account",
   "lock.pullCloudHint":
-    "Downloads the encrypted vault stored for this account to this browser. After a successful download, you will confirm your master password and set up your authenticator on this device (same flow as first-time setup).",
+    "Having trouble unlocking? Don't worry — your passwords are safely backed up to your account. Restore them on this device: we'll download your encrypted vault, then guide you through your master password and setting up your authenticator again.",
   "lock.pullCloudDone":
-    "Download complete. Enter your master password below, then scan the QR code to finish.",
+    "Restore complete. Enter your master password below, then scan the QR code to finish.",
   "lock.rebindTitle": "Finish restoring this device",
   "lock.rebindSubtitleMaster":
     "Your vault data is here. Enter the master password you used when you created this vault. Next you will scan a new QR code — codes from an old or lost phone will no longer work after you confirm.",
