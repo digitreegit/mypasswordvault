@@ -369,6 +369,58 @@
         max-width: 28rem;
         color: var(--muted);
       }
+      .faq-list {
+        margin-top: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+      }
+      .faq-item {
+        border: 1px solid var(--line);
+        border-radius: 0.85rem;
+        background: rgba(255, 255, 255, 0.03);
+        overflow: hidden;
+      }
+      .faq-item summary {
+        cursor: pointer;
+        list-style: none;
+        padding: 1rem 1.15rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--ink);
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: flex-start;
+        line-height: 1.35;
+      }
+      .faq-item summary::-webkit-details-marker {
+        display: none;
+      }
+      .faq-item summary::after {
+        content: "▸";
+        flex-shrink: 0;
+        margin-top: 0.15rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+        transition: transform 0.18s ease;
+      }
+      .faq-item[open] summary::after {
+        transform: rotate(90deg);
+      }
+      .faq-a {
+        margin: 0;
+        padding: 0 1.15rem 1.05rem;
+        font-size: 0.92rem;
+        color: var(--muted);
+        line-height: 1.55;
+        border-top: 1px solid var(--line);
+        padding-top: 0.85rem;
+      }
+      .faq-a a {
+        color: var(--accent2);
+        font-weight: 500;
+      }
       footer {
         margin-top: 4rem;
         padding-top: 2rem;
@@ -455,6 +507,7 @@
           My Password Vault
         </a>
         <div class="nav-actions">
+          <a class="btn btn-ghost" href="#faq">FAQ</a>
           <a class="btn btn-primary" href="/app/">Sign in</a>
         </div>
       </header>
@@ -470,6 +523,7 @@
         <div class="hero-cta">
           <a class="btn btn-primary" href="#get-started">Getting started</a>
           <a class="btn btn-ghost" href="/app/">Sign in</a>
+          <a class="btn btn-ghost" href="#faq">FAQ</a>
         </div>
       </section>
 
@@ -632,6 +686,74 @@
             <span>Sites, passwords, categories — save and sync when you’re ready.</span>
           </li>
         </ol>
+      </section>
+
+      <section id="faq">
+        <h2>Common questions</h2>
+        <p class="section-desc">
+          Quick answers about trust, day-to-day use, authenticators, backups, pricing, and how to reach us.
+        </p>
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary>Can I trust this app? Is my data safe?</summary>
+            <p class="faq-a">
+              Your passwords are encrypted on your device before anything is synced. Servers only ever see
+              ciphertext—your master password and plain-text secrets never leave your control in readable form.
+              Google sign-in is only used to tie the encrypted vault to your account.
+            </p>
+          </details>
+          <details class="faq-item">
+            <summary>How do I use it? Will it feel simple day to day?</summary>
+            <p class="faq-a">
+              Sign in with Google, choose a strong master password, scan one QR code for two-factor
+              authentication, then unlock to add or search entries. Auto-lock keeps the vault closed when you
+              step away; sync picks up changes when you sign in on another browser or phone.
+            </p>
+          </details>
+          <details class="faq-item">
+            <summary>
+              What if my authenticator app breaks, I lose my phone, or codes stop working?
+            </summary>
+            <p class="faq-a">
+              Your encrypted vault remains in your account. On a new or reset device: sign in, download the
+              latest vault from Devices &amp; backup, enter your master password, then follow the prompts to
+              scan a new QR code and link a replacement authenticator. After you confirm, old time-based codes
+              stop working—that is expected—but your encrypted data was not erased. If you still have access to
+              your previous authenticator, you can often unlock normally without resetting it.
+            </p>
+          </details>
+          <details class="faq-item">
+            <summary>Is this free or paid?</summary>
+            <p class="faq-a">
+              The service is free to use for now. If that ever changes, we will announce pricing clearly
+              beforehand.
+            </p>
+          </details>
+          <details class="faq-item">
+            <summary>What if I forget my master password?</summary>
+            <p class="faq-a">
+              Nobody (including us) can recover your passwords without your master password. If you lose it you
+              must reset the vault and lose existing entries on that device. Cloud restore and encrypted backup
+              files always require the same master password used when those backups were made.
+            </p>
+          </details>
+          <details class="faq-item">
+            <summary>Can I keep an offline backup?</summary>
+            <p class="faq-a">
+              Yes. After you unlock, open Settings → Offline JSON file (advanced) to download an encrypted
+              export. Store it somewhere safe; you will still need the master password from the time of export
+              to open it.
+            </p>
+          </details>
+          <details class="faq-item">
+            <summary>Who do I contact if something goes wrong?</summary>
+            <p class="faq-a">
+              Email
+              <a href="mailto:contact@skyface.com">contact@skyface.com</a>
+              for questions, bug reports, or feedback—we read incoming mail.
+            </p>
+          </details>
+        </div>
       </section>
 
       <div class="cta-panel" id="cta">
