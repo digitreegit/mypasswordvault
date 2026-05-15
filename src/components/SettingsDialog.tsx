@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useVault } from "../lib/vault";
 import { useAuth } from "../lib/auth";
-import { LanguageMenu } from "./LanguageMenu";
+import { ScreenHeader } from "./ScreenHeader";
 import { ChevronDown } from "./Icons";
 import { downloadJsonFile } from "../lib/vaultBackup";
 import { isAppError } from "../lib/errors";
@@ -84,37 +84,30 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         className="card w-full max-w-md max-h-[min(90dvh,90vh)] overflow-y-auto p-4 sm:p-6 space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold">{t("settings.title")}</h2>
-          <button type="button" className="btn-ghost text-sm shrink-0" onClick={onClose}>
-            {t("common.close")}
-          </button>
-        </div>
-
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-sm font-medium text-ink-700 shrink-0">
-            {t("settings.language")}
-          </span>
-          <LanguageMenu
-            value={locale}
-            onChange={(l) => {
-              void (async () => {
-                setBackupToast(null);
-                try {
-                  await setLocale(l);
-                } catch (e: unknown) {
-                  setBackupToast(
-                    isAppError(e)
-                      ? t(e.code)
-                      : (e as Error)?.message ?? t("setup.errGeneric")
-                  );
-                }
-              })();
-            }}
-            ariaLabel={t("settings.language")}
-            align="right"
-          />
-        </div>
+        <ScreenHeader
+          brandName={t("app.brandName")}
+          pageTitle={t("settings.title")}
+          locale={locale}
+          onLocaleChange={async (l) => {
+            setBackupToast(null);
+            try {
+              await setLocale(l);
+            } catch (e: unknown) {
+              setBackupToast(
+                isAppError(e)
+                  ? t(e.code)
+                  : (e as Error)?.message ?? t("setup.errGeneric")
+              );
+            }
+          }}
+          languageAriaLabel={t("settings.language")}
+          titleRowEnd={
+            <button type="button" className="btn-ghost text-sm shrink-0" onClick={onClose}>
+              {t("common.close")}
+            </button>
+          }
+          className="pb-1"
+        />
 
         <div>
           <label className="label" htmlFor="settings-autolock">

@@ -7,8 +7,8 @@ import {
   normalizeLocale,
   type Locale,
 } from "../lib/i18n/locale";
-import { LanguageMenu } from "./LanguageMenu";
-import { Shield } from "./Icons";
+import { isNativeApp } from "../lib/platform";
+import { ScreenHeader } from "./ScreenHeader";
 
 const FAQ_ITEMS: readonly [questionKey: string, answerKey: string][] = [
   ["auth.faqTrustQ", "auth.faqTrustA"],
@@ -29,6 +29,7 @@ export function AuthScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const t = (key: string) => translate(locale, key);
+  const brandHomeHref = isNativeApp() ? undefined : "/";
 
   async function onGoogle() {
     if (!configured) return;
@@ -47,17 +48,15 @@ export function AuthScreen() {
     return (
       <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-ink-50 to-ink-100">
         <div className="card w-full max-w-md p-5 sm:p-8 space-y-4">
-          <div className="flex justify-end">
-            <LanguageMenu
-              value={locale}
-              onChange={(l) => setLocale(normalizeLocale(l))}
-              ariaLabel={t("settings.language")}
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Shield className="text-accent-500 w-8" />
-            <h1 className="text-xl font-semibold">{t("auth.notConfiguredTitle")}</h1>
-          </div>
+          <ScreenHeader
+            brandName={t("app.brandName")}
+            pageTitle={t("auth.notConfiguredTitle")}
+            locale={locale}
+            onLocaleChange={(l) => setLocale(normalizeLocale(l))}
+            languageAriaLabel={t("settings.language")}
+            brandHomeHref={brandHomeHref}
+            brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
+          />
           <p className="text-sm text-ink-600 leading-snug whitespace-pre-line">
             {t("auth.notConfiguredBody")}
           </p>
@@ -69,17 +68,15 @@ export function AuthScreen() {
   return (
     <div className="min-h-[100dvh] flex justify-center px-4 py-10 sm:px-6 sm:py-12 bg-gradient-to-br from-ink-50 to-ink-100">
       <div className="card w-full max-w-xl p-5 sm:p-8 space-y-5 my-auto">
-        <div className="flex justify-end">
-          <LanguageMenu
-            value={locale}
-            onChange={(l) => setLocale(normalizeLocale(l))}
-            ariaLabel={t("settings.language")}
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <Shield className="text-accent-500 w-8" />
-          <h1 className="text-xl font-semibold">{t("auth.title")}</h1>
-        </div>
+        <ScreenHeader
+          brandName={t("app.brandName")}
+          pageTitle={t("auth.title")}
+          locale={locale}
+          onLocaleChange={(l) => setLocale(normalizeLocale(l))}
+          languageAriaLabel={t("settings.language")}
+          brandHomeHref={brandHomeHref}
+          brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
+        />
         <p className="text-sm text-ink-500 leading-snug">{t("auth.subtitle")}</p>
 
         <button
@@ -98,7 +95,7 @@ export function AuthScreen() {
           <p className="text-sm text-red-600 bg-red-50 rounded-md px-3 py-2">{error}</p>
         )}
 
-        <p className="text-xs text-ink-500 leading-snug border-t border-ink-100 pt-4">
+        <p className="text-xs text-ink-500 leading-snug">
           {t("auth.securityNote")}
         </p>
 

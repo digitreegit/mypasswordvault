@@ -21,6 +21,7 @@ import {
   ExternalLink,
   Check,
 } from "./Icons";
+import { LanguageMenu } from "./LanguageMenu";
 
 type SortKey = "category" | "site" | "username" | "updatedAt";
 
@@ -37,7 +38,7 @@ const heroChevronField =
   "pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 shrink-0 -translate-y-1/2 text-ink-400";
 
 export function VaultScreen() {
-  const { entries, lock, upsertEntry, removeEntry, touchActivity, t, categories } =
+  const { entries, lock, upsertEntry, removeEntry, touchActivity, t, categories, locale, setLocale } =
     useVault();
 
   const [query, setQuery] = useState("");
@@ -192,14 +193,26 @@ export function VaultScreen() {
       onTouchStart={touchActivity}
       onKeyDown={touchActivity}
     >
-      <header className="bg-white border-b border-ink-200 px-3 py-2.5 sm:px-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4 sticky top-0 z-10 pt-[max(0.625rem,env(safe-area-inset-top))] text-ink-600">
-        <div className="flex items-center gap-2 min-w-0 shrink-0 overflow-visible">
-          <Shield className="text-accent-500 w-8 sm:w-9" />
-          <span className="font-semibold text-sm sm:text-base truncate">
-            My Password Vault
-          </span>
+      <header className="bg-white border-b border-ink-200 px-3 py-2.5 sm:px-4 flex flex-col gap-4 sm:gap-5 sticky top-0 z-10 pt-[max(0.625rem,env(safe-area-inset-top))] text-ink-600">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0 overflow-visible">
+            <Shield className="text-accent-500 w-8 sm:w-9 shrink-0" />
+            <span className="font-brand font-semibold text-base sm:text-lg text-ink-800 tracking-tight truncate">
+              {t("app.brandName")}
+            </span>
+          </div>
+          <LanguageMenu
+            value={locale}
+            onChange={(l) => void setLocale(l)}
+            ariaLabel={t("settings.language")}
+            align="right"
+          />
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 w-full min-w-0 flex-1">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4 w-full min-w-0">
+          <h1 className="font-sans text-xl font-semibold text-ink-900 tracking-tight shrink-0">
+            {t("vault.pageTitle")}
+          </h1>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 w-full min-w-0 flex-1 lg:min-w-0">
           <div className="w-full sm:max-w-md lg:flex-1 lg:max-w-xl min-w-0">
             <input
               className="input"
@@ -266,6 +279,7 @@ export function VaultScreen() {
               </span>
             </button>
           </div>
+        </div>
         </div>
       </header>
 
@@ -352,11 +366,11 @@ export function VaultScreen() {
             <table className="w-full text-sm min-w-[56rem]">
               <colgroup>
                 <col style={{ width: "10%" }} />
-                <col style={{ width: "14%" }} />
-                <col style={{ width: "16%" }} />
+                <col style={{ width: "18%" }} />
+                <col style={{ width: "22%" }} />
                 <col style={{ width: "30%" }} />
-                <col style={{ width: "16%" }} />
-                <col style={{ width: "14%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "10%" }} />
               </colgroup>
               <thead className="bg-ink-100/70 text-ink-600 text-xs">
                 <tr className="text-left">

@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  content: ["./index.html", "./app/index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
@@ -23,6 +23,14 @@ export default {
         },
       },
       fontFamily: {
+        sans: [
+          "Inter",
+          '"Noto Sans KR"',
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
+        brand: ['"Outfit"', "system-ui", "sans-serif"],
         mono: [
           "ui-monospace",
           "SFMono-Regular",

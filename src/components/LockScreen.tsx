@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { useVault } from "../lib/vault";
-import { Shield, Lock, Check } from "./Icons";
-import { LanguageMenu } from "./LanguageMenu";
+import { Lock, Check } from "./Icons";
+import { ScreenHeader } from "./ScreenHeader";
 import { isAppError } from "../lib/errors";
 import { otpauthQrDataUrl, otpauthUri } from "../lib/totp";
 
@@ -129,17 +129,13 @@ export function LockScreen() {
     return (
       <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-ink-50 to-ink-100">
         <div className="card w-full max-w-md p-5 sm:p-8 space-y-4">
-          <div className="flex justify-end">
-            <LanguageMenu
-              value={locale}
-              onChange={(l) => void setLocale(l)}
-              ariaLabel={t("settings.language")}
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Shield className="text-accent-500 w-8" />
-            <h1 className="text-xl font-semibold">{t("lock.rebindTitle")}</h1>
-          </div>
+          <ScreenHeader
+            brandName={t("app.brandName")}
+            pageTitle={t("lock.rebindTitle")}
+            locale={locale}
+            onLocaleChange={(l) => void setLocale(l)}
+            languageAriaLabel={t("settings.language")}
+          />
           {syncMsg && (
             <p className={PULL_CLOUD_DONE_BANNER}>{syncMsg}</p>
           )}
@@ -262,18 +258,13 @@ export function LockScreen() {
   return (
     <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-ink-50 to-ink-100">
       <div className="card w-full max-w-md p-5 sm:p-8 space-y-4">
-        <div className="flex justify-end">
-          <LanguageMenu
-            value={locale}
-            onChange={(l) => void setLocale(l)}
-            ariaLabel={t("settings.language")}
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Shield className="text-accent-500 w-8" />
-          <h1 className="text-xl font-semibold">{t("lock.title")}</h1>
-        </div>
+        <ScreenHeader
+          brandName={t("app.brandName")}
+          pageTitle={t("lock.title")}
+          locale={locale}
+          onLocaleChange={(l) => void setLocale(l)}
+          languageAriaLabel={t("settings.language")}
+        />
         <p className="text-sm text-ink-500 leading-snug">{t("lock.subtitle")}</p>
 
         <form onSubmit={handle} className="space-y-4">
@@ -312,7 +303,7 @@ export function LockScreen() {
             <Lock /> {t("lock.unlock")}
           </button>
 
-          <div className="pt-2 border-t border-ink-100">
+          <div className="pt-2">
             {!confirmReset ? (
               <button
                 type="button"

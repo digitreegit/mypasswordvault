@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useVault } from "../lib/vault";
 import { otpauthQrDataUrl, otpauthUri } from "../lib/totp";
 import { passwordStrengthScore } from "../lib/passwordGenerator";
-import { Shield, Check, Eye, EyeOff, ChevronDown } from "./Icons";
-import { LanguageMenu } from "./LanguageMenu";
+import { Check, Eye, EyeOff, ChevronDown } from "./Icons";
+import { ScreenHeader } from "./ScreenHeader";
 import { isAppError } from "../lib/errors";
 
 type Stage = "password" | "enroll-2fa";
@@ -73,17 +73,16 @@ export function SetupScreen() {
   return (
     <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-ink-50 to-ink-100">
       <div className="card w-full max-w-md p-5 sm:p-8">
-        <div className="flex justify-end mb-2">
-          <LanguageMenu
-            value={locale}
-            onChange={(l) => void setLocale(l)}
-            ariaLabel={t("settings.language")}
-          />
-        </div>
-        <div className="flex items-center gap-2 mb-1">
-          <Shield className="text-accent-500 w-8" />
-          <h1 className="text-xl font-semibold">{t("setup.title")}</h1>
-        </div>
+        <ScreenHeader
+          brandName={t("app.brandName")}
+          pageTitle={
+            stage === "password" ? t("setup.pageTitle") : t("setup.pageTitle2fa")
+          }
+          locale={locale}
+          onLocaleChange={(l) => void setLocale(l)}
+          languageAriaLabel={t("settings.language")}
+          className="mb-1"
+        />
         <p className="text-sm text-ink-500 mb-6 leading-snug">{t("setup.subtitle")}</p>
 
         {stage === "password" && (

@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useVault } from "../lib/vault";
 import { newId, type VaultCategory } from "../lib/storage";
 import { GripVertical, Trash } from "./Icons";
+import { ScreenHeader } from "./ScreenHeader";
 
 function reorderBeforeTarget(
   list: VaultCategory[],
@@ -22,7 +23,8 @@ function reorderBeforeTarget(
 }
 
 export function CategoriesDialog({ onClose }: { onClose: () => void }) {
-  const { categories, setCategories, deleteCategory, t } = useVault();
+  const { categories, setCategories, deleteCategory, locale, setLocale, t } =
+    useVault();
   const [draft, setDraft] = useState<VaultCategory[]>(categories);
   const [busy, setBusy] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -73,13 +75,21 @@ export function CategoriesDialog({ onClose }: { onClose: () => void }) {
         role="dialog"
         aria-labelledby="cat-dialog-title"
       >
-        <div className="px-5 py-4 border-b border-ink-200 flex items-center justify-between gap-2">
-          <h2 id="cat-dialog-title" className="text-lg font-semibold">
-            {t("vault.categoriesTitle")}
-          </h2>
-          <button type="button" className="btn-ghost text-sm" onClick={onClose}>
-            {t("common.cancel")}
-          </button>
+        <div className="px-5 py-4 border-b border-ink-200 space-y-3">
+          <ScreenHeader
+            brandName={t("app.brandName")}
+            pageTitle={t("vault.categoriesTitle")}
+            locale={locale}
+            onLocaleChange={(l) => void setLocale(l)}
+            languageAriaLabel={t("settings.language")}
+            titleRowEnd={
+              <button type="button" className="btn-ghost text-sm" onClick={onClose}>
+                {t("common.cancel")}
+              </button>
+            }
+            shieldClassName="w-7 sm:w-8"
+            titleId="cat-dialog-title"
+          />
         </div>
         <div className="px-5 py-3 overflow-y-auto flex-1 space-y-2">
           <p className="text-sm text-ink-600 leading-snug">{t("vault.categoriesHint")}</p>

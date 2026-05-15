@@ -2,8 +2,10 @@
 export const MESSAGES_EN: Record<string, string> = {
   "app.loading": "Loading…",
   "app.authLoading": "Checking your session…",
+  "app.brandName": "My Password Vault",
 
-  "auth.title": "Sign in",
+  "auth.title": "Sign In",
+  "auth.brandHomeAria": "Go to homepage",
   "auth.subtitle":
     "Use your account to sync the encrypted vault between devices. Your master password is never sent to the server.",
   "auth.google": "Continue with Google",
@@ -50,6 +52,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "autoLock.off": "Off",
   "autoLock.offBad": "Off (not recommended)",
 
+  "setup.pageTitle": "Set up",
+  "setup.pageTitle2fa": "Two-factor authentication",
   "setup.title": "Set up My Password Vault",
   "setup.subtitle":
     "After you sign in, create your vault here. Your master password is never stored on any server.",
@@ -162,6 +166,7 @@ export const MESSAGES_EN: Record<string, string> = {
     "This backup file will replace the empty vault on this device. Continue?",
   "setup.restoreApply": "Load backup",
 
+  "vault.pageTitle": "Vault",
   "vault.search": "Search (site, URL, username, notes, memo, category)",
   "vault.colCategory": "Category",
   "vault.manageCategories": "Manage categories",

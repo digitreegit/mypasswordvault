@@ -16,6 +16,8 @@
     "@capacitor/app": "^7.0.1",
     "@capacitor/browser": "^7.0.1",
     "@capacitor/core": "^7.0.1",
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/noto-sans-kr": "^5.2.9",
     "@heroicons/react": "^2.2.0",
     "@supabase/supabase-js": "^2.105.4",
     "idb": "^8.0.0",

@@ -4,8 +4,10 @@ export const MESSAGES_KR: Record<string, string> = {
   ...en,
   "app.loading": "불러오는 중…",
   "app.authLoading": "로그인 상태 확인 중…",
+  "app.brandName": "My Password Vault",
 
   "auth.title": "로그인",
+  "auth.brandHomeAria": "소개 페이지로 이동",
   "auth.subtitle":
     "계정으로 암호화된 금고를 기기 간에 동기화합니다. 마스터 비밀번호는 서버로 전송되지 않습니다.",
   "auth.google": "Google로 계속하기",
@@ -50,6 +52,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "autoLock.m30": "30분",
   "autoLock.off": "사용 안 함",
   "autoLock.offBad": "사용 안 함 (권장하지 않음)",
+  "setup.pageTitle": "시작 설정",
+  "setup.pageTitle2fa": "2단계 인증",
   "setup.title": "My Password Vault 설정",
   "setup.subtitle":
     "로그인한 뒤 여기서 새 vault를 만듭니다. 마스터 비밀번호는 어떤 서버에도 저장되지 않습니다.",
@@ -157,6 +161,7 @@ export const MESSAGES_KR: Record<string, string> = {
     "이 백업으로 이 기기의 빈 vault 자리를 채웁니다. 계속할까요?",
   "setup.restoreApply": "백업 불러오기",
 
+  "vault.pageTitle": "금고",
   "vault.search": "검색 (사이트, URL, 사용자명, 메모, 상세, 카테고리)",
   "vault.colCategory": "카테고리",
   "vault.manageCategories": "카테고리 관리",

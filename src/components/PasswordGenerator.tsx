@@ -7,6 +7,7 @@ import {
 } from "../lib/passwordGenerator";
 import { useVault } from "../lib/vault";
 import { Refresh, Check, Copy } from "./Icons";
+import { ScreenHeader } from "./ScreenHeader";
 
 interface Props {
   initial?: Partial<GenOptions>;
@@ -15,7 +16,7 @@ interface Props {
 }
 
 export function PasswordGenerator({ initial, onUse, onClose }: Props) {
-  const { t } = useVault();
+  const { t, locale, setLocale } = useVault();
   const [opts, setOpts] = useState<GenOptions>({ ...DEFAULT_GEN, ...initial });
   const [value, setValue] = useState<string>(() => generatePassword(opts));
   const [copied, setCopied] = useState(false);
@@ -59,7 +60,19 @@ export function PasswordGenerator({ initial, onUse, onClose }: Props) {
         className="card w-full max-w-md max-h-[min(90dvh,90vh)] overflow-y-auto p-4 sm:p-6 space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold">{t("pwdGen.title")}</h2>
+        <ScreenHeader
+          brandName={t("app.brandName")}
+          pageTitle={t("pwdGen.title")}
+          locale={locale}
+          onLocaleChange={(l) => void setLocale(l)}
+          languageAriaLabel={t("settings.language")}
+          titleRowEnd={
+            <button type="button" className="btn-ghost text-sm" onClick={onClose}>
+              {t("common.close")}
+            </button>
+          }
+          className="pb-1"
+        />
 
         <div className="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm break-all min-h-[64px] flex items-center">
           {value}
