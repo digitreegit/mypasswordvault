@@ -182,8 +182,8 @@ export function VaultScreen() {
       onKeyDown={touchActivity}
     >
       <header className="bg-white border-b border-ink-200 px-3 py-2.5 sm:px-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4 sticky top-0 z-10 pt-[max(0.625rem,env(safe-area-inset-top))] text-ink-600">
-        <div className="flex items-center gap-2 min-w-0 shrink-0">
-          <Shield className="text-accent-600 shrink-0" />
+        <div className="flex items-center gap-2 min-w-0 shrink-0 overflow-visible">
+          <Shield className="text-accent-500 w-8 sm:w-9" />
           <span className="font-semibold text-sm sm:text-base truncate">
             My Password Vault
           </span>

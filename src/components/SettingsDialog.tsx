@@ -87,7 +87,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">{t("settings.title")}</h2>
           <button type="button" className="btn-ghost text-sm shrink-0" onClick={onClose}>
-            {t("common.cancel")}
+            {t("common.close")}
           </button>
         </div>
 

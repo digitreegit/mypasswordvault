@@ -44,7 +44,7 @@ export function AuthScreen() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <Shield className="text-accent-600" />
+            <Shield className="text-accent-500 w-8" />
             <h1 className="text-xl font-semibold">{t("auth.notConfiguredTitle")}</h1>
           </div>
           <p className="text-sm text-ink-600 leading-relaxed whitespace-pre-line">
@@ -66,7 +66,7 @@ export function AuthScreen() {
           />
         </div>
         <div className="flex items-center gap-2">
-          <Shield className="text-accent-600" />
+          <Shield className="text-accent-500 w-8" />
           <h1 className="text-xl font-semibold">{t("auth.title")}</h1>
         </div>
         <p className="text-sm text-ink-500 leading-relaxed">{t("auth.subtitle")}</p>

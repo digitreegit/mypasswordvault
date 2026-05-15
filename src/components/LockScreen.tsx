@@ -132,7 +132,7 @@ export function LockScreen() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <Shield className="text-accent-600" />
+            <Shield className="text-accent-500 w-8" />
             <h1 className="text-xl font-semibold">{t("lock.rebindTitle")}</h1>
           </div>
           {syncMsg && (
@@ -268,7 +268,7 @@ export function LockScreen() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Shield className="text-accent-600" />
+          <Shield className="text-accent-500 w-8" />
           <h1 className="text-xl font-semibold">{t("lock.title")}</h1>
         </div>
         <p className="text-sm text-ink-500">{t("lock.subtitle")}</p>

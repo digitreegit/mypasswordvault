@@ -81,7 +81,7 @@ export function SetupScreen() {
           />
         </div>
         <div className="flex items-center gap-2 mb-1">
-          <Shield className="text-accent-600" />
+          <Shield className="text-accent-500 w-8" />
           <h1 className="text-xl font-semibold">{t("setup.title")}</h1>
         </div>
         <p className="text-sm text-ink-500 mb-6">{t("setup.subtitle")}</p>

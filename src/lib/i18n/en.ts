@@ -15,6 +15,7 @@ export const MESSAGES_EN: Record<string, string> = {
     "Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to a .env file in the project root, then restart the dev server. See README.md for creating the database table and enabling Google sign-in.",
 
   "common.cancel": "Cancel",
+  "common.close": "Close",
   "common.confirm": "Confirm",
   "common.save": "Save",
 

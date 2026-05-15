@@ -17,6 +17,7 @@ export const MESSAGES_KR: Record<string, string> = {
     "프로젝트 루트의 .env 파일에 VITE_SUPABASE_URL과 VITE_SUPABASE_ANON_KEY를 넣은 뒤 개발 서버를 다시 시작하세요. DB 테이블 생성과 Google 로그인 설정은 README.md를 참고하세요.",
 
   "common.cancel": "취소",
+  "common.close": "닫기",
   "common.confirm": "확인",
   "common.save": "저장",
   "autoLock.m1": "1분",
