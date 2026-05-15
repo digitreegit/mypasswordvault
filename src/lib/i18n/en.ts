@@ -23,6 +23,10 @@ export const MESSAGES_EN: Record<string, string> = {
   "auth.faqUseQ": "How do I use it? Will it feel simple day to day?",
   "auth.faqUseA":
     "Sign in with Google, choose a strong master password, scan one QR code for two-factor authentication, then unlock to add or search entries. Auto-lock keeps the vault closed when you step away; sync picks up changes when you sign in on another browser or phone.",
+  "auth.faqWhatAuthenticatorQ":
+    "What is an authenticator app, what does it do, and which one should I use?",
+  "auth.faqWhatAuthenticatorA":
+    "An authenticator app is an app on your phone or computer that generates short-lived numeric codes—usually six digits—for two-factor authentication. After set-up it shares a secret with your vault via the QR scan; unlocking requires your master password plus a fresh code so a stolen password alone isn’t enough. Use any reputable time-based OTP (TOTP) app compatible with Authenticator/Google-style setups, such as Google Authenticator, Microsoft Authenticator, Authy, FreeOTP, 1Password’s OTP field, Bitwarden, or compatible built-in Authenticator modes—pick one from a publisher you trust and keep it updated.",
   "auth.faqAuthenticatorQ":
     "What if my authenticator app breaks, I lose my phone, or codes stop working?",
   "auth.faqAuthenticatorA":

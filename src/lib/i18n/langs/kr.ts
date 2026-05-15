@@ -25,6 +25,10 @@ export const MESSAGES_KR: Record<string, string> = {
   "auth.faqUseQ": "어떻게 쓰나요? 매일 쓰기 부담스럽지 않나요?",
   "auth.faqUseA":
     "Google로 로그인하고, 강한 마스터 비밀번호를 정한 뒤 QR 한 번으로 2단계 인증을 연결하면 됩니다. 잠금 해제 후에는 목록에 항목을 추가·검색하면 됩니다. 자동 잠금으로 자리를 비울 때 금고가 닫히고, 다른 브라우저나 휴대폰에서 같은 계정으로 로그인하면 동기화됩니다.",
+  "auth.faqWhatAuthenticatorQ":
+    "인증(Authenticator) 앱이 무엇이고, 역할은 무엇이며 어떤 앱을 써야 하나요?",
+  "auth.faqWhatAuthenticatorA":
+    "인증 앱은 휴대폰이나 컴퓨터에 설치해 주기적으로 바뀌는 숫자 코드(보통 6자리)를 만들어 두 번째 확인 수단으로 쓰는 앱입니다. QR로 금고와 비밀이 공유된 뒤에는 잠금 해제 때마다 마스터 비밀번호와 새 코드가 함께 필요해, 마스터 비밀번호만 들킨 상태로는 열 수 없도록 합니다. Google Authenticator, Microsoft Authenticator, Authy, FreeOTP처럼 TOTP(RFC 기반 시간 OTP) 표준을 지원하는 신뢰할 수 있는 앱이면 대부분 사용할 수 있습니다. 쓰는 비밀번호 관리자(예: 1Password, Bitwarden) 안의 OTP 기능을 쓰셔도 됩니다. 업데이트를 잘 하는 앱과 제작사를 선택하세요.",
   "auth.faqAuthenticatorQ":
     "인증 앱이 고장 났거나, 휴대폰을 잃어버렸거나, 코드가 안 맞으면 어떻게 되나요?",
   "auth.faqAuthenticatorA":

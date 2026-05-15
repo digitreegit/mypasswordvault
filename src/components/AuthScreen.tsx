@@ -13,6 +13,7 @@ import { ScreenHeader } from "./ScreenHeader";
 const FAQ_ITEMS: readonly [questionKey: string, answerKey: string][] = [
   ["auth.faqTrustQ", "auth.faqTrustA"],
   ["auth.faqUseQ", "auth.faqUseA"],
+  ["auth.faqWhatAuthenticatorQ", "auth.faqWhatAuthenticatorA"],
   ["auth.faqAuthenticatorQ", "auth.faqAuthenticatorA"],
   ["auth.faqPricingQ", "auth.faqPricingA"],
   ["auth.faqMasterQ", "auth.faqMasterA"],
