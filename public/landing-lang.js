@@ -58,9 +58,20 @@
     metaTitle: "My Password Vault — Secure passwords, zero clutter",
     metaDescription:
       "My Password Vault — local-first password manager. AES-GCM-256, TOTP 2FA, optional encrypted sync. Spreadsheet-simple.",
+    metaTitleFaq: "FAQ — My Password Vault",
+    metaDescriptionFaq: "Frequently asked questions about My Password Vault — security, sync, backups, and support.",
+    metaTitlePricing: "Pricing — My Password Vault",
+    metaDescriptionPricing: "Plans and pricing for My Password Vault — free tier and one-time license.",
+    metaTitlePrivacy: "Privacy Policy — My Password Vault",
+    metaDescriptionPrivacy: "Privacy Policy for My Password Vault by Skyface, LLC.",
+    metaTitleTerms: "Terms of Use — My Password Vault",
+    metaDescriptionTerms: "Terms of Use for My Password Vault by Skyface, LLC.",
     logoAria: "My Password Vault home",
     langAria: "Language",
+    navHome: "Home",
+    navMenu: "Menu",
     navFaq: "FAQ",
+    navPricing: "Pricing",
     navSignIn: "Sign In",
     heroEyebrow: "hassle-free password manager",
     heroH1Line1: "Passwords you control.",
@@ -119,6 +130,27 @@
     gsStep3Span: "Use Authenticator, 1Password, Authy, etc., then confirm with a 6-digit code.",
     gsStep4Strong: "Add rows like a sheet",
     gsStep4Span: "Sites, passwords, categories — save and sync when you’re ready.",
+    landingPriceTitle: "Simple limits, one upgrade",
+    landingPriceSubtitle:
+      "Start free with a generous entry cap, then unlock unlimited passwords with a single payment — no subscription.",
+    landingTierFree: "Free",
+    landingFreeForever: "No monthly fee",
+    landingFreeDesc: "For personal use and trying the product with full security features.",
+    landingFreeF1: "Up to 25 password entries",
+    landingFreeF2: "Local-first AES-GCM-256 encryption + TOTP 2FA",
+    landingFreeF3: "Encrypted sync to your Supabase project (ciphertext only)",
+    landingFreeF4: "Offline JSON backup & restore",
+    landingFreeFootnote:
+      "When you reach 25 entries, adding new rows is paused until you upgrade or delete entries.",
+    landingTierPaid: "Permanent license",
+    landingPaidOnce: "One-time USD 4.99 — no subscription",
+    landingPaidDesc: "Unlock unlimited password entries on this account forever.",
+    landingPaidF1: "Unlimited password entries",
+    landingPaidF2: "Everything in Free, plus no entry cap",
+    landingPaidF3: "Same zero-knowledge model — we never receive your master password",
+    landingPaidF4: "License stored on your account; works on every device you sign into",
+    landingCtaBuy: "Continue to secure checkout",
+    landingSignInHint: "We use your Google account only to attach the license and encrypted vault.",
     faqTitle: "Common questions",
     faqDesc:
       "Quick answers about trust, day-to-day use, authenticators, backups, pricing, and how to reach us.",
@@ -150,6 +182,7 @@
     ctaReadyLead:
       "Same tool for weekend admins and daily operators: fewer clicks, fewer tabs, more confidence that\n          your credentials never left encryption you control.",
     footerPrivacy: "Privacy Policy",
+    footerTerms: "Terms of Use",
     footerCopy: "©2026 Skyface, LLC. All rights reserved.",
   };
 
@@ -157,7 +190,20 @@
     metaTitle: "My Password Vault — 안전하고 단순한 비밀번호 관리",
     metaDescription:
       "My Password Vault — 로컬 우선 비밀번호 관리자. AES-GCM-256, TOTP 2FA, 선택형 암호화 동기화. 스프레드시트처럼 간단합니다.",
+    metaTitleFaq: "자주 묻는 질문 — My Password Vault",
+    metaDescriptionFaq:
+      "My Password Vault에 대한 자주 묻는 질문 — 보안, 동기화, 백업, 지원.",
+    metaTitlePricing: "요금제 — My Password Vault",
+    metaDescriptionPricing: "My Password Vault 요금제 — 무료 한도와 일회성 라이선스.",
+    metaTitlePrivacy: "개인정보 처리방침 — My Password Vault",
+    metaDescriptionPrivacy: "Skyface, LLC의 My Password Vault 개인정보 처리방침.",
+    metaTitleTerms: "이용약관 — My Password Vault",
+    metaDescriptionTerms: "Skyface, LLC의 My Password Vault 이용약관.",
     langAria: "언어 선택",
+    navHome: "홈",
+    navMenu: "메뉴",
+    navFaq: "자주 묻는 질문",
+    navPricing: "요금제",
     navSignIn: "로그인",
     heroEyebrow: "부담 적은 패스워드 매니저",
     heroH1Line1: "통제하는 비밀번호.",
@@ -216,6 +262,27 @@
       "Google Authenticator, 1Password, Authy 등으로 스캔 후 6자리 코드로 확인합니다.",
     gsStep4Strong: "시트처럼 행 추가",
     gsStep4Span: "사이트·비밀번호·카테고리를 저장하고 준비되면 동기화합니다.",
+    landingPriceTitle: "명확한 한도, 한 번의 업그레이드",
+    landingPriceSubtitle:
+      "넉넉한 무료 한도로 시작한 뒤, 한 번의 결제로 무제한 항목을 쓸 수 있습니다. 월 구독이 없습니다.",
+    landingTierFree: "무료",
+    landingFreeForever: "월 요금 없음",
+    landingFreeDesc: "개인 사용과 보안 기능을 모두 체험하기에 적합합니다.",
+    landingFreeF1: "비밀번호 항목 최대 25개",
+    landingFreeF2: "로컬 우선 AES-GCM-256 암호화 + TOTP 2FA",
+    landingFreeF3: "Supabase로 암호문만 동기화",
+    landingFreeF4: "오프라인 JSON 백업·복원",
+    landingFreeFootnote:
+      "25개에 도달하면 새 행 추가가 일시 중지됩니다. 업그레이드하거나 항목을 삭제하세요.",
+    landingTierPaid: "영구 라이선스",
+    landingPaidOnce: "일회 USD 4.99 — 구독 없음",
+    landingPaidDesc: "이 계정에서 비밀번호 항목을 영구적으로 무제한으로 저장합니다.",
+    landingPaidF1: "비밀번호 항목 무제한",
+    landingPaidF2: "무료 플랜의 모든 기능 + 항목 수 제한 해제",
+    landingPaidF3: "동일한 제로 지식 모델 — 마스터 비밀번호는 서버로 가지 않습니다",
+    landingPaidF4: "라이선스는 계정에 저장되며, 로그인하는 모든 기기에서 동일하게 적용됩니다",
+    landingCtaBuy: "안전한 결제 페이지로 이동",
+    landingSignInHint: "Google 계정은 라이선스와 암호화 금고를 연결하는 데만 사용됩니다.",
     faqTitle: "자주 묻는 질문",
     faqDesc:
       "신뢰, 일상적인 사용법, 인증 앱, 백업, 가격, 연락처에 대한 짧은 답변입니다.",
@@ -249,6 +316,7 @@
     ctaReadyLead:
       "주말 관리자든 매일 운영하든 같은 도구입니다. 클릭과 탭을 줄이고, 통제 가능한 암호화 안에 자격 증명을 두세요.",
     footerPrivacy: "개인정보 처리방침",
+    footerTerms: "이용약관",
     footerCopy: "©2026 Skyface, LLC. All rights reserved.",
   };
 
@@ -284,9 +352,33 @@
     } catch (e) {}
 
     document.documentElement.lang = HTML_LANG_MAP[loc] || "en";
-    document.title = D.metaTitle;
+    var page = (document.body && document.body.getAttribute("data-landing-page")) || "home";
+    var titleKey = "metaTitle";
+    var descKey = "metaDescription";
+    if (page === "faq") {
+      titleKey = "metaTitleFaq";
+      descKey = "metaDescriptionFaq";
+    } else if (page === "pricing") {
+      titleKey = "metaTitlePricing";
+      descKey = "metaDescriptionPricing";
+    } else if (page === "privacy") {
+      titleKey = "metaTitlePrivacy";
+      descKey = "metaDescriptionPrivacy";
+    } else if (page === "terms") {
+      titleKey = "metaTitleTerms";
+      descKey = "metaDescriptionTerms";
+    }
+    function pickStr(dict, key, fb) {
+      var v = dict[key];
+      return typeof v === "string" && v ? v : fb;
+    }
+    document.title = pickStr(D, titleKey, pickStr(EN, titleKey, D.metaTitle));
     var md = document.querySelector('meta[name="description"]');
-    if (md) md.setAttribute("content", D.metaDescription);
+    if (md)
+      md.setAttribute(
+        "content",
+        pickStr(D, descKey, pickStr(EN, descKey, D.metaDescription)),
+      );
 
     document.querySelectorAll("[data-logo-landing-aria]").forEach(function (a) {
       a.setAttribute("aria-label", D.logoAria || EN.logoAria);
@@ -296,13 +388,22 @@
       b.setAttribute("aria-label", D.langAria || EN.langAria);
     });
 
+    document.querySelectorAll("[data-i18n-aria]").forEach(function (el) {
+      var key = el.getAttribute("data-i18n-aria");
+      if (!key) return;
+      var val = typeof D[key] === "undefined" ? EN[key] : D[key];
+      if (typeof val !== "string") return;
+      el.setAttribute("aria-label", val);
+    });
+
     document.querySelectorAll("[data-i18n]").forEach(function (el) {
       var key = el.getAttribute("data-i18n");
       if (!key) return;
       var val = typeof D[key] === "undefined" ? EN[key] : D[key];
       if (typeof val !== "string") return;
       if (el.hasAttribute("data-i18n-html")) el.innerHTML = val;
-      else el.textContent = val;
+      else if (el.tagName === "PRE" || el.hasAttribute("data-i18n-pre")) el.textContent = val;
+      else el.textContent = val.replace(/\s*\n+\s*/g, " ").replace(/[ \t]{2,}/g, " ").trim();
     });
 
     syncLangMenuActive(loc);

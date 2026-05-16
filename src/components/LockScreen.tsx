@@ -4,6 +4,7 @@ import { useVault } from "../lib/vault";
 import { Lock, Check } from "./Icons";
 import { ScreenHeader } from "./ScreenHeader";
 import { isAppError } from "../lib/errors";
+import { isNativeApp } from "../lib/platform";
 import { otpauthQrDataUrl, otpauthUri } from "../lib/totp";
 
 type RebindStage = "master" | "totp";
@@ -26,6 +27,7 @@ export function LockScreen() {
     abortTotpRebindProgress,
     t,
   } = useVault();
+  const brandHomeHref = isNativeApp() ? undefined : "/";
   const [pw, setPw] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -135,6 +137,8 @@ export function LockScreen() {
             locale={locale}
             onLocaleChange={(l) => void setLocale(l)}
             languageAriaLabel={t("settings.language")}
+            brandHomeHref={brandHomeHref}
+            brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
           />
           {syncMsg && (
             <p className={PULL_CLOUD_DONE_BANNER}>{syncMsg}</p>
@@ -264,6 +268,8 @@ export function LockScreen() {
           locale={locale}
           onLocaleChange={(l) => void setLocale(l)}
           languageAriaLabel={t("settings.language")}
+          brandHomeHref={brandHomeHref}
+          brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
         />
         <p className="text-sm text-ink-500 leading-snug">{t("lock.subtitle")}</p>
 

@@ -156,6 +156,15 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.licenseLoading": "라이선스 확인 중…",
   "settings.licenseLink": "요금제·결제 페이지 열기",
   "settings.licenseRefresh": "상태 새로고침",
+  "settings.planBadgeFree": "무료",
+  "settings.planBadgeLicensed": "라이선스 적용",
+  "settings.licenseKeyLabel": "라이선스 키",
+  "settings.licenseKeyHint":
+    "결제 시 발급된 참조 값(Stripe 체크아웃 세션)입니다. 읽기 전용이며 본인 기록용으로 보관하세요.",
+  "settings.licenseCopyKey": "복사",
+  "settings.licenseKeyCopied": "복사됨",
+  "settings.licenseNoSessionId":
+    "라이선스는 활성화되어 있으나, 이 계정에 저장된 결제 참조가 아직 없습니다.",
 
   "lock.syncTitle": "계정에서 불러오기",
   "lock.pullCloud": "계정에서 복원하기",
@@ -185,6 +194,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.restoreApply": "백업 불러오기",
 
   "vault.pageTitle": "금고",
+  "vault.licenseBadgeFree": "무료",
+  "vault.licenseBadgeLicensed": "라이선스",
   "vault.search": "검색 (사이트, URL, 사용자명, 메모, 상세, 카테고리)",
   "vault.colCategory": "카테고리",
   "vault.manageCategories": "카테고리 관리",
@@ -267,7 +278,6 @@ export const MESSAGES_KR: Record<string, string> = {
   "pricing.checkoutCancel": "결제를 취소했습니다. 준비되면 다시 시도할 수 있습니다.",
   "pricing.youAreLicensed": "이 계정에는 이미 영구 라이선스가 적용되어 있습니다. 감사합니다.",
   "pricing.tierFree": "무료",
-  "pricing.currentPlan": "현재",
   "pricing.freeForever": "월 요금 없음",
   "pricing.freeDesc": "개인 사용과 보안 기능을 모두 체험하기에 적합합니다.",
   "pricing.freeF1": "비밀번호 항목 최대 25개",
@@ -276,7 +286,6 @@ export const MESSAGES_KR: Record<string, string> = {
   "pricing.freeF4": "오프라인 JSON 백업·복원",
   "pricing.freeFootnote":
     "{{limit}}개에 도달하면 새 행 추가가 일시 중지됩니다. 업그레이드하거나 항목을 삭제하세요.",
-  "pricing.mostPopular": "가장 알뜰",
   "pricing.tierPaid": "영구 라이선스",
   "pricing.paidOnce": "일회 USD 4.99 — 구독 없음",
   "pricing.paidDesc": "이 계정에서 비밀번호 항목을 영구적으로 무제한으로 저장합니다.",

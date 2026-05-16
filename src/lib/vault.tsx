@@ -45,7 +45,7 @@ import {
   reconcileCloudAtStartup,
   upsertRemoteVaultBackup,
 } from "./cloudVault";
-import { FREE_ENTRY_LIMIT, fetchUserLicensed } from "./entitlements";
+import { FREE_ENTRY_LIMIT, fetchUserEntitlement } from "./entitlements";
 import { isSupabaseConfigured } from "./supabaseClient";
 
 /** After "Download from account", require master password then new TOTP enrollment (lost old phone). */
@@ -115,6 +115,8 @@ interface VaultContextValue {
 
   /** Cloud billing: one-time license removes the free entry cap. */
   licensed: boolean;
+  /** Stripe checkout session id when licensed (for display in Settings). */
+  licenseKey: string | null;
   entitlementLoaded: boolean;
   atEntryLimit: boolean;
   freeEntryLimit: number;
@@ -172,6 +174,7 @@ export function VaultProvider({
     useState(false);
 
   const [licensed, setLicensed] = useState(!isSupabaseConfigured);
+  const [licenseKey, setLicenseKey] = useState<string | null>(null);
   const [entitlementLoaded, setEntitlementLoaded] = useState(
     !isSupabaseConfigured,
   );
@@ -187,16 +190,19 @@ export function VaultProvider({
   const refreshEntitlements = useCallback(async () => {
     if (!userId || !isSupabaseConfigured) {
       setLicensed(true);
+      setLicenseKey(null);
       setEntitlementLoaded(true);
       return;
     }
     setEntitlementLoaded(false);
     try {
-      const ok = await fetchUserLicensed(userId);
-      setLicensed(ok);
+      const ent = await fetchUserEntitlement(userId);
+      setLicensed(ent.licensed);
+      setLicenseKey(ent.stripeCheckoutSessionId);
     } catch (e) {
       console.error("refreshEntitlements", e);
       setLicensed(false);
+      setLicenseKey(null);
     } finally {
       setEntitlementLoaded(true);
     }
@@ -832,6 +838,7 @@ export function VaultProvider({
       setCategories,
       deleteCategory,
       licensed,
+      licenseKey,
       entitlementLoaded,
       atEntryLimit,
       freeEntryLimit: FREE_ENTRY_LIMIT,
@@ -844,6 +851,7 @@ export function VaultProvider({
       locale,
       needsTotpRebindAfterCloudPull,
       licensed,
+      licenseKey,
       entitlementLoaded,
       atEntryLimit,
       setup,

@@ -11,6 +11,7 @@ import { FREE_ENTRY_LIMIT, fetchUserLicensed } from "../lib/entitlements";
 import { isNativeApp } from "../lib/platform";
 import { privacyPolicyUrl } from "../lib/privacyPolicyUrl";
 import { Check } from "./Icons";
+import { LanguageMenu } from "./LanguageMenu";
 
 function parseCheckoutQuery(): "success" | "cancel" | null {
   if (typeof window === "undefined") return null;
@@ -124,18 +125,13 @@ export function PricingPage() {
           </a>
         </div>
         <div className="flex items-center gap-2">
-          <label className="sr-only" htmlFor="pricing-lang">
-            {t("settings.language")}
-          </label>
-          <select
-            id="pricing-lang"
-            className="input text-sm py-1.5 max-w-[10rem]"
+          <LanguageMenu
+            appearance="compact"
             value={locale}
-            onChange={(e) => setLocale(normalizeLocale(e.target.value))}
-          >
-            <option value="en">English</option>
-            <option value="kr">한국어</option>
-          </select>
+            onChange={setLocale}
+            ariaLabel={t("settings.language")}
+            align="right"
+          />
           <a
             className="text-sm text-ink-600 hover:text-ink-900 whitespace-nowrap"
             href={privacyHref}
@@ -190,16 +186,9 @@ export function PricingPage() {
 
         <div className="grid gap-6 md:grid-cols-2 md:gap-8 items-stretch">
           <section className="card p-6 sm:p-8 flex flex-col border-ink-200">
-            <div className="flex items-baseline justify-between gap-2">
-              <h2 className="text-lg font-semibold text-accent-700 uppercase tracking-wide">
-                {t("pricing.tierFree")}
-              </h2>
-              {licensed === false ? (
-                <span className="text-xs font-medium text-ink-500 border border-ink-200 rounded-full px-2 py-0.5">
-                  {t("pricing.currentPlan")}
-                </span>
-              ) : null}
-            </div>
+            <h2 className="text-lg font-semibold text-accent-700 uppercase tracking-wide">
+              {t("pricing.tierFree")}
+            </h2>
             <p className="mt-4 text-4xl sm:text-5xl font-bold text-ink-900">$0</p>
             <p className="text-sm text-ink-500 mt-1">{t("pricing.freeForever")}</p>
             <p className="mt-4 text-sm text-ink-600 leading-relaxed">{t("pricing.freeDesc")}</p>
@@ -223,11 +212,8 @@ export function PricingPage() {
             </p>
           </section>
 
-          <section className="card p-6 sm:p-8 flex flex-col border-2 border-accent-500 shadow-md relative">
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-ink-900 text-white text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
-              {t("pricing.mostPopular")}
-            </span>
-            <h2 className="text-lg font-semibold text-accent-700 uppercase tracking-wide mt-2">
+          <section className="card p-6 sm:p-8 flex flex-col border-2 border-accent-500 shadow-md">
+            <h2 className="text-lg font-semibold text-accent-700 uppercase tracking-wide">
               {t("pricing.tierPaid")}
             </h2>
             <p className="mt-4 text-4xl sm:text-5xl font-bold text-ink-900">$4.99</p>

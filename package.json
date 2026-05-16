@@ -10,7 +10,8 @@
     "cap:sync": "npm run build:capacitor && npx cap sync && node scripts/patch-ios-url-scheme.mjs",
     "cap:ios": "npm run cap:sync && npx cap open ios",
     "cap:run:ios": "npm run cap:sync && npx cap run ios",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "landing:assemble": "node scripts/assemble-landing-pages.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^7.0.1",

@@ -17,6 +17,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
     pullVaultFromCloud,
     entries,
     licensed,
+    licenseKey,
     entitlementLoaded,
     freeEntryLimit,
     refreshEntitlements,
@@ -29,6 +30,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
   const [signingOut, setSigningOut] = useState(false);
   const [importDraft, setImportDraft] = useState<string | null>(null);
   const [backupToast, setBackupToast] = useState<string | null>(null);
+  const [licenseKeyCopied, setLicenseKeyCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -77,6 +79,18 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
       );
     } finally {
       setPullBusy(false);
+    }
+  }
+
+  async function copyLicenseKey() {
+    if (!licenseKey) return;
+    setBackupToast(null);
+    try {
+      await navigator.clipboard.writeText(licenseKey);
+      setLicenseKeyCopied(true);
+      setTimeout(() => setLicenseKeyCopied(false), 2000);
+    } catch {
+      setBackupToast(t("settings.copyBackupFail"));
     }
   }
 
@@ -165,20 +179,69 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         {configured && user && (
           <div className="rounded-lg border border-ink-200 bg-ink-50/90 p-3 space-y-2">
             <h3 className="text-sm font-semibold text-ink-800">{t("settings.licenseTitle")}</h3>
-            <p className="text-xs text-ink-600 leading-snug">{t("settings.licenseFree", { limit: freeEntryLimit })}</p>
-            <p className="text-xs text-ink-600 leading-snug">{t("settings.licensePaid")}</p>
             {!entitlementLoaded ? (
               <p className="text-xs text-ink-500">{t("settings.licenseLoading")}</p>
-            ) : licensed ? (
-              <p className="text-xs font-medium text-emerald-800">{t("settings.licenseStatusLicensed")}</p>
             ) : (
-              <p className="text-xs text-ink-700">
-                {t("settings.licenseStatusFree", {
-                  count: entries.length,
-                  limit: freeEntryLimit,
-                })}
-              </p>
+              <>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className={
+                      licensed
+                        ? "text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-md border border-emerald-300 bg-emerald-50 text-emerald-900"
+                        : "text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-md border border-ink-200 bg-white text-ink-700"
+                    }
+                    translate="no"
+                  >
+                    {licensed ? t("settings.planBadgeLicensed") : t("settings.planBadgeFree")}
+                  </span>
+                </div>
+                {licensed ? (
+                  <p className="text-xs font-medium text-emerald-800 leading-snug">
+                    {t("settings.licenseStatusLicensed")}
+                  </p>
+                ) : (
+                  <p className="text-xs text-ink-700 leading-snug">
+                    {t("settings.licenseStatusFree", {
+                      count: entries.length,
+                      limit: freeEntryLimit,
+                    })}
+                  </p>
+                )}
+                {licensed && licenseKey ? (
+                  <div className="space-y-1 pt-1">
+                    <label className="label text-xs" htmlFor="settings-license-key">
+                      {t("settings.licenseKeyLabel")}
+                    </label>
+                    <div className="flex gap-2 items-stretch">
+                      <input
+                        id="settings-license-key"
+                        type="text"
+                        readOnly
+                        value={licenseKey}
+                        className="input w-full min-w-0 font-mono text-xs bg-white"
+                        spellCheck={false}
+                      />
+                      <button
+                        type="button"
+                        className="btn-secondary text-xs shrink-0 self-stretch px-3"
+                        onClick={() => void copyLicenseKey()}
+                      >
+                        {licenseKeyCopied ? t("settings.licenseKeyCopied") : t("settings.licenseCopyKey")}
+                      </button>
+                    </div>
+                    <p className="text-xs text-ink-500 leading-snug">{t("settings.licenseKeyHint")}</p>
+                  </div>
+                ) : licensed ? (
+                  <p className="text-xs text-ink-500 leading-snug pt-0.5">
+                    {t("settings.licenseNoSessionId")}
+                  </p>
+                ) : null}
+              </>
             )}
+            <p className="text-xs text-ink-600 leading-snug border-t border-ink-100/80 pt-2">
+              {t("settings.licenseFree", { limit: freeEntryLimit })}
+            </p>
+            <p className="text-xs text-ink-600 leading-snug">{t("settings.licensePaid")}</p>
             <div className="flex flex-wrap gap-2 pt-1">
               <a
                 href="#/pricing"

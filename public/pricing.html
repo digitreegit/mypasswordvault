@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="Plans and pricing — My Password Vault." />
+    <title>Pricing — My Password Vault</title>
+    <link rel="icon" href="./favicon.png" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./landing-site.css" />
+  </head>
+  <body data-landing-page="pricing">
+    <div id="file-protocol-banner" class="file-protocol-banner" role="alert">
+      <strong style="display: block; margin-bottom: 0.35rem">Opened as a local file (file://)</strong>
+      Absolute paths like <code>/app/</code> do not work from disk. Run
+      <code>npm run dev</code> in this project folder, then use
+      <a href="http://127.0.0.1:5173/">http://127.0.0.1:5173/</a>
+      — <strong>Sign In</strong> links below switch to the dev server while this page stays on
+      <code>file://</code>.
+    </div>
+    <script>
+      (function () {
+        if (location.protocol !== "file:") return;
+        document.documentElement.classList.add("file-protocol-landing");
+        var b = document.getElementById("file-protocol-banner");
+        if (b) b.classList.add("is-visible");
+        document.querySelectorAll('a[href^="/app/"]').forEach(function (a) {
+          var href = a.getAttribute("href") || "";
+          a.setAttribute("href", "http://127.0.0.1:5173" + href);
+        });
+      })();
+    </script>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <div class="orb" aria-hidden="true"></div>
+    <div class="orb orb2" aria-hidden="true"></div>
+
+    <div class="landing-header-band">
+      <div class="landing-header-band-inner">
+        <header class="landing-header-main">
+        <a class="logo" href="./index.html" data-logo-landing-aria aria-label="My Password Vault home">
+          <span class="logo-mark" aria-hidden="true">
+            <svg viewBox="245 346 126 112" fill="currentColor" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+              <path d="M364.21,369.16h-4v-10.67c0-7.55-6.14-13.69-13.69-13.69h-.38c-7.15,0-14.1-2.52-19.59-7.1l-5.15-4.3c-1.06-.89-2.41-1.37-3.79-1.37h-23.61c-1.38,0-2.72.49-3.78,1.37l-5.17,4.31c-5.49,4.57-12.45,7.09-19.59,7.09h-.36c-7.55,0-13.69,6.14-13.69,13.69v10.67h-4.62c-5,0-9.06,4.06-9.06,9.06v33.2c0,5,4.06,9.06,9.06,9.06h10.34c3.71,6.9,9.05,12.82,15.59,17.18l28.29,18.86c1.43.95,3.08,1.46,4.8,1.46s3.37-.5,4.79-1.45l28.3-18.87c6.54-4.36,11.88-10.27,15.59-17.18h9.72c4.99,0,9.06-4.06,9.06-9.06v-33.2c0-5-4.06-9.06-9.06-9.06ZM258.91,358.49c0-3.41,2.77-6.19,6.19-6.19h.36c8.9,0,17.56-3.14,24.39-8.83l4.73-3.94h22.46l4.71,3.93c6.83,5.7,15.5,8.84,24.4,8.84h.38c3.41,0,6.19,2.77,6.19,6.19v10.67h-5.91v-4.1c0-4.43-3.6-8.02-8.02-8.02h-11.24l-9.39-7.83c-1.06-.88-2.41-1.37-3.79-1.37h-17.12c-1.38,0-2.73.49-3.79,1.37l-9.39,7.83h-11.23c-4.43,0-8.02,3.6-8.02,8.02v4.1h-5.91v-10.67ZM339.31,369.16h-66.99v-4.1c0-.29.24-.52.52-.52h11.8c1.38,0,2.72-.48,3.79-1.37l9.39-7.83h15.97l9.39,7.83c1.06.88,2.41,1.37,3.79,1.37h11.82c.29,0,.52.24.52.52v4.1ZM334.74,431.41l-28.3,18.87c-.38.25-.87.25-1.26,0l-28.3-18.86c-4.35-2.9-8.05-6.64-10.97-10.94h7.52c2.19,2.59,4.7,4.87,7.53,6.75l20.39,13.59c1.32.88,2.86,1.34,4.45,1.34s3.12-.46,4.45-1.35l20.38-13.59c2.83-1.89,5.35-4.17,7.54-6.75h7.52c-2.92,4.3-6.62,8.03-10.97,10.94ZM284.49,420.47h42.64c-.23.16-.42.36-.65.51l-20.38,13.59c-.19.12-.41.12-.58,0l-20.39-13.59c-.23-.15-.42-.35-.64-.51ZM365.77,411.41c0,.86-.7,1.56-1.56,1.56h-117.42c-.86,0-1.56-.7-1.56-1.56v-33.2c0-.86.7-1.56,1.56-1.56h117.42c.86,0,1.56.7,1.56,1.56v33.2Z" />
+              <polygon points="278.69 385.25 271.31 390.18 271.87 381.37 265.92 381.37 266.51 390.18 259.13 385.25 256.13 390.52 264.09 394.39 256.13 398.27 259.13 403.47 266.51 398.54 265.92 407.35 271.87 407.35 271.31 398.54 278.69 403.47 281.63 398.27 273.73 394.39 281.63 390.52 278.69 385.25" />
+              <polygon points="315.31 385.25 307.93 390.18 308.49 381.37 302.54 381.37 303.13 390.18 295.75 385.25 292.75 390.52 300.71 394.39 292.75 398.27 295.75 403.47 303.13 398.54 302.54 407.35 308.49 407.35 307.93 398.54 315.31 403.47 318.25 398.27 310.35 394.39 318.25 390.52 315.31 385.25" />
+              <polygon points="351.93 385.25 344.55 390.18 345.11 381.37 339.16 381.37 339.75 390.18 332.37 385.25 329.37 390.52 337.33 394.39 329.37 398.27 332.37 403.47 339.75 398.54 339.16 407.35 345.11 407.35 344.55 398.54 351.93 403.47 354.87 398.27 346.97 394.39 354.87 390.52 351.93 385.25" />
+            </svg>
+          </span>
+          <span class="logo-text">My Password Vault</span>
+        </a>
+        <button
+          type="button"
+          class="landing-menu-toggle"
+          aria-expanded="false"
+          aria-controls="landing-nav-panel"
+          data-i18n-aria="navMenu"
+          aria-label="Menu"
+        >
+          <span class="landing-menu-toggle-inner" aria-hidden="true">
+            <span class="landing-menu-bar"></span>
+            <span class="landing-menu-bar"></span>
+            <span class="landing-menu-bar"></span>
+          </span>
+        </button>
+        </header>
+        <div id="landing-nav-backdrop" class="landing-nav-backdrop" aria-hidden="true"></div>
+        <div id="landing-nav-panel" class="landing-nav-panel">
+        <div class="nav-actions" role="navigation" aria-label="Main">
+          <a class="btn btn-ghost landing-nav-link" href="./index.html" data-i18n="navHome">Home</a>
+          <a class="btn btn-ghost landing-nav-link" href="./faq.html" data-i18n="navFaq">FAQ</a>
+          <a class="btn btn-ghost landing-nav-link" href="./pricing.html" data-i18n="navPricing" aria-current="page">Pricing</a>
+
+          <a class="btn btn-primary" href="/app/" data-i18n="navSignIn">Sign In</a>
+          <div id="landing-lang-root"></div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <main class="landing-inner-main">
+      <section id="pricing" class="landing-price-section">
+        <h2 data-i18n="landingPriceTitle">Simple limits, one upgrade</h2>
+        <p class="section-desc" data-i18n="landingPriceSubtitle">Start free with a generous entry cap, then unlock unlimited passwords with a single payment — no subscription.</p>
+        <div class="landing-price-grid">
+          <article class="card landing-price-card">
+            <h3 class="landing-price-tier" data-i18n="landingTierFree">Free</h3>
+            <p class="landing-price-amount">$0</p>
+            <p class="landing-price-sub" data-i18n="landingFreeForever">No monthly fee</p>
+            <p class="landing-price-desc" data-i18n="landingFreeDesc">
+              For personal use and trying the product with full security features.
+            </p>
+            <ul class="landing-price-list">
+              <li>
+                <svg class="landing-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m4.5 12.75 6 6 9-13.5"
+                  />
+                </svg>
+                <span data-i18n="landingFreeF1">Up to 25 password entries</span>
+              </li>
+              <li>
+                <svg class="landing-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m4.5 12.75 6 6 9-13.5"
+                  />
+                </svg>
+                <span data-i18n="landingFreeF2">Local-first AES-GCM-256 encryption + TOTP 2FA</span>
+              </li>
+              <li>
+                <svg class="landing-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m4.5 12.75 6 6 9-13.5"
+                  />
+                </svg>
+                <span data-i18n="landingFreeF3">Encrypted sync to your Supabase project (ciphertext only)</span>
+              </li>
+              <li>
+                <svg class="landing-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m4.5 12.75 6 6 9-13.5"
+                  />
+                </svg>
+                <span data-i18n="landingFreeF4">Offline JSON backup &amp; restore</span>
+              </li>
+            </ul>
+            <p class="landing-price-foot" data-i18n="landingFreeFootnote">
+              When you reach 25 entries, adding new rows is paused until you upgrade or delete entries.
+            </p>
+          </article>
+          <article class="card landing-price-card landing-price-card--paid">
+            <h3 class="landing-price-tier" data-i18n="landingTierPaid">Permanent license</h3>
+            <p class="landing-price-amount">$4.99</p>
+            <p class="landing-price-sub" data-i18n="landingPaidOnce">One-time USD 4.99 — no subscription</p>
+            <p class="landing-price-desc" data-i18n="landingPaidDesc">
+              Unlock unlimited password entries on this account forever.
+            </p>
+            <ul class="landing-price-list">
+              <li>
+                <svg class="landing-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m4.5 12.75 6 6 9-13.5"
+                  />
+                </svg>
+                <span data-i18n="landingPaidF1">Unlimited password entries</span>
+              </li>
+              <li>
+                <svg class="landing-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m4.5 12.75 6 6 9-13.5"
+                  />
+                </svg>
+                <span data-i18n="landingPaidF2">Everything in Free, plus no entry cap</span>
+              </li>
+              <li>
+                <svg class="landing-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m4.5 12.75 6 6 9-13.5"
+                  />
+                </svg>
+                <span data-i18n="landingPaidF3">Same zero-knowledge model — we never receive your master password</span>
+              </li>
+              <li>
+                <svg class="landing-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m4.5 12.75 6 6 9-13.5"
+                  />
+                </svg>
+                <span data-i18n="landingPaidF4">License stored on your account; works on every device you sign into</span>
+              </li>
+            </ul>
+            <div class="landing-price-cta-block">
+              <a class="btn btn-primary landing-price-btn" href="/app/#/pricing" data-i18n="landingCtaBuy"
+                >Continue to secure checkout</a
+              >
+              <p class="landing-price-hint" data-i18n="landingSignInHint">
+                We use your Google account only to attach the license and encrypted vault.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      </main>
+
+      <footer>
+        <p>
+          <strong>My Password Vault</strong>
+        </p>
+        <p class="landing-footer-copy">
+          <span data-i18n="footerCopy">©2026 Skyface, LLC. All rights reserved.</span>
+        </p>
+        <p class="landing-footer-legal">
+          <a href="./privacy.html" data-i18n="footerPrivacy">Privacy Policy</a>
+          <a href="./terms.html" data-i18n="footerTerms">Terms of Use</a>
+        </p>
+      </footer>
+    </div>
+    <script src="./landing-overlays.js"></script>
+    <script src="./landing-nav.js"></script>
+    <script src="./landing-lang.js"></script>
+  </body>
+</html>

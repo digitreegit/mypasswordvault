@@ -1,4 +1,5 @@
 import { MESSAGES_EN as en } from "../en";
+import { PRICING_CN, PRICING_ID, PRICING_JP } from "./pricing_i18n";
 
 export const MESSAGES_CN: Record<string, string> = {
   ...en,
@@ -106,6 +107,7 @@ export const MESSAGES_CN: Record<string, string> = {
   "pwdGen.cDigits": "数字 0-9",
   "pwdGen.cSymbols": "符号 !@#$",
   "pwdGen.cAmbiguous": "排除易混淆字符",
+  ...PRICING_CN,
 };
 
 export const MESSAGES_JP: Record<string, string> = {
@@ -218,6 +220,7 @@ export const MESSAGES_JP: Record<string, string> = {
   "pwdGen.cDigits": "数字 0-9",
   "pwdGen.cSymbols": "記号 !@#$",
   "pwdGen.cAmbiguous": "紛らわしい文字を除外",
+  ...PRICING_JP,
 };
 
 export const MESSAGES_ID: Record<string, string> = {
@@ -331,4 +334,5 @@ export const MESSAGES_ID: Record<string, string> = {
   "pwdGen.cDigits": "Angka 0-9",
   "pwdGen.cSymbols": "Simbol !@#$",
   "pwdGen.cAmbiguous": "Kecualikan karakter ambigu",
+  ...PRICING_ID,
 };

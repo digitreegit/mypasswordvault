@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { LOCALES, LOCALE_LABELS, type Locale } from "../lib/i18n/locale";
 import { Globe, Check } from "./Icons";
 
@@ -10,6 +11,11 @@ interface Props {
   /** Dropdown panel alignment under the button */
   align?: "left" | "right";
   className?: string;
+  /**
+   * `globe` — icon-only trigger (default).
+   * `compact` — current language label + Heroicons chevron (e.g. pricing bar).
+   */
+  appearance?: "globe" | "compact";
 }
 
 export function LanguageMenu({
@@ -18,6 +24,7 @@ export function LanguageMenu({
   ariaLabel,
   align = "right",
   className,
+  appearance = "globe",
 }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -43,13 +50,27 @@ export function LanguageMenu({
     <div className={["relative inline-block", className].filter(Boolean).join(" ")} ref={rootRef}>
       <button
         type="button"
-        className="btn-ghost p-2 rounded-lg text-ink-600 hover:text-ink-900 hover:bg-ink-100"
+        className={
+          appearance === "compact"
+            ? "input text-sm py-1.5 pl-3 pr-9 max-w-[12rem] w-full min-w-0 text-left relative flex items-center text-ink-800 hover:bg-ink-50/80"
+            : "btn-ghost p-2 rounded-lg text-ink-600 hover:text-ink-900 hover:bg-ink-100"
+        }
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-label={ariaLabel}
         onClick={() => setOpen((o) => !o)}
       >
-        <Globe width={20} height={20} className="shrink-0" />
+        {appearance === "compact" ? (
+          <>
+            <span className="truncate min-w-0 pr-1">{LOCALE_LABELS[value]}</span>
+            <ChevronDownIcon
+              className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400 shrink-0"
+              aria-hidden
+            />
+          </>
+        ) : (
+          <Globe width={20} height={20} className="shrink-0" />
+        )}
       </button>
       {open && (
         <div

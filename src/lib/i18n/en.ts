@@ -160,6 +160,15 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.licenseLoading": "Checking license…",
   "settings.licenseLink": "Open plans & pricing",
   "settings.licenseRefresh": "Refresh status",
+  "settings.planBadgeFree": "Free",
+  "settings.planBadgeLicensed": "Licensed",
+  "settings.licenseKeyLabel": "License key",
+  "settings.licenseKeyHint":
+    "Purchase reference (Stripe checkout session). Read-only — keep it for your records.",
+  "settings.licenseCopyKey": "Copy",
+  "settings.licenseKeyCopied": "Copied",
+  "settings.licenseNoSessionId":
+    "License is active; no checkout reference is stored for this account yet.",
 
   "lock.syncTitle": "Load from your account",
   "lock.pullCloud": "Restore from account",
@@ -189,6 +198,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "setup.restoreApply": "Load backup",
 
   "vault.pageTitle": "Vault",
+  "vault.licenseBadgeFree": "FREE",
+  "vault.licenseBadgeLicensed": "LICENSED",
   "vault.search": "Search (site, URL, username, notes, memo, category)",
   "vault.colCategory": "Category",
   "vault.manageCategories": "Manage categories",
@@ -274,7 +285,6 @@ export const MESSAGES_EN: Record<string, string> = {
   "pricing.checkoutCancel": "Checkout was cancelled. You can try again whenever you are ready.",
   "pricing.youAreLicensed": "Your account already has a permanent license. Thank you for your support.",
   "pricing.tierFree": "Free",
-  "pricing.currentPlan": "Current",
   "pricing.freeForever": "No monthly fee",
   "pricing.freeDesc": "For personal use and trying the product with full security features.",
   "pricing.freeF1": "Up to 25 password entries",
@@ -283,7 +293,6 @@ export const MESSAGES_EN: Record<string, string> = {
   "pricing.freeF4": "Offline JSON backup & restore",
   "pricing.freeFootnote":
     "When you reach {{limit}} entries, adding new rows is paused until you upgrade or delete entries.",
-  "pricing.mostPopular": "Best value",
   "pricing.tierPaid": "Permanent license",
   "pricing.paidOnce": "One-time USD 4.99 — no subscription",
   "pricing.paidDesc": "Unlock unlimited password entries on this account forever.",

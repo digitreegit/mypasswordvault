@@ -24,6 +24,7 @@ import {
 import { LanguageMenu } from "./LanguageMenu";
 import { privacyPolicyUrl } from "../lib/privacyPolicyUrl";
 import { isAppError } from "../lib/errors";
+import { useAuth } from "../lib/auth";
 
 type SortKey = "category" | "site" | "username" | "updatedAt";
 
@@ -41,6 +42,7 @@ const heroChevronField =
 
 export function VaultScreen() {
   const privacyHref = useMemo(() => privacyPolicyUrl(), []);
+  const { configured, user } = useAuth();
   const {
     entries,
     lock,
@@ -53,6 +55,8 @@ export function VaultScreen() {
     setLocale,
     atEntryLimit,
     freeEntryLimit,
+    licensed,
+    entitlementLoaded,
   } = useVault();
 
   const [query, setQuery] = useState("");
@@ -224,12 +228,33 @@ export function VaultScreen() {
               {t("app.brandName")}
             </span>
           </div>
-          <LanguageMenu
-            value={locale}
-            onChange={(l) => void setLocale(l)}
-            ariaLabel={t("settings.language")}
-            align="right"
-          />
+          <div className="flex items-center gap-2 shrink-0 min-w-0">
+            {configured && user?.id ? (
+              entitlementLoaded ? (
+                <span
+                  className={
+                    licensed
+                      ? "text-[0.65rem] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border border-emerald-300 bg-emerald-50 text-emerald-900 whitespace-nowrap"
+                      : "text-[0.65rem] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border border-ink-200 bg-ink-50 text-ink-600 whitespace-nowrap"
+                  }
+                  translate="no"
+                >
+                  {licensed ? t("vault.licenseBadgeLicensed") : t("vault.licenseBadgeFree")}
+                </span>
+              ) : (
+                <span
+                  className="h-6 w-[3.25rem] rounded-md bg-ink-100 animate-pulse shrink-0"
+                  aria-hidden
+                />
+              )
+            ) : null}
+            <LanguageMenu
+              value={locale}
+              onChange={(l) => void setLocale(l)}
+              ariaLabel={t("settings.language")}
+              align="right"
+            />
+          </div>
         </div>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4 w-full min-w-0">
           <h1 className="font-sans text-xl font-semibold text-ink-900 tracking-tight shrink-0">
