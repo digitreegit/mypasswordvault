@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { ChevronDownIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import { useVault, type DecryptedEntry } from "../lib/vault";
 import type { VaultCategory } from "../lib/storage";
 import { PasswordGenerator } from "./PasswordGenerator";
@@ -23,6 +23,7 @@ import {
 } from "./Icons";
 import { LanguageMenu } from "./LanguageMenu";
 import { privacyPolicyUrl } from "../lib/privacyPolicyUrl";
+import { isAppError } from "../lib/errors";
 
 type SortKey = "category" | "site" | "username" | "updatedAt";
 
@@ -40,8 +41,19 @@ const heroChevronField =
 
 export function VaultScreen() {
   const privacyHref = useMemo(() => privacyPolicyUrl(), []);
-  const { entries, lock, upsertEntry, removeEntry, touchActivity, t, categories, locale, setLocale } =
-    useVault();
+  const {
+    entries,
+    lock,
+    upsertEntry,
+    removeEntry,
+    touchActivity,
+    t,
+    categories,
+    locale,
+    setLocale,
+    atEntryLimit,
+    freeEntryLimit,
+  } = useVault();
 
   const [query, setQuery] = useState("");
   const [showAll, setShowAll] = useState(false);
@@ -53,6 +65,7 @@ export function VaultScreen() {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [entryLimitModalOpen, setEntryLimitModalOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -169,15 +182,23 @@ export function VaultScreen() {
   }
 
   async function addEntry() {
-    await upsertEntry({
-      categoryId: "",
-      site: "",
-      url: "",
-      username: "",
-      password: "",
-      notes: "",
-      memo: "",
-    });
+    try {
+      await upsertEntry({
+        categoryId: "",
+        site: "",
+        url: "",
+        username: "",
+        password: "",
+        notes: "",
+        memo: "",
+      });
+    } catch (e) {
+      if (isAppError(e) && e.code === "errors.entryLimitReached") {
+        setEntryLimitModalOpen(true);
+        return;
+      }
+      console.error(e);
+    }
   }
 
   function toggleSort(k: SortKey) {
@@ -250,8 +271,9 @@ export function VaultScreen() {
             </button>
             <button
               type="button"
-              className="btn-primary text-sm shrink-0"
+              className="btn-primary text-sm shrink-0 disabled:opacity-50 disabled:pointer-events-none"
               onClick={addEntry}
+              disabled={atEntryLimit}
               aria-label={t("vault.addRow")}
             >
               <Plus />{" "}
@@ -286,6 +308,32 @@ export function VaultScreen() {
       </header>
 
       <main className="flex-1 p-2 sm:p-4 min-w-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {atEntryLimit && (
+          <div
+            role="status"
+            className="mb-4 rounded-lg border border-ink-200 bg-white px-3 py-3 sm:px-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between shadow-sm"
+          >
+            <div className="flex gap-3 min-w-0">
+              <InformationCircleIcon
+                className="h-5 w-5 shrink-0 text-ink-500 mt-0.5"
+                aria-hidden
+              />
+              <p className="text-sm text-ink-800 leading-snug min-w-0">
+                {t("vault.entryLimitBanner", { limit: freeEntryLimit })}
+              </p>
+            </div>
+            <a
+              href="#/pricing"
+              className="btn-primary text-sm shrink-0 justify-center sm:min-w-[10rem]"
+              onClick={(e) => {
+                e.preventDefault();
+                window.location.hash = "#/pricing";
+              }}
+            >
+              {t("vault.entryLimitUpgrade")}
+            </a>
+          </div>
+        )}
         <div className="mb-1.5 flex justify-end pl-0.5 pr-3 sm:pr-4">
           <p className="text-[11px] sm:text-xs text-ink-500 tabular-nums text-right max-w-full leading-snug">
             {t("vault.totalItems", { count: filtered.length })}
@@ -335,8 +383,9 @@ export function VaultScreen() {
               {t("vault.empty")}{" "}
               <button
                 type="button"
-                className="text-accent-600 hover:underline"
+                className="text-accent-600 hover:underline disabled:opacity-50 disabled:pointer-events-none"
                 onClick={addEntry}
+                disabled={atEntryLimit}
               >
                 {t("vault.emptyCta")}
               </button>
@@ -416,8 +465,10 @@ export function VaultScreen() {
                     >
                       {t("vault.empty")}{" "}
                       <button
-                        className="text-accent-600 hover:underline"
+                        type="button"
+                        className="text-accent-600 hover:underline disabled:opacity-50 disabled:pointer-events-none"
                         onClick={addEntry}
+                        disabled={atEntryLimit}
                       >
                         {t("vault.emptyCta")}
                       </button>
@@ -467,6 +518,59 @@ export function VaultScreen() {
             setGeneratorFor(null);
           }}
         />
+      )}
+      {entryLimitModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45"
+          role="presentation"
+          onClick={() => setEntryLimitModalOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="vault-entry-limit-title"
+            className="w-full max-w-md rounded-xl border border-ink-200 bg-white shadow-xl p-5 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex gap-3">
+              <InformationCircleIcon
+                className="h-6 w-6 shrink-0 text-ink-500"
+                aria-hidden
+              />
+              <div className="min-w-0 space-y-2">
+                <h2
+                  id="vault-entry-limit-title"
+                  className="text-base font-semibold text-ink-900 leading-snug"
+                >
+                  {t("vault.entryLimitModalTitle")}
+                </h2>
+                <p className="text-sm text-ink-600 leading-snug">
+                  {t("vault.entryLimitModalBody", { limit: freeEntryLimit })}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end pt-1">
+              <button
+                type="button"
+                className="btn-secondary text-sm w-full sm:w-auto"
+                onClick={() => setEntryLimitModalOpen(false)}
+              >
+                {t("vault.entryLimitModalClose")}
+              </button>
+              <a
+                href="#/pricing"
+                className="btn-primary text-sm w-full sm:w-auto text-center"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setEntryLimitModalOpen(false);
+                  window.location.hash = "#/pricing";
+                }}
+              >
+                {t("vault.entryLimitModalCta")}
+              </a>
+            </div>
+          </div>
+        </div>
       )}
       {showSettings && (
         <SettingsDialog onClose={() => setShowSettings(false)} />

@@ -37,7 +37,8 @@ export const MESSAGES_KR: Record<string, string> = {
     "암호화된 금고는 계정에 그대로 남아 있습니다. 새 기기나 초기화 후에는: 로그인 → 설정의 ‘계정에서 최신 받기’로 암호화 스냅샷을 받고 → 마스터 비밀번호를 입력한 뒤 → 안내에 따라 새 QR을 스캔해 대체 인증기를 연결하면 됩니다. 확인을 마치면 예전 시간 기반 코드는 더 이상 쓰이지 않는 것이 정상이지만, 데이터가 지워진 것은 아닙니다. 이전 인증 기기가 아직 있다면 종종 재연결 없이 마스터+6자리로 바로 잠금 해제할 수도 있습니다.",
   "auth.faqPricingQ": "유료인가요, 무료인가요?",
   "auth.faqPricingA":
-    "지금은 무료로 이용할 수 있습니다. 정책이 바뀌면 미리 명확히 안내하겠습니다.",
+    "비밀번호 항목은 무료로 최대 25개까지 저장할 수 있습니다. $4.99를 한 번만 결제하면 이 계정에서 항목 수 제한 없이 계속 쓸 수 있습니다. 앱 주소에 #/pricing 을 붙이거나 설정에서 요금제 페이지로 이동해 결제할 수 있습니다.",
+  "auth.pricingLink": "요금제·결제",
   "auth.faqContactQ": "문제가 생기면 어디로 연락하나요?",
   "auth.faqContactA":
     "문의·버그 신고·제안은 contact@skyface.com 으로 메일 주세요. 보내주신 내용은 확인합니다.",
@@ -102,6 +103,11 @@ export const MESSAGES_KR: Record<string, string> = {
     "Supabase에 user_vaults 테이블이 없습니다. 대시보드 → SQL Editor에서 이 저장소의 supabase/migrations/20260513120000_user_vaults.sql 내용을 붙여넣어 실행한 뒤 다시 시도하세요.",
   "errors.noCloudBackup":
     "이 계정에 저장된 암호화 금고가 아직 없습니다. 이미 금고가 있는 기기에서 사용하거나, 아래 고급 메뉴의 오프라인 파일을 사용하세요.",
+  "errors.entryLimitReached":
+    "무료 플랜에서는 비밀번호 항목을 최대 {{limit}}개까지 저장할 수 있습니다. 더 추가하려면 유료 라이선스로 업그레이드하세요.",
+  "errors.importExceedsEntryLimit":
+    "이 백업에는 {{limit}}개를 넘는 항목이 있습니다. 가져오기 전에 영구 라이선스를 구매하거나, 파일에서 항목을 줄이세요.",
+
   "strength.0": "비어 있음",
   "strength.1": "약함",
   "strength.2": "보통",
@@ -139,6 +145,17 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.signOut": "계정에서 로그아웃",
   "settings.signOutHint":
     "클라우드 동기화만 종료합니다. 이 기기의 로컬 금고는 초기화하기 전까지 유지됩니다.",
+
+  "settings.licenseTitle": "요금제·항목 제한",
+  "settings.licenseFree":
+    "무료: 이 계정에 비밀번호 항목 최대 {{limit}}개. 서버는 비밀번호 내용을 알 수 없습니다.",
+  "settings.licensePaid":
+    "영구 라이선스: $4.99 일회 결제 — 항목 수 무제한. 로그인한 계정에 연결됩니다.",
+  "settings.licenseStatusLicensed": "이 계정은 영구 라이선스가 적용되어 있습니다(항목 무제한).",
+  "settings.licenseStatusFree": "무료 플랜입니다 ({{count}} / {{limit}}개 사용 중).",
+  "settings.licenseLoading": "라이선스 확인 중…",
+  "settings.licenseLink": "요금제·결제 페이지 열기",
+  "settings.licenseRefresh": "상태 새로고침",
 
   "lock.syncTitle": "계정에서 불러오기",
   "lock.pullCloud": "계정에서 복원하기",
@@ -200,6 +217,14 @@ export const MESSAGES_KR: Record<string, string> = {
   "vault.footer":
     "비밀번호는 AES-GCM-256으로 암호화됩니다. 로그인 시 암호문이 계정에 동기화되며 서버는 내용을 읽을 수 없습니다. 복사된 비밀번호는 20초 후 클립보드에서 지워집니다.",
   "vault.totalItems": "전체 {{count}}개",
+  "vault.entryLimitBanner":
+    "이 계정의 무료 한도({{limit}}개)에 도달했습니다. 한 번 업그레이드하면 항목을 무제한으로 추가할 수 있습니다.",
+  "vault.entryLimitUpgrade": "요금제 보기·업그레이드",
+  "vault.entryLimitModalTitle": "항목 한도 도달",
+  "vault.entryLimitModalBody":
+    "무료 플랜에서는 비밀번호 항목을 최대 {{limit}}개까지 저장할 수 있습니다. 영구 라이선스를 구매하면 계속 추가할 수 있습니다.",
+  "vault.entryLimitModalCta": "요금제 보기",
+  "vault.entryLimitModalClose": "닫기",
   "vault.summaryUncategorized": "분류 없음",
   "vault.newEntry": "새 항목",
   "vault.sortBy": "정렬",
@@ -229,4 +254,48 @@ export const MESSAGES_KR: Record<string, string> = {
   "pwdGen.cDigits": "숫자 0-9",
   "pwdGen.cSymbols": "특수문자 !@#$",
   "pwdGen.cAmbiguous": "혼동되는 문자 제외",
+
+  "pricing.backHome": "소개 페이지",
+  "pricing.backApp": "금고로 돌아가기",
+  "pricing.title": "명확한 한도, 한 번의 업그레이드",
+  "pricing.subtitle":
+    "넉넉한 무료 한도로 시작한 뒤, 한 번의 결제로 무제한 항목을 쓸 수 있습니다. 월 구독이 없습니다.",
+  "pricing.supabaseRequired":
+    "결제·라이선스를 쓰려면 README에 따라 Supabase를 연결하세요.",
+  "pricing.checkoutSuccess":
+    "결제가 접수되었습니다. 라이선스가 아직 반영되지 않았다면 잠시 후 이 페이지를 새로고침하세요.",
+  "pricing.checkoutCancel": "결제를 취소했습니다. 준비되면 다시 시도할 수 있습니다.",
+  "pricing.youAreLicensed": "이 계정에는 이미 영구 라이선스가 적용되어 있습니다. 감사합니다.",
+  "pricing.tierFree": "무료",
+  "pricing.currentPlan": "현재",
+  "pricing.freeForever": "월 요금 없음",
+  "pricing.freeDesc": "개인 사용과 보안 기능을 모두 체험하기에 적합합니다.",
+  "pricing.freeF1": "비밀번호 항목 최대 25개",
+  "pricing.freeF2": "로컬 우선 AES-GCM-256 암호화 + TOTP 2FA",
+  "pricing.freeF3": "Supabase로 암호문만 동기화",
+  "pricing.freeF4": "오프라인 JSON 백업·복원",
+  "pricing.freeFootnote":
+    "{{limit}}개에 도달하면 새 행 추가가 일시 중지됩니다. 업그레이드하거나 항목을 삭제하세요.",
+  "pricing.mostPopular": "가장 알뜰",
+  "pricing.tierPaid": "영구 라이선스",
+  "pricing.paidOnce": "일회 USD 4.99 — 구독 없음",
+  "pricing.paidDesc": "이 계정에서 비밀번호 항목을 영구적으로 무제한으로 저장합니다.",
+  "pricing.paidF1": "비밀번호 항목 무제한",
+  "pricing.paidF2": "무료 플랜의 모든 기능 + 항목 수 제한 해제",
+  "pricing.paidF3": "동일한 제로 지식 모델 — 마스터 비밀번호는 서버로 가지 않습니다",
+  "pricing.paidF4": "라이선스는 계정에 저장되며, 로그인하는 모든 기기에서 동일하게 적용됩니다",
+  "pricing.signInToBuy": "Google로 로그인한 뒤 결제로 이동",
+  "pricing.signInHint": "Google 계정은 라이선스와 암호화 금고를 연결하는 데만 사용됩니다.",
+  "pricing.alreadyLicensed": "라이선스 적용됨 — 감사합니다",
+  "pricing.ctaBuy": "안전한 결제 페이지로 이동",
+  "pricing.stripeNote": "결제는 Stripe에서 처리됩니다. 결제를 위해 잠시 외부 페이지로 이동합니다.",
+  "pricing.errSignIn": "먼저 로그인하세요.",
+  "pricing.errCheckout": "결제를 시작할 수 없습니다. 다시 시도하거나 문의하세요.",
+  "pricing.opsTitle": "운영 체크리스트 (Supabase + Stripe)",
+  "pricing.ops1":
+    "Supabase SQL Editor에서 `20260515180000_user_entitlements.sql` 마이그레이션을 실행하세요.",
+  "pricing.ops2":
+    "Edge Functions `create-checkout-session`, `stripe-webhook`을 배포하고 STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PUBLIC_APP_URL(배포 URL, 프로덕션은 /app 포함), 선택 STRIPE_LICENSE_AMOUNT_CENTS(기본 499)를 설정하세요.",
+  "pricing.ops3": "Stripe 대시보드에서 `stripe-webhook` URL을 등록하고 checkout.session.completed 이벤트를 구독하세요.",
+  "pricing.ops4": "결제 후 잠금 해제하거나 이 페이지를 열면 user_entitlements에서 라이선스를 다시 읽어 옵니다.",
 };

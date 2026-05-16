@@ -1,0 +1,300 @@
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuth } from "../lib/auth";
+import { translate } from "../lib/i18n/bundles";
+import {
+  detectBrowserLocale,
+  normalizeLocale,
+  type Locale,
+} from "../lib/i18n/locale";
+import { getSupabase, isSupabaseConfigured } from "../lib/supabaseClient";
+import { FREE_ENTRY_LIMIT, fetchUserLicensed } from "../lib/entitlements";
+import { isNativeApp } from "../lib/platform";
+import { privacyPolicyUrl } from "../lib/privacyPolicyUrl";
+import { Check } from "./Icons";
+
+function parseCheckoutQuery(): "success" | "cancel" | null {
+  if (typeof window === "undefined") return null;
+  const q = window.location.hash.split("?")[1];
+  if (!q) return null;
+  const v = new URLSearchParams(q).get("checkout");
+  if (v === "success") return "success";
+  if (v === "cancel") return "cancel";
+  return null;
+}
+
+function clearCheckoutQuery() {
+  const base = window.location.hash.split("?")[0] || "#/pricing";
+  window.history.replaceState(null, "", base);
+}
+
+export function PricingPage() {
+  const { configured, loading, session, signInWithGoogle } = useAuth();
+  const [locale, setLocale] = useState<Locale>(() =>
+    normalizeLocale(detectBrowserLocale()),
+  );
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [licensed, setLicensed] = useState<boolean | null>(null);
+  const [checkoutFlash, setCheckoutFlash] = useState<string | null>(null);
+
+  const t = useCallback(
+    (k: string, v?: Record<string, string | number>) => translate(locale, k, v),
+    [locale],
+  );
+  const privacyHref = useMemo(() => privacyPolicyUrl(), []);
+
+  const uid = session?.user?.id;
+
+  const reloadLicense = useCallback(async () => {
+    if (!uid || !isSupabaseConfigured) {
+      setLicensed(null);
+      return;
+    }
+    setLicensed(await fetchUserLicensed(uid));
+  }, [uid]);
+
+  useEffect(() => {
+    void reloadLicense();
+  }, [reloadLicense]);
+
+  useEffect(() => {
+    const q = parseCheckoutQuery();
+    if (q === "success") {
+      setCheckoutFlash(t("pricing.checkoutSuccess"));
+      clearCheckoutQuery();
+      void reloadLicense();
+    } else if (q === "cancel") {
+      setCheckoutFlash(t("pricing.checkoutCancel"));
+      clearCheckoutQuery();
+    }
+  }, [reloadLicense, t]);
+
+  async function startCheckout() {
+    setErr(null);
+    const sb = getSupabase();
+    if (!sb || !session) {
+      setErr(t("pricing.errSignIn"));
+      return;
+    }
+    setBusy(true);
+    try {
+      const { data, error } = await sb.functions.invoke<{ url?: string }>(
+        "create-checkout-session",
+        { body: {} },
+      );
+      if (error) {
+        setErr(error.message || t("pricing.errCheckout"));
+        return;
+      }
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setErr(t("pricing.errCheckout"));
+    } catch (e) {
+      setErr((e as Error)?.message ?? t("pricing.errCheckout"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const backHref = isNativeApp() ? undefined : "/";
+
+  return (
+    <div className="min-h-screen min-h-[100dvh] bg-ink-50 text-ink-800 flex flex-col">
+      <header className="border-b border-ink-200 bg-white px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-3 min-w-0">
+          {backHref ? (
+            <a
+              href={backHref}
+              className="text-sm font-medium text-accent-700 hover:text-accent-800 shrink-0"
+            >
+              {t("pricing.backHome")}
+            </a>
+          ) : null}
+          <a
+            href="#/"
+            className="text-sm text-ink-600 hover:text-ink-900 shrink-0"
+            onClick={(e) => {
+              e.preventDefault();
+              window.location.hash = "";
+            }}
+          >
+            {t("pricing.backApp")}
+          </a>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="sr-only" htmlFor="pricing-lang">
+            {t("settings.language")}
+          </label>
+          <select
+            id="pricing-lang"
+            className="input text-sm py-1.5 max-w-[10rem]"
+            value={locale}
+            onChange={(e) => setLocale(normalizeLocale(e.target.value))}
+          >
+            <option value="en">English</option>
+            <option value="kr">한국어</option>
+          </select>
+          <a
+            className="text-sm text-ink-600 hover:text-ink-900 whitespace-nowrap"
+            href={privacyHref}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t("legal.privacyPolicy")}
+          </a>
+        </div>
+      </header>
+
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-10 sm:py-14">
+        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
+          <h1 className="text-2xl sm:text-3xl font-bold text-ink-900 tracking-tight">
+            {t("pricing.title")}
+          </h1>
+          <p className="mt-3 text-ink-600 text-sm sm:text-base leading-relaxed">
+            {t("pricing.subtitle")}
+          </p>
+        </div>
+
+        {checkoutFlash && (
+          <div
+            className="mb-8 rounded-lg border border-ink-200 bg-white px-4 py-3 text-sm text-ink-700 shadow-sm"
+            role="status"
+          >
+            {checkoutFlash}
+          </div>
+        )}
+
+        {!configured && (
+          <p className="mb-8 text-center text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+            {t("pricing.supabaseRequired")}
+          </p>
+        )}
+
+        {configured && loading && (
+          <p className="text-center text-ink-500 text-sm mb-8">{t("app.authLoading")}</p>
+        )}
+
+        {configured && uid && licensed === true && (
+          <div className="mb-8 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 text-center">
+            {t("pricing.youAreLicensed")}
+          </div>
+        )}
+
+        {err && (
+          <p className="mb-6 text-center text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            {err}
+          </p>
+        )}
+
+        <div className="grid gap-6 md:grid-cols-2 md:gap-8 items-stretch">
+          <section className="card p-6 sm:p-8 flex flex-col border-ink-200">
+            <div className="flex items-baseline justify-between gap-2">
+              <h2 className="text-lg font-semibold text-accent-700 uppercase tracking-wide">
+                {t("pricing.tierFree")}
+              </h2>
+              {licensed === false ? (
+                <span className="text-xs font-medium text-ink-500 border border-ink-200 rounded-full px-2 py-0.5">
+                  {t("pricing.currentPlan")}
+                </span>
+              ) : null}
+            </div>
+            <p className="mt-4 text-4xl sm:text-5xl font-bold text-ink-900">$0</p>
+            <p className="text-sm text-ink-500 mt-1">{t("pricing.freeForever")}</p>
+            <p className="mt-4 text-sm text-ink-600 leading-relaxed">{t("pricing.freeDesc")}</p>
+            <ul className="mt-6 space-y-3 text-sm text-ink-700 flex-1">
+              {(
+                [
+                  "pricing.freeF1",
+                  "pricing.freeF2",
+                  "pricing.freeF3",
+                  "pricing.freeF4",
+                ] as const
+              ).map((k) => (
+                <li key={k} className="flex gap-2">
+                  <Check className="h-5 w-5 shrink-0 text-accent-600" aria-hidden />
+                  <span>{t(k)}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-6 text-xs text-ink-500 leading-snug border-t border-ink-100 pt-4">
+              {t("pricing.freeFootnote", { limit: FREE_ENTRY_LIMIT })}
+            </p>
+          </section>
+
+          <section className="card p-6 sm:p-8 flex flex-col border-2 border-accent-500 shadow-md relative">
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-ink-900 text-white text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+              {t("pricing.mostPopular")}
+            </span>
+            <h2 className="text-lg font-semibold text-accent-700 uppercase tracking-wide mt-2">
+              {t("pricing.tierPaid")}
+            </h2>
+            <p className="mt-4 text-4xl sm:text-5xl font-bold text-ink-900">$4.99</p>
+            <p className="text-sm text-ink-500 mt-1">{t("pricing.paidOnce")}</p>
+            <p className="mt-4 text-sm text-ink-600 leading-relaxed">{t("pricing.paidDesc")}</p>
+            <ul className="mt-6 space-y-3 text-sm text-ink-700 flex-1">
+              {(
+                [
+                  "pricing.paidF1",
+                  "pricing.paidF2",
+                  "pricing.paidF3",
+                  "pricing.paidF4",
+                ] as const
+              ).map((k) => (
+                <li key={k} className="flex gap-2">
+                  <Check className="h-5 w-5 shrink-0 text-accent-600" aria-hidden />
+                  <span>{t(k)}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-8 pt-4 border-t border-ink-100 space-y-3">
+              {!session ? (
+                <>
+                  <button
+                    type="button"
+                    className="btn-primary w-full justify-center"
+                    disabled={!configured || busy || loading}
+                    onClick={() => void signInWithGoogle()}
+                  >
+                    {t("pricing.signInToBuy")}
+                  </button>
+                  <p className="text-xs text-ink-500 text-center">{t("pricing.signInHint")}</p>
+                </>
+              ) : licensed === true ? (
+                <button type="button" className="btn-secondary w-full justify-center" disabled>
+                  {t("pricing.alreadyLicensed")}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn-primary w-full justify-center"
+                  disabled={
+                    !configured || busy || loading || (Boolean(session) && licensed === null)
+                  }
+                  onClick={() => void startCheckout()}
+                >
+                  {busy ? t("app.loading") : t("pricing.ctaBuy")}
+                </button>
+              )}
+              <p className="text-xs text-ink-500 leading-snug text-center">
+                {t("pricing.stripeNote")}
+              </p>
+            </div>
+          </section>
+        </div>
+
+        <section className="mt-12 rounded-xl border border-ink-200 bg-white p-5 sm:p-6 text-sm text-ink-600 leading-relaxed">
+          <h3 className="font-semibold text-ink-900 mb-2">{t("pricing.opsTitle")}</h3>
+          <ol className="list-decimal pl-5 space-y-2">
+            <li>{t("pricing.ops1")}</li>
+            <li>{t("pricing.ops2")}</li>
+            <li>{t("pricing.ops3")}</li>
+            <li>{t("pricing.ops4")}</li>
+          </ol>
+        </section>
+      </main>
+    </div>
+  );
+}

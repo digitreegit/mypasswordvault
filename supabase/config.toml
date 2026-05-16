@@ -8,3 +8,11 @@ verify_jwt = false
 # Forgot password: browser invokes with anon key; uses service role + Resend only.
 [functions.send-password-reset]
 verify_jwt = false
+
+# Signed-in user starts Stripe Checkout for one-time license (JWT verified by gateway).
+[functions.create-checkout-session]
+verify_jwt = true
+
+# Stripe → grant license (raw body + signature; no JWT).
+[functions.stripe-webhook]
+verify_jwt = false

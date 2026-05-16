@@ -45,6 +45,8 @@ import {
   reconcileCloudAtStartup,
   upsertRemoteVaultBackup,
 } from "./cloudVault";
+import { FREE_ENTRY_LIMIT, fetchUserLicensed } from "./entitlements";
+import { isSupabaseConfigured } from "./supabaseClient";
 
 /** After "Download from account", require master password then new TOTP enrollment (lost old phone). */
 const TOTP_REBIND_AFTER_PULL_KEY = "mpv_totp_rebind_after_pull";
@@ -110,6 +112,13 @@ interface VaultContextValue {
   categories: VaultCategory[];
   setCategories: (next: VaultCategory[]) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
+
+  /** Cloud billing: one-time license removes the free entry cap. */
+  licensed: boolean;
+  entitlementLoaded: boolean;
+  atEntryLimit: boolean;
+  freeEntryLimit: number;
+  refreshEntitlements: () => Promise<void>;
 }
 
 const VaultContext = createContext<VaultContextValue | null>(null);
@@ -161,6 +170,41 @@ export function VaultProvider({
   );
   const [needsTotpRebindAfterCloudPull, setNeedsTotpRebindAfterCloudPull] =
     useState(false);
+
+  const [licensed, setLicensed] = useState(!isSupabaseConfigured);
+  const [entitlementLoaded, setEntitlementLoaded] = useState(
+    !isSupabaseConfigured,
+  );
+  const entitlementRef = useRef({
+    licensed: !isSupabaseConfigured,
+    loaded: !isSupabaseConfigured,
+  });
+
+  useEffect(() => {
+    entitlementRef.current = { licensed, loaded: entitlementLoaded };
+  }, [licensed, entitlementLoaded]);
+
+  const refreshEntitlements = useCallback(async () => {
+    if (!userId || !isSupabaseConfigured) {
+      setLicensed(true);
+      setEntitlementLoaded(true);
+      return;
+    }
+    setEntitlementLoaded(false);
+    try {
+      const ok = await fetchUserLicensed(userId);
+      setLicensed(ok);
+    } catch (e) {
+      console.error("refreshEntitlements", e);
+      setLicensed(false);
+    } finally {
+      setEntitlementLoaded(true);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    void refreshEntitlements();
+  }, [refreshEntitlements]);
 
   useEffect(() => {
     localeRef.current = locale;
@@ -403,7 +447,8 @@ export function VaultProvider({
     lastActivityRef.current = Date.now();
     setStatus("unlocked");
     await flushCloudPush();
-  }, [flushCloudPush]);
+    void refreshEntitlements();
+  }, [flushCloudPush, refreshEntitlements]);
 
   const unlock = useCallback(
     async (masterPassword: string, totpCode: string) => {
@@ -435,8 +480,9 @@ export function VaultProvider({
       setNeedsTotpRebindAfterCloudPull(false);
       await loadEntries(key);
       setStatus("unlocked");
+      void refreshEntitlements();
     },
-    [loadEntries]
+    [loadEntries, refreshEntitlements]
   );
 
   const resetVault = useCallback(async () => {
@@ -483,6 +529,16 @@ export function VaultProvider({
       if (!session) throw new AppError("errors.locked");
       const id = partial.id ?? newId();
       const existing = entries.find((e) => e.id === id);
+      const isNew = !existing;
+      if (
+        isNew &&
+        isSupabaseConfigured &&
+        entitlementLoaded &&
+        !licensed &&
+        entries.length >= FREE_ENTRY_LIMIT
+      ) {
+        throw new AppError("errors.entryLimitReached");
+      }
       const merged: DecryptedEntry = {
         id,
         categoryId: partial.categoryId ?? existing?.categoryId ?? "",
@@ -519,7 +575,7 @@ export function VaultProvider({
       lastActivityRef.current = Date.now();
       scheduleCloudPush();
     },
-    [entries, scheduleCloudPush]
+    [entries, scheduleCloudPush, licensed, entitlementLoaded]
   );
 
   const removeEntry = useCallback(async (id: string) => {
@@ -583,7 +639,14 @@ export function VaultProvider({
   }, []);
 
   const importBackup = useCallback(async (jsonText: string) => {
-    const { meta, entries } = parseVaultBackup(jsonText);
+    const { meta, entries: parsedEntries } = parseVaultBackup(jsonText);
+    if (isSupabaseConfigured) {
+      const { loaded, licensed: lic } = entitlementRef.current;
+      const treatAsUnlicensed = loaded ? !lic : true;
+      if (treatAsUnlicensed && parsedEntries.length > FREE_ENTRY_LIMIT) {
+        throw new AppError("errors.importExceedsEntryLimit");
+      }
+    }
     sessionRef.current = null;
     pendingSetupRef.current = null;
     pendingTotpRebindRef.current = null;
@@ -593,7 +656,7 @@ export function VaultProvider({
       categories: meta.categories ?? [],
     };
     await putMeta(metaNorm);
-    for (const e of entries) {
+    for (const e of parsedEntries) {
       const row: VaultEntry = {
         ...e,
         categoryId: typeof e.categoryId === "string" ? e.categoryId : "",
@@ -724,8 +787,18 @@ export function VaultProvider({
       await loadEntries(pending.key);
       setStatus("unlocked");
       await flushCloudPush();
+      void refreshEntitlements();
     },
-    [loadEntries, flushCloudPush]
+    [loadEntries, flushCloudPush, refreshEntitlements]
+  );
+
+  const atEntryLimit = useMemo(
+    () =>
+      isSupabaseConfigured &&
+      entitlementLoaded &&
+      !licensed &&
+      entries.length >= FREE_ENTRY_LIMIT,
+    [entitlementLoaded, licensed, entries.length],
   );
 
   const value = useMemo<VaultContextValue>(
@@ -758,6 +831,11 @@ export function VaultProvider({
       categories: meta?.categories ?? [],
       setCategories,
       deleteCategory,
+      licensed,
+      entitlementLoaded,
+      atEntryLimit,
+      freeEntryLimit: FREE_ENTRY_LIMIT,
+      refreshEntitlements,
     }),
     [
       status,
@@ -765,6 +843,9 @@ export function VaultProvider({
       entries,
       locale,
       needsTotpRebindAfterCloudPull,
+      licensed,
+      entitlementLoaded,
+      atEntryLimit,
       setup,
       confirmTotpEnrollment,
       abortSetup,
@@ -786,6 +867,7 @@ export function VaultProvider({
       touchActivity,
       setCategories,
       deleteCategory,
+      refreshEntitlements,
     ]
   );
 

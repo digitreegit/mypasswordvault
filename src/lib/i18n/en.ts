@@ -35,7 +35,8 @@ export const MESSAGES_EN: Record<string, string> = {
     "Your encrypted vault remains in your account. On a new or reset device: sign in, download the latest vault from Devices & backup, enter your master password, then follow the prompts to scan a new QR code and link a replacement authenticator. After you confirm, old time-based codes stop working—that is expected—but your encrypted data was not erased. If you still have access to your previous authenticator, you can often unlock normally without resetting it.",
   "auth.faqPricingQ": "Is this free or paid?",
   "auth.faqPricingA":
-    "The service is free to use for now. If that ever changes, we will announce pricing clearly beforehand.",
+    "You can save up to 25 password entries for free. A one-time $4.99 purchase unlocks unlimited entries on your account forever. Open Plans & pricing from the app (or add #/pricing to the app URL) for checkout.",
+  "auth.pricingLink": "Plans & pricing",
   "auth.faqContactQ": "Who do I contact if something goes wrong?",
   "auth.faqContactA":
     "Email contact@skyface.com for questions, bug reports, or feedback—we read incoming mail.",
@@ -104,6 +105,10 @@ export const MESSAGES_EN: Record<string, string> = {
     "The Supabase project is missing the user_vaults table. In the Supabase dashboard open SQL Editor, paste and run the contents of supabase/migrations/20260513120000_user_vaults.sql in this repo, then try again.",
   "errors.noCloudBackup":
     "No encrypted vault found for this account yet. Use a device that already has the vault, or an offline file under Advanced below.",
+  "errors.entryLimitReached":
+    "The free plan allows up to {{limit}} password entries. Upgrade to add more.",
+  "errors.importExceedsEntryLimit":
+    "This backup has more than {{limit}} entries. Upgrade to a permanent license before importing, or remove entries from the file.",
 
   "strength.0": "Empty",
   "strength.1": "Weak",
@@ -144,6 +149,17 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.signOut": "Sign out of account",
   "settings.signOutHint":
     "Signs out of cloud sync only. This device keeps its local vault until you reset it.",
+
+  "settings.licenseTitle": "Plan & entry limit",
+  "settings.licenseFree":
+    "Free: up to {{limit}} password entries on this account. The server never sees your passwords.",
+  "settings.licensePaid":
+    "Permanent license: one-time $4.99 — unlimited entries. Tied to your signed-in account.",
+  "settings.licenseStatusLicensed": "Your account has a permanent license (unlimited entries).",
+  "settings.licenseStatusFree": "You are on the free plan ({{count}} / {{limit}} entries used).",
+  "settings.licenseLoading": "Checking license…",
+  "settings.licenseLink": "Open plans & pricing",
+  "settings.licenseRefresh": "Refresh status",
 
   "lock.syncTitle": "Load from your account",
   "lock.pullCloud": "Restore from account",
@@ -205,6 +221,14 @@ export const MESSAGES_EN: Record<string, string> = {
   "vault.footer":
     "Passwords are encrypted with AES-GCM-256. When signed in, ciphertext syncs to your account; the server cannot read your secrets. Copied passwords are cleared from the clipboard after 20 seconds.",
   "vault.totalItems": "Total: {{count}} items",
+  "vault.entryLimitBanner":
+    "You have reached the free limit of {{limit}} password entries on this account. Upgrade once to add unlimited entries.",
+  "vault.entryLimitUpgrade": "View plans & upgrade",
+  "vault.entryLimitModalTitle": "Entry limit reached",
+  "vault.entryLimitModalBody":
+    "The free plan includes up to {{limit}} password entries. Purchase a permanent license to keep adding entries.",
+  "vault.entryLimitModalCta": "See pricing",
+  "vault.entryLimitModalClose": "Close",
   "vault.summaryUncategorized": "Uncategorized",
   "vault.newEntry": "New entry",
   "vault.sortBy": "Sort by",
@@ -237,4 +261,48 @@ export const MESSAGES_EN: Record<string, string> = {
   "pwdGen.cDigits": "Digits 0–9",
   "pwdGen.cSymbols": "Symbols !@#$",
   "pwdGen.cAmbiguous": "Exclude ambiguous characters",
+
+  "pricing.backHome": "Home",
+  "pricing.backApp": "Back to vault",
+  "pricing.title": "Simple limits, one upgrade",
+  "pricing.subtitle":
+    "Start free with a generous entry cap, then unlock unlimited passwords with a single payment — no subscription.",
+  "pricing.supabaseRequired":
+    "Connect this app to Supabase (see README) to enable account billing and Stripe checkout.",
+  "pricing.checkoutSuccess":
+    "Payment received. If your license is not active yet, wait a few seconds and refresh this page.",
+  "pricing.checkoutCancel": "Checkout was cancelled. You can try again whenever you are ready.",
+  "pricing.youAreLicensed": "Your account already has a permanent license. Thank you for your support.",
+  "pricing.tierFree": "Free",
+  "pricing.currentPlan": "Current",
+  "pricing.freeForever": "No monthly fee",
+  "pricing.freeDesc": "For personal use and trying the product with full security features.",
+  "pricing.freeF1": "Up to 25 password entries",
+  "pricing.freeF2": "Local-first AES-GCM-256 encryption + TOTP 2FA",
+  "pricing.freeF3": "Encrypted sync to your Supabase project (ciphertext only)",
+  "pricing.freeF4": "Offline JSON backup & restore",
+  "pricing.freeFootnote":
+    "When you reach {{limit}} entries, adding new rows is paused until you upgrade or delete entries.",
+  "pricing.mostPopular": "Best value",
+  "pricing.tierPaid": "Permanent license",
+  "pricing.paidOnce": "One-time USD 4.99 — no subscription",
+  "pricing.paidDesc": "Unlock unlimited password entries on this account forever.",
+  "pricing.paidF1": "Unlimited password entries",
+  "pricing.paidF2": "Everything in Free, plus no entry cap",
+  "pricing.paidF3": "Same zero-knowledge model — we never receive your master password",
+  "pricing.paidF4": "License stored on your account; works on every device you sign into",
+  "pricing.signInToBuy": "Sign in with Google to continue to checkout",
+  "pricing.signInHint": "We use your Google account only to attach the license and encrypted vault.",
+  "pricing.alreadyLicensed": "Licensed — thank you",
+  "pricing.ctaBuy": "Continue to secure checkout",
+  "pricing.stripeNote": "Payments are processed by Stripe. You will leave this app to complete purchase.",
+  "pricing.errSignIn": "Please sign in first.",
+  "pricing.errCheckout": "Could not start checkout. Try again or contact support.",
+  "pricing.opsTitle": "Operator checklist (Supabase + Stripe)",
+  "pricing.ops1":
+    "Run the SQL migration `20260515180000_user_entitlements.sql` in the Supabase SQL editor.",
+  "pricing.ops2":
+    "Deploy edge functions `create-checkout-session` and `stripe-webhook`; set secrets STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PUBLIC_APP_URL (your deployed app URL including /app if used), optional STRIPE_LICENSE_AMOUNT_CENTS (default 499).",
+  "pricing.ops3": "In Stripe Dashboard, add the webhook endpoint URL for `stripe-webhook` and subscribe to checkout.session.completed.",
+  "pricing.ops4": "After purchase, the app refreshes license from user_entitlements automatically when you unlock or open this page.",
 };

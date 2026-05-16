@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { VaultProvider, useVault } from "./lib/vault";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { translate } from "./lib/i18n/bundles";
@@ -7,6 +7,23 @@ import { SetupScreen } from "./components/SetupScreen";
 import { LockScreen } from "./components/LockScreen";
 import { VaultScreen } from "./components/VaultScreen";
 import { AuthScreen } from "./components/AuthScreen";
+import { PricingPage } from "./components/PricingPage";
+
+function parseHashPath(): string {
+  if (typeof window === "undefined") return "";
+  const raw = window.location.hash.replace(/^#/, "");
+  return raw.split("?")[0].replace(/^\//, "").toLowerCase();
+}
+
+function useHashPath(): string {
+  const [path, setPath] = useState(parseHashPath);
+  useEffect(() => {
+    const onHash = () => setPath(parseHashPath());
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  return path;
+}
 
 function HtmlLang() {
   const { locale } = useVault();
@@ -42,6 +59,11 @@ function VaultShell() {
 function AuthenticatedApp() {
   const { configured, loading, session } = useAuth();
   const [bootLocale] = useState(() => detectBrowserLocale());
+  const hashPath = useHashPath();
+
+  if (hashPath === "pricing") {
+    return <PricingPage />;
+  }
 
   if (configured && loading) {
     return (

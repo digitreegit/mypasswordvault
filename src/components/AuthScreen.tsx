@@ -122,6 +122,19 @@ export function AuthScreen() {
           </a>
         </p>
 
+        <p className="text-center text-sm">
+          <a
+            href="#/pricing"
+            className="text-accent-600 hover:underline font-medium"
+            onClick={(e) => {
+              e.preventDefault();
+              window.location.hash = "#/pricing";
+            }}
+          >
+            {t("auth.pricingLink")}
+          </a>
+        </p>
+
         <section
           className="border-t border-ink-100 pt-5 space-y-3"
           aria-labelledby="auth-faq-heading"

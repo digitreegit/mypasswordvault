@@ -15,6 +15,11 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
     exportBackup,
     importBackup,
     pullVaultFromCloud,
+    entries,
+    licensed,
+    entitlementLoaded,
+    freeEntryLimit,
+    refreshEntitlements,
     t,
   } = useVault();
   const { configured, user, signOut } = useAuth();
@@ -156,6 +161,47 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
             {t("settings.autoLockHint")}
           </p>
         </div>
+
+        {configured && user && (
+          <div className="rounded-lg border border-ink-200 bg-ink-50/90 p-3 space-y-2">
+            <h3 className="text-sm font-semibold text-ink-800">{t("settings.licenseTitle")}</h3>
+            <p className="text-xs text-ink-600 leading-snug">{t("settings.licenseFree", { limit: freeEntryLimit })}</p>
+            <p className="text-xs text-ink-600 leading-snug">{t("settings.licensePaid")}</p>
+            {!entitlementLoaded ? (
+              <p className="text-xs text-ink-500">{t("settings.licenseLoading")}</p>
+            ) : licensed ? (
+              <p className="text-xs font-medium text-emerald-800">{t("settings.licenseStatusLicensed")}</p>
+            ) : (
+              <p className="text-xs text-ink-700">
+                {t("settings.licenseStatusFree", {
+                  count: entries.length,
+                  limit: freeEntryLimit,
+                })}
+              </p>
+            )}
+            <div className="flex flex-wrap gap-2 pt-1">
+              <a
+                href="#/pricing"
+                className="btn-primary text-xs justify-center flex-1 min-w-[8rem]"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.hash = "#/pricing";
+                  onClose();
+                }}
+              >
+                {t("settings.licenseLink")}
+              </a>
+              <button
+                type="button"
+                className="btn-secondary text-xs"
+                disabled={!entitlementLoaded}
+                onClick={() => void refreshEntitlements()}
+              >
+                {t("settings.licenseRefresh")}
+              </button>
+            </div>
+          </div>
+        )}
 
         {backupToast && (
           <p className="text-xs text-ink-600 bg-ink-50 rounded-md p-2 leading-snug">{backupToast}</p>
