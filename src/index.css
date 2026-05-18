@@ -41,6 +41,86 @@ body {
   .card {
     @apply rounded-xl bg-white border border-ink-200 shadow-sm;
   }
+
+  /* Thin range slider (password generator length, etc.) */
+  .range-thin {
+    @apply block h-5 w-full cursor-pointer bg-transparent;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .range-thin:focus {
+    outline: none;
+  }
+  .range-thin:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 2px rgb(99 102 241 / 0.35);
+  }
+  .range-thin:focus-visible::-moz-range-thumb {
+    box-shadow: 0 0 0 2px rgb(99 102 241 / 0.35);
+  }
+  .range-thin::-webkit-slider-runnable-track {
+    height: 5px;
+    border: none;
+    border-radius: 9999px;
+    /* top/bottom 1px = border; middle 3px = fill; purple includes left border */
+    --range-fill: max(var(--range-pct, 0%), 2px);
+    background:
+      linear-gradient(
+        to right,
+        #4f46e5 0%,
+        #4f46e5 var(--range-fill),
+        #eeeef1 var(--range-fill),
+        #eeeef1 100%
+      )
+      0 0 / 100% 1px no-repeat,
+      linear-gradient(
+        to right,
+        #4f46e5 0%,
+        #4f46e5 var(--range-fill),
+        #f7f7f8 var(--range-fill),
+        #f7f7f8 100%
+      )
+      0 1px / 100% 3px no-repeat,
+      linear-gradient(
+        to right,
+        #4f46e5 0%,
+        #4f46e5 var(--range-fill),
+        #eeeef1 var(--range-fill),
+        #eeeef1 100%
+      )
+      0 4px / 100% 1px no-repeat;
+  }
+  .range-thin::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    margin-top: -3.5px;
+    border-radius: 9999px;
+    background: #4f46e5;
+    border: none;
+    box-shadow: 0 1px 2px rgb(18 18 22 / 0.12);
+  }
+  .range-thin::-moz-range-track {
+    height: 5px;
+    border: none;
+    border-radius: 9999px;
+    background:
+      linear-gradient(to right, #eeeef1, #eeeef1) 0 0 / 100% 1px no-repeat,
+      linear-gradient(to right, #f7f7f8, #f7f7f8) 0 1px / 100% 3px no-repeat,
+      linear-gradient(to right, #eeeef1, #eeeef1) 0 4px / 100% 1px no-repeat;
+  }
+  .range-thin::-moz-range-progress {
+    height: 5px;
+    border-radius: 9999px 0 0 9999px;
+    background: #4f46e5;
+  }
+  .range-thin::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: none;
+    border-radius: 9999px;
+    background: #4f46e5;
+    box-shadow: 0 1px 2px rgb(18 18 22 / 0.12);
+  }
 }
 
 .cell-input {

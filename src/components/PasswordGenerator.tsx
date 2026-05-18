@@ -7,7 +7,6 @@ import {
 } from "../lib/passwordGenerator";
 import { useVault } from "../lib/vault";
 import { Refresh, Check, Copy } from "./Icons";
-import { ScreenHeader } from "./ScreenHeader";
 
 interface Props {
   initial?: Partial<GenOptions>;
@@ -16,7 +15,7 @@ interface Props {
 }
 
 export function PasswordGenerator({ initial, onUse, onClose }: Props) {
-  const { t, locale, setLocale } = useVault();
+  const { t } = useVault();
   const [opts, setOpts] = useState<GenOptions>({ ...DEFAULT_GEN, ...initial });
   const [value, setValue] = useState<string>(() => generatePassword(opts));
   const [copied, setCopied] = useState(false);
@@ -51,6 +50,11 @@ export function PasswordGenerator({ initial, onUse, onClose }: Props) {
     ] as const
   ).map(([k, msg]) => ({ key: k, msg }));
 
+  const lengthMin = 8;
+  const lengthMax = 64;
+  const lengthFillPct =
+    ((opts.length - lengthMin) / (lengthMax - lengthMin)) * 100;
+
   return (
     <div
       className="fixed inset-0 z-50 bg-ink-900/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
@@ -60,19 +64,14 @@ export function PasswordGenerator({ initial, onUse, onClose }: Props) {
         className="card w-full max-w-md max-h-[min(90dvh,90vh)] overflow-y-auto p-4 sm:p-6 space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <ScreenHeader
-          brandName={t("app.brandName")}
-          pageTitle={t("pwdGen.title")}
-          locale={locale}
-          onLocaleChange={(l) => void setLocale(l)}
-          languageAriaLabel={t("settings.language")}
-          titleRowEnd={
-            <button type="button" className="btn-ghost text-sm" onClick={onClose}>
-              {t("common.close")}
-            </button>
-          }
-          className="pb-1"
-        />
+        <div className="flex items-start justify-between gap-2 pb-1">
+          <h1 className="font-sans text-xl font-semibold text-ink-900 tracking-tight">
+            {t("pwdGen.title")}
+          </h1>
+          <button type="button" className="btn-ghost text-sm shrink-0" onClick={onClose}>
+            {t("common.close")}
+          </button>
+        </div>
 
         <div className="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm break-all min-h-[64px] flex items-center">
           {value}
@@ -106,13 +105,16 @@ export function PasswordGenerator({ initial, onUse, onClose }: Props) {
           </label>
           <input
             type="range"
-            min={8}
-            max={64}
+            min={lengthMin}
+            max={lengthMax}
             value={opts.length}
             onChange={(e) =>
               setOpts((o) => ({ ...o, length: Number(e.target.value) }))
             }
-            className="w-full accent-accent-600"
+            className="range-thin w-full"
+            style={
+              { "--range-pct": `${lengthFillPct}%` } as React.CSSProperties
+            }
           />
         </div>
 
