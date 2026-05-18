@@ -398,7 +398,11 @@ export function VaultScreen() {
             onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
             aria-label={sortDir === "asc" ? "Ascending" : "Descending"}
           >
-            {sortDir === "asc" ? "↑" : "↓"}
+            {sortDir === "asc" ? (
+              <ChevronUp className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5" />
+            )}
           </button>
         </div>
 
@@ -920,7 +924,13 @@ function Th({
       <span className="inline-flex items-center gap-1">
         {children}
         {active && (
-          <span className="text-ink-400">{dir === "asc" ? "▲" : "▼"}</span>
+          <span className="inline-flex shrink-0 text-ink-400" aria-hidden>
+            {dir === "asc" ? (
+              <ChevronUp className="h-3 w-3" />
+            ) : (
+              <ChevronDown className="h-3 w-3" />
+            )}
+          </span>
         )}
       </span>
     </th>

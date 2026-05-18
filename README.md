@@ -45,7 +45,8 @@ masterPassword + salt
 1. [Supabase](https://supabase.com)에서 프로젝트를 만들고 **Authentication → Providers**에서 **Google**을 켭니다. **Authentication → URL configuration**의 **Redirect URLs**에 아래를 포함합니다(개발·배포 모두). OAuth는 React 앱이 `/app/`에서 열리므로 **`/app/**` 경로가 반드시 허용**되어야 합니다.  
    - 예: `http://127.0.0.1:5173/app/**`, `http://localhost:5173/app/**`, 프로덕션 `https://your-domain/app/**`  
    - 루트(`/`)는 정적 **랜딩 페이지**이고, **Continue with Google** 화면은 `/app/` 입니다.  
-   **Site URL**은 OAuth 후 기본 돌아올 주소로, 예: `http://127.0.0.1:5173/app` 또는 배포 시 `https://your-domain/app` 을 권장합니다.
+   **Site URL**은 OAuth 후 기본 돌아올 주소로, 예: `http://127.0.0.1:5173/app` 또는 배포 시 `https://mypasswordvault.app/app` 을 권장합니다.  
+   **Google "continue to …supabase.co"** 문구는 앱 코드가 아니라 OAuth Auth 호스트입니다. `mypasswordvault.app` 브랜딩은 Supabase **Custom Domain** + `VITE_SUPABASE_URL` 변경이 필요합니다 → **[docs/google-oauth-domain.md](./docs/google-oauth-domain.md)** (유료 플랜).
 2. SQL 편집기에서 `supabase/migrations/20260513120000_user_vaults.sql`을 실행해 `user_vaults` 테이블과 RLS를 만듭니다.
 3. `.env.example`을 참고해 `.env`에 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`를 설정합니다. **이 값이 없으면** 첫 화면에서 Supabase 설정 안내만 표시되고 금고로 들어가지 않습니다.
 
