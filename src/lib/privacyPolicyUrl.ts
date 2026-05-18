@@ -1,16 +1,33 @@
+import { isNativeApp } from "./platform";
+
 /** Default when `window.location` is unavailable (SSR/tests). */
 const PRIVACY_PATH = "/privacy.html";
 
-/** Public production host for native shells (Capacitor) where origin is non-HTTP. */
-const PRIVACY_CANONICAL_ORIGIN = "https://vault.skyface.com";
+/** Static privacy page host (marketing site on Vercel). Override via VITE_PUBLIC_SITE_ORIGIN. */
+const DEFAULT_SITE_ORIGIN = "https://mypasswordvault.app";
+
+function publicSiteOrigin(): string {
+  const fromEnv = import.meta.env.VITE_PUBLIC_SITE_ORIGIN?.trim().replace(/\/+$/, "");
+  return fromEnv || DEFAULT_SITE_ORIGIN;
+}
 
 /**
- * Canonical privacy policy URL: same-origin in normal HTTPS deployments;
- * fallback to production host in native/custom schemes so store review links resolve.
+ * Privacy policy URL for in-app links (sign-in footer, vault footer).
+ * Local dev uses same-origin `/privacy.html`; deployed/native shells use the public site.
  */
 export function privacyPolicyUrl(): string {
-  if (typeof window === "undefined" || !window.location) return PRIVACY_PATH;
-  const { protocol, origin } = window.location;
-  if (protocol === "http:" || protocol === "https:") return `${origin}${PRIVACY_PATH}`;
-  return `${PRIVACY_CANONICAL_ORIGIN}${PRIVACY_PATH}`;
+  const canonical = `${publicSiteOrigin()}${PRIVACY_PATH}`;
+
+  if (typeof window === "undefined" || !window.location) return canonical;
+  if (isNativeApp()) return canonical;
+
+  const { protocol, origin, hostname } = window.location;
+  if (
+    (protocol === "http:" || protocol === "https:") &&
+    (hostname === "localhost" || hostname === "127.0.0.1")
+  ) {
+    return `${origin}${PRIVACY_PATH}`;
+  }
+
+  return canonical;
 }
