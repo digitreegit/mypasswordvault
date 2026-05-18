@@ -178,7 +178,7 @@ const footer = `      </main>
           <strong>My Password Vault</strong>
         </p>
         <p class="landing-footer-copy">
-          <span data-i18n="footerCopy">©2026 Skyface, LLC. All rights reserved.</span>
+          <span data-i18n="footerCopy">© Skyface, LLC. All rights reserved.</span>
         </p>
         <p class="landing-footer-legal">
           <a href="./privacy.html" data-i18n="footerPrivacy">Privacy Policy</a>

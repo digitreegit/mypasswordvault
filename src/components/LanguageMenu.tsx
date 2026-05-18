@@ -77,7 +77,7 @@ export function LanguageMenu({
           role="listbox"
           aria-label={ariaLabel}
           className={[
-            "absolute z-[60] mt-1 w-max min-w-[12rem] max-h-[min(20rem,70vh)] overflow-y-auto rounded-lg border border-ink-200 bg-white py-1 shadow-lg",
+            "absolute z-[60] mt-1 w-max min-w-[12rem] max-h-[min(24rem,75vh)] overflow-y-auto rounded-lg border border-ink-200 bg-white py-1 pb-1.5 shadow-lg",
             align === "right" ? "right-0" : "left-0",
           ].join(" ")}
         >

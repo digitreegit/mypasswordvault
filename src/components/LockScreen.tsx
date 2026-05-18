@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { useVault } from "../lib/vault";
-import { Lock, Check } from "./Icons";
+import { Lock, Check, Eye, EyeOff } from "./Icons";
 import { ScreenHeader } from "./ScreenHeader";
 import { isAppError } from "../lib/errors";
 import { isNativeApp } from "../lib/platform";
@@ -29,6 +29,7 @@ export function LockScreen() {
   } = useVault();
   const brandHomeHref = isNativeApp() ? undefined : "/";
   const [pw, setPw] = useState("");
+  const [showMasterPw, setShowMasterPw] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -151,13 +152,26 @@ export function LockScreen() {
               </p>
               <div>
                 <label className="label">{t("lock.masterPw")}</label>
-                <input
-                  type="password"
-                  className="input"
-                  value={rebindPw}
-                  onChange={(e) => setRebindPw(e.target.value)}
-                  autoFocus
-                />
+                <div className="relative">
+                  <input
+                    type={showMasterPw ? "text" : "password"}
+                    className="input pr-10"
+                    value={rebindPw}
+                    onChange={(e) => setRebindPw(e.target.value)}
+                    autoFocus
+                    spellCheck={false}
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-ink-400 hover:text-accent-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30"
+                    onClick={() => setShowMasterPw((v) => !v)}
+                    title={showMasterPw ? t("vault.hide") : t("vault.show")}
+                    aria-label={showMasterPw ? t("vault.hide") : t("vault.show")}
+                  >
+                    {showMasterPw ? <EyeOff /> : <Eye />}
+                  </button>
+                </div>
               </div>
               {error && <div className="text-sm text-red-600">{error}</div>}
               <button
@@ -276,13 +290,26 @@ export function LockScreen() {
         <form onSubmit={handle} className="space-y-4">
           <div>
             <label className="label">{t("lock.masterPw")}</label>
-            <input
-              type="password"
-              className="input"
-              value={pw}
-              onChange={(e) => setPw(e.target.value)}
-              autoFocus
-            />
+            <div className="relative">
+              <input
+                type={showMasterPw ? "text" : "password"}
+                className="input pr-10"
+                value={pw}
+                onChange={(e) => setPw(e.target.value)}
+                autoFocus
+                spellCheck={false}
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-ink-400 hover:text-accent-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30"
+                onClick={() => setShowMasterPw((v) => !v)}
+                title={showMasterPw ? t("vault.hide") : t("vault.show")}
+                aria-label={showMasterPw ? t("vault.hide") : t("vault.show")}
+              >
+                {showMasterPw ? <EyeOff /> : <Eye />}
+              </button>
+            </div>
           </div>
           <div>
             <label className="label">{t("lock.totp")}</label>

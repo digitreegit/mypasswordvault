@@ -131,7 +131,7 @@ globalThis.MPV_LANDING_OVERLAYS = {
     landingSignInHint:
       "Usamos tu cuenta de Google solo para vincular la licencia y la bóveda cifrada.",
     footerPrivacy: "Política de privacidad",
-    footerCopy: "©2026 Skyface, LLC. All rights reserved.",
+    footerCopy: "©{{year}} Skyface, LLC. All rights reserved.",
   },
   "cn": {
     "metaTitle": "My Password Vault — 安全密码，界面清爽",
@@ -227,7 +227,7 @@ globalThis.MPV_LANDING_OVERLAYS = {
     "landingCtaBuy": "前往安全结账",
     "landingSignInHint": "我们仅使用 Google 账户关联许可与加密保险库。",
     "footerPrivacy": "隐私政策",
-    "footerCopy": "©2026 Skyface, LLC. All rights reserved."
+    "footerCopy": "©{{year}} Skyface, LLC. All rights reserved."
   },
   "jp": {
     "metaTitle": "My Password Vault — 安全なパスワード、シンプルに",
@@ -323,7 +323,7 @@ globalThis.MPV_LANDING_OVERLAYS = {
     "landingCtaBuy": "安全なチェックアウトへ進む",
     "landingSignInHint": "Google アカウントはライセンスと暗号化ボールトの紐付けにのみ使用します。",
     "footerPrivacy": "プライバシーポリシー",
-    "footerCopy": "©2026 Skyface, LLC. All rights reserved."
+    "footerCopy": "©{{year}} Skyface, LLC. All rights reserved."
   },
   "de": {
     "metaTitle": "My Password Vault — Sichere Passwörter, klare Oberfläche",
@@ -419,7 +419,7 @@ globalThis.MPV_LANDING_OVERLAYS = {
     "landingCtaBuy": "Weiter zum sicheren Checkout",
     "landingSignInHint": "Wir nutzen Ihr Google-Konto nur, um Lizenz und verschlüsselten Tresor zu verknüpfen.",
     "footerPrivacy": "Datenschutz",
-    "footerCopy": "©2026 Skyface, LLC. All rights reserved."
+    "footerCopy": "©{{year}} Skyface, LLC. All rights reserved."
   },
   "fr": {
     "metaTitle": "My Password Vault — Mots de passe sûrs, interface claire",
@@ -515,7 +515,7 @@ globalThis.MPV_LANDING_OVERLAYS = {
     "landingCtaBuy": "Continuer vers le paiement sécurisé",
     "landingSignInHint": "Nous utilisons votre compte Google uniquement pour lier la licence et le coffre chiffré.",
     "footerPrivacy": "Politique de confidentialité",
-    "footerCopy": "©2026 Skyface, LLC. All rights reserved."
+    "footerCopy": "©{{year}} Skyface, LLC. All rights reserved."
   },
   "it": {
     "metaTitle": "My Password Vault — Password sicure, zero confusione",
@@ -611,7 +611,7 @@ globalThis.MPV_LANDING_OVERLAYS = {
     "landingCtaBuy": "Continua al checkout sicuro",
     "landingSignInHint": "Usiamo Google solo per associare licenza e cassaforte crittografata.",
     "footerPrivacy": "Informativa sulla privacy",
-    "footerCopy": "©2026 Skyface, LLC. All rights reserved."
+    "footerCopy": "©{{year}} Skyface, LLC. All rights reserved."
   },
   "id": {
     "metaTitle": "My Password Vault — Kata sandi aman, tampilan jernih",
@@ -707,6 +707,6 @@ globalThis.MPV_LANDING_OVERLAYS = {
     "landingCtaBuy": "Lanjut ke checkout aman",
     "landingSignInHint": "Kami hanya memakai akun Google untuk menautkan lisensi dan brankas terenkripsi.",
     "footerPrivacy": "Kebijakan privasi",
-    "footerCopy": "©2026 Skyface, LLC. All rights reserved."
+    "footerCopy": "©{{year}} Skyface, LLC. All rights reserved."
   }
 };

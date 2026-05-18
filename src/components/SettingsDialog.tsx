@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useVault } from "../lib/vault";
 import { useAuth } from "../lib/auth";
-import { ScreenHeader } from "./ScreenHeader";
 import { ChevronDown } from "./Icons";
 import { downloadJsonFile } from "../lib/vaultBackup";
 import { isAppError } from "../lib/errors";
@@ -9,8 +8,6 @@ import { isAppError } from "../lib/errors";
 export function SettingsDialog({ onClose }: { onClose: () => void }) {
   const {
     meta,
-    locale,
-    setLocale,
     setAutoLockMinutes,
     exportBackup,
     importBackup,
@@ -100,33 +97,17 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <div
-        className="card w-full max-w-md max-h-[min(90dvh,90vh)] overflow-y-auto p-4 sm:p-6 space-y-4"
+        className="card w-full max-w-lg sm:max-w-xl max-h-[min(90dvh,90vh)] overflow-y-auto p-4 sm:p-6 space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <ScreenHeader
-          brandName={t("app.brandName")}
-          pageTitle={t("settings.title")}
-          locale={locale}
-          onLocaleChange={async (l) => {
-            setBackupToast(null);
-            try {
-              await setLocale(l);
-            } catch (e: unknown) {
-              setBackupToast(
-                isAppError(e)
-                  ? t(e.code)
-                  : (e as Error)?.message ?? t("setup.errGeneric")
-              );
-            }
-          }}
-          languageAriaLabel={t("settings.language")}
-          titleRowEnd={
-            <button type="button" className="btn-ghost text-sm shrink-0" onClick={onClose}>
-              {t("common.close")}
-            </button>
-          }
-          className="pb-1"
-        />
+        <div className="flex items-start justify-between gap-2 pb-1">
+          <h1 className="font-sans text-xl font-semibold text-ink-900 tracking-tight">
+            {t("settings.title")}
+          </h1>
+          <button type="button" className="btn-ghost text-sm shrink-0" onClick={onClose}>
+            {t("common.close")}
+          </button>
+        </div>
 
         <div>
           <label className="label" htmlFor="settings-autolock">
@@ -223,7 +204,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
                       />
                       <button
                         type="button"
-                        className="btn-secondary text-xs shrink-0 self-stretch px-3"
+                        className="btn-secondary shrink-0 self-stretch px-3"
                         onClick={() => void copyLicenseKey()}
                       >
                         {licenseKeyCopied ? t("settings.licenseKeyCopied") : t("settings.licenseCopyKey")}
@@ -242,10 +223,10 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
               {t("settings.licenseFree", { limit: freeEntryLimit })}
             </p>
             <p className="text-xs text-ink-600 leading-snug">{t("settings.licensePaid")}</p>
-            <div className="flex flex-wrap gap-2 pt-1">
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
               <a
                 href="#/pricing"
-                className="btn-primary text-xs justify-center flex-1 min-w-[8rem]"
+                className="btn-primary justify-center flex-1 min-w-0"
                 onClick={(e) => {
                   e.preventDefault();
                   window.location.hash = "#/pricing";
@@ -256,7 +237,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
               </a>
               <button
                 type="button"
-                className="btn-secondary text-xs"
+                className="btn-secondary flex-1 min-w-0 sm:max-w-[11rem] sm:flex-none"
                 disabled={!entitlementLoaded}
                 onClick={() => void refreshEntitlements()}
               >

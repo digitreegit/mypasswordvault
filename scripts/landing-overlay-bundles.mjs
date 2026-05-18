@@ -117,7 +117,7 @@ export default {
     landingCtaBuy: "前往安全结账",
     landingSignInHint: "我们仅使用 Google 账户关联许可与加密保险库。",
     footerPrivacy: "隐私政策",
-    footerCopy: "©2026 Skyface, LLC. All rights reserved.",
+    footerCopy: "©{{year}} Skyface, LLC. All rights reserved.",
   },
 
   jp: {
@@ -243,7 +243,7 @@ export default {
     landingSignInHint:
       "Google アカウントはライセンスと暗号化ボールトの紐付けにのみ使用します。",
     footerPrivacy: "プライバシーポリシー",
-    footerCopy: "©2026 Skyface, LLC. All rights reserved.",
+    footerCopy: "©{{year}} Skyface, LLC. All rights reserved.",
   },
 
   de: {
@@ -369,7 +369,7 @@ export default {
     landingSignInHint:
       "Wir nutzen Ihr Google-Konto nur, um Lizenz und verschlüsselten Tresor zu verknüpfen.",
     footerPrivacy: "Datenschutz",
-    footerCopy: "©2026 Skyface, LLC. All rights reserved.",
+    footerCopy: "©{{year}} Skyface, LLC. All rights reserved.",
   },
 
   fr: {
@@ -497,7 +497,7 @@ export default {
     landingSignInHint:
       "Nous utilisons votre compte Google uniquement pour lier la licence et le coffre chiffré.",
     footerPrivacy: "Politique de confidentialité",
-    footerCopy: "©2026 Skyface, LLC. All rights reserved.",
+    footerCopy: "©{{year}} Skyface, LLC. All rights reserved.",
   },
 
   it: {
@@ -626,7 +626,7 @@ export default {
     landingSignInHint:
       "Usiamo Google solo per associare licenza e cassaforte crittografata.",
     footerPrivacy: "Informativa sulla privacy",
-    footerCopy: "©2026 Skyface, LLC. All rights reserved.",
+    footerCopy: "©{{year}} Skyface, LLC. All rights reserved.",
   },
 
   id: {
@@ -755,6 +755,6 @@ export default {
     landingSignInHint:
       "Kami hanya memakai akun Google untuk menautkan lisensi dan brankas terenkripsi.",
     footerPrivacy: "Kebijakan privasi",
-    footerCopy: "©2026 Skyface, LLC. All rights reserved.",
+    footerCopy: "©{{year}} Skyface, LLC. All rights reserved.",
   },
 };
