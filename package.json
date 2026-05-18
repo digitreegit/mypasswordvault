@@ -21,6 +21,7 @@
     "@fontsource/noto-sans-kr": "^5.2.9",
     "@heroicons/react": "^2.2.0",
     "@supabase/supabase-js": "^2.105.4",
+    "@vercel/analytics": "^2.0.1",
     "idb": "^8.0.0",
     "otpauth": "^9.3.4",
     "qrcode": "^1.5.4",
