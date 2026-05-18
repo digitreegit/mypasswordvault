@@ -63,7 +63,7 @@ export function AuthScreen() {
           <p className="text-sm text-ink-600 leading-snug whitespace-pre-line">
             {t("auth.notConfiguredBody")}
           </p>
-          <p className="text-xs text-ink-500">
+          <p className="text-center text-sm pt-2">
             <a
               href={privacyHref}
               className="text-accent-600 hover:underline font-medium"
@@ -111,29 +111,6 @@ export function AuthScreen() {
         <p className="text-xs text-ink-500 leading-snug">
           {t("auth.securityNote")}
         </p>
-        <p className="text-xs text-ink-500">
-          <a
-            href={privacyHref}
-            className="text-accent-600 hover:underline font-medium"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t("legal.privacyPolicy")}
-          </a>
-        </p>
-
-        <p className="text-center text-sm">
-          <a
-            href="#/pricing"
-            className="text-accent-600 hover:underline font-medium"
-            onClick={(e) => {
-              e.preventDefault();
-              window.location.hash = "#/pricing";
-            }}
-          >
-            {t("auth.pricingLink")}
-          </a>
-        </p>
 
         <section
           className="border-t border-ink-100 pt-5 space-y-3"
@@ -166,6 +143,17 @@ export function AuthScreen() {
             ))}
           </div>
         </section>
+
+        <p className="text-center text-sm pt-4 border-t border-ink-100">
+          <a
+            href={privacyHref}
+            className="text-accent-600 hover:underline font-medium"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t("legal.privacyPolicy")}
+          </a>
+        </p>
       </div>
     </div>
   );

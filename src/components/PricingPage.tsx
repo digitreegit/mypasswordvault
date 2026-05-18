@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../lib/auth";
 import { translate } from "../lib/i18n/bundles";
 import {
@@ -9,9 +9,7 @@ import {
 import { getSupabase, isSupabaseConfigured } from "../lib/supabaseClient";
 import { FREE_ENTRY_LIMIT, fetchUserLicensed } from "../lib/entitlements";
 import { isNativeApp } from "../lib/platform";
-import { privacyPolicyUrl } from "../lib/privacyPolicyUrl";
 import { Check } from "./Icons";
-import { LanguageMenu } from "./LanguageMenu";
 
 function parseCheckoutQuery(): "success" | "cancel" | null {
   if (typeof window === "undefined") return null;
@@ -30,9 +28,7 @@ function clearCheckoutQuery() {
 
 export function PricingPage() {
   const { configured, loading, session, signInWithGoogle } = useAuth();
-  const [locale, setLocale] = useState<Locale>(() =>
-    normalizeLocale(detectBrowserLocale()),
-  );
+  const [locale] = useState<Locale>(() => normalizeLocale(detectBrowserLocale()));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [licensed, setLicensed] = useState<boolean | null>(null);
@@ -42,8 +38,6 @@ export function PricingPage() {
     (k: string, v?: Record<string, string | number>) => translate(locale, k, v),
     [locale],
   );
-  const privacyHref = useMemo(() => privacyPolicyUrl(), []);
-
   const uid = session?.user?.id;
 
   const reloadLicense = useCallback(async () => {
@@ -124,23 +118,6 @@ export function PricingPage() {
             {t("pricing.backApp")}
           </a>
         </div>
-        <div className="flex items-center gap-2">
-          <LanguageMenu
-            appearance="compact"
-            value={locale}
-            onChange={setLocale}
-            ariaLabel={t("settings.language")}
-            align="right"
-          />
-          <a
-            className="text-sm text-ink-600 hover:text-ink-900 whitespace-nowrap"
-            href={privacyHref}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {t("legal.privacyPolicy")}
-          </a>
-        </div>
       </header>
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-10 sm:py-14">
@@ -189,7 +166,7 @@ export function PricingPage() {
             <h2 className="text-lg font-semibold text-accent-700 uppercase tracking-wide">
               {t("pricing.tierFree")}
             </h2>
-            <p className="mt-4 text-4xl sm:text-5xl font-bold text-ink-900">$0</p>
+            <p className="mt-4 text-3xl sm:text-4xl font-bold text-ink-900 tracking-tight">$0</p>
             <p className="text-sm text-ink-500 mt-1">{t("pricing.freeForever")}</p>
             <p className="mt-4 text-sm text-ink-600 leading-relaxed">{t("pricing.freeDesc")}</p>
             <ul className="mt-6 space-y-3 text-sm text-ink-700 flex-1">
@@ -199,6 +176,7 @@ export function PricingPage() {
                   "pricing.freeF2",
                   "pricing.freeF3",
                   "pricing.freeF4",
+                  "pricing.freeF5",
                 ] as const
               ).map((k) => (
                 <li key={k} className="flex gap-2">
@@ -212,11 +190,14 @@ export function PricingPage() {
             </p>
           </section>
 
-          <section className="card p-6 sm:p-8 flex flex-col border-2 border-accent-500 shadow-md">
+          <section className="relative card p-6 sm:p-8 flex flex-col border-2 border-accent-500 shadow-md pt-9">
+            <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-3 py-1 rounded-full text-[0.68rem] sm:text-xs font-semibold uppercase tracking-wider bg-accent-600 text-white shadow-md whitespace-nowrap">
+              {t("pricing.mostPopular")}
+            </span>
             <h2 className="text-lg font-semibold text-accent-700 uppercase tracking-wide">
               {t("pricing.tierPaid")}
             </h2>
-            <p className="mt-4 text-4xl sm:text-5xl font-bold text-ink-900">$4.99</p>
+            <p className="mt-4 text-3xl sm:text-4xl font-bold text-ink-900 tracking-tight">$4.99</p>
             <p className="text-sm text-ink-500 mt-1">{t("pricing.paidOnce")}</p>
             <p className="mt-4 text-sm text-ink-600 leading-relaxed">{t("pricing.paidDesc")}</p>
             <ul className="mt-6 space-y-3 text-sm text-ink-700 flex-1">
@@ -226,6 +207,7 @@ export function PricingPage() {
                   "pricing.paidF2",
                   "pricing.paidF3",
                   "pricing.paidF4",
+                  "pricing.paidF5",
                 ] as const
               ).map((k) => (
                 <li key={k} className="flex gap-2">
@@ -237,17 +219,14 @@ export function PricingPage() {
 
             <div className="mt-8 pt-4 border-t border-ink-100 space-y-3">
               {!session ? (
-                <>
-                  <button
-                    type="button"
-                    className="btn-primary w-full justify-center"
-                    disabled={!configured || busy || loading}
-                    onClick={() => void signInWithGoogle()}
-                  >
-                    {t("pricing.signInToBuy")}
-                  </button>
-                  <p className="text-xs text-ink-500 text-center">{t("pricing.signInHint")}</p>
-                </>
+                <button
+                  type="button"
+                  className="btn-primary w-full justify-center"
+                  disabled={!configured || busy || loading}
+                  onClick={() => void signInWithGoogle()}
+                >
+                  {t("pricing.signInToBuy")}
+                </button>
               ) : licensed === true ? (
                 <button type="button" className="btn-secondary w-full justify-center" disabled>
                   {t("pricing.alreadyLicensed")}
@@ -264,8 +243,8 @@ export function PricingPage() {
                   {busy ? t("app.loading") : t("pricing.ctaBuy")}
                 </button>
               )}
-              <p className="text-xs text-ink-500 leading-snug text-center">
-                {t("pricing.stripeNote")}
+              <p className="text-xs text-ink-500 leading-snug text-left">
+                {t("pricing.signInHint")}
               </p>
             </div>
           </section>

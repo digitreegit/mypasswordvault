@@ -234,8 +234,8 @@ export function VaultScreen() {
                 <span
                   className={
                     licensed
-                      ? "text-[0.65rem] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border border-emerald-300 bg-emerald-50 text-emerald-900 whitespace-nowrap"
-                      : "text-[0.65rem] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border border-ink-200 bg-ink-50 text-ink-600 whitespace-nowrap"
+                      ? "text-[0.58rem] sm:text-[0.625rem] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md border border-emerald-300 bg-emerald-50 text-emerald-900 whitespace-nowrap leading-none"
+                      : "text-[0.58rem] sm:text-[0.625rem] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md border border-ink-200 bg-ink-50 text-ink-600 whitespace-nowrap leading-none"
                   }
                   translate="no"
                 >

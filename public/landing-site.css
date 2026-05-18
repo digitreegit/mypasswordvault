@@ -887,6 +887,8 @@
         display: grid;
         gap: 1.25rem;
         align-items: stretch;
+        overflow: visible;
+        padding-top: 0.85rem;
       }
       @media (min-width: 768px) {
         .landing-price-grid {
@@ -909,6 +911,26 @@
         border-width: 2px;
         border-color: rgba(99, 102, 241, 0.55);
         box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.12), 0 12px 40px rgba(0, 0, 0, 0.25);
+        padding-top: 1.85rem;
+        overflow: visible;
+      }
+      .landing-price-badge {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1;
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent), #4f46e5);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.45);
       }
       .landing-price-tier {
         margin: 0;
@@ -918,12 +940,13 @@
         text-transform: uppercase;
         color: var(--accent2);
       }
-      .landing-price-amount {
+      .landing-price-card .landing-price-amount {
         margin: 1rem 0 0;
-        font-size: clamp(2.25rem, 5vw, 3rem);
+        font-size: clamp(2.75rem, 7vw, 3.5rem);
         font-weight: 700;
         letter-spacing: -0.02em;
-        line-height: 1.1;
+        line-height: 1.05;
+        color: var(--ink);
       }
       .landing-price-sub {
         margin: 0.35rem 0 0;
@@ -1086,6 +1109,19 @@
 
       .landing-legal-article ul {
         padding-left: 1.25rem;
+      }
+
+      body[data-landing-page="privacy"] .landing-legal-article a,
+      body[data-landing-page="terms"] .landing-legal-article a,
+      body[data-landing-page="privacy"] .landing-legal-article a:visited,
+      body[data-landing-page="terms"] .landing-legal-article a:visited {
+        color: var(--accent2);
+        text-decoration: none;
+      }
+
+      body[data-landing-page="privacy"] .landing-legal-article a:hover,
+      body[data-landing-page="terms"] .landing-legal-article a:hover {
+        text-decoration: underline;
       }
 
       .landing-legal-updated {
