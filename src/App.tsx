@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { VaultProvider, useVault } from "./lib/vault";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { translate } from "./lib/i18n/bundles";
@@ -88,6 +89,7 @@ export default function App() {
   return (
     <AuthProvider>
       <AuthenticatedApp />
+      <Analytics />
     </AuthProvider>
   );
 }
