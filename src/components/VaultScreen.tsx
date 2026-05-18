@@ -446,10 +446,10 @@ export function VaultScreen() {
             <table className="w-full text-sm min-w-[56rem]">
               <colgroup>
                 <col style={{ width: "10%" }} />
-                <col style={{ width: "18%" }} />
+                <col style={{ width: "14%" }} />
                 <col style={{ width: "22%" }} />
                 <col style={{ width: "30%" }} />
-                <col style={{ width: "10%" }} />
+                <col style={{ width: "14%" }} />
                 <col style={{ width: "10%" }} />
               </colgroup>
               <thead className="bg-ink-100/70 text-ink-600 text-xs">
