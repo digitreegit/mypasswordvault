@@ -1,4 +1,9 @@
 import { Capacitor } from "@capacitor/core";
+import {
+  canonicalAppUrl,
+  isLocalDevHost,
+  isVercelPreviewHost,
+} from "./siteOrigin";
 
 /** Custom URL scheme registered in iOS/Android for Supabase OAuth return. */
 export const NATIVE_AUTH_SCHEME = "com.skyface.mypasswordvault";
@@ -10,6 +15,11 @@ export function isNativeApp(): boolean {
 
 export function getOAuthRedirectUrl(): string {
   if (isNativeApp()) return NATIVE_AUTH_REDIRECT;
-  if (typeof window === "undefined") return "/";
-  return `${window.location.origin}${window.location.pathname || "/"}`;
+  if (typeof window === "undefined") return canonicalAppUrl();
+  const { hostname, pathname } = window.location;
+  if (isLocalDevHost(hostname)) {
+    return `${window.location.origin}${pathname || "/app/"}`;
+  }
+  if (isVercelPreviewHost(hostname)) return canonicalAppUrl();
+  return `${window.location.origin}${pathname || "/app/"}`;
 }

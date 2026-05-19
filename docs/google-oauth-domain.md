@@ -2,7 +2,7 @@
 
 Google 계정 선택 화면의 **"to continue to …"** 문구는 앱 소스가 아니라 **OAuth 요청을 처리하는 호스트**입니다. 기본 Supabase URL(`YOUR_REF.supabase.co`)을 쓰면 프로젝트 ref가 그대로 노출됩니다.
 
-**목표:** `xdzodkjjoqkadyicxerd.supabase.co` 대신 `mypasswordvault.app` 계열 호스트로 보이게 하기.
+**목표:** `fzwkemfytbaymkjrygpb.supabase.co` (또는 커스텀 API 호스트) 대신 `mypasswordvault.app` 계열 호스트로 보이게 하기.
 
 ## 요약
 
@@ -58,7 +58,7 @@ OAuth **콜백**은 Supabase Auth 엔드포인트입니다. 커스텀 도메인 
 **APIs & Services → Credentials** → Supabase **Google** 프로바이더에 넣은 OAuth 2.0 클라이언트
 
 1. **Authorized redirect URIs**에 위 콜백 URL 추가  
-   - 마이그레이션 기간에는 기존 `https://xdzodkjjoqkadyicxerd.supabase.co/auth/v1/callback`도 잠시 유지 가능
+   - 마이그레이션 기간에는 기존 `https://fzwkemfytbaymkjrygpb.supabase.co/auth/v1/callback`도 잠시 유지 가능
 2. **OAuth consent screen**
    - App name: `My Password Vault` (또는 제품명)
    - User support / Developer contact

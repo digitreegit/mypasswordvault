@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim();
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY")?.trim();
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY")?.trim();
-  const appUrl = (Deno.env.get("PUBLIC_APP_URL") ?? "http://localhost:5173/app").replace(
+  const appUrl = (Deno.env.get("PUBLIC_APP_URL") ?? "https://mypasswordvault.app/app").replace(
     /\/$/,
     "",
   );

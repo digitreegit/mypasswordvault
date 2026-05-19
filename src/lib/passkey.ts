@@ -8,6 +8,12 @@ import type {
 import { AppError } from "./errors";
 import type { StoredPasskey, VaultMeta } from "./storage";
 import { fromBase64, randomBytes, toBase64 } from "./crypto";
+import {
+  canonicalSiteHostname,
+  isLocalDevHost,
+  isVercelPreviewHost,
+  publicSiteOrigin,
+} from "./siteOrigin";
 
 export function isPasskeySupported(): boolean {
   return (
@@ -18,9 +24,10 @@ export function isPasskeySupported(): boolean {
 }
 
 export function currentPasskeyRpId(): string {
+  if (typeof window === "undefined") return canonicalSiteHostname();
   const host = window.location.hostname;
-  if (host === "localhost" || host === "127.0.0.1") return host;
-  return host;
+  if (isLocalDevHost(host)) return host;
+  return canonicalSiteHostname();
 }
 
 function rpId(): string {
@@ -58,6 +65,10 @@ export function mapPasskeyClientError(err: unknown): AppError {
 }
 
 function expectedOrigin(): string {
+  if (typeof window === "undefined") return publicSiteOrigin();
+  const host = window.location.hostname;
+  if (isLocalDevHost(host)) return window.location.origin;
+  if (isVercelPreviewHost(host)) return publicSiteOrigin();
   return window.location.origin;
 }
 

@@ -1,15 +1,8 @@
 import { isNativeApp } from "./platform";
+import { isLocalDevHost, publicSiteOrigin } from "./siteOrigin";
 
 /** Default when `window.location` is unavailable (SSR/tests). */
 const PRIVACY_PATH = "/privacy.html";
-
-/** Static privacy page host (marketing site on Vercel). Override via VITE_PUBLIC_SITE_ORIGIN. */
-const DEFAULT_SITE_ORIGIN = "https://mypasswordvault.app";
-
-function publicSiteOrigin(): string {
-  const fromEnv = import.meta.env.VITE_PUBLIC_SITE_ORIGIN?.trim().replace(/\/+$/, "");
-  return fromEnv || DEFAULT_SITE_ORIGIN;
-}
 
 /**
  * Privacy policy URL for in-app links (sign-in footer, vault footer).
@@ -24,7 +17,7 @@ export function privacyPolicyUrl(): string {
   const { protocol, origin, hostname } = window.location;
   if (
     (protocol === "http:" || protocol === "https:") &&
-    (hostname === "localhost" || hostname === "127.0.0.1")
+    isLocalDevHost(hostname)
   ) {
     return `${origin}${PRIVACY_PATH}`;
   }

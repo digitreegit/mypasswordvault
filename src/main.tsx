@@ -11,11 +11,14 @@ import "@fontsource/noto-sans-kr/700.css";
 import App from "./App";
 import "./index.css";
 import { setupNativeAuthListener } from "./lib/nativeAuth";
+import { redirectVercelPreviewToCanonical } from "./lib/siteOrigin";
 import { ensureOAuthSessionFromUrl } from "./lib/supabaseAuthRedirect";
 
 setupNativeAuthListener();
 
-void ensureOAuthSessionFromUrl()
+if (redirectVercelPreviewToCanonical()) {
+  // Navigating to mypasswordvault.app — do not mount the app on *.vercel.app.
+} else void ensureOAuthSessionFromUrl()
   .catch((e) => console.error("ensureOAuthSessionFromUrl", e))
   .finally(() => {
     ReactDOM.createRoot(document.getElementById("root")!).render(
