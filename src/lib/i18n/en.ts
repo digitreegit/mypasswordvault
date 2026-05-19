@@ -85,6 +85,8 @@ export const MESSAGES_EN: Record<string, string> = {
     "Copy these one-time recovery codes and store them somewhere safe (password manager or printout). Each code works once if you lose your passkey.",
   "setup.recoveryAck":
     "I have saved these recovery codes in a safe place.",
+  "setup.copyRecoveryCodes": "Copy all recovery codes",
+  "setup.copyRecoveryCodesDone": "Copied",
   "setup.forgetWarn":
     "If you forget your master password and lose your passkey and backups, the vault cannot be recovered.",
   "setup.2faIntro":

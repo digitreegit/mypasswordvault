@@ -6,7 +6,7 @@ import {
   TOTP_BACKUP_ACCOUNT,
 } from "../lib/totp";
 import { passwordStrengthScore } from "../lib/passwordGenerator";
-import { Check, Eye, EyeOff, ChevronDown } from "./Icons";
+import { Check, Copy, Eye, EyeOff, ChevronDown } from "./Icons";
 import { ScreenHeader } from "./ScreenHeader";
 import { isAppError } from "../lib/errors";
 
@@ -40,6 +40,7 @@ export function SetupScreen() {
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
   const [recoveryAck, setRecoveryAck] = useState(false);
   const [totpCopyDone, setTotpCopyDone] = useState(false);
+  const [recoveryCopyDone, setRecoveryCopyDone] = useState(false);
 
   const strengthScore = useMemo(() => passwordStrengthScore(pw), [pw]);
 
@@ -354,11 +355,39 @@ export function SetupScreen() {
 
         {stage === "recovery" && (
           <div className="space-y-4">
-            <ul className="font-mono text-sm bg-ink-50 border border-ink-200 rounded-lg p-3 space-y-1 list-none">
-              {recoveryCodes.map((c) => (
-                <li key={c}>{c}</li>
-              ))}
-            </ul>
+            <div className="relative">
+              <ul className="font-mono text-sm bg-ink-50 border border-ink-200 rounded-lg p-3 pr-11 space-y-1 list-none">
+                {recoveryCodes.map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                className="absolute right-2 top-2 p-2 rounded-md text-ink-400 hover:text-accent-600 hover:bg-white/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30"
+                title={
+                  recoveryCopyDone
+                    ? t("setup.copyRecoveryCodesDone")
+                    : t("setup.copyRecoveryCodes")
+                }
+                aria-label={
+                  recoveryCopyDone
+                    ? t("setup.copyRecoveryCodesDone")
+                    : t("setup.copyRecoveryCodes")
+                }
+                onClick={() => {
+                  void copyTextForClipboard(recoveryCodes.join("\n")).then(() => {
+                    setRecoveryCopyDone(true);
+                    window.setTimeout(() => setRecoveryCopyDone(false), 2500);
+                  });
+                }}
+              >
+                {recoveryCopyDone ? (
+                  <Check className="w-4 h-4 text-accent-600" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+              </button>
+            </div>
             <label className="flex items-start gap-2 text-sm text-ink-700 cursor-pointer">
               <input
                 type="checkbox"

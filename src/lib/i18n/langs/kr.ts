@@ -81,6 +81,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.recoveryIntro":
     "아래 일회용 복구 코드를 복사해 안전한 곳에 보관하세요. 패스키를 잃었을 때 각 코드는 한 번만 사용할 수 있습니다.",
   "setup.recoveryAck": "복구 코드를 안전한 곳에 저장했습니다.",
+  "setup.copyRecoveryCodes": "복구 코드 전체 복사",
+  "setup.copyRecoveryCodesDone": "복사됨",
   "setup.forgetWarn":
     "비밀번호를 잊으면 vault를 복구할 수 없습니다. 잊은 경우 데이터를 모두 잃고 새로 시작해야 합니다.",
   "setup.2faIntro":
