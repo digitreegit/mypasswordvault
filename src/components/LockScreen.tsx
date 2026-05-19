@@ -4,6 +4,7 @@ import { useVault } from "../lib/vault";
 import { Lock, Check, Eye, EyeOff } from "./Icons";
 import { ScreenHeader } from "./ScreenHeader";
 import { isAppError } from "../lib/errors";
+import { passkeyRegisteredForCurrentSite } from "../lib/passkey";
 import { isNativeApp } from "../lib/platform";
 import { otpauthQrDataUrl, otpauthUri } from "../lib/totp";
 
@@ -102,11 +103,16 @@ export function LockScreen() {
     }
   }
 
-  const canPasskey =
-    isPasskeySupported &&
+  const hasPasskeyMeta =
     meta?.authVersion === 2 &&
     !!meta.passkeyDataKeyWrap &&
     (meta.passkeys?.length ?? 0) > 0;
+  const passkeyWrongSite =
+    isPasskeySupported && hasPasskeyMeta && meta
+      ? !passkeyRegisteredForCurrentSite(meta)
+      : false;
+  const canPasskey =
+    isPasskeySupported && hasPasskeyMeta && !passkeyWrongSite;
 
   useEffect(() => {
     if (!canPasskey) setShowBackup(true);
@@ -317,6 +323,14 @@ export function LockScreen() {
           brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
         />
         <p className="text-sm text-ink-500 leading-snug">{t("lock.subtitle")}</p>
+
+        {passkeyWrongSite && (
+          <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-3 leading-snug">
+            {t("lock.passkeyWrongSite", {
+              site: meta?.passkeyRpId ?? "another site",
+            })}
+          </p>
+        )}
 
         {canPasskey && (
           <button

@@ -101,6 +101,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "lock.title": "Vault Locked",
   "lock.subtitle": "Unlock with your passkey, or use a backup method below.",
   "lock.unlockPasskey": "Unlock with passkey",
+  "lock.passkeyWrongSite":
+    "Your passkey was created on {{site}}, not this site. Use backup sign-in below (master password + authenticator or recovery code). You can register a new passkey here after unlocking.",
   "lock.useBackup": "Use backup sign-in (master password)",
   "lock.hideBackup": "Hide backup sign-in",
   "lock.backupHint":
@@ -126,6 +128,12 @@ export const MESSAGES_EN: Record<string, string> = {
   "errors.wrongTotp": "Incorrect authenticator code.",
   "errors.passkeyNotSupported": "Passkeys are not supported in this browser.",
   "errors.passkeyFailed": "Passkey verification failed.",
+  "errors.passkeyCancelled":
+    "Passkey sign-in was cancelled or timed out. Try again, or use backup sign-in below.",
+  "errors.passkeyTimeout":
+    "Passkey sign-in timed out. Try again, or use backup sign-in below.",
+  "errors.passkeyWrongDomain":
+    "This passkey does not apply on this site (passkeys are tied to where you registered them). Use backup sign-in below.",
   "errors.passkeyNoPasswordless":
     "Passkey unlock is not available on this device. Use backup sign-in with your master password.",
   "errors.passkeyRequired": "Register a passkey before continuing.",

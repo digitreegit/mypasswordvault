@@ -96,6 +96,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "lock.title": "잠긴 Vault",
   "lock.subtitle": "패스키로 잠금 해제하거나, 아래 백업 방법을 사용하세요.",
   "lock.unlockPasskey": "패스키로 잠금 해제",
+  "lock.passkeyWrongSite":
+    "패스키는 {{site}}에서 등록되었고 이 사이트에서는 사용할 수 없습니다. 아래 백업 로그인(마스터 비밀번호 + 인증 앱 또는 복구 코드)을 사용하세요. 잠금 해제 후 이 사이트에서 새 패스키를 등록할 수 있습니다.",
   "lock.useBackup": "백업 로그인 (마스터 비밀번호)",
   "lock.hideBackup": "백업 로그인 숨기기",
   "lock.backupHint": "백업: 마스터 비밀번호 + 인증 앱 코드 또는 복구 코드",
@@ -119,6 +121,12 @@ export const MESSAGES_KR: Record<string, string> = {
   "errors.wrongTotp": "인증 앱 코드가 올바르지 않습니다.",
   "errors.passkeyNotSupported": "이 브라우저에서는 패스키를 지원하지 않습니다.",
   "errors.passkeyFailed": "패스키 확인에 실패했습니다.",
+  "errors.passkeyCancelled":
+    "패스키 로그인이 취소되었거나 시간이 초과되었습니다. 다시 시도하거나 아래 백업 로그인을 사용하세요.",
+  "errors.passkeyTimeout":
+    "패스키 로그인 시간이 초과되었습니다. 다시 시도하거나 백업 로그인을 사용하세요.",
+  "errors.passkeyWrongDomain":
+    "이 사이트에서는 등록한 패스키를 사용할 수 없습니다(패스키는 등록한 도메인에 묶입니다). 아래 백업 로그인을 사용하세요.",
   "errors.passkeyNoPasswordless":
     "이 기기에서는 패스키만으로 잠금 해제할 수 없습니다. 마스터 비밀번호 백업 로그인을 사용하세요.",
   "errors.passkeyRequired": "계속하려면 패스키를 등록하세요.",

@@ -35,6 +35,8 @@ export interface VaultMeta {
   /** v2: base64 salt for WebAuthn PRF extension. */
   prfSalt?: string;
   passkeys?: StoredPasskey[];
+  /** Hostname (rpId) where passkeys were registered, e.g. `localhost` or `app.example.com`. */
+  passkeyRpId?: string;
   recoveryCodeHashes?: string[];
   // base64 encrypted verifier (well-known plaintext encrypted with master key)
   verifier: string;

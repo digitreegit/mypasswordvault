@@ -23,8 +23,10 @@ import {
 } from "./authV2";
 import {
   authenticateVaultPasskey,
+  currentPasskeyRpId,
   isPasskeySupported,
   newPrfSalt,
+  passkeyRegisteredForCurrentSite,
   readPrfFirst,
   registerVaultPasskey,
 } from "./passkey";
@@ -516,6 +518,7 @@ export function VaultProvider({
       passkeyDataKeyWrap: pending.passkeyDataKeyWrap,
       prfSalt: pending.prfSalt,
       passkeys: pending.passkeys,
+      passkeyRpId: currentPasskeyRpId(),
       recoveryCodeHashes: pending.recoveryCodeHashes,
       verifier: verifierEnc,
       totpSecret: totpEnc,
@@ -567,6 +570,9 @@ export function VaultProvider({
     if (!m || !isAuthV2(m)) throw new AppError("errors.passkeyNoPasswordless");
     if (!m.passkeys?.length || !m.prfSalt) {
       throw new AppError("errors.noPasskeyRegistered");
+    }
+    if (!passkeyRegisteredForCurrentSite(m)) {
+      throw new AppError("errors.passkeyWrongDomain");
     }
     if (!m.passkeyDataKeyWrap) {
       throw new AppError("errors.passkeyNoPasswordless");

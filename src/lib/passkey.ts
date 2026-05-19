@@ -6,7 +6,7 @@ import type {
   RegistrationJSON,
 } from "@passwordless-id/webauthn";
 import { AppError } from "./errors";
-import type { StoredPasskey } from "./storage";
+import type { StoredPasskey, VaultMeta } from "./storage";
 import { fromBase64, randomBytes, toBase64 } from "./crypto";
 
 export function isPasskeySupported(): boolean {
@@ -17,10 +17,44 @@ export function isPasskeySupported(): boolean {
   );
 }
 
-function rpId(): string {
+export function currentPasskeyRpId(): string {
   const host = window.location.hostname;
   if (host === "localhost" || host === "127.0.0.1") return host;
   return host;
+}
+
+function rpId(): string {
+  return currentPasskeyRpId();
+}
+
+/** Passkeys are bound to the site (rpId) where they were created. */
+export function passkeyRegisteredForCurrentSite(meta: VaultMeta): boolean {
+  if (!meta.passkeys?.length) return false;
+  if (!meta.passkeyRpId) return true;
+  return meta.passkeyRpId === currentPasskeyRpId();
+}
+
+export function mapPasskeyClientError(err: unknown): AppError {
+  if (err instanceof AppError) return err;
+  if (err instanceof DOMException) {
+    if (err.name === "NotAllowedError") {
+      return new AppError("errors.passkeyCancelled");
+    }
+    if (err.name === "SecurityError") {
+      return new AppError("errors.passkeyWrongDomain");
+    }
+    if (err.name === "AbortError" || err.name === "TimeoutError") {
+      return new AppError("errors.passkeyTimeout");
+    }
+  }
+  const msg = err instanceof Error ? err.message : String(err);
+  if (/timed out|not allowed/i.test(msg)) {
+    return new AppError("errors.passkeyCancelled");
+  }
+  if (/security|domain|rpid|relying party/i.test(msg)) {
+    return new AppError("errors.passkeyWrongDomain");
+  }
+  return new AppError("errors.passkeyFailed");
 }
 
 function expectedOrigin(): string {
@@ -51,7 +85,9 @@ export async function registerVaultPasskey(opts: {
 }> {
   if (!isPasskeySupported()) throw new AppError("errors.passkeyNotSupported");
   const challenge = server.randomChallenge();
-  const registration = await client.register({
+  let registration: RegistrationJSON;
+  try {
+    registration = await client.register({
     user: {
       id: opts.userId,
       name: opts.userName,
@@ -68,7 +104,10 @@ export async function registerVaultPasskey(opts: {
       })),
       extensions: prfExtension(opts.prfSaltB64),
     },
-  });
+    });
+  } catch (err) {
+    throw mapPasskeyClientError(err);
+  }
   const info = await server.verifyRegistration(registration, {
     challenge,
     origin: expectedOrigin(),
@@ -97,14 +136,19 @@ export async function authenticateVaultPasskey(
   if (!passkeys.length) throw new AppError("errors.noPasskeyRegistered");
   if (!isPasskeySupported()) throw new AppError("errors.passkeyNotSupported");
   const challenge = server.randomChallenge();
-  const authentication = await client.authenticate({
-    challenge,
-    allowCredentials: passkeys.map((p) => p.id),
-    userVerification: "required",
-    customProperties: {
-      extensions: prfExtension(prfSaltB64),
-    },
-  });
+  let authentication: AuthenticationJSON;
+  try {
+    authentication = await client.authenticate({
+      challenge,
+      allowCredentials: passkeys.map((p) => p.id),
+      userVerification: "required",
+      customProperties: {
+        extensions: prfExtension(prfSaltB64),
+      },
+    });
+  } catch (err) {
+    throw mapPasskeyClientError(err);
+  }
   const passkey = passkeys.find((p) => p.id === authentication.id);
   if (!passkey) throw new AppError("errors.passkeyFailed");
   const info = await server.verifyAuthentication(
