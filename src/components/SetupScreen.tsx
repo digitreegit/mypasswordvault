@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useVault } from "../lib/vault";
-import { otpauthQrDataUrl, otpauthUri } from "../lib/totp";
+import {
+  copyTextForClipboard,
+  otpauthQrDataUrl,
+  TOTP_BACKUP_ACCOUNT,
+} from "../lib/totp";
 import { passwordStrengthScore } from "../lib/passwordGenerator";
 import { Check, Eye, EyeOff, ChevronDown } from "./Icons";
 import { ScreenHeader } from "./ScreenHeader";
@@ -35,12 +39,16 @@ export function SetupScreen() {
   const [code, setCode] = useState("");
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
   const [recoveryAck, setRecoveryAck] = useState(false);
+  const [totpCopyDone, setTotpCopyDone] = useState(false);
 
   const strengthScore = useMemo(() => passwordStrengthScore(pw), [pw]);
 
   useEffect(() => {
     if (stage === "backup-totp" && totpSecret) {
-      otpauthQrDataUrl(totpSecret, "vault-backup").then(setQrUrl).catch(() => {});
+      otpauthQrDataUrl(totpSecret, TOTP_BACKUP_ACCOUNT)
+        .then(setQrUrl)
+        .catch(() => {});
+      setTotpCopyDone(false);
     }
   }, [stage, totpSecret]);
 
@@ -300,12 +308,23 @@ export function SetupScreen() {
                   value={totpSecret}
                   onFocus={(e) => e.currentTarget.select()}
                 />
-                <a
-                  className="text-xs text-accent-600 hover:underline mt-1 inline-block break-all"
-                  href={otpauthUri(totpSecret, "vault-backup")}
+                <button
+                  type="button"
+                  className="text-xs text-accent-600 hover:underline mt-1 font-medium"
+                  onClick={() => {
+                    void copyTextForClipboard(totpSecret).then(() => {
+                      setTotpCopyDone(true);
+                      window.setTimeout(() => setTotpCopyDone(false), 2500);
+                    });
+                  }}
                 >
-                  {t("setup.openOtpauth")}
-                </a>
+                  {totpCopyDone
+                    ? t("setup.copyTotpSecretDone")
+                    : t("setup.copyTotpSecret")}
+                </button>
+                <p className="text-xs text-ink-500 mt-2 leading-snug">
+                  {t("setup.totpAuthenticatorHint")}
+                </p>
               </div>
             </div>
             <div>

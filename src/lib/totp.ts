@@ -3,6 +3,9 @@ import QRCode from "qrcode";
 
 const ISSUER = "My Password Vault";
 
+/** Backup TOTP account — separate from passkey (Apple Passwords cannot add TOTP to passkeys). */
+export const TOTP_BACKUP_ACCOUNT = "backup@mypasswordvault.app";
+
 export function generateTotpSecretBase32(): string {
   // 160-bit secret, base32 encoded — standard for TOTP
   return new OTPAuth.Secret({ size: 20 }).base32;
@@ -39,6 +42,10 @@ export async function otpauthQrDataUrl(
 }
 
 // Validate a 6-digit user-supplied code; allow ±1 step window for clock drift.
+export async function copyTextForClipboard(text: string): Promise<void> {
+  await navigator.clipboard.writeText(text);
+}
+
 export function verifyTotp(secretBase32: string, code: string): boolean {
   const cleaned = code.replace(/\s+/g, "");
   if (!/^\d{6}$/.test(cleaned)) return false;

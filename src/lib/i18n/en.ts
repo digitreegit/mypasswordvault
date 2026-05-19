@@ -91,6 +91,10 @@ export const MESSAGES_EN: Record<string, string> = {
     "Scan the QR code with Google Authenticator, 1Password, Authy, etc., or enter the secret key manually. Then enter the 6-digit code shown in the app to confirm.",
   "setup.secretKey": "Secret key (manual entry)",
   "setup.openOtpauth": "Open otpauth:// link",
+  "setup.copyTotpSecret": "Copy secret key for authenticator app",
+  "setup.copyTotpSecretDone": "Copied",
+  "setup.totpAuthenticatorHint":
+    "Scan the QR with Google Authenticator, 1Password, Authy, or similar. On Mac, use a dedicated authenticator app — Apple Passwords cannot add backup codes to a passkey entry.",
   "setup.totpCode": "6-digit code from the app",
   "setup.back": "Back",
   "setup.confirmStart": "Confirm and start",

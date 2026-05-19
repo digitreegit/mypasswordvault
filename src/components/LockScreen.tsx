@@ -6,7 +6,11 @@ import { ScreenHeader } from "./ScreenHeader";
 import { isAppError } from "../lib/errors";
 import { passkeyRegisteredForCurrentSite } from "../lib/passkey";
 import { isNativeApp } from "../lib/platform";
-import { otpauthQrDataUrl, otpauthUri } from "../lib/totp";
+import {
+  copyTextForClipboard,
+  otpauthQrDataUrl,
+  TOTP_BACKUP_ACCOUNT,
+} from "../lib/totp";
 
 type RebindStage = "master" | "totp";
 
@@ -50,6 +54,7 @@ export function LockScreen() {
   const [rebindCode, setRebindCode] = useState("");
   const [rebindQrUrl, setRebindQrUrl] = useState("");
   const [rebindBusy, setRebindBusy] = useState(false);
+  const [rebindCopyDone, setRebindCopyDone] = useState(false);
 
   useEffect(() => {
     if (needsTotpRebindAfterCloudPull) {
@@ -64,9 +69,10 @@ export function LockScreen() {
 
   useEffect(() => {
     if (rebindStage === "totp" && rebindTotpSecret) {
-      void otpauthQrDataUrl(rebindTotpSecret, "vault")
+      void otpauthQrDataUrl(rebindTotpSecret, TOTP_BACKUP_ACCOUNT)
         .then(setRebindQrUrl)
         .catch(() => {});
+      setRebindCopyDone(false);
     }
   }, [rebindStage, rebindTotpSecret]);
 
@@ -169,15 +175,9 @@ export function LockScreen() {
     return (
       <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-ink-50 to-ink-100">
         <div className="card w-full max-w-md p-5 sm:p-8 space-y-4">
-          <ScreenHeader
-            brandName={t("app.brandName")}
-            pageTitle={t("lock.rebindTitle")}
-            locale={locale}
-            onLocaleChange={(l) => void setLocale(l)}
-            languageAriaLabel={t("settings.language")}
-            brandHomeHref={brandHomeHref}
-            brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
-          />
+          <h1 className="font-sans text-xl font-semibold text-ink-900 tracking-tight">
+            {t("lock.rebindTitle")}
+          </h1>
           {syncMsg && (
             <p className={PULL_CLOUD_DONE_BANNER}>{syncMsg}</p>
           )}
@@ -257,12 +257,23 @@ export function LockScreen() {
                     value={rebindTotpSecret}
                     onFocus={(e) => e.currentTarget.select()}
                   />
-                  <a
-                    className="text-xs text-accent-600 hover:underline mt-1 inline-block break-all"
-                    href={otpauthUri(rebindTotpSecret, "vault")}
+                  <button
+                    type="button"
+                    className="text-xs text-accent-600 hover:underline mt-1 font-medium"
+                    onClick={() => {
+                      void copyTextForClipboard(rebindTotpSecret).then(() => {
+                        setRebindCopyDone(true);
+                        window.setTimeout(() => setRebindCopyDone(false), 2500);
+                      });
+                    }}
                   >
-                    {t("setup.openOtpauth")}
-                  </a>
+                    {rebindCopyDone
+                      ? t("setup.copyTotpSecretDone")
+                      : t("setup.copyTotpSecret")}
+                  </button>
+                  <p className="text-xs text-ink-500 mt-2 leading-snug">
+                    {t("setup.totpAuthenticatorHint")}
+                  </p>
                 </div>
               </div>
               <div>

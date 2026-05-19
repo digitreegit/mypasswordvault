@@ -35,6 +35,7 @@ import {
   hashRecoveryCodes,
   matchRecoveryCode,
 } from "./recoveryCodes";
+import { TOTP_BACKUP_ACCOUNT } from "./totp";
 import {
   deleteEntry,
   getMeta,
@@ -522,7 +523,7 @@ export function VaultProvider({
       recoveryCodeHashes: pending.recoveryCodeHashes,
       verifier: verifierEnc,
       totpSecret: totpEnc,
-      totpLabel: "vault-backup",
+      totpLabel: TOTP_BACKUP_ACCOUNT,
       autoLockMinutes: pending.autoLockMinutes,
       locale: localeRef.current,
       categories: [],

@@ -87,6 +87,10 @@ export const MESSAGES_KR: Record<string, string> = {
     "아래 QR코드를 Google Authenticator, 1Password, Authy 등에 스캔하거나 비밀키를 직접 입력하세요. 그 다음 표시되는 6자리 코드를 입력해 확인합니다.",
   "setup.secretKey": "비밀키 (수동 입력용)",
   "setup.openOtpauth": "otpauth:// 링크 열기",
+  "setup.copyTotpSecret": "인증 앱용 비밀 키 복사",
+  "setup.copyTotpSecretDone": "복사됨",
+  "setup.totpAuthenticatorHint":
+    "QR을 Google Authenticator, 1Password, Authy 등으로 스캔하세요. Mac에서는 전용 인증 앱을 사용하세요. Apple 비밀번호(패스키 항목)에는 백업 코드를 추가할 수 없습니다.",
   "setup.totpCode": "앱에서 표시되는 6자리 코드",
   "setup.back": "뒤로",
   "setup.confirmStart": "확인 후 시작",
