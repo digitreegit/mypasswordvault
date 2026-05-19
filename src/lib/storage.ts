@@ -12,13 +12,33 @@ export interface VaultCategory {
   name: string;
 }
 
+/** WebAuthn credential stored in vault meta (public key only). */
+export interface StoredPasskey {
+  id: string;
+  publicKey: string;
+  algorithm: string;
+  counter: number;
+  transports: string[];
+  createdAt: number;
+}
+
 export interface VaultMeta {
   id: "vault";
+  /** `2` = passkey-primary + backup TOTP + recovery codes. Omit = legacy TOTP-only. */
+  authVersion?: number;
   // base64 PBKDF2 salt
   salt: string;
+  /** v2: AES-GCM wrap of random data key, encrypted with password-derived key. */
+  passwordWrap?: string;
+  /** v2: PRF-wrapped data key for passwordless passkey unlock. */
+  passkeyDataKeyWrap?: string;
+  /** v2: base64 salt for WebAuthn PRF extension. */
+  prfSalt?: string;
+  passkeys?: StoredPasskey[];
+  recoveryCodeHashes?: string[];
   // base64 encrypted verifier (well-known plaintext encrypted with master key)
   verifier: string;
-  // base64 encrypted TOTP secret (encrypted with master key); empty until 2FA enrolled
+  // base64 encrypted backup TOTP secret (encrypted with vault data key)
   totpSecret: string;
   // base32 TOTP secret label hint (issuer/account)
   totpLabel: string;

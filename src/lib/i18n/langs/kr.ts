@@ -15,7 +15,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "auth.google": "Google로 계속하기",
   "auth.errGeneric": "문제가 발생했습니다. 다시 시도하세요.",
   "auth.securityNote":
-    "마스터 비밀번호는 업로드되지 않습니다. Google 로그인은 본인 확인용이며, 금고 비밀은 마스터 비밀번호와 인증 앱으로 잠금 해제할 때만 풀립니다.",
+    "마스터 비밀번호는 업로드되지 않습니다. Google 로그인은 본인 확인용이며, 패스키 또는 마스터 비밀번호+백업 수단으로 잠금 해제합니다.",
   "auth.notConfiguredTitle": "Supabase가 설정되지 않았습니다",
   "auth.notConfiguredBody":
     "프로젝트 루트의 .env 파일에 VITE_SUPABASE_URL과 VITE_SUPABASE_ANON_KEY를 넣은 뒤 개발 서버를 다시 시작하세요. DB 테이블 생성과 Google 로그인 설정은 README.md를 참고하세요.",
@@ -26,15 +26,13 @@ export const MESSAGES_KR: Record<string, string> = {
     "비밀번호는 기기에서 암호화된 뒤에만 동기화됩니다. 서버에는 복호화할 수 없는 암호문만 저장되며, 마스터 비밀번호와 평문 비밀은 우리가 읽을 수 있는 형태로 전송되지 않습니다. Google 로그인은 동기화할 계정을 확인하는 용도입니다.",
   "auth.faqUseQ": "어떻게 쓰나요? 매일 쓰기 부담스럽지 않나요?",
   "auth.faqUseA":
-    "Google로 로그인하고, 강한 마스터 비밀번호를 정한 뒤 QR 한 번으로 2단계 인증을 연결하면 됩니다. 잠금 해제 후에는 목록에 항목을 추가·검색하면 됩니다. 자동 잠금으로 자리를 비울 때 금고가 닫히고, 다른 브라우저나 휴대폰에서 같은 계정으로 로그인하면 동기화됩니다.",
-  "auth.faqWhatAuthenticatorQ":
-    "인증(Authenticator) 앱이 무엇이고, 역할은 무엇이며 어떤 앱을 써야 하나요?",
+    "Google 로그인 → 마스터 비밀번호 → 패스키 등록(Face ID·Touch ID 등) → 백업 인증 앱·복구 코드 저장 순으로 설정합니다. 평소에는 패스키만으로 잠금 해제합니다.",
+  "auth.faqWhatAuthenticatorQ": "패스키란 무엇이고, 어떻게 로그인하나요?",
   "auth.faqWhatAuthenticatorA":
-    "인증 앱은 휴대폰이나 컴퓨터에 설치해 주기적으로 바뀌는 숫자 코드(보통 6자리)를 만들어 두 번째 확인 수단으로 쓰는 앱입니다. QR로 금고와 비밀이 공유된 뒤에는 잠금 해제 때마다 마스터 비밀번호와 새 코드가 함께 필요해, 마스터 비밀번호만 들킨 상태로는 열 수 없도록 합니다. Google Authenticator, Microsoft Authenticator, Authy, FreeOTP처럼 TOTP(RFC 기반 시간 OTP) 표준을 지원하는 신뢰할 수 있는 앱이면 대부분 사용할 수 있습니다. 쓰는 비밀번호 관리자(예: 1Password, Bitwarden) 안의 OTP 기능을 쓰셔도 됩니다. 업데이트를 잘 하는 앱과 제작사를 선택하세요.",
-  "auth.faqAuthenticatorQ":
-    "인증 앱이 고장 났거나, 휴대폰을 잃어버렸거나, 코드가 안 맞으면 어떻게 되나요?",
+    "패스키는 기기 보안 칩(Secure Enclave, TPM 등)에 저장된 키로 본인을 확인합니다. 서버에는 공개키만 저장됩니다. 잠금 해제 시 지문·얼굴·PIN으로 승인하면 챌린지에 서명하며, 비밀번호나 OTP 입력이 필요 없습니다.",
+  "auth.faqAuthenticatorQ": "백업(인증 앱·복구 코드)은 무엇인가요?",
   "auth.faqAuthenticatorA":
-    "암호화된 금고는 계정에 그대로 남아 있습니다. 새 기기나 초기화 후에는: 로그인 → 설정의 ‘계정에서 최신 받기’로 암호화 스냅샷을 받고 → 마스터 비밀번호를 입력한 뒤 → 안내에 따라 새 QR을 스캔해 대체 인증기를 연결하면 됩니다. 확인을 마치면 예전 시간 기반 코드는 더 이상 쓰이지 않는 것이 정상이지만, 데이터가 지워진 것은 아닙니다. 이전 인증 기기가 아직 있다면 종종 재연결 없이 마스터+6자리로 바로 잠금 해제할 수도 있습니다.",
+    "패스키 기기를 잃었을 때는 마스터 비밀번호 + 백업 인증 앱(TOTP) 또는 일회용 복구 코드로 잠금 해제할 수 있습니다. 복구 코드는 설정 시 한 번만 표시되니 안전한 곳에 보관하세요.",
   "auth.faqPricingQ": "유료인가요, 무료인가요?",
   "auth.faqPricingA":
     "비밀번호 항목은 무료로 최대 25개까지 저장할 수 있습니다. $4.99를 한 번만 결제하면 이 계정에서 항목 수 제한 없이 계속 쓸 수 있습니다. 앱에서 __PRICING_LINK__를 열어 결제할 수 있습니다.",
@@ -60,6 +58,9 @@ export const MESSAGES_KR: Record<string, string> = {
   "autoLock.off": "사용 안 함",
   "autoLock.offBad": "사용 안 함 (권장하지 않음)",
   "setup.pageTitle": "시작 설정",
+  "setup.pageTitlePasskey": "패스키 등록",
+  "setup.pageTitleBackupTotp": "백업 인증 앱",
+  "setup.pageTitleRecovery": "복구 코드",
   "setup.pageTitle2fa": "2단계 인증",
   "setup.title": "My Password Vault 설정",
   "setup.subtitle":
@@ -68,7 +69,18 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.masterPwConfirm": "마스터 비밀번호 확인",
   "setup.placeholderMin": "10자 이상",
   "setup.autoLock": "자동 잠금 (분)",
+  "setup.nextPasskey": "다음 — 패스키 등록",
   "setup.next2fa": "다음 — 2단계 인증 설정",
+  "setup.nextRecovery": "다음 — 복구 코드 저장",
+  "setup.passkeyIntro":
+    "이 기기에 패스키를 등록합니다(Face ID, Touch ID, Windows Hello, 지문, 기기 PIN). 매일 잠금 해제에 사용합니다.",
+  "setup.registerPasskey": "패스키 등록",
+  "setup.passkeyUnsupported": "이 브라우저에서는 패스키를 사용할 수 없습니다.",
+  "setup.backupTotpIntro":
+    "백업용 인증 앱(TOTP)을 설정합니다. QR을 스캔하거나 비밀키를 입력한 뒤 6자리 코드로 확인합니다.",
+  "setup.recoveryIntro":
+    "아래 일회용 복구 코드를 복사해 안전한 곳에 보관하세요. 패스키를 잃었을 때 각 코드는 한 번만 사용할 수 있습니다.",
+  "setup.recoveryAck": "복구 코드를 안전한 곳에 저장했습니다.",
   "setup.forgetWarn":
     "비밀번호를 잊으면 vault를 복구할 수 없습니다. 잊은 경우 데이터를 모두 잃고 새로 시작해야 합니다.",
   "setup.2faIntro":
@@ -82,9 +94,17 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.errMismatch": "두 비밀번호가 일치하지 않습니다.",
   "setup.errGeneric": "오류가 발생했습니다.",
   "lock.title": "잠긴 Vault",
-  "lock.subtitle": "마스터 비밀번호와 6자리 인증 코드를 입력하세요.",
+  "lock.subtitle": "패스키로 잠금 해제하거나, 아래 백업 방법을 사용하세요.",
+  "lock.unlockPasskey": "패스키로 잠금 해제",
+  "lock.useBackup": "백업 로그인 (마스터 비밀번호)",
+  "lock.hideBackup": "백업 로그인 숨기기",
+  "lock.backupHint": "백업: 마스터 비밀번호 + 인증 앱 코드 또는 복구 코드",
+  "lock.backupTotpTab": "인증 앱",
+  "lock.backupRecoveryTab": "복구 코드",
+  "lock.recoveryCode": "복구 코드",
+  "lock.unlockBackup": "백업으로 잠금 해제",
   "lock.masterPw": "마스터 비밀번호",
-  "lock.totp": "2단계 인증 코드",
+  "lock.totp": "인증 앱 코드 (백업)",
   "lock.unlock": "잠금 해제",
   "lock.forget": "비밀번호를 잊었나요? Vault 초기화…",
   "lock.resetWarn":
@@ -96,7 +116,15 @@ export const MESSAGES_KR: Record<string, string> = {
   "errors.invalidOtp": "인증 코드가 올바르지 않습니다.",
   "errors.notInitialized": "Vault가 초기화되지 않았습니다.",
   "errors.wrongMaster": "마스터 비밀번호가 올바르지 않습니다.",
-  "errors.wrongTotp": "2단계 인증 코드가 올바르지 않습니다.",
+  "errors.wrongTotp": "인증 앱 코드가 올바르지 않습니다.",
+  "errors.passkeyNotSupported": "이 브라우저에서는 패스키를 지원하지 않습니다.",
+  "errors.passkeyFailed": "패스키 확인에 실패했습니다.",
+  "errors.passkeyNoPasswordless":
+    "이 기기에서는 패스키만으로 잠금 해제할 수 없습니다. 마스터 비밀번호 백업 로그인을 사용하세요.",
+  "errors.passkeyRequired": "계속하려면 패스키를 등록하세요.",
+  "errors.passkeyNeedsSignIn": "패스키 등록 전에 Google로 로그인하세요.",
+  "errors.invalidRecoveryCode": "복구 코드가 올바르지 않거나 이미 사용되었습니다.",
+  "errors.noPasskeyRegistered": "등록된 패스키가 없습니다.",
   "errors.locked": "잠금 상태입니다.",
   "errors.invalidBackup": "올바른 vault 백업 파일이 아닙니다.",
   "errors.missingUserVaultsTable":

@@ -6,11 +6,21 @@ import { Check, Eye, EyeOff, ChevronDown } from "./Icons";
 import { ScreenHeader } from "./ScreenHeader";
 import { isAppError } from "../lib/errors";
 
-type Stage = "password" | "enroll-2fa";
+type Stage = "password" | "passkey" | "backup-totp" | "recovery";
 
 export function SetupScreen() {
-  const { setup, confirmTotpEnrollment, abortSetup, locale, setLocale, t } =
-    useVault();
+  const {
+    setup,
+    registerPasskeyInSetup,
+    beginBackupTotpEnrollment,
+    confirmBackupTotpEnrollment,
+    finalizeEnrollment,
+    abortSetup,
+    isPasskeySupported,
+    locale,
+    setLocale,
+    t,
+  } = useVault();
   const [stage, setStage] = useState<Stage>("password");
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
@@ -23,16 +33,31 @@ export function SetupScreen() {
   const [totpSecret, setTotpSecret] = useState<string>("");
   const [qrUrl, setQrUrl] = useState<string>("");
   const [code, setCode] = useState("");
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
+  const [recoveryAck, setRecoveryAck] = useState(false);
 
   const strengthScore = useMemo(() => passwordStrengthScore(pw), [pw]);
 
   useEffect(() => {
-    if (stage === "enroll-2fa" && totpSecret) {
-      otpauthQrDataUrl(totpSecret, "vault").then(setQrUrl).catch(() => {});
+    if (stage === "backup-totp" && totpSecret) {
+      otpauthQrDataUrl(totpSecret, "vault-backup").then(setQrUrl).catch(() => {});
     }
   }, [stage, totpSecret]);
 
-  async function handleCreate() {
+  const pageTitle = useMemo(() => {
+    switch (stage) {
+      case "password":
+        return t("setup.pageTitle");
+      case "passkey":
+        return t("setup.pageTitlePasskey");
+      case "backup-totp":
+        return t("setup.pageTitleBackupTotp");
+      case "recovery":
+        return t("setup.pageTitleRecovery");
+    }
+  }, [stage, t]);
+
+  async function handlePasswordNext() {
     setError(null);
     if (pw.length < 10) {
       setError(t("setup.errMin"));
@@ -44,9 +69,8 @@ export function SetupScreen() {
     }
     setBusy(true);
     try {
-      const { totpSecretBase32 } = await setup(pw, autoLock);
-      setTotpSecret(totpSecretBase32);
-      setStage("enroll-2fa");
+      await setup(pw, autoLock);
+      setStage("passkey");
     } catch (e: unknown) {
       setError(
         isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
@@ -56,11 +80,49 @@ export function SetupScreen() {
     }
   }
 
-  async function handleConfirm() {
+  async function handleRegisterPasskey() {
+    setError(null);
+    if (!isPasskeySupported) {
+      setError(t("errors.passkeyNotSupported"));
+      return;
+    }
+    setBusy(true);
+    try {
+      await registerPasskeyInSetup();
+      const { totpSecretBase32 } = await beginBackupTotpEnrollment();
+      setTotpSecret(totpSecretBase32);
+      setStage("backup-totp");
+    } catch (e: unknown) {
+      setError(
+        isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleConfirmTotp() {
     setError(null);
     setBusy(true);
     try {
-      await confirmTotpEnrollment(code);
+      const { recoveryCodes: codes } = await confirmBackupTotpEnrollment(code);
+      setRecoveryCodes(codes);
+      setStage("recovery");
+    } catch (e: unknown) {
+      setError(
+        isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleFinish() {
+    if (!recoveryAck) return;
+    setError(null);
+    setBusy(true);
+    try {
+      await finalizeEnrollment();
     } catch (e: unknown) {
       setError(
         isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
@@ -75,15 +137,18 @@ export function SetupScreen() {
       <div className="card w-full max-w-md p-5 sm:p-8">
         <ScreenHeader
           brandName={t("app.brandName")}
-          pageTitle={
-            stage === "password" ? t("setup.pageTitle") : t("setup.pageTitle2fa")
-          }
+          pageTitle={pageTitle}
           locale={locale}
           onLocaleChange={(l) => void setLocale(l)}
           languageAriaLabel={t("settings.language")}
           className="mb-1"
         />
-        <p className="text-sm text-ink-500 mb-6 leading-snug">{t("setup.subtitle")}</p>
+        <p className="text-sm text-ink-500 mb-6 leading-snug">
+          {stage === "password" && t("setup.subtitle")}
+          {stage === "passkey" && t("setup.passkeyIntro")}
+          {stage === "backup-totp" && t("setup.backupTotpIntro")}
+          {stage === "recovery" && t("setup.recoveryIntro")}
+        </p>
 
         {stage === "password" && (
           <div className="space-y-4">
@@ -102,9 +167,8 @@ export function SetupScreen() {
                 />
                 <button
                   type="button"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-ink-400 hover:text-accent-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-ink-400 hover:text-accent-600"
                   onClick={() => setShowMasterPw((v) => !v)}
-                  title={showMasterPw ? t("vault.hide") : t("vault.show")}
                   aria-label={showMasterPw ? t("vault.hide") : t("vault.show")}
                 >
                   {showMasterPw ? <EyeOff /> : <Eye />}
@@ -144,9 +208,8 @@ export function SetupScreen() {
                 />
                 <button
                   type="button"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-ink-400 hover:text-accent-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-ink-400 hover:text-accent-600"
                   onClick={() => setShowConfirmPw((v) => !v)}
-                  title={showConfirmPw ? t("vault.hide") : t("vault.show")}
                   aria-label={showConfirmPw ? t("vault.hide") : t("vault.show")}
                 >
                   {showConfirmPw ? <EyeOff /> : <Eye />}
@@ -167,10 +230,7 @@ export function SetupScreen() {
                   <option value={30}>{t("autoLock.m30")}</option>
                   <option value={0}>{t("autoLock.off")}</option>
                 </select>
-                <span
-                  className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-ink-400"
-                  aria-hidden
-                >
+                <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-ink-400">
                   <ChevronDown />
                 </span>
               </div>
@@ -178,18 +238,48 @@ export function SetupScreen() {
             {error && <div className="text-sm text-red-600">{error}</div>}
             <button
               className="btn-primary w-full"
-              onClick={handleCreate}
+              onClick={handlePasswordNext}
               disabled={busy}
             >
-              {t("setup.next2fa")}
+              {t("setup.nextPasskey")}
             </button>
             <p className="text-xs text-ink-500 leading-snug">{t("setup.forgetWarn")}</p>
           </div>
         )}
 
-        {stage === "enroll-2fa" && (
+        {stage === "passkey" && (
           <div className="space-y-4">
-            <p className="text-sm text-ink-700 leading-snug">{t("setup.2faIntro")}</p>
+            <button
+              type="button"
+              className="btn-primary w-full"
+              onClick={handleRegisterPasskey}
+              disabled={busy || !isPasskeySupported}
+            >
+              {t("setup.registerPasskey")}
+            </button>
+            {!isPasskeySupported && (
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-2">
+                {t("setup.passkeyUnsupported")}
+              </p>
+            )}
+            {error && <div className="text-sm text-red-600">{error}</div>}
+            <button
+              type="button"
+              className="btn-secondary w-full"
+              onClick={async () => {
+                await abortSetup();
+                setStage("password");
+                setError(null);
+              }}
+              disabled={busy}
+            >
+              {t("setup.back")}
+            </button>
+          </div>
+        )}
+
+        {stage === "backup-totp" && (
+          <div className="space-y-4">
             <div className="flex flex-col items-center gap-3 p-4 rounded-lg bg-ink-50 border border-ink-200">
               {qrUrl ? (
                 <img
@@ -212,7 +302,7 @@ export function SetupScreen() {
                 />
                 <a
                   className="text-xs text-accent-600 hover:underline mt-1 inline-block break-all"
-                  href={otpauthUri(totpSecret, "vault")}
+                  href={otpauthUri(totpSecret, "vault-backup")}
                 >
                   {t("setup.openOtpauth")}
                 </a>
@@ -233,27 +323,40 @@ export function SetupScreen() {
               />
             </div>
             {error && <div className="text-sm text-red-600">{error}</div>}
-            <div className="flex gap-2">
-              <button
-                className="btn-secondary flex-1"
-                onClick={async () => {
-                  await abortSetup();
-                  setStage("password");
-                  setCode("");
-                  setError(null);
-                }}
-                disabled={busy}
-              >
-                {t("setup.back")}
-              </button>
-              <button
-                className="btn-primary flex-1"
-                onClick={handleConfirm}
-                disabled={busy || code.length !== 6}
-              >
-                <Check /> {t("setup.confirmStart")}
-              </button>
-            </div>
+            <button
+              className="btn-primary w-full"
+              onClick={handleConfirmTotp}
+              disabled={busy || code.length !== 6}
+            >
+              {t("setup.nextRecovery")}
+            </button>
+          </div>
+        )}
+
+        {stage === "recovery" && (
+          <div className="space-y-4">
+            <ul className="font-mono text-sm bg-ink-50 border border-ink-200 rounded-lg p-3 space-y-1 list-none">
+              {recoveryCodes.map((c) => (
+                <li key={c}>{c}</li>
+              ))}
+            </ul>
+            <label className="flex items-start gap-2 text-sm text-ink-700 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={recoveryAck}
+                onChange={(e) => setRecoveryAck(e.target.checked)}
+              />
+              <span>{t("setup.recoveryAck")}</span>
+            </label>
+            {error && <div className="text-sm text-red-600">{error}</div>}
+            <button
+              className="btn-primary w-full"
+              onClick={handleFinish}
+              disabled={busy || !recoveryAck}
+            >
+              <Check /> {t("setup.confirmStart")}
+            </button>
           </div>
         )}
       </div>

@@ -10,13 +10,29 @@ import React, {
 } from "react";
 import {
   decryptString,
-  deriveKey,
   encryptString,
-  fromBase64,
-  newSalt,
   toBase64,
   VERIFIER_PLAINTEXT,
 } from "./crypto";
+import {
+  assertMasterPassword,
+  createAuthV2Material,
+  dataKeyFromPrfWrap,
+  isAuthV2,
+  wrapDataKeyWithPrf,
+} from "./authV2";
+import {
+  authenticateVaultPasskey,
+  isPasskeySupported,
+  newPrfSalt,
+  readPrfFirst,
+  registerVaultPasskey,
+} from "./passkey";
+import {
+  generateRecoveryCodes,
+  hashRecoveryCodes,
+  matchRecoveryCode,
+} from "./recoveryCodes";
 import {
   deleteEntry,
   getMeta,
@@ -26,6 +42,7 @@ import {
   putMeta,
   type VaultCategory,
   type VaultEntry,
+  type StoredPasskey,
   type VaultMeta,
   wipeAll,
 } from "./storage";
@@ -74,10 +91,15 @@ interface VaultContextValue {
   setup: (
     masterPassword: string,
     autoLockMinutes: number
-  ) => Promise<{ totpSecretBase32: string }>;
-  confirmTotpEnrollment: (code: string) => Promise<void>;
+  ) => Promise<void>;
+  registerPasskeyInSetup: () => Promise<void>;
+  beginBackupTotpEnrollment: () => Promise<{ totpSecretBase32: string }>;
+  confirmBackupTotpEnrollment: (code: string) => Promise<{ recoveryCodes: string[] }>;
+  finalizeEnrollment: () => Promise<void>;
   abortSetup: () => Promise<void>;
-  unlock: (masterPassword: string, totpCode: string) => Promise<void>;
+  isPasskeySupported: boolean;
+  unlockWithPasskey: () => Promise<void>;
+  unlock: (masterPassword: string, secondFactor: string, mode: "totp" | "recovery") => Promise<void>;
   lock: () => void;
   resetVault: () => Promise<void>;
   setAutoLockMinutes: (m: number) => Promise<void>;
@@ -144,10 +166,17 @@ export function VaultProvider({
   const sessionRef = useRef<Session | null>(null);
   // During setup we may have a derived key but no committed meta yet.
   const pendingSetupRef = useRef<{
-    key: CryptoKey;
+    passwordKey: CryptoKey;
+    dataKey: CryptoKey;
+    dataKeyBytes: Uint8Array;
     salt: Uint8Array;
+    passwordWrap: string;
     totpSecret: string;
     autoLockMinutes: number;
+    passkeys: StoredPasskey[];
+    prfSalt: string;
+    passkeyDataKeyWrap?: string;
+    recoveryCodeHashes: string[];
   } | null>(null);
   const pendingTotpRebindRef = useRef<{
     key: CryptoKey;
@@ -406,39 +435,91 @@ export function VaultProvider({
       if (masterPassword.length < 10) {
         throw new AppError("errors.masterTooShort");
       }
-      const salt = newSalt();
-      const key = await deriveKey(masterPassword, salt);
-      const totpSecret = generateTotpSecretBase32();
+      const { salt, passwordKey, dataKey, dataKeyBytes, passwordWrap } =
+        await createAuthV2Material(masterPassword);
       pendingSetupRef.current = {
-        key,
+        passwordKey,
+        dataKey,
+        dataKeyBytes,
         salt,
-        totpSecret,
+        passwordWrap,
+        totpSecret: "",
         autoLockMinutes,
+        passkeys: [],
+        prfSalt: newPrfSalt(),
+        recoveryCodeHashes: [],
       };
-      return { totpSecretBase32: totpSecret };
     },
     []
   );
 
-  const abortSetup = useCallback(async () => {
-    pendingSetupRef.current = null;
+  const registerPasskeyInSetup = useCallback(async () => {
+    const pending = pendingSetupRef.current;
+    if (!pending) throw new AppError("errors.noPendingSetup");
+    if (!userId) throw new AppError("errors.passkeyNeedsSignIn");
+    const label =
+      userId.length > 0 ? `user-${userId.slice(0, 8)}` : "vault-user";
+    const { registration, passkey } = await registerVaultPasskey({
+      userId,
+      userName: label,
+      excludeCredentialIds: pending.passkeys.map((p) => p.id),
+      prfSaltB64: pending.prfSalt,
+    });
+    pending.passkeys.push(passkey);
+    const prfBytes = readPrfFirst(
+      registration.clientExtensionResults as Record<string, unknown>
+    );
+    if (prfBytes) {
+      pending.passkeyDataKeyWrap = await wrapDataKeyWithPrf(
+        prfBytes,
+        pending.dataKeyBytes
+      );
+    }
+  }, [userId]);
+
+  const beginBackupTotpEnrollment = useCallback(async () => {
+    const pending = pendingSetupRef.current;
+    if (!pending) throw new AppError("errors.noPendingSetup");
+    if (!pending.passkeys.length) {
+      throw new AppError("errors.passkeyRequired");
+    }
+    const totpSecret = generateTotpSecretBase32();
+    pending.totpSecret = totpSecret;
+    return { totpSecretBase32: totpSecret };
   }, []);
 
-  const confirmTotpEnrollment = useCallback(async (code: string) => {
+  const confirmBackupTotpEnrollment = useCallback(async (code: string) => {
     const pending = pendingSetupRef.current;
     if (!pending) throw new AppError("errors.noPendingSetup");
     if (!verifyTotp(pending.totpSecret, code)) {
       throw new AppError("errors.invalidOtp");
     }
-    const verifierEnc = await encryptString(pending.key, VERIFIER_PLAINTEXT);
-    const totpEnc = await encryptString(pending.key, pending.totpSecret);
+    const recoveryCodes = generateRecoveryCodes();
+    pending.recoveryCodeHashes = await hashRecoveryCodes(recoveryCodes);
+    return { recoveryCodes };
+  }, []);
+
+  const finalizeEnrollment = useCallback(async () => {
+    const pending = pendingSetupRef.current;
+    if (!pending) throw new AppError("errors.noPendingSetup");
+    if (!pending.recoveryCodeHashes.length) {
+      throw new AppError("errors.noPendingSetup");
+    }
+    const verifierEnc = await encryptString(pending.dataKey, VERIFIER_PLAINTEXT);
+    const totpEnc = await encryptString(pending.dataKey, pending.totpSecret);
     const now = Date.now();
     const m: VaultMeta = {
       id: "vault",
+      authVersion: 2,
       salt: toBase64(pending.salt),
+      passwordWrap: pending.passwordWrap,
+      passkeyDataKeyWrap: pending.passkeyDataKeyWrap,
+      prfSalt: pending.prfSalt,
+      passkeys: pending.passkeys,
+      recoveryCodeHashes: pending.recoveryCodeHashes,
       verifier: verifierEnc,
       totpSecret: totpEnc,
-      totpLabel: "vault",
+      totpLabel: "vault-backup",
       autoLockMinutes: pending.autoLockMinutes,
       locale: localeRef.current,
       categories: [],
@@ -446,7 +527,10 @@ export function VaultProvider({
       updatedAt: now,
     };
     await putMeta(m);
-    sessionRef.current = { key: pending.key, totpSecret: pending.totpSecret };
+    sessionRef.current = {
+      key: pending.dataKey,
+      totpSecret: pending.totpSecret,
+    };
     pendingSetupRef.current = null;
     setMeta(m);
     setEntries([]);
@@ -456,26 +540,13 @@ export function VaultProvider({
     void refreshEntitlements();
   }, [flushCloudPush, refreshEntitlements]);
 
-  const unlock = useCallback(
-    async (masterPassword: string, totpCode: string) => {
-      const m = await getMeta();
-      if (!m) throw new AppError("errors.notInitialized");
-      const salt = fromBase64(m.salt);
-      const key = await deriveKey(masterPassword, salt);
-      let verified: string;
-      try {
-        verified = await decryptString(key, m.verifier);
-      } catch {
-        throw new AppError("errors.wrongMaster");
-      }
-      if (verified !== VERIFIER_PLAINTEXT) {
-        throw new AppError("errors.wrongMaster");
-      }
-      const totpSecret = await decryptString(key, m.totpSecret);
-      if (!verifyTotp(totpSecret, totpCode)) {
-        throw new AppError("errors.wrongTotp");
-      }
-      sessionRef.current = { key, totpSecret };
+  const abortSetup = useCallback(async () => {
+    pendingSetupRef.current = null;
+  }, []);
+
+  const finishUnlock = useCallback(
+    async (m: VaultMeta, dataKey: CryptoKey, totpSecret: string) => {
+      sessionRef.current = { key: dataKey, totpSecret };
       setMeta(m);
       lastActivityRef.current = Date.now();
       try {
@@ -484,11 +555,86 @@ export function VaultProvider({
         /* ignore */
       }
       setNeedsTotpRebindAfterCloudPull(false);
-      await loadEntries(key);
+      await loadEntries(dataKey);
       setStatus("unlocked");
       void refreshEntitlements();
     },
     [loadEntries, refreshEntitlements]
+  );
+
+  const unlockWithPasskey = useCallback(async () => {
+    const m = await getMeta();
+    if (!m || !isAuthV2(m)) throw new AppError("errors.passkeyNoPasswordless");
+    if (!m.passkeys?.length || !m.prfSalt) {
+      throw new AppError("errors.noPasskeyRegistered");
+    }
+    if (!m.passkeyDataKeyWrap) {
+      throw new AppError("errors.passkeyNoPasswordless");
+    }
+    const { authentication, passkey } = await authenticateVaultPasskey(
+      m.passkeys,
+      m.prfSalt
+    );
+    const prfBytes = readPrfFirst(
+      authentication.clientExtensionResults as Record<string, unknown>
+    );
+    if (!prfBytes) throw new AppError("errors.passkeyNoPasswordless");
+    const dataKey = await dataKeyFromPrfWrap(prfBytes, m.passkeyDataKeyWrap);
+    let verified: string;
+    try {
+      verified = await decryptString(dataKey, m.verifier);
+    } catch {
+      throw new AppError("errors.passkeyFailed");
+    }
+    if (verified !== VERIFIER_PLAINTEXT) {
+      throw new AppError("errors.passkeyFailed");
+    }
+    const totpSecret = await decryptString(dataKey, m.totpSecret);
+    const updated: VaultMeta = {
+      ...m,
+      passkeys: m.passkeys.map((p) =>
+        p.id === passkey.id ? { ...passkey } : p
+      ),
+      updatedAt: Date.now(),
+    };
+    await putMeta(updated);
+    await finishUnlock(updated, dataKey, totpSecret);
+    await flushCloudPush();
+  }, [finishUnlock, flushCloudPush]);
+
+  const unlock = useCallback(
+    async (
+      masterPassword: string,
+      secondFactor: string,
+      mode: "totp" | "recovery"
+    ) => {
+      const m = await getMeta();
+      if (!m) throw new AppError("errors.notInitialized");
+      const dataKey = await assertMasterPassword(m, masterPassword);
+      const totpSecret = await decryptString(dataKey, m.totpSecret);
+      if (mode === "totp") {
+        if (!verifyTotp(totpSecret, secondFactor)) {
+          throw new AppError("errors.wrongTotp");
+        }
+      } else {
+        const hashes = m.recoveryCodeHashes ?? [];
+        if (!hashes.length) throw new AppError("errors.invalidRecoveryCode");
+        const idx = await matchRecoveryCode(secondFactor, hashes);
+        if (idx < 0) throw new AppError("errors.invalidRecoveryCode");
+        const nextHashes = hashes.filter((_, i) => i !== idx);
+        const updated: VaultMeta = {
+          ...m,
+          recoveryCodeHashes: nextHashes,
+          updatedAt: Date.now(),
+        };
+        await putMeta(updated);
+        await finishUnlock(updated, dataKey, totpSecret);
+        await flushCloudPush();
+        return;
+      }
+      await finishUnlock(m, dataKey, totpSecret);
+    },
+    [finishUnlock, flushCloudPush]
   );
 
   const resetVault = useCallback(async () => {
@@ -745,19 +891,9 @@ export function VaultProvider({
       if (!allowed) throw new AppError("errors.noPendingSetup");
       const m = await getMeta();
       if (!m) throw new AppError("errors.notInitialized");
-      const salt = fromBase64(m.salt);
-      const key = await deriveKey(masterPassword, salt);
-      let verified: string;
-      try {
-        verified = await decryptString(key, m.verifier);
-      } catch {
-        throw new AppError("errors.wrongMaster");
-      }
-      if (verified !== VERIFIER_PLAINTEXT) {
-        throw new AppError("errors.wrongMaster");
-      }
+      const dataKey = await assertMasterPassword(m, masterPassword);
       const newTotp = generateTotpSecretBase32();
-      pendingTotpRebindRef.current = { key, totpSecret: newTotp };
+      pendingTotpRebindRef.current = { key: dataKey, totpSecret: newTotp };
       return { totpSecretBase32: newTotp };
     },
     []
@@ -773,6 +909,7 @@ export function VaultProvider({
       const m = await getMeta();
       if (!m) throw new AppError("errors.notInitialized");
       const totpEnc = await encryptString(pending.key, pending.totpSecret);
+      // pending.key is vault data key (v1 or v2)
       const updated: VaultMeta = {
         ...m,
         totpSecret: totpEnc,
@@ -814,8 +951,13 @@ export function VaultProvider({
       entries,
       autoLockMinutes: meta?.autoLockMinutes ?? 5,
       setup,
-      confirmTotpEnrollment,
+      registerPasskeyInSetup,
+      beginBackupTotpEnrollment,
+      confirmBackupTotpEnrollment,
+      finalizeEnrollment,
       abortSetup,
+      isPasskeySupported: isPasskeySupported(),
+      unlockWithPasskey,
       unlock,
       lock,
       resetVault,
@@ -855,8 +997,12 @@ export function VaultProvider({
       entitlementLoaded,
       atEntryLimit,
       setup,
-      confirmTotpEnrollment,
+      registerPasskeyInSetup,
+      beginBackupTotpEnrollment,
+      confirmBackupTotpEnrollment,
+      finalizeEnrollment,
       abortSetup,
+      unlockWithPasskey,
       unlock,
       lock,
       resetVault,

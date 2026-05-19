@@ -13,7 +13,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "auth.google": "Continue with Google",
   "auth.errGeneric": "Something went wrong. Try again.",
   "auth.securityNote":
-    "We never upload your master password. Google sign-in only identifies you; vault secrets stay encrypted until you unlock with your master password and authenticator.",
+    "We never upload your master password. Google sign-in only identifies you; vault secrets stay encrypted until you unlock with your passkey, or with your master password plus a backup method.",
   "auth.notConfiguredTitle": "Supabase is not configured",
   "auth.notConfiguredBody":
     "Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to a .env file in the project root, then restart the dev server. See README.md for creating the database table and enabling Google sign-in.",
@@ -24,15 +24,15 @@ export const MESSAGES_EN: Record<string, string> = {
     "Your passwords are encrypted on your device before anything is synced. Servers only ever see ciphertext—your master password and plain-text secrets never leave your control in readable form. Google sign-in is only used to tie the encrypted vault to your account.",
   "auth.faqUseQ": "How do I use it? Will it feel simple day to day?",
   "auth.faqUseA":
-    "Sign in with Google, choose a strong master password, scan one QR code for two-factor authentication, then unlock to add or search entries. Auto-lock keeps the vault closed when you step away; sync picks up changes when you sign in on another browser or phone.",
+    "Sign in with Google, choose a strong master password, register a passkey (Face ID, Touch ID, Windows Hello, or phone), then set up a backup authenticator app and save your recovery codes. Day to day, unlock with your passkey—no typing passwords or OTP codes. Auto-lock keeps the vault closed when you step away.",
   "auth.faqWhatAuthenticatorQ":
-    "What is an authenticator app, what does it do, and which one should I use?",
+    "What is a passkey and how do I sign in?",
   "auth.faqWhatAuthenticatorA":
-    "An authenticator app is an app on your phone or computer that generates short-lived numeric codes—usually six digits—for two-factor authentication. After set-up it shares a secret with your vault via the QR scan; unlocking requires your master password plus a fresh code so a stolen password alone isn’t enough. Use any reputable time-based OTP (TOTP) app compatible with Authenticator/Google-style setups, such as Google Authenticator, Microsoft Authenticator, Authy, FreeOTP, 1Password’s OTP field, Bitwarden, or compatible built-in Authenticator modes—pick one from a publisher you trust and keep it updated.",
+    "A passkey uses your device’s secure hardware (Secure Enclave, TPM, Titan chip, etc.) to prove it’s you—Touch ID, Face ID, fingerprint, or device PIN. The server only stores a public key; your private key never leaves the device. When you unlock, you approve with biometrics or PIN and the device signs a challenge—no password or authenticator code to type.",
   "auth.faqAuthenticatorQ":
-    "What if my authenticator app breaks, I lose my phone, or codes stop working?",
+    "What are the backup options (authenticator and recovery codes)?",
   "auth.faqAuthenticatorA":
-    "Your encrypted vault remains in your account. On a new or reset device: sign in, download the latest vault from Devices & backup, enter your master password, then follow the prompts to scan a new QR code and link a replacement authenticator. After you confirm, old time-based codes stop working—that is expected—but your encrypted data was not erased. If you still have access to your previous authenticator, you can often unlock normally without resetting it.",
+    "If you lose your passkey device, use backup sign-in: your master password plus either a code from your authenticator app (TOTP backup) or a one-time recovery code you saved during setup. Each recovery code works once. You can also restore from your account and re-register a passkey after verifying your master password.",
   "auth.faqPricingQ": "Is this free or paid?",
   "auth.faqPricingA":
     "You can save up to 25 password entries for free. A one-time $4.99 purchase unlocks unlimited entries on your account forever. Open __PRICING_LINK__ from the app for checkout.",
@@ -60,6 +60,9 @@ export const MESSAGES_EN: Record<string, string> = {
   "autoLock.offBad": "Off (not recommended)",
 
   "setup.pageTitle": "Set up",
+  "setup.pageTitlePasskey": "Register passkey",
+  "setup.pageTitleBackupTotp": "Backup authenticator",
+  "setup.pageTitleRecovery": "Recovery codes",
   "setup.pageTitle2fa": "Two-factor authentication",
   "setup.title": "Set up My Password Vault",
   "setup.subtitle":
@@ -68,9 +71,22 @@ export const MESSAGES_EN: Record<string, string> = {
   "setup.masterPwConfirm": "Confirm master password",
   "setup.placeholderMin": "At least 10 characters",
   "setup.autoLock": "Auto-lock (minutes)",
+  "setup.nextPasskey": "Next — register passkey",
   "setup.next2fa": "Next — set up two-factor authentication",
+  "setup.nextRecovery": "Next — save recovery codes",
+  "setup.passkeyIntro":
+    "Register a passkey on this device (Face ID, Touch ID, Windows Hello, fingerprint, or device PIN). This is how you will unlock the vault every day.",
+  "setup.registerPasskey": "Register passkey",
+  "setup.passkeyUnsupported":
+    "Passkeys are not available in this browser. Use Chrome, Safari, or Edge on a supported device.",
+  "setup.backupTotpIntro":
+    "Set up a backup authenticator app (TOTP). Scan the QR code or enter the secret manually, then confirm with a 6-digit code.",
+  "setup.recoveryIntro":
+    "Copy these one-time recovery codes and store them somewhere safe (password manager or printout). Each code works once if you lose your passkey.",
+  "setup.recoveryAck":
+    "I have saved these recovery codes in a safe place.",
   "setup.forgetWarn":
-    "If you forget your password, the vault cannot be recovered. You will lose all data and must start over.",
+    "If you forget your master password and lose your passkey and backups, the vault cannot be recovered.",
   "setup.2faIntro":
     "Scan the QR code with Google Authenticator, 1Password, Authy, etc., or enter the secret key manually. Then enter the 6-digit code shown in the app to confirm.",
   "setup.secretKey": "Secret key (manual entry)",
@@ -83,9 +99,18 @@ export const MESSAGES_EN: Record<string, string> = {
   "setup.errGeneric": "Something went wrong.",
 
   "lock.title": "Vault Locked",
-  "lock.subtitle": "Enter your master password and 6-digit authentication code.",
+  "lock.subtitle": "Unlock with your passkey, or use a backup method below.",
+  "lock.unlockPasskey": "Unlock with passkey",
+  "lock.useBackup": "Use backup sign-in (master password)",
+  "lock.hideBackup": "Hide backup sign-in",
+  "lock.backupHint":
+    "Backup: master password plus authenticator code or a one-time recovery code.",
+  "lock.backupTotpTab": "Authenticator",
+  "lock.backupRecoveryTab": "Recovery code",
+  "lock.recoveryCode": "Recovery code",
+  "lock.unlockBackup": "Unlock with backup",
   "lock.masterPw": "Master password",
-  "lock.totp": "Two-factor code",
+  "lock.totp": "Authenticator code (backup)",
   "lock.unlock": "Unlock",
   "lock.forget": "Forgot master password? Reset vault…",
   "lock.resetWarn":
@@ -98,7 +123,15 @@ export const MESSAGES_EN: Record<string, string> = {
   "errors.invalidOtp": "Invalid authentication code.",
   "errors.notInitialized": "Vault is not initialized.",
   "errors.wrongMaster": "Incorrect master password.",
-  "errors.wrongTotp": "Incorrect two-factor code.",
+  "errors.wrongTotp": "Incorrect authenticator code.",
+  "errors.passkeyNotSupported": "Passkeys are not supported in this browser.",
+  "errors.passkeyFailed": "Passkey verification failed.",
+  "errors.passkeyNoPasswordless":
+    "Passkey unlock is not available on this device. Use backup sign-in with your master password.",
+  "errors.passkeyRequired": "Register a passkey before continuing.",
+  "errors.passkeyNeedsSignIn": "Sign in with Google before registering a passkey.",
+  "errors.invalidRecoveryCode": "Invalid or already used recovery code.",
+  "errors.noPasskeyRegistered": "No passkey is registered for this vault.",
   "errors.locked": "Vault is locked.",
   "errors.invalidBackup": "This file is not a valid vault backup.",
   "errors.missingUserVaultsTable":
@@ -288,7 +321,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "pricing.freeForever": "No monthly fee",
   "pricing.freeDesc": "For personal use and trying the product with full security features.",
   "pricing.freeF1": "Up to 25 password entries",
-  "pricing.freeF2": "Local-first AES-GCM-256 encryption + TOTP 2FA",
+  "pricing.freeF2": "Passkey unlock + AES-GCM-256 encryption (TOTP backup)",
   "pricing.freeF3": "Encrypted sync to your account (ciphertext only in your database)",
   "pricing.freeF4": "Offline JSON backup & restore",
   "pricing.freeF5": "Syncs and works on every device you sign into",

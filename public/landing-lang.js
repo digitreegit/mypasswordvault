@@ -142,7 +142,7 @@
     landingFreeForever: "No monthly fee",
     landingFreeDesc: "For personal use and trying the product with full security features.",
     landingFreeF1: "Up to 25 password entries",
-    landingFreeF2: "Local-first AES-GCM-256 encryption + TOTP 2FA",
+    landingFreeF2: "Passkey unlock + AES-GCM-256 encryption (TOTP backup)",
     landingFreeF3: "Encrypted sync to your account (ciphertext only in your database)",
     landingFreeF4: "Offline JSON backup & restore",
     landingFreeF5: "Syncs and works on every device you sign into",
@@ -167,13 +167,13 @@
       "Your passwords are encrypted on your device before anything is synced. Servers only ever see\n              ciphertext—your master password and plain-text secrets never leave your control in readable form.\n              Google sign-in is only used to tie the encrypted vault to your account.",
     faq2_sum: "How do I use it? Will it feel simple day to day?",
     faq2_html:
-      "Sign in with Google, choose a strong master password, scan one QR code for two-factor\n              authentication, then unlock to add or search entries. Auto-lock keeps the vault closed when you\n              step away; sync picks up changes when you sign in on another browser or phone.",
-    faq3_sum: "What is an authenticator app, what does it do, and which one should I use?",
+      "Sign in with Google, set a master password, register a passkey, then save a backup authenticator and recovery codes. Day to day, unlock with Touch ID, Face ID, or device PIN—no typing passwords or OTP codes.",
+    faq3_sum: "What is a passkey and how do I sign in?",
     faq3_html:
-      "An authenticator app is an app on your phone or computer that generates short-lived numeric codes—usually\n              six digits—for two-factor authentication. After set-up it shares a secret with your vault via the QR scan;\n              unlocking requires your master password plus a fresh code so a stolen password alone isn’t enough. Use any\n              reputable time-based OTP (TOTP) app compatible with Authenticator/Google-style setups, such as Google\n              Authenticator, Microsoft Authenticator, Authy, FreeOTP, 1Password’s OTP field, Bitwarden, or compatible\n              built-in Authenticator modes—pick one from a publisher you trust and keep it updated.",
-    faq4_sum: "What if my authenticator app breaks, I lose my phone, or codes stop working?",
+      "A passkey uses your device’s secure chip to prove it’s you. Only a public key is stored on the server. Unlock by approving with biometrics or PIN—the device signs a challenge. No password or authenticator code on normal sign-in.",
+    faq4_sum: "What are backup authenticator and recovery codes?",
     faq4_html:
-      "Your encrypted vault remains in your account. On a new or reset device: sign in, download the\n              latest vault from Devices & backup, enter your master password, then follow the prompts to\n              scan a new QR code and link a replacement authenticator. After you confirm, old time-based codes\n              stop working—that is expected—but your encrypted data was not erased. If you still have access to\n              your previous authenticator, you can often unlock normally without resetting it.",
+      "If you lose your passkey device, use your master password plus a backup authenticator app (TOTP) or a one-time recovery code from setup. Restore from your account and register a new passkey when needed.",
     faq5_sum: "Is this free or paid?",
     faq5_html:
       "Up to 25 password entries are free. A one-time $4.99 payment unlocks unlimited entries on your\n              account — no subscription. See <a href=\"./pricing.html\">Plans &amp; pricing</a> for checkout.",
@@ -277,7 +277,7 @@
     landingFreeForever: "월 요금 없음",
     landingFreeDesc: "개인 사용과 보안 기능을 모두 체험하기에 적합합니다.",
     landingFreeF1: "비밀번호 항목 최대 25개",
-    landingFreeF2: "로컬 우선 AES-GCM-256 암호화 + TOTP 2FA",
+    landingFreeF2: "패스키 잠금 해제 + AES-GCM-256 암호화 (TOTP 백업)",
     landingFreeF3: "계정으로 암호화 동기화 (서버에는 암호문만 저장)",
     landingFreeF4: "오프라인 JSON 백업·복원",
     landingFreeF5: "로그인하는 모든 기기에서 동기화되고 그대로 사용할 수 있습니다",
@@ -302,15 +302,13 @@
       "비밀번호는 동기화되기 전에 기기에서 암호화됩니다. 서버에는 암호문만 보입니다. 마스터 비밀번호와 평문 비밀은 읽히는 형태로 통제 범위를 벗어나지 않습니다. Google 로그인은 암호화 금고를 계정과 연결하는 용도입니다.",
     faq2_sum: "어떻게 쓰나요? 매일 쓰기 부담스럽지 않나요?",
     faq2_html:
-      "Google로 로그인하고, 강한 마스터 비밀번호를 정한 뒤 QR 한 번으로 2단계 인증을 연결하면 됩니다. 잠금 해제 후 목록에서 항목을 추가·검색합니다. 자동 잠금으로 자리를 비우면 금고가 닫히고, 다른 브라우저나 폰에서 로그인하면 동기화됩니다.",
-    faq3_sum:
-      "인증(Authenticator) 앱이 무엇이고, 역할은 무엇이며 어떤 앱을 써야 하나요?",
+      "Google 로그인 → 마스터 비밀번호 → 패스키 등록 → 백업 인증 앱·복구 코드 저장. 평소에는 Face ID·Touch ID·기기 PIN으로 잠금 해제합니다.",
+    faq3_sum: "패스키란 무엇이고, 어떻게 로그인하나요?",
     faq3_html:
-      "인증 앱은 폰이나 컴퓨터에 설치해 짧게 살아 있는 숫자 코드(보통 6자리)를 만들어 두 번째 확인 단계로 쓰는 앱입니다. QR로 금고와 비밀을 공유한 뒤에는 잠금 해제마다 마스터 비밀번호와 새 코드가 함께 필요합니다. Google Authenticator, Microsoft Authenticator, Authy, FreeOTP, 1Password나 Bitwarden의 OTP 등 표준 TOTP 앱이면 되며, 신뢰하는 제작사의 앱을 최신으로 유지하세요.",
-    faq4_sum:
-      "인증 앱이 고장 났거나, 휴대폰을 잃거나, 코드가 안 맞으면 어떻게 되나요?",
+      "패스키는 기기 보안 칩에 저장된 키로 본인을 확인합니다. 서버에는 공개키만 저장됩니다. 생체 인증이나 PIN으로 챌린지에 서명하며, 평소에는 비밀번호·OTP 입력이 필요 없습니다.",
+    faq4_sum: "백업 인증 앱과 복구 코드는 무엇인가요?",
     faq4_html:
-      "암호화 금고는 계정에 그대로 남습니다. 새 기기에서는 로그인 → Devices & 백업에서 최신 금고를 받고 마스터 비밀번호를 입력한 뒤, 안내에 따라 새 QR을 스캔해 대체 인증기를 연결합니다. 확인 후 예전 시간 기반 코드는 더 이상 쓰이지 않는 것이 정상이지만 데이터가 지워진 것은 아닙니다.",
+      "패스키 기기를 잃었을 때는 마스터 비밀번호 + 백업 인증 앱(TOTP) 또는 설정 시 저장한 일회용 복구 코드로 잠금 해제할 수 있습니다.",
     faq5_sum: "유료인가요, 무료인가요?",
     faq5_html:
       "비밀번호 항목은 최대 25개까지 무료입니다. $4.99를 한 번만 결제하면 이 계정에서 항목 수 제한 없이\n              계속 사용할 수 있습니다(구독 없음). <a href=\"./pricing.html\">요금제·결제</a>에서 결제할 수 있습니다.",

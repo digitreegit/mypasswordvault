@@ -16,6 +16,9 @@ const PULL_CLOUD_DONE_BANNER =
 export function LockScreen() {
   const {
     unlock,
+    unlockWithPasskey,
+    isPasskeySupported,
+    meta,
     resetVault,
     locale,
     setLocale,
@@ -31,6 +34,8 @@ export function LockScreen() {
   const [pw, setPw] = useState("");
   const [showMasterPw, setShowMasterPw] = useState(false);
   const [code, setCode] = useState("");
+  const [backupMode, setBackupMode] = useState<"totp" | "recovery">("totp");
+  const [showBackup, setShowBackup] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -64,12 +69,11 @@ export function LockScreen() {
     }
   }, [rebindStage, rebindTotpSecret]);
 
-  async function handle(e: React.FormEvent) {
-    e.preventDefault();
+  async function handlePasskey() {
     setError(null);
     setBusy(true);
     try {
-      await unlock(pw, code);
+      await unlockWithPasskey();
     } catch (err: unknown) {
       setError(
         isAppError(err)
@@ -80,6 +84,33 @@ export function LockScreen() {
       setBusy(false);
     }
   }
+
+  async function handle(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+    try {
+      await unlock(pw, code, backupMode);
+    } catch (err: unknown) {
+      setError(
+        isAppError(err)
+          ? t(err.code)
+          : (err as Error)?.message ?? t("lock.errFailed")
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const canPasskey =
+    isPasskeySupported &&
+    meta?.authVersion === 2 &&
+    !!meta.passkeyDataKeyWrap &&
+    (meta.passkeys?.length ?? 0) > 0;
+
+  useEffect(() => {
+    if (!canPasskey) setShowBackup(true);
+  }, [canPasskey]);
 
   async function handlePullCloud() {
     setSyncMsg(null);
@@ -287,7 +318,30 @@ export function LockScreen() {
         />
         <p className="text-sm text-ink-500 leading-snug">{t("lock.subtitle")}</p>
 
-        <form onSubmit={handle} className="space-y-4">
+        {canPasskey && (
+          <button
+            type="button"
+            className="btn-primary w-full"
+            onClick={() => void handlePasskey()}
+            disabled={busy}
+          >
+            {t("lock.unlockPasskey")}
+          </button>
+        )}
+
+        <div className="pt-1">
+          <button
+            type="button"
+            className="text-sm text-accent-600 hover:underline font-medium"
+            onClick={() => setShowBackup((v) => !v)}
+          >
+            {showBackup ? t("lock.hideBackup") : t("lock.useBackup")}
+          </button>
+        </div>
+
+        {showBackup && (
+        <form onSubmit={handle} className="space-y-4 border-t border-ink-100 pt-4">
+          <p className="text-xs text-ink-500">{t("lock.backupHint")}</p>
           <div>
             <label className="label">{t("lock.masterPw")}</label>
             <div className="relative">
@@ -311,17 +365,47 @@ export function LockScreen() {
               </button>
             </div>
           </div>
+          <div className="flex gap-2 text-sm">
+            <button
+              type="button"
+              className={
+                backupMode === "totp"
+                  ? "btn-primary flex-1"
+                  : "btn-secondary flex-1"
+              }
+              onClick={() => setBackupMode("totp")}
+            >
+              {t("lock.backupTotpTab")}
+            </button>
+            <button
+              type="button"
+              className={
+                backupMode === "recovery"
+                  ? "btn-primary flex-1"
+                  : "btn-secondary flex-1"
+              }
+              onClick={() => setBackupMode("recovery")}
+            >
+              {t("lock.backupRecoveryTab")}
+            </button>
+          </div>
           <div>
-            <label className="label">{t("lock.totp")}</label>
+            <label className="label">
+              {backupMode === "totp" ? t("lock.totp") : t("lock.recoveryCode")}
+            </label>
             <input
               className="input font-mono tracking-widest text-center text-lg"
-              inputMode="numeric"
-              maxLength={6}
+              inputMode={backupMode === "totp" ? "numeric" : "text"}
+              maxLength={backupMode === "totp" ? 6 : 24}
               value={code}
               onChange={(e) =>
-                setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                setCode(
+                  backupMode === "totp"
+                    ? e.target.value.replace(/\D/g, "").slice(0, 6)
+                    : e.target.value.toUpperCase()
+                )
               }
-              placeholder="000000"
+              placeholder={backupMode === "totp" ? "000000" : "XXXX-XXXX"}
             />
           </div>
           {error && <div className="text-sm text-red-600">{error}</div>}
@@ -331,9 +415,13 @@ export function LockScreen() {
           <button
             type="submit"
             className="btn-primary w-full"
-            disabled={busy || !pw || code.length !== 6}
+            disabled={
+              busy ||
+              !pw ||
+              (backupMode === "totp" ? code.length !== 6 : code.length < 8)
+            }
           >
-            <Lock /> {t("lock.unlock")}
+            <Lock /> {t("lock.unlockBackup")}
           </button>
 
           <div className="pt-2">
@@ -370,6 +458,7 @@ export function LockScreen() {
             )}
           </div>
         </form>
+        )}
 
         <details className="pt-2 border-t border-ink-100 text-sm group">
           <summary className="cursor-pointer text-xs font-medium text-ink-600 hover:text-ink-800 list-none flex w-full items-center justify-between gap-2 [&::-webkit-details-marker]:hidden">

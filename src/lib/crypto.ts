@@ -92,5 +92,53 @@ export function newSalt(): Uint8Array {
   return randomBytes(SALT_LENGTH);
 }
 
+export async function importAesGcmKey(bytes: Uint8Array): Promise<CryptoKey> {
+  return crypto.subtle.importKey(
+    "raw",
+    bytes as BufferSource,
+    { name: "AES-GCM", length: KEY_LENGTH_BITS },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+export async function exportAesGcmKey(key: CryptoKey): Promise<Uint8Array> {
+  const raw = await crypto.subtle.exportKey("raw", key);
+  return new Uint8Array(raw);
+}
+
+export async function encryptBytes(
+  key: CryptoKey,
+  plaintext: Uint8Array
+): Promise<string> {
+  const iv = randomBytes(IV_LENGTH);
+  const ct = new Uint8Array(
+    await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: iv as BufferSource },
+      key,
+      plaintext as BufferSource
+    )
+  );
+  const combined = new Uint8Array(iv.length + ct.length);
+  combined.set(iv, 0);
+  combined.set(ct, iv.length);
+  return toBase64(combined);
+}
+
+export async function decryptBytes(
+  key: CryptoKey,
+  payload: string
+): Promise<Uint8Array> {
+  const combined = fromBase64(payload);
+  const iv = combined.slice(0, IV_LENGTH);
+  const ct = combined.slice(IV_LENGTH);
+  const pt = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: iv as BufferSource },
+    key,
+    ct as BufferSource
+  );
+  return new Uint8Array(pt);
+}
+
 // Constant-time-ish check used only for verifier round-trip
 export const VERIFIER_PLAINTEXT = "mypasswordapp::verifier::v1";
