@@ -135,6 +135,11 @@ export function AuthScreen() {
                 <div className="px-3 pb-3 text-sm text-ink-600 leading-snug border-t border-ink-100/90 pt-2.5">
                   {aKey === "auth.faqContactA" ? (
                     <ContactFaqAnswer text={t(aKey)} />
+                  ) : aKey === "auth.faqPricingA" ? (
+                    <PricingFaqAnswer
+                      text={t(aKey)}
+                      linkLabel={t("auth.pricingLink")}
+                    />
                   ) : (
                     t(aKey)
                   )}
@@ -160,6 +165,33 @@ export function AuthScreen() {
 }
 
 const CONTACT_EMAIL = "contact@skyface.com";
+const PRICING_LINK_MARKER = "__PRICING_LINK__";
+
+const faqLinkClass = "text-accent-600 hover:underline font-medium";
+
+function PricingFaqAnswer({
+  text,
+  linkLabel,
+}: {
+  text: string;
+  linkLabel: string;
+}) {
+  const parts = text.split(PRICING_LINK_MARKER);
+  return (
+    <>
+      {parts.map((part, i) => (
+        <React.Fragment key={i}>
+          {part}
+          {i < parts.length - 1 ? (
+            <a href="#/pricing" className={faqLinkClass}>
+              {linkLabel}
+            </a>
+          ) : null}
+        </React.Fragment>
+      ))}
+    </>
+  );
+}
 
 function ContactFaqAnswer({ text }: { text: string }) {
   const parts = text.split(CONTACT_EMAIL);
@@ -174,7 +206,7 @@ function ContactFaqAnswer({ text }: { text: string }) {
         <a
           key={`a-${i}`}
           href={`mailto:${CONTACT_EMAIL}`}
-          className="text-accent-600 hover:underline font-medium"
+          className={faqLinkClass}
         >
           {CONTACT_EMAIL}
         </a>

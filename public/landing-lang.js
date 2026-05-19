@@ -176,7 +176,7 @@
       "Your encrypted vault remains in your account. On a new or reset device: sign in, download the\n              latest vault from Devices & backup, enter your master password, then follow the prompts to\n              scan a new QR code and link a replacement authenticator. After you confirm, old time-based codes\n              stop working—that is expected—but your encrypted data was not erased. If you still have access to\n              your previous authenticator, you can often unlock normally without resetting it.",
     faq5_sum: "Is this free or paid?",
     faq5_html:
-      "The service is free to use for now. If that ever changes, we will announce pricing clearly\n              beforehand.",
+      "Up to 25 password entries are free. A one-time $4.99 payment unlocks unlimited entries on your\n              account — no subscription. See <a href=\"./pricing.html\">Plans &amp; pricing</a> for checkout.",
     faq6_sum: "What if I forget my master password?",
     faq6_html:
       "Nobody (including us) can recover your passwords without your master password. If you lose it you\n              must reset the vault and lose existing entries on that device. Cloud restore and encrypted backup\n              files always require the same master password used when those backups were made.",
@@ -313,7 +313,7 @@
       "암호화 금고는 계정에 그대로 남습니다. 새 기기에서는 로그인 → Devices & 백업에서 최신 금고를 받고 마스터 비밀번호를 입력한 뒤, 안내에 따라 새 QR을 스캔해 대체 인증기를 연결합니다. 확인 후 예전 시간 기반 코드는 더 이상 쓰이지 않는 것이 정상이지만 데이터가 지워진 것은 아닙니다.",
     faq5_sum: "유료인가요, 무료인가요?",
     faq5_html:
-      "지금은 무료로 이용할 수 있습니다. 정책이 바뀌면 가격 변경 전에 명확히 알리겠습니다.",
+      "비밀번호 항목은 최대 25개까지 무료입니다. $4.99를 한 번만 결제하면 이 계정에서 항목 수 제한 없이\n              계속 사용할 수 있습니다(구독 없음). <a href=\"./pricing.html\">요금제·결제</a>에서 결제할 수 있습니다.",
     faq6_sum: "마스터 비밀번호를 잊으면 어떻게 되나요?",
     faq6_html:
       "마스터 비밀번호 없이는 우리 포함 누구도 복구할 수 없습니다. 잊으면 해당 기기의 금고를 초기화해야 합니다. 클라우드 복구·암호화 백업 파일도 만들 당시의 마스터 비밀번호가 있어야 열 수 있습니다.",

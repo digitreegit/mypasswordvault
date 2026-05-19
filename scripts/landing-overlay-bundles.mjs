@@ -81,7 +81,8 @@ export default {
     faq4_html:
       "加密保险箱仍留在账户内。换新设备时可先登录，在「设备与备份」下载最新保险箱，输入主口令后按照提示扫描二维码连接新的验证器；旧的时间型验证码随后失效是正常的，并不等于数据已删。若旧验证器仍可访问，往往不必重置即可继续使用。",
     faq5_sum: "收费还是免费？",
-    faq5_html: "目前可免费使用；若日后调整价格，我们会提前清楚公告。",
+    faq5_html:
+      "免费版最多可保存 25 条密码。一次性支付 4.99 美元即可在该账户上无限添加条目，无订阅。详见 <a href=\"./pricing.html\">方案与价格</a>。",
     faq6_sum: "如果我忘了主密码？",
     faq6_html:
       "包括我们在内无人能绕过主口令恢复条目；你只能在该设备重置保险箱并清空已有内容。云端恢复与加密备份文件也需要创建备份时使用的那一版主密码。",
@@ -204,7 +205,7 @@ export default {
       "暗号化された金庫はアカウント上にそのまま残ります。新端末ではサインイン → デバイスとバックアップから最新版をダウンロード → マスターを入力したうえで、案内どおり QR を再スキャンし代替のアプリへ接続してください。確認後、古いタイムコードが無効になるのは設計どおりであり、データが消されたわけではありません。",
     faq5_sum: "無料？有料？",
     faq5_html:
-      "いまは無料でご利用いただけます。変更があれば事前に明示します。",
+      "パスワードは最大 25 件まで無料です。4.99 USD の一回払いでこのアカウントの件数が無制限になります（サブスクなし）。<a href=\"./pricing.html\">プランと料金</a>をご覧ください。",
     faq6_sum: "マスターパスワードを忘れたら？",
     faq6_html:
       "私たちも含め、マスターを知らずに復号はできません。忘れた端末側ではリセットになり既存項目は失われます。クラウド復元や暗号バックアップにも、作成時と同じマスターが必要です。",
@@ -330,7 +331,7 @@ export default {
       "Der verschlüsselte Tresor bleibt im Konto. Neues Gerät: anmelden, neuesten Stand laden, Hauptpasswort eingeben, neuen QR für Ersatz-Authenticator — alte Codes erlaufen erwartungsgemäß ohne Datenverlust.",
     faq5_sum: "Kostenlos oder kostenpflichtig?",
     faq5_html:
-      "Derzeit kostenlos; Preisänderungen kündigen wir transparent an.",
+      "Bis zu 25 Einträge sind kostenlos. Einmalig 4,99 USD schaltet unbegrenzte Einträge auf Ihrem Konto frei — kein Abo. Siehe <a href=\"./pricing.html\">Tarife</a>.",
     faq6_sum: "Hauptpasswort vergessen?",
     faq6_html:
       "Niemand kann ohne es wiederherstellen — Tresor auf dem Gerät zurücksetzen. Cloud- und Exportdateien brauchen dasselbe Hauptpasswort wie bei der Erstellung.",
@@ -458,7 +459,7 @@ export default {
       "Le coffre chiffré reste dans le compte. Nouveau matériel : connexion, sauvegarde, mot principal puis nouveau QR — anciens codes invalides comme prévu, données intactes.",
     faq5_sum: "Gratuit ou payant ?",
     faq5_html:
-      "Gratuit pour l’instant ; tout changement de prix sera affiché clairement à l’avance.",
+      "Jusqu’à 25 entrées sont gratuites. Un paiement unique de 4,99 USD débloque des entrées illimitées sur votre compte, sans abonnement. Voir <a href=\"./pricing.html\">Offres et tarifs</a>.",
     faq6_sum: "Mot de passe principal oublié ?",
     faq6_html:
       "Aucune récupération sans ce secret ; réinitialiser le coffre sur l’appareil concerné. Restauration cloud et fichiers exportés exigent le même mot de passe qu’à la création.",
@@ -587,7 +588,7 @@ export default {
       "Il vault cifrato resta nell’account. Su un terminale fresco accedi di nuovo, scarica dal pannello dispositivi/backup l’istanza più recente, reinserisci la master password e prosegui alla scansione del nuovo QR per collegare un authenticator di ricambio — i codici orari più vecchi smettono di valere è normale, non significa che i contenuti sono stati cancellati.",
     faq5_sum: "È gratis o si paga?",
     faq5_html:
-      "Oggi usi tutto gratuitamente; se il modello cambierà annunciamo prima i prezzi in modo trasparente.",
+      "Fino a 25 voci sono gratuite. Un pagamento unico di 4,99 USD sblocca voci illimitate sul tuo account, senza abbonamento. Vedi <a href=\"./pricing.html\">Piani e prezzi</a>.",
     faq6_sum: "Cosa succede se dimentico la master password?",
     faq6_html:
       "Nessuno — neppure il supporto — può recuperarla: dovrai ripristinare il vault sul dispositivo e perdere gli elementi lì contenuti. Il ripristino cloud e i backup cifrati chiedono la stessa master password usata al momento dell’export.",
@@ -716,7 +717,7 @@ export default {
       "Brankas tersemat tetap di akun. Perangkat baru: masuk, unduh cadangan, masukkan kata sandi utama, ikuti langkah QR baru untuk pengganti.",
     faq5_sum: "Gratis?",
     faq5_html:
-      "Saat ini gratis; perubahan harga akan diumumkan jelas lebih dulu.",
+      "Hingga 25 entri gratis. Pembayaran sekali 4,99 USD membuka entri tak terbatas di akun Anda, tanpa langganan. Lihat <a href=\"./pricing.html\">Paket & harga</a>.",
     faq6_sum: "Lupa kata sandi utama?",
     faq6_html:
       "Tidak ada pemulihan; reset brankas di perangkat itu dan kehilangan entri di sana. Ekspor dan pemulihan awan tetap membutuhkan kata sandi yang sama saat dibuat.",

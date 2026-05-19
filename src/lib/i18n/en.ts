@@ -35,7 +35,7 @@ export const MESSAGES_EN: Record<string, string> = {
     "Your encrypted vault remains in your account. On a new or reset device: sign in, download the latest vault from Devices & backup, enter your master password, then follow the prompts to scan a new QR code and link a replacement authenticator. After you confirm, old time-based codes stop working—that is expected—but your encrypted data was not erased. If you still have access to your previous authenticator, you can often unlock normally without resetting it.",
   "auth.faqPricingQ": "Is this free or paid?",
   "auth.faqPricingA":
-    "You can save up to 25 password entries for free. A one-time $4.99 purchase unlocks unlimited entries on your account forever. Open Plans & pricing from the app (or add #/pricing to the app URL) for checkout.",
+    "You can save up to 25 password entries for free. A one-time $4.99 purchase unlocks unlimited entries on your account forever. Open __PRICING_LINK__ from the app for checkout.",
   "auth.pricingLink": "Plans & pricing",
   "auth.faqContactQ": "Who do I contact if something goes wrong?",
   "auth.faqContactA":

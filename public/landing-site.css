@@ -757,6 +757,17 @@
       .faq-a a {
         color: var(--accent2);
         font-weight: 500;
+        text-decoration: none;
+      }
+      .faq-a a:hover {
+        text-decoration: underline;
+      }
+      /* Landing text links: underline on hover only (not buttons/logo) */
+      .wrap a:not(.btn):not(.logo) {
+        text-decoration: none;
+      }
+      .wrap a:not(.btn):not(.logo):hover {
+        text-decoration: underline;
       }
       footer {
         margin-top: 4rem;
@@ -811,6 +822,10 @@
       .file-protocol-banner a {
         color: #fde68a;
         font-weight: 600;
+        text-decoration: none;
+      }
+      .file-protocol-banner a:hover {
+        text-decoration: underline;
       }
       html.file-protocol-landing .wrap {
         padding-top: 0;
