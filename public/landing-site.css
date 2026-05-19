@@ -699,7 +699,7 @@
         margin-top: 1.5rem;
         display: flex;
         flex-direction: column;
-        gap: 0.65rem;
+        gap: 1rem;
       }
       .faq-item {
         border: 1px solid var(--line);
