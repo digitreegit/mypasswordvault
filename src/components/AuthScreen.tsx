@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../lib/auth";
-import { getAuthLastMethod, type AuthLastMethod } from "../lib/authLastUsed";
+import { AuthEmailTakenError, isAuthEmailTakenError } from "../lib/authErrors";
+import {
+  AUTH_LAST_METHOD_CHANGED,
+  getAuthLastMethod,
+  recordEmailSignIn,
+  type AuthLastMethod,
+} from "../lib/authLastUsed";
 import { translate } from "../lib/i18n/bundles";
 import {
   detectBrowserLocale,
@@ -16,32 +21,10 @@ import {
   isDefaultSupabaseProjectHost,
 } from "../lib/supabaseClient";
 import { ScreenHeader } from "./ScreenHeader";
-import { privacyPolicyUrl } from "../lib/privacyPolicyUrl";
+import { privacyPolicyUrl, termsOfUseUrl } from "../lib/privacyPolicyUrl";
 import { Eye, EyeOff } from "./Icons";
 
 type AuthView = "signin" | "signup" | "forgot" | "new-password";
-
-const FAQ_ITEMS: readonly [questionKey: string, answerKey: string][] = [
-  ["auth.faqTrustQ", "auth.faqTrustA"],
-  ["auth.faqUseQ", "auth.faqUseA"],
-  ["auth.faqWhatAuthenticatorQ", "auth.faqWhatAuthenticatorA"],
-  ["auth.faqAuthenticatorQ", "auth.faqAuthenticatorA"],
-  ["auth.faqPricingQ", "auth.faqPricingA"],
-  ["auth.faqMasterQ", "auth.faqMasterA"],
-  ["auth.faqExportQ", "auth.faqExportA"],
-  ["auth.faqContactQ", "auth.faqContactA"],
-];
-
-function hasRecoveryInUrl(): boolean {
-  if (typeof window === "undefined") return false;
-  const hash = window.location.hash.replace(/^#/, "");
-  if (hash) {
-    const p = new URLSearchParams(hash);
-    if (p.get("type") === "recovery") return true;
-  }
-  const q = new URLSearchParams(window.location.search);
-  return q.get("type") === "recovery";
-}
 
 function mapAuthError(
   locale: Locale,
@@ -57,7 +40,12 @@ function mapAuthError(
   ) {
     return t("auth.errInvalidCredentials");
   }
-  if (lower.includes("already registered") || lower.includes("already exists")) {
+  if (
+    e instanceof AuthEmailTakenError ||
+    isAuthEmailTakenError(e) ||
+    lower.includes("already registered") ||
+    lower.includes("already exists")
+  ) {
     return t("auth.errEmailTaken");
   }
   if (lower.includes("password") && lower.includes("6")) {
@@ -66,12 +54,35 @@ function mapAuthError(
   if (msg === "email_send_failed" || msg === "server_misconfigured") {
     return t("auth.errResetSend");
   }
+  if (msg === "function_not_deployed" || msg === "function_unreachable") {
+    return t("auth.errResetNotDeployed");
+  }
+  if (lower.includes("auth session missing")) {
+    return t("auth.errRecoverySession");
+  }
   return msg || t("auth.errGeneric");
 }
 
-function LastUsedBadge({ label }: { label: string }) {
+const authTextLinkClass =
+  "text-ink-900 font-semibold hover:underline focus:outline-none focus-visible:underline";
+
+const authLegalLinkClass =
+  "text-ink-900 font-normal hover:underline focus:outline-none focus-visible:underline";
+
+const authInfoBoxClass =
+  "text-sm text-blue-800 bg-blue-50 border border-blue-200 rounded-md px-3 py-2 leading-snug";
+
+function LastUsedBadge({
+  label,
+  positionClassName = "top-0 -right-2",
+}: {
+  label: string;
+  positionClassName?: string;
+}) {
   return (
-    <span className="inline-block mb-1 rounded-full bg-accent-600 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white uppercase">
+    <span
+      className={`absolute z-10 rounded-full border border-indigo-300 bg-indigo-50 px-2.5 py-1 text-[8px] font-semibold tracking-wide text-accent-700 uppercase leading-none ${positionClassName}`}
+    >
       {label}
     </span>
   );
@@ -90,6 +101,7 @@ function OrDivider({ text }: { text: string }) {
 export function AuthScreen() {
   const {
     configured,
+    passwordRecoveryPending,
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
@@ -99,11 +111,12 @@ export function AuthScreen() {
     () => normalizeLocale(detectBrowserLocale())
   );
   const [view, setView] = useState<AuthView>(() =>
-    hasRecoveryInUrl() ? "new-password" : "signin"
+    passwordRecoveryPending ? "new-password" : "signin"
   );
-  const [lastUsed, setLastUsed] = useState<AuthLastMethod | null>(() =>
-    getAuthLastMethod()
-  );
+  /** Bump to re-read `mpv_auth_last_method` from localStorage after each login attempt. */
+  const [lastUsedRevision, setLastUsedRevision] = useState(0);
+  const lastUsed: AuthLastMethod | null = getAuthLastMethod();
+  void lastUsedRevision;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -113,23 +126,29 @@ export function AuthScreen() {
   const [info, setInfo] = useState<string | null>(null);
 
   const t = (key: string) => translate(locale, key);
-  const privacyHref = privacyPolicyUrl();
   const brandHomeHref = isNativeApp() ? undefined : "/";
 
+  const refreshLastUsed = () => setLastUsedRevision((n) => n + 1);
+
   useEffect(() => {
-    const supabase = getSupabase();
-    if (!supabase) return;
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setView("new-password");
-        setError(null);
-        setInfo(null);
-      }
-    });
-    return () => subscription.unsubscribe();
+    const onFocus = () => refreshLastUsed();
+    const onLastUsedChange = () => refreshLastUsed();
+    refreshLastUsed();
+    window.addEventListener("focus", onFocus);
+    window.addEventListener(AUTH_LAST_METHOD_CHANGED, onLastUsedChange);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener(AUTH_LAST_METHOD_CHANGED, onLastUsedChange);
+    };
   }, []);
+
+  useEffect(() => {
+    if (passwordRecoveryPending) {
+      setView("new-password");
+      setError(null);
+      setInfo(null);
+    }
+  }, [passwordRecoveryPending]);
 
   const pageTitle =
     view === "signup"
@@ -147,7 +166,9 @@ export function AuthScreen() {
         ? t("auth.subtitleForgot")
         : view === "new-password"
           ? t("auth.subtitleNewPassword")
-          : t("auth.subtitle");
+          : view === "signin"
+            ? t("auth.subtitle")
+            : undefined;
 
   function clearMessages() {
     setError(null);
@@ -160,7 +181,6 @@ export function AuthScreen() {
     setBusy(true);
     try {
       await signInWithGoogle();
-      setLastUsed("google");
     } catch (e: unknown) {
       setError(mapAuthError(locale, e, t));
     } finally {
@@ -176,13 +196,15 @@ export function AuthScreen() {
     try {
       if (view === "signin") {
         await signInWithEmail(email, password);
-        setLastUsed("email");
+        recordEmailSignIn();
+        refreshLastUsed();
       } else if (view === "signup") {
         await signUpWithEmail(email, password);
         const supabase = getSupabase();
         const { data } = await supabase!.auth.getSession();
         if (data.session) {
-          setLastUsed("email");
+          recordEmailSignIn();
+          refreshLastUsed();
         } else {
           setInfo(t("auth.checkEmailConfirm"));
           setView("signin");
@@ -233,7 +255,7 @@ export function AuthScreen() {
   if (!configured) {
     return (
       <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-ink-50 to-ink-100">
-        <div className="card w-full max-w-md p-5 sm:p-8 space-y-4">
+        <div className="card w-full max-w-md p-6 sm:p-8 space-y-4">
           <ScreenHeader
             brandName={t("app.brandName")}
             pageTitle={t("auth.notConfiguredTitle")}
@@ -246,37 +268,27 @@ export function AuthScreen() {
           <p className="text-sm text-ink-600 leading-snug whitespace-pre-line">
             {t("auth.notConfiguredBody")}
           </p>
-          <p className="text-center text-sm pt-2">
-            <a
-              href={privacyHref}
-              className="text-accent-600 hover:underline font-medium"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {t("legal.privacyPolicy")}
-            </a>
-          </p>
         </div>
       </div>
     );
   }
 
-  const showGoogleBlock = view === "signin" || view === "signup";
-  const showEmailSignIn = view === "signin" || view === "signup";
+  const showSignInSignUp = view === "signin" || view === "signup";
 
   return (
     <div className="min-h-[100dvh] flex justify-center px-4 py-10 sm:px-6 sm:py-12 bg-gradient-to-br from-ink-50 to-ink-100">
-      <div className="card w-full max-w-xl p-5 sm:p-8 space-y-5 my-auto">
+      <div className="card w-full max-w-md p-6 sm:p-8 space-y-5 my-auto">
         <ScreenHeader
           brandName={t("app.brandName")}
           pageTitle={pageTitle}
+          subtitle={pageSubtitle}
+          titleClassName="text-2xl font-bold text-ink-900 tracking-tight"
           locale={locale}
           onLocaleChange={(l) => setLocale(normalizeLocale(l))}
           languageAriaLabel={t("settings.language")}
           brandHomeHref={brandHomeHref}
           brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
         />
-        <p className="text-sm text-ink-500 leading-snug">{pageSubtitle}</p>
 
         {view === "new-password" && (
           <form className="space-y-4" onSubmit={(e) => void onNewPasswordSubmit(e)}>
@@ -307,7 +319,7 @@ export function AuthScreen() {
             )}
             <button
               type="submit"
-              className="btn-primary w-full"
+              className="btn-primary w-full py-2.5"
               disabled={busy || !password || !passwordConfirm}
             >
               {busy ? t("app.loading") : t("auth.saveNewPassword")}
@@ -327,23 +339,19 @@ export function AuthScreen() {
             {error && (
               <p className="text-sm text-red-600 bg-red-50 rounded-md px-3 py-2">{error}</p>
             )}
-            {info && (
-              <p className="text-sm text-accent-800 bg-accent-50 border border-accent-200 rounded-md px-3 py-2">
-                {info}
-              </p>
-            )}
+            {info && <p className={authInfoBoxClass}>{info}</p>}
             <button
               type="submit"
-              className="btn-primary w-full"
+              className="btn-primary w-full py-2.5"
               disabled={busy || !email.trim()}
             >
               {busy ? t("app.loading") : t("auth.sendResetLink")}
             </button>
-            <p className="text-center text-sm text-ink-600">
+            <p className="text-center text-xs text-ink-600">
               {t("auth.hasAccount")}{" "}
               <button
                 type="button"
-                className="text-accent-600 hover:underline font-medium"
+                className={authTextLinkClass}
                 onClick={() => {
                   clearMessages();
                   setView("signin");
@@ -355,111 +363,102 @@ export function AuthScreen() {
           </form>
         )}
 
-        {(view === "signin" || view === "signup") && (
-          <>
-            {showGoogleBlock && (
-              <div className="space-y-1">
-                {lastUsed === "google" && (
-                  <LastUsedBadge label={t("auth.lastUsed")} />
-                )}
-                <button
-                  type="button"
-                  className="btn-secondary w-full justify-start border-ink-200 bg-white py-2.5"
-                  onClick={() => void onGoogle()}
-                  disabled={busy}
-                >
-                  <span className="flex items-center gap-2">
-                    <GoogleGlyph />
-                    {t("auth.google")}
-                  </span>
-                </button>
-              </div>
-            )}
+        {showSignInSignUp && (
+          <div className="space-y-4">
+            <div className="relative pt-2">
+              {view === "signin" && lastUsed === "google" && (
+                <LastUsedBadge label={t("auth.lastUsed")} />
+              )}
+              <button
+                type="button"
+                className="btn-secondary w-full justify-center border-ink-200 bg-white py-2.5 shadow-sm hover:bg-ink-50"
+                onClick={() => void onGoogle()}
+                disabled={busy}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <GoogleGlyph />
+                  {t("auth.google")}
+                </span>
+              </button>
+            </div>
 
-            {showEmailSignIn && (
-              <>
-                <OrDivider text={t("auth.or")} />
-                <form className="space-y-3" onSubmit={(e) => void onEmailSubmit(e)}>
-                  {lastUsed === "email" && (
-                    <LastUsedBadge label={t("auth.lastUsed")} />
-                  )}
-                  <EmailField
-                    id="auth-email"
-                    label={t("auth.email")}
-                    placeholder={t("auth.emailPlaceholder")}
-                    value={email}
-                    onChange={setEmail}
-                  />
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <label htmlFor="auth-password" className="label mb-0">
-                        {t("auth.password")}
-                      </label>
-                      {view === "signin" && (
-                        <button
-                          type="button"
-                          className="text-xs text-accent-600 hover:underline font-medium shrink-0"
-                          onClick={() => {
-                            clearMessages();
-                            setView("forgot");
-                          }}
-                        >
-                          {t("auth.forgotPassword")}
-                        </button>
-                      )}
-                    </div>
-                    <PasswordField
-                      id="auth-password"
-                      suppressLabel
-                      value={password}
-                      onChange={setPassword}
-                      show={showPassword}
-                      onToggleShow={() => setShowPassword((v) => !v)}
-                      showAria={t("vault.show")}
-                      hideAria={t("vault.hide")}
-                      autoComplete={
-                        view === "signup" ? "new-password" : "current-password"
-                      }
-                    />
+            <OrDivider text={t("auth.or")} />
+
+            <form className="flex flex-col" onSubmit={(e) => void onEmailSubmit(e)}>
+              <div className="flex flex-col gap-3">
+                <EmailField
+                  id="auth-email"
+                  label={t("auth.email")}
+                  placeholder={t("auth.emailPlaceholder")}
+                  value={email}
+                  onChange={setEmail}
+                  lastUsedLabel={
+                    view === "signin" && lastUsed === "email"
+                      ? t("auth.lastUsed")
+                      : undefined
+                  }
+                />
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <label htmlFor="auth-password" className="label mb-0">
+                      {t("auth.password")}
+                    </label>
+                    {view === "signin" && (
+                      <button
+                        type="button"
+                        className={`text-xs shrink-0 ${authTextLinkClass}`}
+                        onClick={() => {
+                          clearMessages();
+                          setView("forgot");
+                        }}
+                      >
+                        {t("auth.forgotPassword")}
+                      </button>
+                    )}
                   </div>
+                  <PasswordField
+                    id="auth-password"
+                    suppressLabel
+                    value={password}
+                    onChange={setPassword}
+                    show={showPassword}
+                    onToggleShow={() => setShowPassword((v) => !v)}
+                    showAria={t("vault.show")}
+                    hideAria={t("vault.hide")}
+                    autoComplete={
+                      view === "signup" ? "new-password" : "current-password"
+                    }
+                  />
+                </div>
 
-                  {error && (
-                    <p className="text-sm text-red-600 bg-red-50 rounded-md px-3 py-2">
-                      {error}
-                    </p>
-                  )}
-                  {info && (
-                    <p className="text-sm text-accent-800 bg-accent-50 border border-accent-200 rounded-md px-3 py-2">
-                      {info}
-                    </p>
-                  )}
+                {error && (
+                  <p className="text-sm text-red-600 bg-red-50 rounded-md px-3 py-2">
+                    {error}
+                  </p>
+                )}
+                {info && <p className={authInfoBoxClass}>{info}</p>}
+              </div>
 
-                  <button
-                    type="submit"
-                    className="btn-primary w-full"
-                    disabled={busy || !email.trim() || !password}
-                  >
-                    {busy
-                      ? t("app.loading")
-                      : view === "signup"
-                        ? t("auth.signUp")
-                        : t("auth.signIn")}
-                  </button>
-                </form>
-              </>
-            )}
+              <button
+                type="submit"
+                className="btn-primary w-full py-2.5 mt-5"
+                disabled={busy || !email.trim() || !password}
+              >
+                {busy
+                  ? t("app.loading")
+                  : view === "signup"
+                    ? t("auth.signUp")
+                    : t("auth.signIn")}
+              </button>
+            </form>
 
-            {view === "signup" && (
-              <p className="text-xs text-ink-500 leading-snug">{t("auth.termsNotice")}</p>
-            )}
-
-            <p className="text-center text-sm text-ink-600">
+            <p className="text-center text-xs text-ink-600">
               {view === "signin" ? (
                 <>
                   {t("auth.noAccount")}{" "}
                   <button
                     type="button"
-                    className="text-accent-600 hover:underline font-medium"
+                    className={authTextLinkClass}
                     onClick={() => {
                       clearMessages();
                       setView("signup");
@@ -473,7 +472,7 @@ export function AuthScreen() {
                   {t("auth.hasAccount")}{" "}
                   <button
                     type="button"
-                    className="text-accent-600 hover:underline font-medium"
+                    className={authTextLinkClass}
                     onClick={() => {
                       clearMessages();
                       setView("signin");
@@ -484,72 +483,78 @@ export function AuthScreen() {
                 </>
               )}
             </p>
-          </>
+
+            <TermsNotice
+              text={t("auth.termsNotice")}
+              termsHref={termsOfUseUrl()}
+              privacyHref={privacyPolicyUrl()}
+              termsLabel={t("legal.termsOfUse")}
+              privacyLabel={t("legal.privacyPolicy")}
+            />
+          </div>
         )}
 
-        {showGoogleBlock && isDefaultSupabaseProjectHost() && (
-          <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 leading-snug">
+        {showSignInSignUp && isDefaultSupabaseProjectHost() && (
+          <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 leading-snug">
             {translate(locale, "auth.oauthHostWarning", {
               host: getSupabaseAuthHostname(),
             })}
           </p>
         )}
-
-        {view !== "forgot" && view !== "new-password" && (
-          <p className="text-xs text-ink-500 leading-snug">{t("auth.securityNote")}</p>
-        )}
-
-        {(view === "signin" || view === "signup") && (
-          <section
-            className="border-t border-ink-100 pt-5 space-y-3"
-            aria-labelledby="auth-faq-heading"
-          >
-            <h2 id="auth-faq-heading" className="text-sm font-semibold text-ink-800">
-              {t("auth.faqTitle")}
-            </h2>
-            <div className="space-y-2">
-              {FAQ_ITEMS.map(([qKey, aKey]) => (
-                <details
-                  key={qKey}
-                  className="group rounded-lg border border-ink-200 bg-ink-50/60"
-                >
-                  <summary className="cursor-pointer list-none flex w-full items-start justify-between gap-2 p-3 text-left text-sm font-medium text-ink-800 [&::-webkit-details-marker]:hidden">
-                    <span className="leading-snug pr-1">{t(qKey)}</span>
-                    <span className="inline-flex shrink-0 text-ink-400 mt-0.5" aria-hidden>
-                      <ChevronDownIcon className="h-4 w-4 group-open:hidden" />
-                      <ChevronUpIcon className="hidden h-4 w-4 group-open:block" />
-                    </span>
-                  </summary>
-                  <div className="px-3 pb-3 text-sm text-ink-600 leading-snug border-t border-ink-100/90 pt-2.5">
-                    {aKey === "auth.faqContactA" ? (
-                      <ContactFaqAnswer text={t(aKey)} />
-                    ) : aKey === "auth.faqPricingA" ? (
-                      <PricingFaqAnswer
-                        text={t(aKey)}
-                        linkLabel={t("auth.pricingLink")}
-                      />
-                    ) : (
-                      t(aKey)
-                    )}
-                  </div>
-                </details>
-              ))}
-            </div>
-          </section>
-        )}
-
-        <p className="text-center text-sm pt-4 border-t border-ink-100">
-          <a
-            href={privacyHref}
-            className="text-accent-600 hover:underline font-medium"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t("legal.privacyPolicy")}
-          </a>
-        </p>
       </div>
     </div>
+  );
+}
+
+const TERMS_MARKER = "__TERMS__";
+const PRIVACY_MARKER = "__PRIVACY__";
+
+function TermsNotice({
+  text,
+  termsHref,
+  privacyHref,
+  termsLabel,
+  privacyLabel,
+}: {
+  text: string;
+  termsHref: string;
+  privacyHref: string;
+  termsLabel: string;
+  privacyLabel: string;
+}) {
+  const parts = text.split(/(__TERMS__|__PRIVACY__)/);
+  return (
+    <p className="text-left text-xs text-ink-500 leading-snug">
+      {parts.map((part, i) => {
+        if (part === TERMS_MARKER) {
+          return (
+            <a
+              key={`terms-${i}`}
+              href={termsHref}
+              className={authLegalLinkClass}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {termsLabel}
+            </a>
+          );
+        }
+        if (part === PRIVACY_MARKER) {
+          return (
+            <a
+              key={`privacy-${i}`}
+              href={privacyHref}
+              className={authLegalLinkClass}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {privacyLabel}
+            </a>
+          );
+        }
+        return <React.Fragment key={i}>{part}</React.Fragment>;
+      })}
+    </p>
   );
 }
 
@@ -559,28 +564,36 @@ function EmailField({
   placeholder,
   value,
   onChange,
+  lastUsedLabel,
 }: {
   id: string;
   label: string;
   placeholder: string;
   value: string;
   onChange: (v: string) => void;
+  /** When set, shows LAST USED on the input’s top-right corner (sign-in email). */
+  lastUsedLabel?: string;
 }) {
   return (
     <div>
       <label htmlFor={id} className="label">
         {label}
       </label>
-      <input
-        id={id}
-        type="email"
-        className="input"
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        autoComplete="email"
-        spellCheck={false}
-      />
+      <div className={lastUsedLabel ? "relative" : undefined}>
+        {lastUsedLabel ? (
+          <LastUsedBadge label={lastUsedLabel} positionClassName="-top-2 -right-2" />
+        ) : null}
+        <input
+          id={id}
+          type="email"
+          className="input"
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete="email"
+          spellCheck={false}
+        />
+      </div>
     </div>
   );
 }
@@ -632,63 +645,15 @@ function PasswordField({
           title={show ? hideAria : showAria}
           aria-label={show ? hideAria : showAria}
         >
-          {show ? <EyeOff /> : <Eye />}
+          {show ? (
+            <EyeOff width={18} height={18} />
+          ) : (
+            <Eye width={18} height={18} />
+          )}
         </button>
       </div>
     </div>
   );
-}
-
-const CONTACT_EMAIL = "contact@skyface.com";
-const PRICING_LINK_MARKER = "__PRICING_LINK__";
-
-const faqLinkClass = "text-accent-600 hover:underline font-medium";
-
-function PricingFaqAnswer({
-  text,
-  linkLabel,
-}: {
-  text: string;
-  linkLabel: string;
-}) {
-  const parts = text.split(PRICING_LINK_MARKER);
-  return (
-    <>
-      {parts.map((part, i) => (
-        <React.Fragment key={i}>
-          {part}
-          {i < parts.length - 1 ? (
-            <a href="#/pricing" className={faqLinkClass}>
-              {linkLabel}
-            </a>
-          ) : null}
-        </React.Fragment>
-      ))}
-    </>
-  );
-}
-
-function ContactFaqAnswer({ text }: { text: string }) {
-  const parts = text.split(CONTACT_EMAIL);
-  if (parts.length === 1) {
-    return <>{text}</>;
-  }
-  const out: React.ReactNode[] = [];
-  parts.forEach((part, i) => {
-    out.push(<React.Fragment key={`p-${i}`}>{part}</React.Fragment>);
-    if (i < parts.length - 1) {
-      out.push(
-        <a
-          key={`a-${i}`}
-          href={`mailto:${CONTACT_EMAIL}`}
-          className={faqLinkClass}
-        >
-          {CONTACT_EMAIL}
-        </a>
-      );
-    }
-  });
-  return <>{out}</>;
 }
 
 function GoogleGlyph() {

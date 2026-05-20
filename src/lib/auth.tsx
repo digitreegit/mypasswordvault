@@ -10,11 +10,29 @@ import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 import { getSupabase, isSupabaseConfigured } from "./supabaseClient";
 import { getOAuthRedirectUrl } from "./platform";
 import { isNativeApp, signInWithGoogleNative } from "./nativeAuth";
-import { setAuthLastMethod } from "./authLastUsed";
+import {
+  AuthEmailTakenError,
+  isAuthEmailTakenError,
+  isDuplicateSignUpResponse,
+} from "./authErrors";
+import {
+  applyPendingAuthMethod,
+  clearPendingAuthMethod,
+  markPendingAuthMethod,
+  recordEmailSignIn,
+} from "./authLastUsed";
+import {
+  clearPasswordRecoveryPending,
+  isPasswordRecoveryPending,
+  setPasswordRecoveryPending,
+} from "./passwordRecoveryPending";
+import { stripAuthParamsFromUrl } from "./supabaseAuthRedirect";
 
 interface AuthContextValue {
   configured: boolean;
   loading: boolean;
+  /** True after recovery email link until account password is updated. */
+  passwordRecoveryPending: boolean;
   session: Session | null;
   user: User | null;
   signInWithGoogle: () => Promise<void>;
@@ -26,15 +44,13 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function stripAuthTokensFromUrl(): void {
-  if (typeof window === "undefined") return;
-  const path = window.location.pathname || "/";
-  window.history.replaceState(null, "", path);
-}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(isSupabaseConfigured);
   const [session, setSession] = useState<Session | null>(null);
+  const [passwordRecoveryPending, setPasswordRecoveryPendingState] = useState(
+    () => isPasswordRecoveryPending()
+  );
 
   useEffect(() => {
     const supabase = getSupabase();
@@ -62,7 +78,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, next) => {
+    } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, next) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setPasswordRecoveryPending();
+        setPasswordRecoveryPendingState(true);
+      }
+      if (event === "SIGNED_IN" && next) {
+        applyPendingAuthMethod();
+      }
       setSession(next);
     });
 
@@ -73,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
-    setAuthLastMethod("google");
+    markPendingAuthMethod("google");
     if (isNativeApp()) {
       await signInWithGoogleNative();
       return;
@@ -88,21 +111,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         queryParams: { prompt: "select_account" },
       },
     });
-    if (error) throw error;
+    if (error) {
+      clearPendingAuthMethod();
+      throw error;
+    }
   }, []);
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
+    markPendingAuthMethod("email");
     const supabase = getSupabase();
     if (!supabase) throw new Error("Supabase not configured");
     const { error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
-    if (error) throw error;
-    setAuthLastMethod("email");
+    if (error) {
+      clearPendingAuthMethod();
+      throw error;
+    }
+    recordEmailSignIn();
   }, []);
 
   const signUpWithEmail = useCallback(async (email: string, password: string) => {
+    markPendingAuthMethod("email");
     const supabase = getSupabase();
     if (!supabase) throw new Error("Supabase not configured");
     const { data, error } = await supabase.auth.signUp({
@@ -110,22 +141,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
       options: { emailRedirectTo: getOAuthRedirectUrl() },
     });
-    if (error) throw error;
-    if (data.session) setAuthLastMethod("email");
+    if (error) {
+      clearPendingAuthMethod();
+      if (isAuthEmailTakenError(error)) throw new AuthEmailTakenError();
+      throw error;
+    }
+    if (isDuplicateSignUpResponse(data)) {
+      clearPendingAuthMethod();
+      throw new AuthEmailTakenError();
+    }
+    if (data.session) {
+      recordEmailSignIn();
+    } else {
+      clearPendingAuthMethod();
+    }
   }, []);
 
   const updatePassword = useCallback(async (password: string) => {
     const supabase = getSupabase();
     if (!supabase) throw new Error("Supabase not configured");
+    const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+    if (sessionErr || !sessionData.session) {
+      throw new Error("Auth session missing!");
+    }
     const { error } = await supabase.auth.updateUser({ password });
     if (error) throw error;
-    stripAuthTokensFromUrl();
+    clearPasswordRecoveryPending();
+    setPasswordRecoveryPendingState(false);
+    stripAuthParamsFromUrl();
   }, []);
 
   const signOut = useCallback(async () => {
     const supabase = getSupabase();
     if (!supabase) return;
-    stripAuthTokensFromUrl();
+    clearPendingAuthMethod();
+    clearPasswordRecoveryPending();
+    setPasswordRecoveryPendingState(false);
+    stripAuthParamsFromUrl();
     await supabase.auth.signOut();
   }, []);
 
@@ -133,6 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       configured: isSupabaseConfigured,
       loading,
+      passwordRecoveryPending,
       session,
       user: session?.user ?? null,
       signInWithGoogle,
@@ -143,6 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       loading,
+      passwordRecoveryPending,
       session,
       signInWithGoogle,
       signInWithEmail,

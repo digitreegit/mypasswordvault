@@ -3,6 +3,7 @@ import { isLocalDevHost, publicSiteOrigin } from "./siteOrigin";
 
 /** Default when `window.location` is unavailable (SSR/tests). */
 const PRIVACY_PATH = "/privacy.html";
+const TERMS_PATH = "/terms.html";
 
 /**
  * Privacy policy URL for in-app links (sign-in footer, vault footer).
@@ -20,6 +21,24 @@ export function privacyPolicyUrl(): string {
     isLocalDevHost(hostname)
   ) {
     return `${origin}${PRIVACY_PATH}`;
+  }
+
+  return canonical;
+}
+
+/** Terms of Use URL (same origin rules as privacy policy). */
+export function termsOfUseUrl(): string {
+  const canonical = `${publicSiteOrigin()}${TERMS_PATH}`;
+
+  if (typeof window === "undefined" || !window.location) return canonical;
+  if (isNativeApp()) return canonical;
+
+  const { protocol, origin, hostname } = window.location;
+  if (
+    (protocol === "http:" || protocol === "https:") &&
+    isLocalDevHost(hostname)
+  ) {
+    return `${origin}${TERMS_PATH}`;
   }
 
   return canonical;

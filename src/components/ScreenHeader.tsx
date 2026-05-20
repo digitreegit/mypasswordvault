@@ -18,6 +18,9 @@ interface ScreenHeaderProps {
   shieldClassName?: string;
   /** Forwarded to `<h1>` for dialog `aria-labelledby` */
   titleId?: string;
+  /** Shown under the page title (e.g. auth sign-in subtitle). */
+  subtitle?: React.ReactNode;
+  titleClassName?: string;
 }
 
 export function ScreenHeader({
@@ -32,10 +35,12 @@ export function ScreenHeader({
   className,
   shieldClassName = "w-8 h-auto",
   titleId,
+  subtitle,
+  titleClassName = "text-xl font-semibold text-ink-900 tracking-tight",
 }: ScreenHeaderProps) {
   return (
     <header
-      className={["space-y-4 sm:space-y-5", className].filter(Boolean).join(" ")}
+      className={["space-y-3", className].filter(Boolean).join(" ")}
     >
       <div className="flex items-center justify-between gap-2 min-h-[2.5rem]">
         {brandHomeHref ? (
@@ -74,15 +79,17 @@ export function ScreenHeader({
           align="right"
         />
       </div>
-      <div className="flex items-start justify-between gap-2">
-        <h1
-          id={titleId}
-          className="font-sans text-xl font-semibold text-ink-900 tracking-tight"
-        >
-          {pageTitle}
-        </h1>
-        {titleRowEnd ? (
-          <div className="shrink-0 flex items-center">{titleRowEnd}</div>
+      <div className="space-y-1">
+        <div className="flex items-start justify-between gap-2">
+          <h1 id={titleId} className={["font-sans", titleClassName].join(" ")}>
+            {pageTitle}
+          </h1>
+          {titleRowEnd ? (
+            <div className="shrink-0 flex items-center">{titleRowEnd}</div>
+          ) : null}
+        </div>
+        {subtitle ? (
+          <p className="text-sm text-ink-500 leading-snug">{subtitle}</p>
         ) : null}
       </div>
     </header>

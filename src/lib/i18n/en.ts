@@ -1,22 +1,22 @@
 /** Base strings (English). Other locales spread this and override. */
 export const MESSAGES_EN: Record<string, string> = {
   "legal.privacyPolicy": "Privacy Policy",
+  "legal.termsOfUse": "Terms of Use",
 
   "app.loading": "Loading…",
   "app.authLoading": "Checking your session…",
   "app.brandName": "My Password Vault",
 
-  "auth.title": "Sign In",
+  "auth.title": "Welcome back",
   "auth.titleSignUp": "Get started",
   "auth.titleForgot": "Forgot your password?",
   "auth.titleNewPassword": "Set a new password",
-  "auth.subtitleSignUp": "Create a new account.",
+  "auth.subtitleSignUp": "Create a new account",
   "auth.subtitleForgot":
-    "Enter your email and we'll send you a link to reset your password.",
-  "auth.subtitleNewPassword": "Choose a new password for your account.",
+    "Enter your email and we'll send you a code to reset the password",
+  "auth.subtitleNewPassword": "Choose a new password for your account",
   "auth.brandHomeAria": "Go to homepage",
-  "auth.subtitle":
-    "Sign in to your account.",
+  "auth.subtitle": "Sign in your account",
   "auth.google": "Continue with Google",
   "auth.lastUsed": "LAST USED",
   "auth.or": "or",
@@ -27,7 +27,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "auth.forgotPassword": "Forgot password?",
   "auth.signIn": "Sign in",
   "auth.signUp": "Sign up",
-  "auth.sendResetLink": "Send reset link",
+  "auth.sendResetLink": "Send reset code",
   "auth.saveNewPassword": "Save new password",
   "auth.noAccount": "Don't have an account?",
   "auth.hasAccount": "Already have an account?",
@@ -41,9 +41,13 @@ export const MESSAGES_EN: Record<string, string> = {
   "auth.errEmailTaken": "An account with this email already exists. Try signing in.",
   "auth.errWeakPassword": "Password must be at least 6 characters.",
   "auth.errResetSend": "Could not send the reset email. Try again later.",
+  "auth.errResetNotDeployed":
+    "Password reset email is not set up yet. Deploy the send-password-reset Edge Function and Resend secrets (see docs/auth-email-resend.md).",
+  "auth.errRecoverySession":
+    "This reset link expired or the session was lost. Request a new password reset email and open the latest link in the same browser.",
   "auth.errPasswordMismatch": "Passwords do not match.",
   "auth.termsNotice":
-    "By continuing, you agree to our Terms of Use and Privacy Policy.",
+    "By continuing, you agree to MyPasswordVault's __TERMS__ and __PRIVACY__.",
   "auth.oauthHostWarning":
     "This build still uses {{host}} for Google sign-in. Set VITE_SUPABASE_URL to https://auth.mypasswordvault.app in Vercel (or .env locally), then redeploy or restart npm run dev.",
   "auth.errGeneric": "Something went wrong. Try again.",

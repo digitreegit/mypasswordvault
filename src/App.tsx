@@ -57,7 +57,7 @@ function VaultShell() {
 }
 
 function AuthenticatedApp() {
-  const { configured, loading, session } = useAuth();
+  const { configured, loading, session, passwordRecoveryPending } = useAuth();
   const [bootLocale] = useState(() => detectBrowserLocale());
   const hashPath = useHashPath();
 
@@ -73,7 +73,7 @@ function AuthenticatedApp() {
     );
   }
 
-  if (!session?.user?.id) {
+  if (passwordRecoveryPending || !session?.user?.id) {
     return <AuthScreen />;
   }
 
