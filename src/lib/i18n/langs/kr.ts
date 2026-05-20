@@ -9,10 +9,44 @@ export const MESSAGES_KR: Record<string, string> = {
   "app.brandName": "My Password Vault",
 
   "auth.title": "로그인",
+  "auth.titleSignUp": "시작하기",
+  "auth.titleForgot": "비밀번호를 잊으셨나요?",
+  "auth.titleNewPassword": "새 비밀번호 설정",
+  "auth.subtitleSignUp": "새 계정을 만듭니다.",
+  "auth.subtitleForgot":
+    "이메일을 입력하면 비밀번호 재설정 링크를 보내 드립니다.",
+  "auth.subtitleNewPassword": "계정에 사용할 새 비밀번호를 입력하세요.",
   "auth.brandHomeAria": "소개 페이지로 이동",
-  "auth.subtitle":
-    "계정으로 암호화된 금고를 기기 간에 동기화합니다. 마스터 비밀번호는 서버로 전송되지 않습니다.",
+  "auth.subtitle": "계정으로 로그인하세요.",
   "auth.google": "Google로 계속하기",
+  "auth.lastUsed": "최근 사용",
+  "auth.or": "또는",
+  "auth.email": "이메일",
+  "auth.emailPlaceholder": "you@example.com",
+  "auth.password": "비밀번호",
+  "auth.passwordConfirm": "비밀번호 확인",
+  "auth.forgotPassword": "비밀번호 찾기",
+  "auth.signIn": "로그인",
+  "auth.signUp": "가입하기",
+  "auth.sendResetLink": "재설정 링크 보내기",
+  "auth.saveNewPassword": "새 비밀번호 저장",
+  "auth.noAccount": "계정이 없으신가요?",
+  "auth.hasAccount": "이미 계정이 있으신가요?",
+  "auth.switchSignUp": "가입하기",
+  "auth.switchSignIn": "로그인",
+  "auth.resetSent":
+    "해당 이메일로 가입된 계정이 있으면 재설정 링크를 보냈습니다. 받은편지함과 스팸함을 확인하세요.",
+  "auth.checkEmailConfirm":
+    "이메일에서 계정 확인을 완료한 뒤 로그인하세요.",
+  "auth.errInvalidCredentials": "이메일 또는 비밀번호가 올바르지 않습니다.",
+  "auth.errEmailTaken": "이미 사용 중인 이메일입니다. 로그인을 시도하세요.",
+  "auth.errWeakPassword": "비밀번호는 6자 이상이어야 합니다.",
+  "auth.errResetSend": "재설정 메일을 보내지 못했습니다. 나중에 다시 시도하세요.",
+  "auth.errPasswordMismatch": "비밀번호가 일치하지 않습니다.",
+  "auth.termsNotice":
+    "계속하면 이용약관 및 개인정보 처리방침에 동의하는 것으로 간주됩니다.",
+  "auth.oauthHostWarning":
+    "이 빌드는 Google 로그인에 {{host}}를 씁니다. Vercel(또는 로컬 .env)의 VITE_SUPABASE_URL을 https://auth.mypasswordvault.app 로 맞춘 뒤 재배포하거나 npm run dev를 다시 실행하세요.",
   "auth.errGeneric": "문제가 발생했습니다. 다시 시도하세요.",
   "auth.securityNote":
     "마스터 비밀번호는 업로드되지 않습니다. Google 로그인은 본인 확인용이며, 패스키 또는 마스터 비밀번호+백업 수단으로 잠금 해제합니다.",

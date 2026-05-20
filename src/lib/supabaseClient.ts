@@ -12,12 +12,28 @@ export const isSupabaseConfigured = Boolean(
     !anonKey.includes("YOUR_ANON_PUBLIC_KEY")
 );
 
+/** Host baked into this build (Vite env at build time). */
+export function getSupabaseAuthHostname(): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "";
+  }
+}
+
+export function isDefaultSupabaseProjectHost(): boolean {
+  return getSupabaseAuthHostname().endsWith(".supabase.co");
+}
+
 let _client: SupabaseClient | null = null;
+let _clientKey = "";
 
 /** Browser client; null when env vars are missing (local-only mode). */
 export function getSupabase(): SupabaseClient | null {
   if (!isSupabaseConfigured) return null;
-  if (!_client) {
+  const key = `${url}\0${anonKey}`;
+  if (!_client || _clientKey !== key) {
+    _clientKey = key;
     _client = createClient(url, anonKey, {
       auth: {
         flowType: "pkce",

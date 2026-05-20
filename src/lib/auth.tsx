@@ -10,6 +10,7 @@ import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 import { getSupabase, isSupabaseConfigured } from "./supabaseClient";
 import { getOAuthRedirectUrl } from "./platform";
 import { isNativeApp, signInWithGoogleNative } from "./nativeAuth";
+import { setAuthLastMethod } from "./authLastUsed";
 
 interface AuthContextValue {
   configured: boolean;
@@ -17,6 +18,9 @@ interface AuthContextValue {
   session: Session | null;
   user: User | null;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -69,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
+    setAuthLastMethod("google");
     if (isNativeApp()) {
       await signInWithGoogleNative();
       return;
@@ -86,6 +91,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   }, []);
 
+  const signInWithEmail = useCallback(async (email: string, password: string) => {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not configured");
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (error) throw error;
+    setAuthLastMethod("email");
+  }, []);
+
+  const signUpWithEmail = useCallback(async (email: string, password: string) => {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not configured");
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: { emailRedirectTo: getOAuthRedirectUrl() },
+    });
+    if (error) throw error;
+    if (data.session) setAuthLastMethod("email");
+  }, []);
+
+  const updatePassword = useCallback(async (password: string) => {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not configured");
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+    stripAuthTokensFromUrl();
+  }, []);
+
   const signOut = useCallback(async () => {
     const supabase = getSupabase();
     if (!supabase) return;
@@ -100,9 +136,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session,
       user: session?.user ?? null,
       signInWithGoogle,
+      signInWithEmail,
+      signUpWithEmail,
+      updatePassword,
       signOut,
     }),
-    [loading, session, signInWithGoogle, signOut]
+    [
+      loading,
+      session,
+      signInWithGoogle,
+      signInWithEmail,
+      signUpWithEmail,
+      updatePassword,
+      signOut,
+    ]
   );
 
   return (

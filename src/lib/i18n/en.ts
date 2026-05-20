@@ -7,10 +7,45 @@ export const MESSAGES_EN: Record<string, string> = {
   "app.brandName": "My Password Vault",
 
   "auth.title": "Sign In",
+  "auth.titleSignUp": "Get started",
+  "auth.titleForgot": "Forgot your password?",
+  "auth.titleNewPassword": "Set a new password",
+  "auth.subtitleSignUp": "Create a new account.",
+  "auth.subtitleForgot":
+    "Enter your email and we'll send you a link to reset your password.",
+  "auth.subtitleNewPassword": "Choose a new password for your account.",
   "auth.brandHomeAria": "Go to homepage",
   "auth.subtitle":
-    "Use your account to sync the encrypted vault between devices. Your master password is never sent to the server.",
+    "Sign in to your account.",
   "auth.google": "Continue with Google",
+  "auth.lastUsed": "LAST USED",
+  "auth.or": "or",
+  "auth.email": "Email",
+  "auth.emailPlaceholder": "you@example.com",
+  "auth.password": "Password",
+  "auth.passwordConfirm": "Confirm password",
+  "auth.forgotPassword": "Forgot password?",
+  "auth.signIn": "Sign in",
+  "auth.signUp": "Sign up",
+  "auth.sendResetLink": "Send reset link",
+  "auth.saveNewPassword": "Save new password",
+  "auth.noAccount": "Don't have an account?",
+  "auth.hasAccount": "Already have an account?",
+  "auth.switchSignUp": "Sign up",
+  "auth.switchSignIn": "Sign in",
+  "auth.resetSent":
+    "If an account exists for that email, we sent a password reset link. Check your inbox and spam folder.",
+  "auth.checkEmailConfirm":
+    "Check your email to confirm your account, then sign in.",
+  "auth.errInvalidCredentials": "Invalid email or password.",
+  "auth.errEmailTaken": "An account with this email already exists. Try signing in.",
+  "auth.errWeakPassword": "Password must be at least 6 characters.",
+  "auth.errResetSend": "Could not send the reset email. Try again later.",
+  "auth.errPasswordMismatch": "Passwords do not match.",
+  "auth.termsNotice":
+    "By continuing, you agree to our Terms of Use and Privacy Policy.",
+  "auth.oauthHostWarning":
+    "This build still uses {{host}} for Google sign-in. Set VITE_SUPABASE_URL to https://auth.mypasswordvault.app in Vercel (or .env locally), then redeploy or restart npm run dev.",
   "auth.errGeneric": "Something went wrong. Try again.",
   "auth.securityNote":
     "We never upload your master password. Google sign-in only identifies you; vault secrets stay encrypted until you unlock with your passkey, or with your master password plus a backup method.",
