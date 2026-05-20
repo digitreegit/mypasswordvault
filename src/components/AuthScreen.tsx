@@ -10,7 +10,10 @@ import {
 import { translate } from "../lib/i18n/bundles";
 import {
   detectBrowserLocale,
+  localeToHtmlLang,
   normalizeLocale,
+  persistStoredLocale,
+  readStoredLocale,
   type Locale,
 } from "../lib/i18n/locale";
 import { isNativeApp } from "../lib/platform";
@@ -108,7 +111,7 @@ export function AuthScreen() {
     updatePassword,
   } = useAuth();
   const [locale, setLocale] = useState<Locale>(
-    () => normalizeLocale(detectBrowserLocale())
+    () => readStoredLocale() ?? detectBrowserLocale()
   );
   const [view, setView] = useState<AuthView>(() =>
     passwordRecoveryPending ? "new-password" : "signin"
@@ -129,6 +132,18 @@ export function AuthScreen() {
   const brandHomeHref = isNativeApp() ? undefined : "/";
 
   const refreshLastUsed = () => setLastUsedRevision((n) => n + 1);
+
+  const handleLocaleChange = (next: Locale) => {
+    const L = normalizeLocale(next);
+    setLocale(L);
+    persistStoredLocale(L);
+    setError(null);
+    setInfo(null);
+  };
+
+  useEffect(() => {
+    document.documentElement.lang = localeToHtmlLang(locale);
+  }, [locale]);
 
   useEffect(() => {
     const onFocus = () => refreshLastUsed();
@@ -260,7 +275,7 @@ export function AuthScreen() {
             brandName={t("app.brandName")}
             pageTitle={t("auth.notConfiguredTitle")}
             locale={locale}
-            onLocaleChange={(l) => setLocale(normalizeLocale(l))}
+            onLocaleChange={handleLocaleChange}
             languageAriaLabel={t("settings.language")}
             brandHomeHref={brandHomeHref}
             brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
@@ -284,7 +299,7 @@ export function AuthScreen() {
           subtitle={pageSubtitle}
           titleClassName="text-2xl font-bold text-ink-900 tracking-tight"
           locale={locale}
-          onLocaleChange={(l) => setLocale(normalizeLocale(l))}
+          onLocaleChange={handleLocaleChange}
           languageAriaLabel={t("settings.language")}
           brandHomeHref={brandHomeHref}
           brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}

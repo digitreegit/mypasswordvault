@@ -1,4 +1,5 @@
 import { MESSAGES_EN as en } from "../en";
+import { AUTH_DE, AUTH_ES, AUTH_FR, AUTH_IT } from "./auth_i18n";
 import { PRICING_DE, PRICING_ES, PRICING_FR, PRICING_IT } from "./pricing_i18n";
 
 export const MESSAGES_ES: Record<string, string> = {
@@ -114,6 +115,7 @@ export const MESSAGES_ES: Record<string, string> = {
   "pwdGen.cDigits": "Dígitos 0-9",
   "pwdGen.cSymbols": "Símbolos !@#$",
   "pwdGen.cAmbiguous": "Excluir caracteres ambiguos",
+  ...AUTH_ES,
   ...PRICING_ES,
 };
 
@@ -228,6 +230,7 @@ export const MESSAGES_DE: Record<string, string> = {
   "pwdGen.cDigits": "Ziffern 0–9",
   "pwdGen.cSymbols": "Symbole !@#$",
   "pwdGen.cAmbiguous": "Mehrdeutige Zeichen ausschließen",
+  ...AUTH_DE,
   ...PRICING_DE,
 };
 
@@ -344,6 +347,7 @@ export const MESSAGES_FR: Record<string, string> = {
   "pwdGen.cDigits": "Chiffres 0-9",
   "pwdGen.cSymbols": "Symboles !@#$",
   "pwdGen.cAmbiguous": "Exclure les caractères ambigus",
+  ...AUTH_FR,
   ...PRICING_FR,
 };
 
@@ -460,5 +464,6 @@ export const MESSAGES_IT: Record<string, string> = {
   "pwdGen.cDigits": "Cifre 0-9",
   "pwdGen.cSymbols": "Simboli !@#$",
   "pwdGen.cAmbiguous": "Escludi caratteri ambigui",
+  ...AUTH_IT,
   ...PRICING_IT,
 };

@@ -66,6 +66,26 @@ export function normalizeLocale(raw: string | undefined | null): Locale {
   return ALIAS[k] ?? ALIAS[short] ?? "en";
 }
 
+export function readStoredLocale(): Locale | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(LOCALE_STORAGE_KEY);
+    if (raw) return normalizeLocale(raw);
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+export function persistStoredLocale(locale: Locale): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(LOCALE_STORAGE_KEY, normalizeLocale(locale));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function detectBrowserLocale(): Locale {
   if (typeof navigator === "undefined") return "en";
   const list = [

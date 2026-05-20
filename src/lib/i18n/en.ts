@@ -16,7 +16,7 @@ export const MESSAGES_EN: Record<string, string> = {
     "Enter your email and we'll send you a code to reset the password",
   "auth.subtitleNewPassword": "Choose a new password for your account",
   "auth.brandHomeAria": "Go to homepage",
-  "auth.subtitle": "Sign in your account",
+  "auth.subtitle": "Sign in to your account",
   "auth.google": "Continue with Google",
   "auth.lastUsed": "LAST USED",
   "auth.or": "or",
