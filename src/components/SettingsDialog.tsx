@@ -20,11 +20,12 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
     refreshEntitlements,
     t,
   } = useVault();
-  const { configured, user, signOut } = useAuth();
+  const { configured, user, signOut, deleteAccount } = useAuth();
   const [mins, setMins] = useState<number>(meta?.autoLockMinutes ?? 5);
   const [busy, setBusy] = useState(false);
   const [pullBusy, setPullBusy] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [importDraft, setImportDraft] = useState<string | null>(null);
   const [backupToast, setBackupToast] = useState<string | null>(null);
   const [licenseKeyCopied, setLicenseKeyCopied] = useState(false);
@@ -356,24 +357,61 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
                 email: user.email ?? user.id,
               })}
             </p>
-            <button
-              type="button"
-              className="btn-danger text-sm w-full"
-              disabled={signingOut || busy}
-              onClick={async () => {
-                setSigningOut(true);
-                try {
-                  await signOut();
-                  onClose();
-                } finally {
-                  setSigningOut(false);
-                }
-              }}
-            >
-              {t("settings.signOut")}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                className="btn-danger text-sm flex-1 min-w-0"
+                disabled={signingOut || deletingAccount || busy}
+                onClick={async () => {
+                  setSigningOut(true);
+                  try {
+                    await signOut();
+                    onClose();
+                  } finally {
+                    setSigningOut(false);
+                  }
+                }}
+              >
+                {signingOut ? t("app.loading") : t("settings.signOut")}
+              </button>
+              <button
+                type="button"
+                className="btn-danger text-sm flex-1 min-w-0 border border-red-800 bg-red-700 hover:bg-red-800"
+                disabled={signingOut || deletingAccount || busy}
+                onClick={async () => {
+                  const email = user.email ?? user.id;
+                  if (
+                    !window.confirm(
+                      t("settings.deleteAccountConfirm", { email })
+                    )
+                  ) {
+                    return;
+                  }
+                  setDeletingAccount(true);
+                  setBackupToast(null);
+                  try {
+                    await deleteAccount();
+                    onClose();
+                  } catch (e: unknown) {
+                    const code = (e as Error)?.message ?? "";
+                    setBackupToast(
+                      code === "function_not_deployed"
+                        ? t("settings.deleteAccountNotDeployed")
+                        : t("settings.deleteAccountFailed")
+                    );
+                  } finally {
+                    setDeletingAccount(false);
+                  }
+                }}
+              >
+                {deletingAccount ? t("app.loading") : t("settings.deleteAccount")}
+              </button>
+            </div>
             <p className="text-xs text-ink-500 leading-snug">
               {t("settings.signOutHint")}
+            </p>
+            <p className="text-xs text-red-800/90 leading-snug">
+              {t("settings.deleteAccountHint")}
             </p>
           </div>
         )}

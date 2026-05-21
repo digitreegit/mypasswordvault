@@ -1,8 +1,18 @@
 /**
  * Supabase "Send Email" Auth Hook handler: sends all auth emails via Resend.
  * @see https://supabase.com/docs/guides/auth/auth-hooks/send-email-hook
+ *
+ * Requires RESEND_FROM e.g. `My Password Vault <noreply@mypasswordvault.app>`
+ * and Send Email Hook enabled in Supabase Dashboard (otherwise built-in Supabase mail is used).
  */
 import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
+import {
+  BRAND_NAME,
+  buildBrandedEmailHtml,
+  DEFAULT_RESEND_FROM,
+  escapeHtml,
+} from "../_shared/brandEmail.ts";
+import { sendBrandedResend } from "../_shared/sendBrandedResend.ts";
 
 const cors: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -15,10 +25,6 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...cors, "Content-Type": "application/json" },
   });
-}
-
-function escapeAttr(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
 function buildVerifyLink(
@@ -35,55 +41,77 @@ function buildVerifyLink(
   return u.toString();
 }
 
-function linkEmailHtml(title: string, intro: string, url: string, otp?: string) {
-  const otpBlock =
-    otp && otp.length >= 4
-      ? `<p>Or enter this code: <strong>${escapeAttr(otp)}</strong></p>`
-      : "";
-  return `<p><strong>${escapeAttr(title)}</strong></p>
-<p>${escapeAttr(intro)}</p>
-<p><a href="${escapeAttr(url)}">Continue</a></p>
-<p style="word-break:break-all;font-size:12px;color:#555">${escapeAttr(url)}</p>
-${otpBlock}
-<p style="font-size:12px;color:#777">If you did not request this, you can ignore this email.</p>`;
-}
-
 const SUBJECTS: Record<string, string> = {
-  signup: "Confirm your email",
-  invite: "You are invited",
-  magiclink: "Your magic link",
-  recovery: "Reset your password",
-  email_change: "Confirm email change",
-  email: "Confirm sign-in",
-  reauthentication: "Confirm it is you",
-  password_changed_notification: "Your password was changed",
-  email_changed_notification: "Your email was changed",
-  phone_changed_notification: "Your phone was changed",
-  identity_linked_notification: "A sign-in method was linked",
-  identity_unlinked_notification: "A sign-in method was removed",
-  mfa_factor_enrolled_notification: "Two-step verification was enabled",
-  mfa_factor_unenrolled_notification: "Two-step verification was updated",
+  signup: `Confirm your ${BRAND_NAME} account`,
+  invite: `You're invited to ${BRAND_NAME}`,
+  magiclink: `Sign in to ${BRAND_NAME}`,
+  recovery: `Reset your ${BRAND_NAME} password`,
+  email_change: `Confirm your ${BRAND_NAME} email change`,
+  email: `Confirm sign-in to ${BRAND_NAME}`,
+  reauthentication: `Confirm it's you — ${BRAND_NAME}`,
+  password_changed_notification: `Your ${BRAND_NAME} password was changed`,
+  email_changed_notification: `Your ${BRAND_NAME} email was changed`,
+  phone_changed_notification: `Your ${BRAND_NAME} phone number was changed`,
+  identity_linked_notification: `A sign-in method was linked to ${BRAND_NAME}`,
+  identity_unlinked_notification: `A sign-in method was removed from ${BRAND_NAME}`,
+  mfa_factor_enrolled_notification: `Two-step verification enabled on ${BRAND_NAME}`,
+  mfa_factor_unenrolled_notification: `Two-step verification updated on ${BRAND_NAME}`,
 };
 
-async function sendViaResend(
-  apiKey: string,
-  from: string,
-  to: string,
-  subject: string,
-  html: string
-): Promise<void> {
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ from, to: [to], subject, html }),
+const LINK_COPY: Record<
+  string,
+  { title: string; intro: string; button: string }
+> = {
+  signup: {
+    title: "Confirm your email address",
+    intro:
+      `Thanks for signing up for ${BRAND_NAME}. Click the button below to verify this email address and finish creating your account.`,
+    button: "Confirm email address",
+  },
+  invite: {
+    title: "You're invited",
+    intro: `You've been invited to join ${BRAND_NAME}. Accept the invitation using the button below.`,
+    button: "Accept invitation",
+  },
+  magiclink: {
+    title: "Sign in",
+    intro: `Use the button below to sign in to ${BRAND_NAME}. This link expires soon.`,
+    button: "Sign in",
+  },
+  recovery: {
+    title: "Reset your password",
+    intro: `We received a request to reset the password for your ${BRAND_NAME} account.`,
+    button: "Set a new password",
+  },
+  email: {
+    title: "Confirm sign-in",
+    intro: `Use the button below to continue signing in to ${BRAND_NAME}.`,
+    button: "Continue",
+  },
+  reauthentication: {
+    title: "Confirm it's you",
+    intro: `For your security, confirm this action on your ${BRAND_NAME} account.`,
+    button: "Confirm",
+  },
+};
+
+function brandedLinkEmail(
+  action: string,
+  url: string,
+  otp?: string
+): string {
+  const copy = LINK_COPY[action] ?? {
+    title: "Account notification",
+    intro: `You have a notification from ${BRAND_NAME}.`,
+    button: "Continue",
+  };
+  return buildBrandedEmailHtml({
+    title: copy.title,
+    intro: copy.intro,
+    buttonLabel: copy.button,
+    url,
+    otp,
   });
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`Resend ${res.status}: ${t}`);
-  }
 }
 
 type UserRow = {
@@ -96,7 +124,6 @@ type UserRow = {
   }>;
 };
 
-/** Hook payload sometimes omits `user.email`; fall back to identities / metadata. */
 function resolveRecipientEmail(user: UserRow): string | undefined {
   const e = user.email?.trim();
   if (e && e.includes("@")) return e;
@@ -130,13 +157,13 @@ Deno.serve(async (req) => {
   }
 
   const resendKey = Deno.env.get("RESEND_API_KEY");
-  const resendFrom = Deno.env.get("RESEND_FROM");
+  const resendFrom = Deno.env.get("RESEND_FROM")?.trim() || DEFAULT_RESEND_FROM;
   const hookSecretRaw = Deno.env.get("SEND_EMAIL_HOOK_SECRET");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
 
-  if (!resendKey || !resendFrom || !hookSecretRaw || !supabaseUrl) {
+  if (!resendKey || !hookSecretRaw || !supabaseUrl) {
     console.error(
-      "send-auth-email: missing RESEND_API_KEY, RESEND_FROM, SEND_EMAIL_HOOK_SECRET, or SUPABASE_URL"
+      "send-auth-email: missing RESEND_API_KEY, SEND_EMAIL_HOOK_SECRET, or SUPABASE_URL"
     );
     return json({ error: "server_misconfigured" }, 500);
   }
@@ -164,7 +191,7 @@ Deno.serve(async (req) => {
   }
 
   const action = email_data.email_action_type;
-  const subject = SUBJECTS[action] ?? "Account notification";
+  const subject = SUBJECTS[action] ?? `${BRAND_NAME} account notification`;
   const redirectTo = email_data.redirect_to ?? "";
   const meta = user.user_metadata ?? {};
   const newEmail =
@@ -172,7 +199,6 @@ Deno.serve(async (req) => {
     (typeof meta.new_email === "string" ? meta.new_email : undefined);
 
   try {
-    // Secure email change: two messages (Supabase docs — token/hash mapping is intentional).
     if (action === "email_change") {
       const th = email_data.token_hash ?? "";
       const thn = email_data.token_hash_new ?? "";
@@ -187,30 +213,32 @@ Deno.serve(async (req) => {
 
       if (dual) {
         const urlCurrent = buildVerifyLink(supabaseUrl, thn, "email_change", redirectTo);
-        await sendViaResend(
+        await sendBrandedResend(
           resendKey,
           resendFrom,
           currentEmail,
-          "Confirm email change (current address)",
-          linkEmailHtml(
-            "Confirm change",
-            "Confirm updating your email using the link below.",
-            urlCurrent,
-            email_data.token
-          )
+          `Confirm email change on your ${BRAND_NAME} account`,
+          buildBrandedEmailHtml({
+            title: "Confirm email change",
+            intro: `Confirm updating the email on your ${BRAND_NAME} account using the button below.`,
+            buttonLabel: "Confirm change",
+            url: urlCurrent,
+            otp: email_data.token,
+          })
         );
         const urlNew = buildVerifyLink(supabaseUrl, th, "email_change", redirectTo);
-        await sendViaResend(
+        await sendBrandedResend(
           resendKey,
           resendFrom,
           newEmail,
-          "Confirm your new email address",
-          linkEmailHtml(
-            "Confirm new email",
-            "Confirm this address using the link below.",
-            urlNew,
-            email_data.token_new
-          )
+          `Confirm your new ${BRAND_NAME} email`,
+          buildBrandedEmailHtml({
+            title: "Confirm new email",
+            intro: `Confirm this new email address for your ${BRAND_NAME} account.`,
+            buttonLabel: "Confirm new email",
+            url: urlNew,
+            otp: email_data.token_new,
+          })
         );
         return json({});
       }
@@ -220,29 +248,28 @@ Deno.serve(async (req) => {
       const hash =
         th.length >= 16 ? th : thn.length >= 16 ? thn : "";
       if (!hash) {
-        await sendViaResend(
+        await sendBrandedResend(
           resendKey,
           resendFrom,
           dest,
           subject,
-          `<p>${escapeAttr(subject)}</p><p>Use the code: <strong>${escapeAttr(
-            email_data.token || email_data.token_new
-          )}</strong></p>`
+          buildBrandedEmailHtml({
+            title: "Confirm email change",
+            intro: `Use the verification code below for your ${BRAND_NAME} account.`,
+            buttonLabel: "Open app",
+            url: email_data.site_url || "https://mypasswordvault.app/app/",
+            otp: email_data.token || email_data.token_new,
+          })
         );
         return json({});
       }
       const url = buildVerifyLink(supabaseUrl, hash, "email_change", redirectTo);
-      await sendViaResend(
+      await sendBrandedResend(
         resendKey,
         resendFrom,
         dest,
         subject,
-        linkEmailHtml(
-          "Confirm email change",
-          "Use the link below to confirm your email change.",
-          url,
-          email_data.token || email_data.token_new
-        )
+        brandedLinkEmail("email_change", url, email_data.token || email_data.token_new)
       );
       return json({});
     }
@@ -250,7 +277,7 @@ Deno.serve(async (req) => {
     const recipient = resolveRecipientEmail(user);
     if (!recipient) {
       console.warn(
-        "send-auth-email: no recipient email (user.email / identities / metadata empty), action=",
+        "send-auth-email: no recipient email, action=",
         action
       );
       return json({});
@@ -265,37 +292,31 @@ Deno.serve(async (req) => {
       "reauthentication",
     ]);
     const th = email_data.token_hash ?? "";
-    // Supabase hashes vary in length; require a non-trivial token for link-based mail.
     const hasVerifyToken = th.length >= 8;
 
     if (linkTypes.has(action) && hasVerifyToken) {
       const url = buildVerifyLink(supabaseUrl, th, action, redirectTo);
-      const intros: Record<string, string> = {
-        signup: "Confirm your email address for your account.",
-        invite: "You have been invited — use the link below to accept.",
-        magiclink: "Use the link below to sign in.",
-        recovery: "Use the link below to set a new password.",
-        email: "Use the link below to continue signing in.",
-        reauthentication: "Use the link below to confirm it is you.",
-      };
-      await sendViaResend(
+      await sendBrandedResend(
         resendKey,
         resendFrom,
         recipient,
         subject,
-        linkEmailHtml(subject, intros[action] ?? "Use the link below.", url, email_data.token)
+        brandedLinkEmail(action, url, email_data.token)
       );
       return json({});
     }
 
-    // Notifications and other types: no verify link required.
     const body =
       email_data.token && email_data.token.length >= 4
-        ? `<p>${escapeAttr(subject)}</p><p>Code: <strong>${escapeAttr(
-            email_data.token
-          )}</strong></p>`
-        : `<p>${escapeAttr(subject)}</p><p>This is an automated message about your account.</p>`;
-    await sendViaResend(resendKey, resendFrom, recipient, subject, body);
+        ? buildBrandedEmailHtml({
+            title: subject,
+            intro: `Use this verification code for your ${BRAND_NAME} account.`,
+            buttonLabel: "Open app",
+            url: email_data.site_url || "https://mypasswordvault.app/app/",
+            otp: email_data.token,
+          })
+        : `<p style="font-family:sans-serif;color:#42424a;">${escapeHtml(subject)}</p><p style="font-family:sans-serif;color:#42424a;">This is an automated message about your ${escapeHtml(BRAND_NAME)} account.</p>`;
+    await sendBrandedResend(resendKey, resendFrom, recipient, subject, body);
     return json({});
   } catch (e) {
     console.error("send-auth-email: send failed", e);

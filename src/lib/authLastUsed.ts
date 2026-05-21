@@ -18,6 +18,11 @@ export function setAuthLastMethod(method: AuthLastMethod): void {
   window.dispatchEvent(new CustomEvent(AUTH_LAST_METHOD_CHANGED));
 }
 
+export function clearAuthLastMethod(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(STORAGE_KEY);
+}
+
 /** Set immediately before starting a sign-in flow. */
 export function markPendingAuthMethod(method: AuthLastMethod): void {
   if (typeof window === "undefined") return;

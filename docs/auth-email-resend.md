@@ -76,6 +76,22 @@ supabase secrets set RESET_EMAIL_SUBJECT="Reset your My Password Vault password"
 `send-password-reset`만 배포한 상태에서는 **가입 확인 메일은 나가지 않습니다.**  
 Sign up 후 파란 안내 문구만 보이고 메일이 없다면 아래 Hook 설정이 필요합니다.
 
+### 보내는 사람이 `Supabase Auth` / `noreply@mail.app.supabase.io` 인 경우
+
+그 메일은 **Supabase 기본 메일**입니다. Hook이 꺼져 있거나 `send-auth-email`이 실패했을 때 나갑니다.
+
+| 원하는 값 | 설정 |
+|-----------|------|
+| 표시 이름 | `My Password Vault` |
+| 주소 | `noreply@mypasswordvault.app` |
+
+1. Resend에서 `mypasswordvault.app` 도메인 **Verified**
+2. `supabase secrets set RESEND_FROM="My Password Vault <noreply@mypasswordvault.app>"`
+3. `send-auth-email` 배포 + 아래 **Send Email Hook** 켜기
+4. 테스트 가입 후 Resend Dashboard → Emails 에 발송 기록 확인
+
+Hook이 켜지면 가입 확인 메일은 **브랜드 HTML 템플릿** + 위 발신 주소로 나갑니다.
+
 ## 3a. Sign up 확인 메일 (Send Email Hook)
 
 Dashboard → **Authentication** → **Hooks** (또는 **Auth Hooks**) → **Send Email**:

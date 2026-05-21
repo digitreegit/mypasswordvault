@@ -26,6 +26,10 @@ import {
   isPasswordRecoveryPending,
   setPasswordRecoveryPending,
 } from "./passwordRecoveryPending";
+import {
+  clearAllLocalAppData,
+  requestAccountDeletion,
+} from "./accountDeletion";
 import { stripAuthParamsFromUrl } from "./supabaseAuthRedirect";
 
 interface AuthContextValue {
@@ -40,6 +44,7 @@ interface AuthContextValue {
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -181,6 +186,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   }, []);
 
+  const deleteAccount = useCallback(async () => {
+    await requestAccountDeletion();
+    await clearAllLocalAppData();
+    clearPendingAuthMethod();
+    clearPasswordRecoveryPending();
+    setPasswordRecoveryPendingState(false);
+    stripAuthParamsFromUrl();
+    const supabase = getSupabase();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    setSession(null);
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       configured: isSupabaseConfigured,
@@ -193,6 +212,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signUpWithEmail,
       updatePassword,
       signOut,
+      deleteAccount,
     }),
     [
       loading,
@@ -203,6 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signUpWithEmail,
       updatePassword,
       signOut,
+      deleteAccount,
     ]
   );
 

@@ -48,7 +48,17 @@ Google Cloud Console **Authorized redirect URI** 에 추가:
 가입 확인 메일 · 비밀번호 찾기: **[auth-email-resend.md](./auth-email-resend.md)**  
 (`send-password-reset`, `send-auth-email` 배포 + Resend secrets + Send Email Hook)
 
-## 5. Edge Functions (Stripe 라이선스)
+## 5. 계정 삭제 (선택)
+
+설정 → **Delete account / 계정 삭제** 는 Edge Function `delete-account` 를 호출합니다.
+
+```bash
+supabase functions deploy delete-account
+```
+
+서비스 롤 키는 배포 시 자동 주입됩니다. 삭제 시 `user_vaults`, `user_entitlements`, Auth 사용자가 제거됩니다.
+
+## 6. Edge Functions (Stripe 라이선스)
 
 새 프로젝트에 함수 배포 및 시크릿 설정:
 
@@ -68,7 +78,7 @@ Dashboard → **Edge Functions** → Secrets (또는 CLI `supabase secrets set`)
 `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` 는 배포 시 자동 주입되는 경우가 많습니다. 웹훅 URL은 Stripe에  
 `https://fzwkemfytbaymkjrygpb.supabase.co/functions/v1/stripe-webhook` 로 등록합니다.
 
-## 6. 앱에서 확인
+## 7. 앱에서 확인
 
 1. `.env` 반영 후 로그인 → 새 vault 설정 또는 클라우드에서 복원
 2. 이전 프로젝트(`xdzodkjjoqkadyicxerd`) 데이터는 **자동 이전되지 않음** (암호화 백업·마스터 비밀번호로만 복구 가능)

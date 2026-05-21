@@ -232,9 +232,17 @@ export const MESSAGES_EN: Record<string, string> = {
 
   "settings.accountTitle": "Account",
   "settings.signedInAs": "Signed in as {{email}}",
-  "settings.signOut": "Sign out of account",
+  "settings.signOut": "Sign out",
   "settings.signOutHint":
-    "Signs out of cloud sync only. This device keeps its local vault until you reset it.",
+    "Ends your session. Cloud sync stops, but this device keeps its local vault until you reset or delete the account.",
+  "settings.deleteAccount": "Delete account",
+  "settings.deleteAccountHint":
+    "Permanently deletes your account, encrypted cloud backup, license record, and all vault data on this device. Cannot be undone.",
+  "settings.deleteAccountConfirm":
+    "Permanently delete your account and all data for {{email}}?\n\nThis removes your cloud backup, license, and local vault on this device. You cannot undo this.",
+  "settings.deleteAccountFailed": "Could not delete the account. Try again later.",
+  "settings.deleteAccountNotDeployed":
+    "Account deletion is not set up yet. Deploy the delete-account Edge Function (see README / docs).",
 
   "settings.licenseTitle": "Plan & entry limit",
   "settings.licenseFree":

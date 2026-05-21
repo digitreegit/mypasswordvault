@@ -223,9 +223,17 @@ export const MESSAGES_KR: Record<string, string> = {
 
   "settings.accountTitle": "계정",
   "settings.signedInAs": "로그인: {{email}}",
-  "settings.signOut": "계정에서 로그아웃",
+  "settings.signOut": "로그아웃",
   "settings.signOutHint":
-    "클라우드 동기화만 종료합니다. 이 기기의 로컬 금고는 초기화하기 전까지 유지됩니다.",
+    "로그인 세션만 종료합니다. 클라우드 동기화는 멈추지만, 계정 삭제나 금고 초기화 전까지 이 기기의 로컬 데이터는 남습니다.",
+  "settings.deleteAccount": "계정 삭제",
+  "settings.deleteAccountHint":
+    "계정, 클라우드에 저장된 암호화 백업, 라이선스 정보, 이 기기의 금고 데이터를 영구 삭제합니다. 되돌릴 수 없습니다.",
+  "settings.deleteAccountConfirm":
+    "{{email}} 계정과 모든 데이터를 영구 삭제할까요?\n\n클라우드 백업·라이선스·이 기기의 금고가 모두 삭제되며 취소할 수 없습니다.",
+  "settings.deleteAccountFailed": "계정을 삭제하지 못했습니다. 나중에 다시 시도하세요.",
+  "settings.deleteAccountNotDeployed":
+    "계정 삭제 기능이 아직 배포되지 않았습니다. delete-account Edge Function을 배포하세요 (README/docs 참고).",
 
   "settings.licenseTitle": "요금제·항목 제한",
   "settings.licenseFree":

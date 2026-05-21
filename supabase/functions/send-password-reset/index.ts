@@ -3,6 +3,12 @@
  * Bypasses Supabase built-in mail (rate limits) when Auth Hook / SMTP are not used.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.8";
+import {
+  BRAND_NAME,
+  buildBrandedEmailHtml,
+  DEFAULT_RESEND_FROM,
+} from "../_shared/brandEmail.ts";
+import { sendBrandedResend } from "../_shared/sendBrandedResend.ts";
 
 const cors: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -15,10 +21,6 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...cors, "Content-Type": "application/json" },
   });
-}
-
-function escapeAttr(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
 /** New projects use SUPABASE_SECRET_KEYS JSON; legacy uses SUPABASE_SERVICE_ROLE_KEY. */
@@ -54,7 +56,7 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const adminKey = getAdminApiKey();
   const resendKey = Deno.env.get("RESEND_API_KEY");
-  const resendFrom = Deno.env.get("RESEND_FROM");
+  const resendFrom = Deno.env.get("RESEND_FROM")?.trim() || DEFAULT_RESEND_FROM;
 
   if (!supabaseUrl || !adminKey || !resendKey || !resendFrom) {
     console.error("send-password-reset: missing env", {
@@ -104,29 +106,20 @@ Deno.serve(async (req) => {
 
   const actionLink = String(data.properties.action_link);
   const subject =
-    Deno.env.get("RESET_EMAIL_SUBJECT") ?? "Reset your My Password Vault password";
+    Deno.env.get("RESET_EMAIL_SUBJECT") ??
+    `Reset your ${BRAND_NAME} password`;
 
-  const resendRes = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: resendFrom,
-      to: [email],
-      subject,
-      html: `<p>You asked to reset the password for your account.</p>
-<p><a href="${escapeAttr(actionLink)}">Set a new password</a></p>
-<p>If the button does not work, copy this link into your browser:</p>
-<p style="word-break:break-all">${escapeAttr(actionLink)}</p>
-<p>If you did not request this, you can ignore this email.</p>`,
-    }),
+  const html = buildBrandedEmailHtml({
+    title: "Reset your password",
+    intro: `We received a request to reset the password for your ${BRAND_NAME} account. Click the button below to choose a new password.`,
+    buttonLabel: "Set a new password",
+    url: actionLink,
   });
 
-  if (!resendRes.ok) {
-    const detail = await resendRes.text();
-    console.error("send-password-reset: Resend HTTP", resendRes.status, detail);
+  try {
+    await sendBrandedResend(resendKey, resendFrom, email, subject, html);
+  } catch (e) {
+    console.error("send-password-reset: Resend failed", e);
     return json({ error: "email_send_failed" }, 502);
   }
 

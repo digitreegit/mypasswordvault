@@ -13,6 +13,10 @@ verify_jwt = false
 [functions.create-checkout-session]
 verify_jwt = true
 
+# Signed-in user permanently deletes account + cloud data (JWT verified by gateway).
+[functions.delete-account]
+verify_jwt = true
+
 # Stripe → grant license (raw body + signature; no JWT).
 [functions.stripe-webhook]
 verify_jwt = false
