@@ -33,6 +33,13 @@ export const Copy = (p: P) => (
     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
   </svg>
 );
+export const Download = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
+  </svg>
+);
 export const Refresh = (p: P) => (
   <svg {...base} {...p}>
     <path d="M21 12a9 9 0 1 1-3-6.7" />
@@ -57,6 +64,12 @@ export const Lock = (p: P) => (
   <svg {...base} {...p}>
     <rect x="3" y="11" width="18" height="11" rx="2" />
     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
+export const User = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
   </svg>
 );
 export const Settings = (p: P) => (

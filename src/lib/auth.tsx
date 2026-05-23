@@ -18,6 +18,7 @@ import {
 import {
   applyPendingAuthMethod,
   clearPendingAuthMethod,
+  getAuthLastMethod,
   markPendingAuthMethod,
   recordEmailSignIn,
 } from "./authLastUsed";
@@ -31,6 +32,40 @@ import {
   requestAccountDeletion,
 } from "./accountDeletion";
 import { stripAuthParamsFromUrl } from "./supabaseAuthRedirect";
+import {
+  appendSignInLog,
+  clearSignInLogsForUser,
+  type SignInLogMethod,
+} from "./signInLogs";
+
+function signInMethodForAuthEvent(
+  event: AuthChangeEvent,
+  session: Session
+): SignInLogMethod {
+  if (event === "PASSWORD_RECOVERY") return "email";
+
+  const stored = getAuthLastMethod();
+  if (stored === "google" || stored === "email") return stored;
+
+  const provider = session.user.app_metadata?.provider;
+  if (provider === "google") return "google";
+  if (provider === "email") return "email";
+
+  const identities = session.user.identities ?? [];
+  if (identities.some((i) => i.provider === "email")) return "email";
+  if (identities.some((i) => i.provider === "google")) return "google";
+  return "unknown";
+}
+
+function recordSignInMethodFromAuthEvent(event: AuthChangeEvent): void {
+  if (event === "PASSWORD_RECOVERY" || isPasswordRecoveryPending()) {
+    recordEmailSignIn();
+    return;
+  }
+  if (!applyPendingAuthMethod()) {
+    /* Session refresh / token renewal — keep existing LAST USED. */
+  }
+}
 
 interface AuthContextValue {
   configured: boolean;
@@ -43,6 +78,7 @@ interface AuthContextValue {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
+  updateEmail: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<void>;
 }
@@ -87,9 +123,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event === "PASSWORD_RECOVERY") {
         setPasswordRecoveryPending();
         setPasswordRecoveryPendingState(true);
+        markPendingAuthMethod("email");
       }
-      if (event === "SIGNED_IN" && next) {
-        applyPendingAuthMethod();
+      if (
+        (event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") &&
+        next?.user?.id
+      ) {
+        recordSignInMethodFromAuthEvent(event);
+        appendSignInLog(next.user.id, {
+          method: signInMethodForAuthEvent(event, next),
+          event,
+        });
       }
       setSession(next);
     });
@@ -162,6 +206,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const updateEmail = useCallback(async (email: string) => {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not configured");
+    const trimmed = email.trim();
+    if (!trimmed) throw new Error("Email required");
+    const { error } = await supabase.auth.updateUser({ email: trimmed });
+    if (error) throw error;
+  }, []);
+
   const updatePassword = useCallback(async (password: string) => {
     const supabase = getSupabase();
     if (!supabase) throw new Error("Supabase not configured");
@@ -173,6 +226,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
     clearPasswordRecoveryPending();
     setPasswordRecoveryPendingState(false);
+    recordEmailSignIn();
     stripAuthParamsFromUrl();
   }, []);
 
@@ -187,7 +241,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteAccount = useCallback(async () => {
+    const uid = session?.user?.id;
     await requestAccountDeletion();
+    if (uid) clearSignInLogsForUser(uid);
     await clearAllLocalAppData();
     clearPendingAuthMethod();
     clearPasswordRecoveryPending();
@@ -210,6 +266,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signInWithGoogle,
       signInWithEmail,
       signUpWithEmail,
+      updateEmail,
       updatePassword,
       signOut,
       deleteAccount,
@@ -221,6 +278,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signInWithGoogle,
       signInWithEmail,
       signUpWithEmail,
+      updateEmail,
       updatePassword,
       signOut,
       deleteAccount,

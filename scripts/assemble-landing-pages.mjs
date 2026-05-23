@@ -89,7 +89,7 @@ ${LOGO_SVG}
         <div id="landing-nav-panel" class="landing-nav-panel">
         <div class="nav-actions" role="navigation" aria-label="Main">
 ${navInner}
-          <a class="btn btn-primary" href="/app/" data-i18n="navSignIn">Sign In</a>
+          <div id="landing-auth-root"></div>
           <div id="landing-lang-root"></div>
         </div>
         </div>
@@ -186,9 +186,12 @@ const footer = `      </main>
         </p>
       </footer>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./landing-config.js"></script>
     <script src="./landing-overlays.js"></script>
     <script src="./landing-nav.js"></script>
     <script src="./landing-lang.js"></script>
+    <script src="./landing-auth.js"></script>
   </body>
 </html>
 `;

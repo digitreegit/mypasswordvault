@@ -4,6 +4,7 @@ import { AuthEmailTakenError, isAuthEmailTakenError } from "../lib/authErrors";
 import {
   AUTH_LAST_METHOD_CHANGED,
   getAuthLastMethod,
+  markPendingAuthMethod,
   recordEmailSignIn,
   type AuthLastMethod,
 } from "../lib/authLastUsed";
@@ -238,6 +239,7 @@ export function AuthScreen() {
     clearMessages();
     setBusy(true);
     try {
+      markPendingAuthMethod("email");
       await requestPasswordResetEmail(email);
       setInfo(t("auth.resetSent"));
     } catch (err: unknown) {
@@ -258,6 +260,8 @@ export function AuthScreen() {
     setBusy(true);
     try {
       await updatePassword(password);
+      recordEmailSignIn();
+      refreshLastUsed();
       setPassword("");
       setPasswordConfirm("");
     } catch (err: unknown) {

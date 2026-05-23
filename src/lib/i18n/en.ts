@@ -126,6 +126,11 @@ export const MESSAGES_EN: Record<string, string> = {
     "I have saved these recovery codes in a safe place.",
   "setup.copyRecoveryCodes": "Copy all recovery codes",
   "setup.copyRecoveryCodesDone": "Copied",
+  "setup.downloadRecoveryCodes": "Download recovery codes as text file",
+  "setup.downloadRecoveryCodesDone": "Downloaded",
+  "setup.skipBackupTotp": "Skip — continue without authenticator app",
+  "setup.backupTotpSkipWarn":
+    "This authenticator app is a backup for when passkeys do not work on a device. It is optional — you can skip it and continue with your passkey and recovery codes only.",
   "setup.forgetWarn":
     "If you forget your master password and lose your passkey and backups, the vault cannot be recovered.",
   "setup.2faIntro":
@@ -203,6 +208,15 @@ export const MESSAGES_EN: Record<string, string> = {
   "strength.4": "Very strong",
 
   "settings.title": "Settings",
+  "settings.sidebarSection": "Settings",
+  "settings.navAria": "Settings sections",
+  "settings.navGeneral": "General",
+  "settings.navPlan": "Plan",
+  "settings.navBackup": "Backup",
+  "settings.generalSubtitle": "Auto-lock and other vault preferences on this device.",
+  "settings.planSubtitle": "Entry limits and your license status.",
+  "settings.backupSubtitle": "Cloud sync and optional offline backup files.",
+  "settings.accountSubtitle": "Profile, sign-in, and account actions.",
   "settings.autoLock": "Auto-lock (minutes)",
   "settings.autoLockHint":
     "Locks automatically when there is no mouse or keyboard activity.",
@@ -215,11 +229,7 @@ export const MESSAGES_EN: Record<string, string> = {
 
   "settings.syncTitle": "Devices & backup",
   "settings.syncHint":
-    "While you are signed in, this app keeps an encrypted copy in your database (the server cannot read it). On a new browser or phone, sign in with the same account, tap “Download latest from account” if needed, then unlock with the same master password and authenticator app as before.",
-  "settings.pullCloud": "Download latest from account",
-  "settings.pullCloudHint":
-    "Replaces the vault stored only on this device with the encrypted snapshot from your account. Use if unlock fails or you just switched devices.",
-  "settings.pullCloudDone": "Vault updated from your account. Unlock again below if the settings dialog is open.",
+    "While you are signed in, this app keeps an encrypted copy in your database (the server cannot read it). On a new browser or phone, sign in with the same account — your vault downloads automatically — then unlock with the same master password and authenticator or recovery code as before.",
   "settings.fileBackupAdvanced": "Offline JSON file (advanced)",
   "settings.fileBackupAdvancedHint":
     "Optional export/import. Only use a .json file you exported yourself here; it is the same encrypted data. Master password and 6-digit codes still match the vault when that file was made.",
@@ -243,6 +253,35 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.deleteAccountFailed": "Could not delete the account. Try again later.",
   "settings.deleteAccountNotDeployed":
     "Account deletion is not set up yet. Deploy the delete-account Edge Function (see README / docs).",
+  "nav.userMenu": "Account menu",
+  "settings.openAccountPage": "Account preference",
+
+  "account.title": "Account settings",
+  "account.navAria": "Account sections",
+  "account.navPreferences": "Account preference",
+  "account.navSignInLogs": "Sign-in logs",
+  "account.navVault": "Open vault",
+  "account.profileTitle": "Profile",
+  "account.saveEmail": "Save email",
+  "account.emailUpdated":
+    "If your provider requires it, check your inbox to confirm the new email address.",
+  "account.emailChangeHint":
+    "Changing your email may require confirmation from your inbox before it takes effect.",
+  "account.passwordTitle": "Change password",
+  "account.newPassword": "New password",
+  "account.savePassword": "Update password",
+  "account.passwordUpdated": "Your sign-in password has been updated.",
+  "account.signInLogsHint":
+    "Recent sign-in events on this browser (stored locally on your device).",
+  "account.signInLogsEmpty": "No sign-in events recorded yet.",
+  "account.signInLogsLinkTitle": "Sign-in logs",
+  "account.backToVault": "Back to vault",
+  "account.sidebarSection": "Account settings",
+  "account.preferencesSubtitle": "Update your profile email and sign-in password.",
+  "account.signInLogsLinkHint": "View when and how you signed in on this device.",
+  "account.signInMethod.google": "Google",
+  "account.signInMethod.email": "Email",
+  "account.signInMethod.unknown": "Sign-in",
 
   "settings.licenseTitle": "Plan & entry limit",
   "settings.licenseFree":
@@ -254,8 +293,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.licenseLoading": "Checking license…",
   "settings.licenseLink": "Open plans & pricing",
   "settings.licenseRefresh": "Refresh status",
-  "settings.planBadgeFree": "Free",
-  "settings.planBadgeLicensed": "Licensed",
+  "settings.planBadgeFree": "FREE",
+  "settings.planBadgePro": "PRO",
   "settings.licenseKeyLabel": "License key",
   "settings.licenseKeyHint":
     "Purchase reference (Stripe checkout session). Read-only — keep it for your records.",
@@ -264,21 +303,6 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.licenseNoSessionId":
     "License is active; no checkout reference is stored for this account yet.",
 
-  "lock.syncTitle": "Load from your account",
-  "lock.pullCloud": "Restore from account",
-  "lock.pullCloudHint":
-    "Having trouble unlocking? Don't worry — your passwords are safely backed up to your account. Restore them on this device: we'll download your encrypted vault, then guide you through your master password and setting up your authenticator again.",
-  "lock.pullCloudDone":
-    "Restore complete. Enter your master password below, then scan the QR code to finish.",
-  "lock.rebindTitle": "Finish restoring this device",
-  "lock.rebindSubtitleMaster":
-    "Your vault data is here. Enter the master password you used when you created this vault. Next you will scan a new QR code — codes from an old or lost phone will no longer work after you confirm.",
-  "lock.rebindContinue": "Continue",
-  "lock.rebindUseOldTotp":
-    "I still have my previous authenticator — skip and unlock with master + 6-digit code instead",
-  "lock.rebind2faIntro":
-    "Scan the QR with Google Authenticator, 1Password, Authy, etc., then enter the 6-digit code to confirm. This replaces the previous authenticator for this vault.",
-  "lock.rebindConfirm": "Confirm and open vault",
   "lock.fileBackupAdvanced": "Offline JSON file (advanced)",
   "lock.fileBackupAdvancedHint":
     "Optional export/import. Only use a .json file you exported yourself here; it is the same encrypted data. Master password and 6-digit codes still match the vault when that file was made.",
@@ -293,8 +317,10 @@ export const MESSAGES_EN: Record<string, string> = {
 
   "vault.pageTitle": "Vault",
   "vault.licenseBadgeFree": "FREE",
-  "vault.licenseBadgeLicensed": "LICENSED",
+  "vault.licenseBadgePro": "PRO",
   "vault.search": "Search (site, URL, username, notes, memo, category)",
+  "vault.searchPlaceholder": "Search",
+  "vault.addShort": "Add",
   "vault.colCategory": "Category",
   "vault.manageCategories": "Manage categories",
   "vault.categoriesTitle": "Categories",
@@ -319,8 +345,10 @@ export const MESSAGES_EN: Record<string, string> = {
   "vault.colUser": "Username",
   "vault.colPass": "Password",
   "vault.colNotes": "Notes",
+  "vault.colNote": "Note",
   "vault.colMemo": "Memo",
   "vault.colActions": "Actions",
+  "vault.colAction": "Action",
   "vault.empty": "No entries yet.",
   "vault.emptyCta": "Add your first entry.",
   "vault.footer":

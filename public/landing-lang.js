@@ -78,6 +78,11 @@
     navFaq: "FAQ",
     navPricing: "Pricing",
     navSignIn: "Sign In",
+    navUserMenu: "Account menu",
+    navOpenMyVault: "Open my vault",
+    navAccountPreference: "Account preference",
+    navSignInLogs: "Sign-in logs",
+    navLogOut: "Log out",
     heroEyebrow: "hassle-free password manager",
     heroH1Line1: "Passwords you control.",
     heroH1Line2: "Clarity you feel.",
@@ -213,6 +218,11 @@
     navFaq: "자주 묻는 질문",
     navPricing: "요금제",
     navSignIn: "로그인",
+    navUserMenu: "계정 메뉴",
+    navOpenMyVault: "내 금고 열기",
+    navAccountPreference: "계정 설정",
+    navSignInLogs: "로그인 기록",
+    navLogOut: "로그아웃",
     heroEyebrow: "부담 적은 패스워드 매니저",
     heroH1Line1: "통제하는 비밀번호.",
     heroH1Line2: "더 맑아지는 일상 보안.",
@@ -417,6 +427,10 @@
     });
 
     syncLangMenuActive(loc);
+
+    if (window.MPV_LANDING_AUTH_REFRESH_I18N) {
+      window.MPV_LANDING_AUTH_REFRESH_I18N();
+    }
   }
 
   function syncLangMenuActive(locale) {
@@ -486,10 +500,38 @@
     slot.appendChild(wrap);
   }
 
+  window.MPV_LANDING_T = function (key) {
+    var D = dictFor(pickLocaleInitial());
+    var val = typeof D[key] === "undefined" ? EN[key] : D[key];
+    return typeof val === "string" ? applyVars(val) : key;
+  };
+
+  window.MPV_LANDING_APPLY_I18N = function (scope) {
+    var root = scope && scope.querySelectorAll ? scope : document;
+    var loc = pickLocaleInitial();
+    var D = dictFor(loc);
+    root.querySelectorAll("[data-i18n-aria]").forEach(function (el) {
+      var key = el.getAttribute("data-i18n-aria");
+      if (!key) return;
+      var val = typeof D[key] === "undefined" ? EN[key] : D[key];
+      if (typeof val === "string") el.setAttribute("aria-label", val);
+    });
+    root.querySelectorAll("[data-i18n]").forEach(function (el) {
+      var key = el.getAttribute("data-i18n");
+      if (!key) return;
+      var val = typeof D[key] === "undefined" ? EN[key] : D[key];
+      if (typeof val !== "string") return;
+      val = applyVars(val);
+      if (el.hasAttribute("data-i18n-html")) el.innerHTML = val;
+      else el.textContent = val;
+    });
+  };
+
   function boot() {
     var slot = document.getElementById("landing-lang-root");
     buildLangUi(slot);
     applyLocale(pickLocaleInitial());
+    if (window.MPV_LANDING_AUTH_INIT) window.MPV_LANDING_AUTH_INIT();
   }
 
   if (document.readyState === "loading") {

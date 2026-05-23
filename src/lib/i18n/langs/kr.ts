@@ -122,6 +122,11 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.recoveryAck": "복구 코드를 안전한 곳에 저장했습니다.",
   "setup.copyRecoveryCodes": "복구 코드 전체 복사",
   "setup.copyRecoveryCodesDone": "복사됨",
+  "setup.downloadRecoveryCodes": "복구 코드 텍스트 파일로 다운로드",
+  "setup.downloadRecoveryCodesDone": "다운로드됨",
+  "setup.skipBackupTotp": "건너뛰기 — 인증 앱 없이 계속",
+  "setup.backupTotpSkipWarn":
+    "인증 앱은 패스키가 동작하지 않을 때 쓰는 백업입니다. 필수가 아니며, 건너뛰면 패스키와 복구 코드만으로 계속할 수 있습니다.",
   "setup.forgetWarn":
     "비밀번호를 잊으면 vault를 복구할 수 없습니다. 잊은 경우 데이터를 모두 잃고 새로 시작해야 합니다.",
   "setup.2faIntro":
@@ -195,6 +200,15 @@ export const MESSAGES_KR: Record<string, string> = {
   "strength.3": "강함",
   "strength.4": "매우 강함",
   "settings.title": "설정",
+  "settings.sidebarSection": "설정",
+  "settings.navAria": "설정 메뉴",
+  "settings.navGeneral": "일반",
+  "settings.navPlan": "요금제",
+  "settings.navBackup": "백업",
+  "settings.generalSubtitle": "이 기기의 자동 잠금 등 금고 환경설정입니다.",
+  "settings.planSubtitle": "항목 제한과 라이선스 상태입니다.",
+  "settings.backupSubtitle": "클라우드 동기화와 오프라인 백업 파일입니다.",
+  "settings.accountSubtitle": "프로필, 로그인, 계정 작업입니다.",
   "settings.autoLock": "자동 잠금 (분)",
   "settings.autoLockHint": "마우스/키보드 입력이 없으면 자동으로 잠깁니다.",
   "settings.language": "언어",
@@ -206,11 +220,7 @@ export const MESSAGES_KR: Record<string, string> = {
 
   "settings.syncTitle": "기기·백업",
   "settings.syncHint":
-    "로그인한 동안 이 앱은 데이터베이스에 암호화된 사본을 둡니다(서버는 내용을 읽을 수 없습니다). 새 브라우저나 휴대폰에서는 같은 계정으로 로그인한 뒤, 필요하면 「계정에서 최신 받기」를 누르고, 예전과 같은 마스터 비밀번호와 인증 앱 6자리로 잠금 해제하세요.",
-  "settings.pullCloud": "계정에서 최신 받기",
-  "settings.pullCloudHint":
-    "이 기기에만 있던 금고를 계정에 저장된 암호화 스냅샷으로 바꿉니다. 잠금 해제가 안 되거나 기기를 바꾼 직후에 사용하세요.",
-  "settings.pullCloudDone": "계정에서 받았습니다. 설정 창이 열려 있으면 아래에서 다시 잠금 해제하세요.",
+    "로그인한 동안 이 앱은 데이터베이스에 암호화된 사본을 둡니다(서버는 내용을 읽을 수 없습니다). 새 브라우저나 휴대폰에서는 같은 계정으로 로그인하면 금고가 자동으로 받아지고, 예전과 같은 마스터 비밀번호와 인증 앱 6자리 또는 복구 코드로 잠금 해제하세요.",
   "settings.fileBackupAdvanced": "오프라인 JSON 파일 (고급)",
   "settings.fileBackupAdvancedHint":
     "선택 사항입니다. 이 앱에서 보낸 .json만 가져오세요. 데이터는 동일하게 암호화되어 있으며, 마스터 비밀번호·6자리 코드는 그 파일을 만든 당시의 금고와 같아야 합니다.",
@@ -234,6 +244,35 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.deleteAccountFailed": "계정을 삭제하지 못했습니다. 나중에 다시 시도하세요.",
   "settings.deleteAccountNotDeployed":
     "계정 삭제 기능이 아직 배포되지 않았습니다. delete-account Edge Function을 배포하세요 (README/docs 참고).",
+  "nav.userMenu": "계정 메뉴",
+  "settings.openAccountPage": "계정 설정",
+
+  "account.title": "계정 설정",
+  "account.navAria": "계정 메뉴",
+  "account.navPreferences": "계정 설정",
+  "account.navSignInLogs": "로그인 기록",
+  "account.navVault": "금고 열기",
+  "account.backToVault": "금고로 돌아가기",
+  "account.sidebarSection": "계정 설정",
+  "account.preferencesSubtitle": "프로필 이메일과 로그인 비밀번호를 변경합니다.",
+  "account.profileTitle": "프로필",
+  "account.saveEmail": "이메일 저장",
+  "account.emailUpdated":
+    "제공자에 따라 새 이메일 확인 메일이 올 수 있습니다.",
+  "account.emailChangeHint":
+    "이메일 변경은 받은 편지함에서 확인해야 적용될 수 있습니다.",
+  "account.passwordTitle": "비밀번호 변경",
+  "account.newPassword": "새 비밀번호",
+  "account.savePassword": "비밀번호 업데이트",
+  "account.passwordUpdated": "로그인 비밀번호가 변경되었습니다.",
+  "account.signInLogsHint":
+    "이 브라우저에서의 최근 로그인 기록입니다(기기에만 저장).",
+  "account.signInLogsEmpty": "기록된 로그인이 없습니다.",
+  "account.signInLogsLinkTitle": "로그인 기록",
+  "account.signInLogsLinkHint": "이 기기에서 로그인한 시각과 방식을 확인합니다.",
+  "account.signInMethod.google": "Google",
+  "account.signInMethod.email": "이메일",
+  "account.signInMethod.unknown": "로그인",
 
   "settings.licenseTitle": "요금제·항목 제한",
   "settings.licenseFree":
@@ -245,8 +284,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.licenseLoading": "라이선스 확인 중…",
   "settings.licenseLink": "요금제·결제 페이지 열기",
   "settings.licenseRefresh": "상태 새로고침",
-  "settings.planBadgeFree": "무료",
-  "settings.planBadgeLicensed": "라이선스 적용",
+  "settings.planBadgeFree": "FREE",
+  "settings.planBadgePro": "PRO",
   "settings.licenseKeyLabel": "라이선스 키",
   "settings.licenseKeyHint":
     "결제 시 발급된 참조 값(Stripe 체크아웃 세션)입니다. 읽기 전용이며 본인 기록용으로 보관하세요.",
@@ -255,21 +294,6 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.licenseNoSessionId":
     "라이선스는 활성화되어 있으나, 이 계정에 저장된 결제 참조가 아직 없습니다.",
 
-  "lock.syncTitle": "계정에서 불러오기",
-  "lock.pullCloud": "계정에서 복원하기",
-  "lock.pullCloudHint":
-    "로그인이나 잠금 해제가 어려우신가요? 걱정하지 마세요. 비밀번호는 계정에 안전하게 백업되어 있습니다. 이 기기에서 복원하면 암호화된 금고를 받아 드린 뒤, 마스터 비밀번호 확인과 인증 앱 다시 등록을 단계별로 안내합니다.",
-  "lock.pullCloudDone":
-    "복원이 완료되었습니다. 아래에 마스터 비밀번호를 입력한 뒤 QR을 스캔해 마무리하세요.",
-  "lock.rebindTitle": "이 기기에서 복구 마무리",
-  "lock.rebindSubtitleMaster":
-    "금고 데이터는 이 기기에 있습니다. 금고를 만들 때 쓰던 마스터 비밀번호를 입력하세요. 다음 화면에서 새 QR을 스캔하면 됩니다. 확인을 마치면 예전·분실한 휴대폰의 인증 코드는 더 이상 쓰이지 않습니다.",
-  "lock.rebindContinue": "다음",
-  "lock.rebindUseOldTotp":
-    "예전 인증 앱이 그대로 있어요 — 건너뛰고 마스터 + 6자리로 잠금 해제",
-  "lock.rebind2faIntro":
-    "Google Authenticator, 1Password, Authy 등으로 QR을 스캔한 뒤, 표시되는 6자리 코드를 입력해 확인하세요. 이 금고의 이전 인증기는 교체됩니다.",
-  "lock.rebindConfirm": "확인하고 금고 열기",
   "lock.fileBackupAdvanced": "오프라인 JSON 파일 (고급)",
   "lock.fileBackupAdvancedHint":
     "선택 사항입니다. 이 앱에서 보낸 .json만 가져오세요. 마스터 비밀번호·6자리 코드는 그 파일을 만들 당시의 금고와 같아야 합니다.",
@@ -283,9 +307,11 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.restoreApply": "백업 불러오기",
 
   "vault.pageTitle": "금고",
-  "vault.licenseBadgeFree": "무료",
-  "vault.licenseBadgeLicensed": "라이선스",
+  "vault.licenseBadgeFree": "FREE",
+  "vault.licenseBadgePro": "PRO",
   "vault.search": "검색 (사이트, URL, 사용자명, 메모, 상세, 카테고리)",
+  "vault.searchPlaceholder": "검색",
+  "vault.addShort": "추가",
   "vault.colCategory": "카테고리",
   "vault.manageCategories": "카테고리 관리",
   "vault.categoriesTitle": "카테고리",
@@ -310,8 +336,10 @@ export const MESSAGES_KR: Record<string, string> = {
   "vault.colUser": "사용자명",
   "vault.colPass": "비밀번호",
   "vault.colNotes": "메모",
+  "vault.colNote": "메모",
   "vault.colMemo": "상세 메모",
   "vault.colActions": "동작",
+  "vault.colAction": "액션",
   "vault.empty": "저장된 항목이 없습니다.",
   "vault.emptyCta": "새 항목을 추가하세요.",
   "vault.footer":

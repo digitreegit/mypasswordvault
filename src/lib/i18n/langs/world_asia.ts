@@ -42,12 +42,6 @@ export const MESSAGES_CN: Record<string, string> = {
   "lock.resetWarn": "重置将永久删除所有已保存密码，确定继续？",
   "lock.deleteAll": "全部删除并重新开始",
   "lock.errFailed": "解锁失败",
-  "lock.syncTitle": "从账户加载",
-  "lock.pullCloud": "从账户恢复",
-  "lock.pullCloudHint":
-    "无法解锁？别担心 — 您的密码已安全备份到账户。在此设备上恢复：我们会下载加密的保险库，然后引导您确认主密码并重新设置身份验证器。",
-  "lock.pullCloudDone":
-    "恢复完成。请在下方输入主密码，然后扫描二维码完成。",
   "errors.masterTooShort": "主密码至少需要 10 个字符。",
   "errors.noPendingSetup": "没有进行中的设置。",
   "errors.invalidOtp": "验证码无效。",
@@ -155,12 +149,6 @@ export const MESSAGES_JP: Record<string, string> = {
     "リセットすると保存されたパスワードはすべて完全に削除されます。続行しますか？",
   "lock.deleteAll": "すべて削除して最初から",
   "lock.errFailed": "ロック解除に失敗しました",
-  "lock.syncTitle": "アカウントから読み込む",
-  "lock.pullCloud": "アカウントから復元",
-  "lock.pullCloudHint":
-    "ロック解除でお困りですか？ご安心ください — パスワードはアカウントに安全にバックアップされています。このデバイスで復元します。暗号化されたボールトをダウンロードし、マスターパスワードの確認と認証アプリの再設定を案内します。",
-  "lock.pullCloudDone":
-    "復元が完了しました。下にマスターパスワードを入力し、QRコードをスキャンして完了してください。",
   "errors.masterTooShort": "マスターパスワードは 10 文字以上である必要があります。",
   "errors.noPendingSetup": "進行中のセットアップがありません。",
   "errors.invalidOtp": "認証コードが正しくありません。",
@@ -269,12 +257,6 @@ export const MESSAGES_ID: Record<string, string> = {
     "Reset akan menghapus permanen semua kata sandi tersimpan. Lanjutkan?",
   "lock.deleteAll": "Hapus semua dan mulai lagi",
   "lock.errFailed": "Gagal membuka kunci",
-  "lock.syncTitle": "Muat dari akun Anda",
-  "lock.pullCloud": "Pulihkan dari akun",
-  "lock.pullCloudHint":
-    "Kesulitan membuka kunci? Jangan khawatir — kata sandi Anda dicadangkan dengan aman ke akun. Pulihkan di perangkat ini: kami unduh brankas terenkripsi, lalu memandu kata sandi utama dan penyiapan autentikator.",
-  "lock.pullCloudDone":
-    "Pemulihan selesai. Masukkan kata sandi utama di bawah, lalu pindai kode QR untuk menyelesaikan.",
   "errors.masterTooShort": "Kata sandi utama minimal 10 karakter.",
   "errors.noPendingSetup": "Tidak ada penyiapan yang sedang berjalan.",
   "errors.invalidOtp": "Kode autentikasi tidak valid.",

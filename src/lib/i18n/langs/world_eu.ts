@@ -46,12 +46,6 @@ export const MESSAGES_ES: Record<string, string> = {
     "Restablecer borrará permanentemente todas las contraseñas guardadas. ¿Continuar?",
   "lock.deleteAll": "Borrar todo y empezar de nuevo",
   "lock.errFailed": "Error al desbloquear",
-  "lock.syncTitle": "Cargar desde su cuenta",
-  "lock.pullCloud": "Restaurar desde la cuenta",
-  "lock.pullCloudHint":
-    "¿Problemas para desbloquear? No se preocupe: sus contraseñas están respaldadas de forma segura en su cuenta. Restáurelas en este dispositivo: descargaremos su bóveda cifrada y le guiaremos con la contraseña maestra y la configuración del autenticador.",
-  "lock.pullCloudDone":
-    "Restauración completada. Introduzca su contraseña maestra abajo y escanee el código QR para terminar.",
   "errors.masterTooShort":
     "La contraseña maestra debe tener al menos 10 caracteres.",
   "errors.noPendingSetup": "No hay configuración en curso.",
@@ -162,12 +156,6 @@ export const MESSAGES_DE: Record<string, string> = {
     "Zurücksetzen löscht alle gespeicherten Passwörter dauerhaft. Fortfahren?",
   "lock.deleteAll": "Alles löschen und neu beginnen",
   "lock.errFailed": "Entsperren fehlgeschlagen",
-  "lock.syncTitle": "Vom Konto laden",
-  "lock.pullCloud": "Vom Konto wiederherstellen",
-  "lock.pullCloudHint":
-    "Probleme beim Entsperren? Keine Sorge — Ihre Passwörter sind sicher in Ihrem Konto gesichert. Stellen Sie sie auf diesem Gerät wieder her: Wir laden Ihren verschlüsselten Tresor herunter und führen Sie durch Masterpasswort und die erneute Einrichtung Ihres Authenticators.",
-  "lock.pullCloudDone":
-    "Wiederherstellung abgeschlossen. Geben Sie unten Ihr Masterpasswort ein und scannen Sie den QR-Code zum Abschluss.",
   "errors.masterTooShort": "Masterpasswort muss mindestens 10 Zeichen haben.",
   "errors.noPendingSetup": "Keine Einrichtung aktiv.",
   "errors.invalidOtp": "Ungültiger Authentifizierungscode.",
@@ -278,12 +266,6 @@ export const MESSAGES_FR: Record<string, string> = {
     "La réinitialisation supprime définitivement tous les mots de passe. Continuer ?",
   "lock.deleteAll": "Tout supprimer et recommencer",
   "lock.errFailed": "Échec du déverrouillage",
-  "lock.syncTitle": "Charger depuis votre compte",
-  "lock.pullCloud": "Restaurer depuis le compte",
-  "lock.pullCloudHint":
-    "Des difficultés à déverrouiller ? Pas d'inquiétude — vos mots de passe sont sauvegardés en toute sécurité sur votre compte. Restaurez-les sur cet appareil : nous téléchargeons votre coffre chiffré, puis vous guidons pour le mot de passe maître et la configuration de l'authentificateur.",
-  "lock.pullCloudDone":
-    "Restauration terminée. Saisissez votre mot de passe maître ci-dessous, puis scannez le code QR pour terminer.",
   "errors.masterTooShort":
     "Le mot de passe maître doit contenir au moins 10 caractères.",
   "errors.noPendingSetup": "Aucune configuration en cours.",
@@ -395,12 +377,6 @@ export const MESSAGES_IT: Record<string, string> = {
     "La reimpostazione elimina definitivamente tutte le password salvate. Continuare?",
   "lock.deleteAll": "Elimina tutto e ricomincia",
   "lock.errFailed": "Sblocco non riuscito",
-  "lock.syncTitle": "Carica dal tuo account",
-  "lock.pullCloud": "Ripristina dall'account",
-  "lock.pullCloudHint":
-    "Problemi allo sblocco? Non preoccuparti — le password sono al sicuro nel tuo account. Ripristinale su questo dispositivo: scaricheremo la cassaforte crittografata e ti guideremo con la password principale e la configurazione dell'autenticatore.",
-  "lock.pullCloudDone":
-    "Ripristino completato. Inserisci la password principale sotto e scansiona il QR per terminare.",
   "errors.masterTooShort":
     "La password principale deve avere almeno 10 caratteri.",
   "errors.noPendingSetup": "Nessuna configurazione in corso.",

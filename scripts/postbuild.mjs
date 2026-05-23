@@ -20,3 +20,10 @@ for (const name of readdirSync(srcAssets)) {
 }
 rmSync(srcAssets, { recursive: true, force: true });
 console.log("postbuild: moved dist/assets → dist/app/assets");
+
+import { spawnSync } from "node:child_process";
+const cfg = spawnSync("node", ["scripts/write-landing-config.mjs"], {
+  cwd: new URL("../", import.meta.url).pathname,
+  stdio: "inherit",
+});
+if (cfg.status !== 0) process.exit(cfg.status ?? 1);

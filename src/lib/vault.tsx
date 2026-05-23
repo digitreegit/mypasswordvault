@@ -61,15 +61,11 @@ import {
 import { buildVaultBackupJson, parseVaultBackup } from "./vaultBackup";
 import {
   deleteRemoteVaultBackup,
-  forcePullRemoteVault,
   reconcileCloudAtStartup,
   upsertRemoteVaultBackup,
 } from "./cloudVault";
 import { FREE_ENTRY_LIMIT, fetchUserEntitlement } from "./entitlements";
 import { isSupabaseConfigured } from "./supabaseClient";
-
-/** After "Download from account", require master password then new TOTP enrollment (lost old phone). */
-const TOTP_REBIND_AFTER_PULL_KEY = "mpv_totp_rebind_after_pull";
 
 export type VaultStatus = "loading" | "fresh" | "locked" | "unlocked";
 
@@ -98,6 +94,8 @@ interface VaultContextValue {
   registerPasskeyInSetup: () => Promise<void>;
   beginBackupTotpEnrollment: () => Promise<{ totpSecretBase32: string }>;
   confirmBackupTotpEnrollment: (code: string) => Promise<{ recoveryCodes: string[] }>;
+  /** Skip backup TOTP; still issues one-time recovery codes. */
+  skipBackupTotpEnrollment: () => Promise<{ recoveryCodes: string[] }>;
   finalizeEnrollment: () => Promise<void>;
   abortSetup: () => Promise<void>;
   isPasskeySupported: boolean;
@@ -112,21 +110,8 @@ interface VaultContextValue {
 
   /** Encrypted vault snapshot (JSON). Optional offline copy; same master password + 2FA. */
   exportBackup: () => Promise<string>;
-  /** Replace local vault with backup; locks the app. Prefer pullVaultFromCloud when signed in. */
+  /** Replace local vault with backup; locks the app. */
   importBackup: (jsonText: string) => Promise<void>;
-  /** Re-download encrypted vault from the signed-in account and lock (same master + TOTP as before). */
-  pullVaultFromCloud: () => Promise<void>;
-  /** True after cloud pull until unlock or dismiss — user should re-enroll TOTP or use normal unlock. */
-  needsTotpRebindAfterCloudPull: boolean;
-  dismissTotpRebindAfterCloudPull: () => void;
-  /** Verify master password only; returns new TOTP secret for QR (after cloud pull). */
-  beginTotpRebindAfterCloudPull: (
-    masterPassword: string
-  ) => Promise<{ totpSecretBase32: string }>;
-  /** Confirm new TOTP code, replace encrypted secret in meta, unlock. */
-  confirmTotpRebindAfterCloudPull: (code: string) => Promise<void>;
-  /** Clear pending rebind (e.g. back from QR step). */
-  abortTotpRebindProgress: () => void;
 
   upsertEntry: (
     partial: Partial<DecryptedEntry> & { id?: string }
@@ -181,10 +166,6 @@ export function VaultProvider({
     passkeyDataKeyWrap?: string;
     recoveryCodeHashes: string[];
   } | null>(null);
-  const pendingTotpRebindRef = useRef<{
-    key: CryptoKey;
-    totpSecret: string;
-  } | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
   const localeRef = useRef<Locale>("en");
   const pushDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -202,9 +183,6 @@ export function VaultProvider({
   const [locale, setLocaleState] = useState<Locale>(
     () => readStoredLocale() ?? detectBrowserLocale()
   );
-  const [needsTotpRebindAfterCloudPull, setNeedsTotpRebindAfterCloudPull] =
-    useState(false);
-
   const [licensed, setLicensed] = useState(!isSupabaseConfigured);
   const [licenseKey, setLicenseKey] = useState<string | null>(null);
   const [entitlementLoaded, setEntitlementLoaded] = useState(
@@ -286,12 +264,6 @@ export function VaultProvider({
       if (cancelled) return;
       const m = await getMeta();
       if (!m) {
-        setNeedsTotpRebindAfterCloudPull(false);
-        try {
-          sessionStorage.removeItem(TOTP_REBIND_AFTER_PULL_KEY);
-        } catch {
-          /* ignore */
-        }
         setStatus("fresh");
         setMeta(null);
       } else {
@@ -306,13 +278,6 @@ export function VaultProvider({
           }
         }
         setStatus("locked");
-        try {
-          setNeedsTotpRebindAfterCloudPull(
-            sessionStorage.getItem(TOTP_REBIND_AFTER_PULL_KEY) === "1"
-          );
-        } catch {
-          setNeedsTotpRebindAfterCloudPull(false);
-        }
       }
     })();
     return () => {
@@ -327,13 +292,6 @@ export function VaultProvider({
   }, []);
 
   const lock = useCallback(() => {
-    try {
-      sessionStorage.removeItem(TOTP_REBIND_AFTER_PULL_KEY);
-    } catch {
-      /* ignore */
-    }
-    setNeedsTotpRebindAfterCloudPull(false);
-    pendingTotpRebindRef.current = null;
     lockInternal();
   }, [lockInternal]);
 
@@ -502,6 +460,15 @@ export function VaultProvider({
     return { recoveryCodes };
   }, []);
 
+  const skipBackupTotpEnrollment = useCallback(async () => {
+    const pending = pendingSetupRef.current;
+    if (!pending) throw new AppError("errors.noPendingSetup");
+    pending.totpSecret = "";
+    const recoveryCodes = generateRecoveryCodes();
+    pending.recoveryCodeHashes = await hashRecoveryCodes(recoveryCodes);
+    return { recoveryCodes };
+  }, []);
+
   const finalizeEnrollment = useCallback(async () => {
     const pending = pendingSetupRef.current;
     if (!pending) throw new AppError("errors.noPendingSetup");
@@ -553,12 +520,6 @@ export function VaultProvider({
       sessionRef.current = { key: dataKey, totpSecret };
       setMeta(m);
       lastActivityRef.current = Date.now();
-      try {
-        sessionStorage.removeItem(TOTP_REBIND_AFTER_PULL_KEY);
-      } catch {
-        /* ignore */
-      }
-      setNeedsTotpRebindAfterCloudPull(false);
       await loadEntries(dataKey);
       setStatus("unlocked");
       void refreshEntitlements();
@@ -655,13 +616,6 @@ export function VaultProvider({
     await wipeAll();
     sessionRef.current = null;
     pendingSetupRef.current = null;
-    pendingTotpRebindRef.current = null;
-    try {
-      sessionStorage.removeItem(TOTP_REBIND_AFTER_PULL_KEY);
-    } catch {
-      /* ignore */
-    }
-    setNeedsTotpRebindAfterCloudPull(false);
     setMeta(null);
     setEntries([]);
     setStatus("fresh");
@@ -808,7 +762,6 @@ export function VaultProvider({
     }
     sessionRef.current = null;
     pendingSetupRef.current = null;
-    pendingTotpRebindRef.current = null;
     await wipeAll();
     const metaNorm: VaultMeta = {
       ...meta,
@@ -835,112 +788,8 @@ export function VaultProvider({
     }
     setEntries([]);
     setStatus("locked");
-    try {
-      sessionStorage.removeItem(TOTP_REBIND_AFTER_PULL_KEY);
-    } catch {
-      /* ignore */
-    }
-    setNeedsTotpRebindAfterCloudPull(false);
     await flushCloudPush();
   }, [flushCloudPush]);
-
-  const pullVaultFromCloud = useCallback(async () => {
-    if (!userId) throw new AppError("errors.notInitialized");
-    sessionRef.current = null;
-    pendingSetupRef.current = null;
-    pendingTotpRebindRef.current = null;
-    const ok = await forcePullRemoteVault(userId);
-    if (!ok) throw new AppError("errors.noCloudBackup");
-    const m = await getMeta();
-    if (!m) throw new AppError("errors.notInitialized");
-    setMeta(m);
-    if (m.locale) {
-      const L = normalizeLocale(m.locale);
-      setLocaleState(L);
-      try {
-        localStorage.setItem(LOCALE_STORAGE_KEY, L);
-      } catch {
-        /* ignore */
-      }
-    }
-    setEntries([]);
-    setStatus("locked");
-    try {
-      sessionStorage.setItem(TOTP_REBIND_AFTER_PULL_KEY, "1");
-    } catch {
-      /* ignore */
-    }
-    setNeedsTotpRebindAfterCloudPull(true);
-  }, [userId]);
-
-  const dismissTotpRebindAfterCloudPull = useCallback(() => {
-    pendingTotpRebindRef.current = null;
-    try {
-      sessionStorage.removeItem(TOTP_REBIND_AFTER_PULL_KEY);
-    } catch {
-      /* ignore */
-    }
-    setNeedsTotpRebindAfterCloudPull(false);
-  }, []);
-
-  const abortTotpRebindProgress = useCallback(() => {
-    pendingTotpRebindRef.current = null;
-  }, []);
-
-  const beginTotpRebindAfterCloudPull = useCallback(
-    async (masterPassword: string) => {
-      let allowed = false;
-      try {
-        allowed = sessionStorage.getItem(TOTP_REBIND_AFTER_PULL_KEY) === "1";
-      } catch {
-        /* ignore */
-      }
-      if (!allowed) throw new AppError("errors.noPendingSetup");
-      const m = await getMeta();
-      if (!m) throw new AppError("errors.notInitialized");
-      const dataKey = await assertMasterPassword(m, masterPassword);
-      const newTotp = generateTotpSecretBase32();
-      pendingTotpRebindRef.current = { key: dataKey, totpSecret: newTotp };
-      return { totpSecretBase32: newTotp };
-    },
-    []
-  );
-
-  const confirmTotpRebindAfterCloudPull = useCallback(
-    async (code: string) => {
-      const pending = pendingTotpRebindRef.current;
-      if (!pending) throw new AppError("errors.noPendingSetup");
-      if (!verifyTotp(pending.totpSecret, code)) {
-        throw new AppError("errors.invalidOtp");
-      }
-      const m = await getMeta();
-      if (!m) throw new AppError("errors.notInitialized");
-      const totpEnc = await encryptString(pending.key, pending.totpSecret);
-      // pending.key is vault data key (v1 or v2)
-      const updated: VaultMeta = {
-        ...m,
-        totpSecret: totpEnc,
-        totpLabel: m.totpLabel ?? "vault",
-        updatedAt: Date.now(),
-      };
-      await putMeta(updated);
-      sessionRef.current = { key: pending.key, totpSecret: pending.totpSecret };
-      pendingTotpRebindRef.current = null;
-      try {
-        sessionStorage.removeItem(TOTP_REBIND_AFTER_PULL_KEY);
-      } catch {
-        /* ignore */
-      }
-      setNeedsTotpRebindAfterCloudPull(false);
-      setMeta(updated);
-      lastActivityRef.current = Date.now();
-      await loadEntries(pending.key);
-      setStatus("unlocked");
-      await flushCloudPush();
-      void refreshEntitlements();
-    },
-    [loadEntries, flushCloudPush, refreshEntitlements]
-  );
 
   const atEntryLimit = useMemo(
     () =>
@@ -961,6 +810,7 @@ export function VaultProvider({
       registerPasskeyInSetup,
       beginBackupTotpEnrollment,
       confirmBackupTotpEnrollment,
+      skipBackupTotpEnrollment,
       finalizeEnrollment,
       abortSetup,
       isPasskeySupported: isPasskeySupported(),
@@ -974,12 +824,6 @@ export function VaultProvider({
       t,
       exportBackup,
       importBackup,
-      pullVaultFromCloud,
-      needsTotpRebindAfterCloudPull,
-      dismissTotpRebindAfterCloudPull,
-      beginTotpRebindAfterCloudPull,
-      confirmTotpRebindAfterCloudPull,
-      abortTotpRebindProgress,
       upsertEntry,
       removeEntry,
       touchActivity,
@@ -998,7 +842,6 @@ export function VaultProvider({
       meta,
       entries,
       locale,
-      needsTotpRebindAfterCloudPull,
       licensed,
       licenseKey,
       entitlementLoaded,
@@ -1007,6 +850,7 @@ export function VaultProvider({
       registerPasskeyInSetup,
       beginBackupTotpEnrollment,
       confirmBackupTotpEnrollment,
+      skipBackupTotpEnrollment,
       finalizeEnrollment,
       abortSetup,
       unlockWithPasskey,
@@ -1018,11 +862,6 @@ export function VaultProvider({
       t,
       exportBackup,
       importBackup,
-      pullVaultFromCloud,
-      dismissTotpRebindAfterCloudPull,
-      beginTotpRebindAfterCloudPull,
-      confirmTotpRebindAfterCloudPull,
-      abortTotpRebindProgress,
       upsertEntry,
       removeEntry,
       touchActivity,

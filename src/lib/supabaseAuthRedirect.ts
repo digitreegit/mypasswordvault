@@ -1,10 +1,13 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
 import {
+  isPasswordRecoveryPending,
   setPasswordRecoveryPending,
   urlIndicatesPasswordRecovery,
 } from "./passwordRecoveryPending";
 import {
   applyPendingAuthMethod,
+  markPendingAuthMethod,
+  recordEmailSignIn,
   recordGoogleSignIn,
 } from "./authLastUsed";
 import { getSupabase, isSupabaseConfigured } from "./supabaseClient";
@@ -68,7 +71,13 @@ export async function completeOAuthFromUrl(url?: string): Promise<boolean> {
       return false;
     }
     if (data.session) {
-      if (!applyPendingAuthMethod()) recordGoogleSignIn();
+      if (!applyPendingAuthMethod()) {
+        if (isPasswordRecoveryPending() || urlIndicatesPasswordRecovery()) {
+          recordEmailSignIn();
+        } else {
+          recordGoogleSignIn();
+        }
+      }
     }
 
     if (typeof window !== "undefined" && !url?.includes("://")) {
@@ -96,7 +105,10 @@ async function completeAuthTokensFromUrl(): Promise<boolean> {
   const type = search.get("type");
 
   if (token_hash && type) {
-    if (type === "recovery") setPasswordRecoveryPending();
+    if (type === "recovery") {
+      setPasswordRecoveryPending();
+      markPendingAuthMethod("email");
+    }
     const { error } = await supabase.auth.verifyOtp({
       token_hash,
       type: type as EmailOtpType,
@@ -119,6 +131,7 @@ async function completeAuthTokensFromUrl(): Promise<boolean> {
   if (access_token && refresh_token) {
     if (urlIndicatesPasswordRecovery() || hashParams.get("type") === "recovery") {
       setPasswordRecoveryPending();
+      markPendingAuthMethod("email");
     }
     const { error } = await supabase.auth.setSession({
       access_token,
@@ -139,7 +152,10 @@ async function completeAuthTokensFromUrl(): Promise<boolean> {
       console.error("exchangeCodeForSession from hash failed", error);
       return false;
     }
-    if (hashParams.get("type") === "recovery") setPasswordRecoveryPending();
+    if (hashParams.get("type") === "recovery") {
+      setPasswordRecoveryPending();
+      markPendingAuthMethod("email");
+    }
     stripAuthParamsFromUrl();
     return true;
   }
@@ -162,5 +178,9 @@ export async function ensureOAuthSessionFromUrl(): Promise<void> {
   if (!data.session) return;
 
   if (applyPendingAuthMethod()) return;
+  if (isPasswordRecoveryPending() || urlIndicatesPasswordRecovery()) {
+    recordEmailSignIn();
+    return;
+  }
   if (completedOAuth || hadOAuthCode) recordGoogleSignIn();
 }

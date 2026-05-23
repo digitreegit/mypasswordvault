@@ -6,9 +6,11 @@ import {
   TOTP_BACKUP_ACCOUNT,
 } from "../lib/totp";
 import { passwordStrengthScore } from "../lib/passwordGenerator";
-import { Check, Copy, Eye, EyeOff, ChevronDown } from "./Icons";
+import { Check, Copy, Download, Eye, EyeOff, ChevronDown } from "./Icons";
 import { ScreenHeader } from "./ScreenHeader";
+import { downloadTextFile } from "../lib/downloadTextFile";
 import { isAppError } from "../lib/errors";
+import { isNativeApp } from "../lib/platform";
 
 type Stage = "password" | "passkey" | "backup-totp" | "recovery";
 
@@ -18,6 +20,7 @@ export function SetupScreen() {
     registerPasskeyInSetup,
     beginBackupTotpEnrollment,
     confirmBackupTotpEnrollment,
+    skipBackupTotpEnrollment,
     finalizeEnrollment,
     abortSetup,
     isPasskeySupported,
@@ -41,6 +44,9 @@ export function SetupScreen() {
   const [recoveryAck, setRecoveryAck] = useState(false);
   const [totpCopyDone, setTotpCopyDone] = useState(false);
   const [recoveryCopyDone, setRecoveryCopyDone] = useState(false);
+  const [recoveryDownloadDone, setRecoveryDownloadDone] = useState(false);
+
+  const brandHomeHref = isNativeApp() ? undefined : "/";
 
   const strengthScore = useMemo(() => passwordStrengthScore(pw), [pw]);
 
@@ -110,6 +116,22 @@ export function SetupScreen() {
     }
   }
 
+  async function handleSkipTotp() {
+    setError(null);
+    setBusy(true);
+    try {
+      const { recoveryCodes: codes } = await skipBackupTotpEnrollment();
+      setRecoveryCodes(codes);
+      setStage("recovery");
+    } catch (e: unknown) {
+      setError(
+        isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleConfirmTotp() {
     setError(null);
     setBusy(true);
@@ -150,6 +172,8 @@ export function SetupScreen() {
           locale={locale}
           onLocaleChange={(l) => void setLocale(l)}
           languageAriaLabel={t("settings.language")}
+          brandHomeHref={brandHomeHref}
+          brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
           className="mb-1"
         />
         <p className="text-sm text-ink-500 mb-6 leading-snug">
@@ -350,43 +374,84 @@ export function SetupScreen() {
             >
               {t("setup.nextRecovery")}
             </button>
+            <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-md px-3 py-2.5 leading-snug">
+              {t("setup.backupTotpSkipWarn")}
+            </p>
+            <button
+              type="button"
+              className="btn-secondary w-full"
+              onClick={handleSkipTotp}
+              disabled={busy}
+            >
+              {t("setup.skipBackupTotp")}
+            </button>
           </div>
         )}
 
         {stage === "recovery" && (
           <div className="space-y-4">
             <div className="relative">
-              <ul className="font-mono text-sm bg-ink-50 border border-ink-200 rounded-lg p-3 pr-11 space-y-1 list-none">
+              <ul className="font-mono text-sm bg-ink-50 border border-ink-200 rounded-lg p-3 pr-[4.5rem] space-y-1 list-none">
                 {recoveryCodes.map((c) => (
                   <li key={c}>{c}</li>
                 ))}
               </ul>
-              <button
-                type="button"
-                className="absolute right-2 top-2 p-2 rounded-md text-ink-400 hover:text-accent-600 hover:bg-white/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30"
-                title={
-                  recoveryCopyDone
-                    ? t("setup.copyRecoveryCodesDone")
-                    : t("setup.copyRecoveryCodes")
-                }
-                aria-label={
-                  recoveryCopyDone
-                    ? t("setup.copyRecoveryCodesDone")
-                    : t("setup.copyRecoveryCodes")
-                }
-                onClick={() => {
-                  void copyTextForClipboard(recoveryCodes.join("\n")).then(() => {
-                    setRecoveryCopyDone(true);
-                    window.setTimeout(() => setRecoveryCopyDone(false), 2500);
-                  });
-                }}
-              >
-                {recoveryCopyDone ? (
-                  <Check className="w-4 h-4 text-accent-600" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
-              </button>
+              <div className="absolute right-2 top-2 flex items-center gap-0.5">
+                <button
+                  type="button"
+                  className="p-2 rounded-md text-ink-400 hover:text-accent-600 hover:bg-white/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30"
+                  title={
+                    recoveryCopyDone
+                      ? t("setup.copyRecoveryCodesDone")
+                      : t("setup.copyRecoveryCodes")
+                  }
+                  aria-label={
+                    recoveryCopyDone
+                      ? t("setup.copyRecoveryCodesDone")
+                      : t("setup.copyRecoveryCodes")
+                  }
+                  onClick={() => {
+                    void copyTextForClipboard(recoveryCodes.join("\n")).then(() => {
+                      setRecoveryCopyDone(true);
+                      window.setTimeout(() => setRecoveryCopyDone(false), 2500);
+                    });
+                  }}
+                >
+                  {recoveryCopyDone ? (
+                    <Check className="w-4 h-4 text-accent-600" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="p-2 rounded-md text-ink-400 hover:text-accent-600 hover:bg-white/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30"
+                  title={
+                    recoveryDownloadDone
+                      ? t("setup.downloadRecoveryCodesDone")
+                      : t("setup.downloadRecoveryCodes")
+                  }
+                  aria-label={
+                    recoveryDownloadDone
+                      ? t("setup.downloadRecoveryCodesDone")
+                      : t("setup.downloadRecoveryCodes")
+                  }
+                  onClick={() => {
+                    downloadTextFile(
+                      "my-password-vault-recovery-codes.txt",
+                      recoveryCodes.join("\n")
+                    );
+                    setRecoveryDownloadDone(true);
+                    window.setTimeout(() => setRecoveryDownloadDone(false), 2500);
+                  }}
+                >
+                  {recoveryDownloadDone ? (
+                    <Check className="w-4 h-4 text-accent-600" />
+                  ) : (
+                    <Download className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </div>
             <label className="flex items-start gap-2 text-sm text-ink-700 cursor-pointer">
               <input

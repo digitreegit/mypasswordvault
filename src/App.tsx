@@ -8,6 +8,11 @@ import { LockScreen } from "./components/LockScreen";
 import { VaultScreen } from "./components/VaultScreen";
 import { AuthScreen } from "./components/AuthScreen";
 import { PricingPage } from "./components/PricingPage";
+import { AccountSettingsPage } from "./components/AccountSettingsPage";
+import {
+  SettingsPage,
+  settingsSectionFromPath,
+} from "./components/SettingsPage";
 
 function parseHashPath(): string {
   if (typeof window === "undefined") return "";
@@ -65,6 +70,15 @@ function AuthenticatedApp() {
     return <PricingPage />;
   }
 
+  const isAccountRoute =
+    hashPath === "account" || hashPath === "account/logs";
+
+  const isSettingsRoute =
+    hashPath === "settings" ||
+    hashPath === "settings/plan" ||
+    hashPath === "settings/backup" ||
+    hashPath === "settings/account";
+
   if (configured && loading) {
     return (
       <div className="min-h-screen min-h-[100dvh] flex items-center justify-center text-ink-500 px-4">
@@ -75,6 +89,24 @@ function AuthenticatedApp() {
 
   if (passwordRecoveryPending || !session?.user?.id) {
     return <AuthScreen />;
+  }
+
+  if (isAccountRoute) {
+    return (
+      <VaultProvider userId={session.user.id}>
+        <AccountSettingsPage
+          section={hashPath === "account/logs" ? "logs" : "preferences"}
+        />
+      </VaultProvider>
+    );
+  }
+
+  if (isSettingsRoute) {
+    return (
+      <VaultProvider userId={session.user.id}>
+        <SettingsPage section={settingsSectionFromPath(hashPath)} />
+      </VaultProvider>
+    );
   }
 
   return (

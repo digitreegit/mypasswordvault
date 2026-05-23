@@ -1077,6 +1077,83 @@
         outline-offset: 2px;
       }
 
+      #landing-auth-root {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+      }
+
+      .landing-user-menu {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .landing-user-menu-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.5rem;
+        min-height: 2.5rem;
+        padding: 0.5rem;
+      }
+
+      .landing-user-dropdown {
+        position: absolute;
+        top: calc(100% + 0.35rem);
+        right: 0;
+        z-index: 120;
+        min-width: 13.5rem;
+        padding: 0.35rem 0;
+        border-radius: 0.65rem;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(18, 18, 28, 0.96);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+      }
+
+      .landing-user-dropdown-email {
+        margin: 0;
+        padding: 0.55rem 0.85rem 0.45rem;
+        font-size: 0.75rem;
+        line-height: 1.35;
+        color: var(--muted);
+        word-break: break-all;
+      }
+
+      .landing-user-dropdown-divider {
+        height: 0;
+        margin: 0;
+        border: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .landing-user-dropdown-item {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 0.55rem 0.85rem;
+        font-size: 0.875rem;
+        color: var(--text);
+        text-decoration: none;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      .landing-user-dropdown-item:hover,
+      .landing-user-dropdown-item:focus-visible {
+        background: rgba(99, 102, 241, 0.18);
+        color: #fff;
+        outline: none;
+      }
+
+      .landing-user-dropdown-logout {
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        margin-top: 0.15rem;
+        color: #fca5a5;
+      }
+
       .landing-inner-main {
         padding-top: 0.5rem;
         padding-bottom: 3rem;

@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { LOCALES, LOCALE_LABELS, type Locale } from "../lib/i18n/locale";
 import { Globe, Check } from "./Icons";
@@ -27,12 +28,50 @@ export function LanguageMenu({
   appearance = "globe",
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({});
   const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!open || !buttonRef.current) return;
+
+    const updatePosition = () => {
+      const rect = buttonRef.current!.getBoundingClientRect();
+      const gap = 4;
+      const base: React.CSSProperties = {
+        position: "fixed",
+        top: rect.bottom + gap,
+        zIndex: 9999,
+        minWidth: "12rem",
+        width: "max-content",
+        maxHeight: "min(24rem, 75vh)",
+      };
+      if (align === "right") {
+        base.right = Math.max(8, window.innerWidth - rect.right);
+        base.left = "auto";
+      } else {
+        base.left = Math.max(8, rect.left);
+        base.right = "auto";
+      }
+      setPanelStyle(base);
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, align]);
 
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (e: PointerEvent) => {
-      if (rootRef.current?.contains(e.target as Node)) return;
+      const target = e.target as Node;
+      if (rootRef.current?.contains(target)) return;
+      if (panelRef.current?.contains(target)) return;
       setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
@@ -46,9 +85,47 @@ export function LanguageMenu({
     };
   }, [open]);
 
+  const panel =
+    open &&
+    createPortal(
+      <div
+        ref={panelRef}
+        role="listbox"
+        aria-label={ariaLabel}
+        style={panelStyle}
+        className="overflow-y-auto rounded-lg border border-ink-200 bg-white py-1 pb-1.5 shadow-lg"
+      >
+        {LOCALES.map((loc) => (
+          <button
+            key={loc}
+            type="button"
+            role="option"
+            aria-selected={value === loc}
+            className={[
+              "w-full text-left px-3 py-2 text-sm flex items-center justify-between gap-3",
+              value === loc
+                ? "bg-accent-50 text-accent-900"
+                : "text-ink-800 hover:bg-ink-50",
+            ].join(" ")}
+            onClick={() => {
+              onChange(loc);
+              setOpen(false);
+            }}
+          >
+            <span>{LOCALE_LABELS[loc]}</span>
+            {value === loc && (
+              <Check width={14} height={14} className="text-accent-600 shrink-0" />
+            )}
+          </button>
+        ))}
+      </div>,
+      document.body
+    );
+
   return (
     <div className={["relative inline-block", className].filter(Boolean).join(" ")} ref={rootRef}>
       <button
+        ref={buttonRef}
         type="button"
         className={
           appearance === "compact"
@@ -72,40 +149,7 @@ export function LanguageMenu({
           <Globe width={20} height={20} className="shrink-0" />
         )}
       </button>
-      {open && (
-        <div
-          role="listbox"
-          aria-label={ariaLabel}
-          className={[
-            "absolute z-[60] mt-1 w-max min-w-[12rem] max-h-[min(24rem,75vh)] overflow-y-auto rounded-lg border border-ink-200 bg-white py-1 pb-1.5 shadow-lg",
-            align === "right" ? "right-0" : "left-0",
-          ].join(" ")}
-        >
-          {LOCALES.map((loc) => (
-            <button
-              key={loc}
-              type="button"
-              role="option"
-              aria-selected={value === loc}
-              className={[
-                "w-full text-left px-3 py-2 text-sm flex items-center justify-between gap-3",
-                value === loc
-                  ? "bg-accent-50 text-accent-900"
-                  : "text-ink-800 hover:bg-ink-50",
-              ].join(" ")}
-              onClick={() => {
-                onChange(loc);
-                setOpen(false);
-              }}
-            >
-              <span>{LOCALE_LABELS[loc]}</span>
-              {value === loc && (
-                <Check width={14} height={14} className="text-accent-600 shrink-0" />
-              )}
-            </button>
-          ))}
-        </div>
-      )}
+      {panel}
     </div>
   );
 }

@@ -77,7 +77,7 @@
           <a class="btn btn-ghost landing-nav-link" href="./index.html" data-i18n="navHome" aria-current="page">Home</a>
           <a class="btn btn-ghost landing-nav-link" href="./faq.html" data-i18n="navFaq">FAQ</a>
           <a class="btn btn-ghost landing-nav-link" href="./pricing.html" data-i18n="navPricing">Pricing</a>
-          <a class="btn btn-primary" href="/app/" data-i18n="navSignIn">Sign In</a>
+          <div id="landing-auth-root"></div>
           <div id="landing-lang-root"></div>
         </div>
         </div>
@@ -297,8 +297,11 @@
       </footer>
     </div>
     <!-- Root-only asset: keep path root-relative so Vite base (/app/) does not rewrite it to /app/… (404). -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./landing-config.js"></script>
     <script src="./landing-overlays.js"></script>
     <script src="./landing-nav.js"></script>
     <script src="./landing-lang.js"></script>
+    <script src="./landing-auth.js"></script>
   </body>
 </html>
