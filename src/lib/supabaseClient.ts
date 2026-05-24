@@ -39,7 +39,8 @@ export function getSupabase(): SupabaseClient | null {
         flowType: "pkce",
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: !Capacitor.isNativePlatform(),
+        // Handled explicitly in ensureOAuthSessionFromUrl before React mounts.
+        detectSessionInUrl: false,
         storage: typeof window !== "undefined" ? window.localStorage : undefined,
       },
     });
