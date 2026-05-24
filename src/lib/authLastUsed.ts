@@ -87,10 +87,10 @@ function consumePendingAuthMethod(maxAgeMs = 30 * 60 * 1000): AuthLastMethod | n
 }
 
 /** Apply pending sign-in method from the current attempt (email or Google button). */
-export function applyPendingAuthMethod(): boolean {
+export function applyPendingAuthMethod(userId?: string): boolean {
   const pending = consumePendingAuthMethod();
   if (!pending) return false;
-  setAuthLastMethod(pending);
+  setAuthLastMethod(pending, userId);
   return true;
 }
 

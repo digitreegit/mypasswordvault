@@ -69,36 +69,25 @@ export function UserMenuDropdown({ className = "" }: { className?: string }) {
           <div className={MENU_DIVIDER} role="separator" />
           <a
             role="menuitem"
-            href="#/account"
-            className={`${MENU_ITEM} mt-1`}
-            onClick={(e) => {
-              e.preventDefault();
-              go("#/account");
-            }}
-          >
-            {t("settings.openAccountPage")}
-          </a>
-          <a
-            role="menuitem"
-            href="#/account/logs"
-            className={MENU_ITEM}
-            onClick={(e) => {
-              e.preventDefault();
-              go("#/account/logs");
-            }}
-          >
-            {t("account.navSignInLogs")}
-          </a>
-          <a
-            role="menuitem"
             href="#/settings"
-            className={MENU_ITEM}
+            className={`${MENU_ITEM} mt-1`}
             onClick={(e) => {
               e.preventDefault();
               go("#/settings");
             }}
           >
             {t("settings.title")}
+          </a>
+          <a
+            role="menuitem"
+            href="#/settings/logs"
+            className={MENU_ITEM}
+            onClick={(e) => {
+              e.preventDefault();
+              go("#/settings/logs");
+            }}
+          >
+            {t("settings.navSignInLogs")}
           </a>
           <div className={`${MENU_DIVIDER} mt-1`} role="separator" />
           <button

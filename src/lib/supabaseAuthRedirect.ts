@@ -74,7 +74,7 @@ export async function completeOAuthFromUrl(url?: string): Promise<boolean> {
     }
     if (data.session) {
       const userId = data.session.user.id;
-      if (!applyPendingAuthMethod()) {
+      if (!applyPendingAuthMethod(userId)) {
         if (isPasswordRecoveryPending() || urlIndicatesPasswordRecovery()) {
           recordEmailSignIn(userId);
         } else {
@@ -185,7 +185,7 @@ export async function ensureOAuthSessionFromUrl(): Promise<void> {
   const { data } = await supabase.auth.getSession();
   if (!data.session) return;
 
-  if (applyPendingAuthMethod()) {
+  if (applyPendingAuthMethod(data.session.user.id)) {
     const pending = getAuthLastMethod();
     if (pending === "google" || pending === "email") {
       setAuthLastMethod(pending, data.session.user.id);

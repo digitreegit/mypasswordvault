@@ -5,7 +5,6 @@ import {
   AUTH_LAST_METHOD_CHANGED,
   getAuthLastMethod,
   markPendingAuthMethod,
-  recordEmailSignIn,
   type AuthLastMethod,
 } from "../lib/authLastUsed";
 import { translate } from "../lib/i18n/bundles";
@@ -223,14 +222,12 @@ export function AuthScreen() {
     try {
       if (view === "signin") {
         await signInWithEmail(email, password);
-        recordEmailSignIn();
         refreshLastUsed();
       } else if (view === "signup") {
         await signUpWithEmail(email, password);
         const supabase = getSupabase();
         const { data } = await supabase!.auth.getSession();
         if (data.session) {
-          recordEmailSignIn();
           refreshLastUsed();
         } else {
           setInfo(t("auth.checkEmailConfirm"));
@@ -271,7 +268,6 @@ export function AuthScreen() {
     setBusy(true);
     try {
       await updatePassword(password);
-      recordEmailSignIn();
       refreshLastUsed();
       setPassword("");
       setPasswordConfirm("");

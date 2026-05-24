@@ -2,26 +2,44 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useVault } from "../lib/vault";
 import { useAuth } from "../lib/auth";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { ChevronDown, Shield } from "./Icons";
-import { LOCALES, LOCALE_LABELS, type Locale } from "../lib/i18n/locale";
+import { ChevronDown, EmailIcon, GoogleIcon, Shield, User } from "./Icons";
+import { LOCALES, LOCALE_LABELS, localeToHtmlLang, type Locale } from "../lib/i18n/locale";
 import { AccountCredentialPanel } from "./AccountCredentialPanel";
 import { PlanBadge } from "./PlanBadge";
 import { UserMenuDropdown } from "./UserMenuDropdown";
 import { downloadJsonFile } from "../lib/vaultBackup";
+import { formatSignInLogMeta, formatSignInLogTime, getSignInLogs, subscribeSignInLogsChanged, type SignInLogEntry } from "../lib/signInLogs";
 import { isAppError } from "../lib/errors";
 
-export type SettingsSection = "general" | "plan" | "backup" | "account";
+export type SettingsSection = "general" | "plan" | "backup" | "account" | "logs";
 
 export function settingsSectionFromPath(hashPath: string): SettingsSection {
   if (hashPath === "settings/plan") return "plan";
   if (hashPath === "settings/backup") return "backup";
   if (hashPath === "settings/account") return "account";
+  if (hashPath === "settings/logs") return "logs";
   return "general";
 }
 
 function settingsHref(section: SettingsSection): string {
   if (section === "general") return "#/settings";
   return `#/settings/${section}`;
+}
+
+function signInLogEventLabel(event: string, t: (key: string) => string): string {
+  if (event === "SIGNED_IN") return t("account.signInEvent.signedIn");
+  if (event === "PASSWORD_RECOVERY") return t("account.signInEvent.passwordRecovery");
+  return event;
+}
+
+function SignInLogMethodIcon({ method }: { method: SignInLogEntry["method"] }) {
+  if (method === "google") {
+    return <GoogleIcon className="h-5 w-5 shrink-0" />;
+  }
+  if (method === "email") {
+    return <EmailIcon className="h-5 w-5 shrink-0 text-ink-600" />;
+  }
+  return <User className="h-5 w-5 shrink-0 text-ink-400" />;
 }
 
 function sidebarNavClass(active: boolean): string {
@@ -59,6 +77,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   const [importDraft, setImportDraft] = useState<string | null>(null);
   const [backupToast, setBackupToast] = useState<string | null>(null);
   const [licenseKeyCopied, setLicenseKeyCopied] = useState(false);
+  const [logsRefresh, setLogsRefresh] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const vaultHref = "/app/#";
@@ -81,6 +100,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     items.push({ id: "backup", label: t("settings.navBackup") });
     if (showAccountSections) {
       items.push({ id: "account", label: t("settings.accountTitle") });
+      items.push({ id: "logs", label: t("settings.navSignInLogs") });
     }
     return items;
   }, [showAccountSections, t]);
@@ -89,6 +109,12 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     ? section
     : (navItems[0]?.id ?? "general");
 
+  const signInLogs = useMemo(
+    () => (user?.id && activeSection === "logs" ? getSignInLogs(user.id) : []),
+    [user?.id, activeSection, logsRefresh]
+  );
+  const htmlLocale = localeToHtmlLang(locale);
+
   const pageTitle =
     activeSection === "general"
       ? t("settings.navGeneral")
@@ -96,7 +122,9 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
         ? t("settings.licenseTitle")
         : activeSection === "backup"
           ? t("settings.syncTitle")
-          : t("settings.accountTitle");
+          : activeSection === "logs"
+            ? t("settings.navSignInLogs")
+            : t("settings.accountTitle");
 
   const pageSubtitle =
     activeSection === "general"
@@ -105,7 +133,11 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
         ? t("settings.planSubtitle")
         : activeSection === "backup"
           ? t("settings.backupSubtitle")
-          : t("settings.accountSubtitle");
+          : activeSection === "logs"
+            ? t("settings.signInLogsSubtitle")
+            : t("settings.accountSubtitle");
+
+  useEffect(() => subscribeSignInLogsChanged(() => setLogsRefresh((n) => n + 1)), []);
 
   useEffect(() => {
     setMins(meta?.autoLockMinutes ?? 5);
@@ -395,6 +427,47 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     );
   }
 
+  function renderSignInLogs() {
+    if (!showAccountSections) return null;
+    return (
+      <div className="card p-5 sm:p-6 space-y-4">
+        {signInLogs.length === 0 ? (
+          <p className="text-sm text-ink-500">{t("account.signInLogsEmpty")}</p>
+        ) : (
+          <ul className="divide-y divide-ink-100">
+            {signInLogs.map((row) => (
+              <li
+                key={row.id}
+                className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 first:pt-0 last:pb-0"
+              >
+                <div className="flex items-start gap-3 min-w-0">
+                  <SignInLogMethodIcon method={row.method} />
+                  <div className="min-w-0">
+                    <p className="font-medium text-ink-800 leading-snug">
+                      {t(`account.signInMethod.${row.method}`)}
+                    </p>
+                    <p className="text-xs text-ink-500 leading-snug mt-0.5">
+                      {signInLogEventLabel(row.event, t)}
+                    </p>
+                    <p className="text-xs text-ink-500 leading-snug mt-0.5">
+                      {formatSignInLogMeta(row, t)}
+                    </p>
+                  </div>
+                </div>
+                <time
+                  dateTime={new Date(row.at).toISOString()}
+                  className="text-ink-500 text-xs sm:text-sm sm:text-right shrink-0 pl-8 sm:pl-0"
+                >
+                  {formatSignInLogTime(row.at, htmlLocale)}
+                </time>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
+
   function renderAccount() {
     if (!showAccountSections || !user) return null;
     const email = user.email ?? user.id;
@@ -472,6 +545,8 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
         return renderBackup();
       case "account":
         return renderAccount();
+      case "logs":
+        return renderSignInLogs();
       default:
         return renderGeneral();
     }
@@ -543,13 +618,21 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
           </p>
           <nav className="flex md:flex-col gap-1 md:gap-0.5" aria-label={t("settings.navAria")}>
             {navItems.map((item) => (
-              <a
-                key={item.id}
-                href={settingsHref(item.id)}
-                className={sidebarNavClass(activeSection === item.id)}
-              >
-                {item.label}
-              </a>
+              <React.Fragment key={item.id}>
+                {item.id === "logs" ? (
+                  <div
+                    className="my-2 border-t border-ink-200"
+                    role="separator"
+                    aria-hidden
+                  />
+                ) : null}
+                <a
+                  href={settingsHref(item.id)}
+                  className={sidebarNavClass(activeSection === item.id)}
+                >
+                  {item.label}
+                </a>
+              </React.Fragment>
             ))}
           </nav>
         </aside>

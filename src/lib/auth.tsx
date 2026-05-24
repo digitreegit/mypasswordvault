@@ -72,6 +72,8 @@ function signInMethodFromUser(user: User, lastUsed?: SignInLogMethod | null): Si
   if (hasGoogle && !hasEmail) return "google";
   if (hasEmail && !hasGoogle) return "email";
 
+  if (lastUsed === "google" || lastUsed === "email") return lastUsed;
+
   const preferred = preferredProviderWhenBothLinked(googleIdentity, emailIdentity);
   if (preferred) return preferred;
 
@@ -83,8 +85,6 @@ function signInMethodFromUser(user: User, lastUsed?: SignInLogMethod | null): Si
 
   const primary = user.app_metadata?.provider;
   if (primary === "google" || primary === "email") return primary;
-
-  if (lastUsed === "google" || lastUsed === "email") return lastUsed;
 
   if (hasGoogle && !userSupportsEmailPassword(user)) return "google";
   if (userSupportsEmailPassword(user)) return "email";
@@ -98,6 +98,7 @@ function signInMethodForAuthEvent(
 ): SignInLogMethod {
   if (event === "PASSWORD_RECOVERY") return "email";
   const lastUsed = getAuthLastMethod(session.user.id);
+  if (lastUsed === "google" || lastUsed === "email") return lastUsed;
   return signInMethodFromUser(session.user, lastUsed);
 }
 
@@ -106,14 +107,15 @@ export function getUserSignInMethod(user: User): SignInLogMethod {
   return signInMethodFromUser(user, getAuthLastMethod(user.id));
 }
 
-function recordSignInMethodFromAuthEvent(event: AuthChangeEvent): void {
+function recordSignInMethodFromAuthEvent(
+  event: AuthChangeEvent,
+  userId: string
+): void {
   if (event === "PASSWORD_RECOVERY" || isPasswordRecoveryPending()) {
-    recordEmailSignIn();
+    recordEmailSignIn(userId);
     return;
   }
-  if (!applyPendingAuthMethod()) {
-    /* Session refresh / token renewal — keep existing LAST USED. */
-  }
+  applyPendingAuthMethod(userId);
 }
 
 interface AuthContextValue {
@@ -178,7 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         (event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") &&
         next?.user?.id
       ) {
-        recordSignInMethodFromAuthEvent(event);
+        recordSignInMethodFromAuthEvent(event, next.user.id);
         const method = signInMethodForAuthEvent(event, next);
         if (method === "google" || method === "email") {
           setAuthLastMethod(method, next.user.id);
@@ -231,7 +233,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearPendingAuthMethod();
       throw error;
     }
-    recordEmailSignIn();
   }, []);
 
   const signUpWithEmail = useCallback(async (email: string, password: string) => {
@@ -252,9 +253,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearPendingAuthMethod();
       throw new AuthEmailTakenError();
     }
-    if (data.session) {
-      recordEmailSignIn();
-    } else {
+    if (!data.session) {
       clearPendingAuthMethod();
     }
   }, []);
@@ -279,7 +278,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
     clearPasswordRecoveryPending();
     setPasswordRecoveryPendingState(false);
-    recordEmailSignIn();
+    recordEmailSignIn(sessionData.session.user.id);
     stripAuthParamsFromUrl();
   }, []);
 

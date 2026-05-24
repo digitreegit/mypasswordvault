@@ -92,10 +92,7 @@
       '" data-i18n="navOpenMyVault"></a>' +
       '<div class="landing-user-dropdown-divider" role="separator"></div>' +
       '<a role="menuitem" class="landing-user-dropdown-item" href="' +
-      appPath("/app/#/account") +
-      '" data-i18n="navAccountPreference"></a>' +
-      '<a role="menuitem" class="landing-user-dropdown-item" href="' +
-      appPath("/app/#/account/logs") +
+      appPath("/app/#/settings/logs") +
       '" data-i18n="navSignInLogs"></a>' +
       '<button type="button" role="menuitem" class="landing-user-dropdown-item landing-user-dropdown-logout" data-i18n="navLogOut"></button>' +
       "</div></div>";

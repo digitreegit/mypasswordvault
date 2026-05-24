@@ -8,7 +8,6 @@ import { LockScreen } from "./components/LockScreen";
 import { VaultScreen } from "./components/VaultScreen";
 import { AuthScreen } from "./components/AuthScreen";
 import { PricingPage } from "./components/PricingPage";
-import { AccountSettingsPage } from "./components/AccountSettingsPage";
 import {
   SettingsPage,
   settingsSectionFromPath,
@@ -56,26 +55,30 @@ function VaultShell() {
   return <Router />;
 }
 
+function normalizeHashPath(path: string): string {
+  if (path === "account/logs") return "settings/logs";
+  if (path === "account") return "settings/account";
+  return path;
+}
+
 function AuthenticatedVaultRoutes({ hashPath }: { hashPath: string }) {
-  const isAccountRoute =
-    hashPath === "account" || hashPath === "account/logs";
+  const route = normalizeHashPath(hashPath);
+
+  useEffect(() => {
+    if (route !== hashPath) {
+      window.location.hash = `#/${route}`;
+    }
+  }, [hashPath, route]);
 
   const isSettingsRoute =
-    hashPath === "settings" ||
-    hashPath === "settings/plan" ||
-    hashPath === "settings/backup" ||
-    hashPath === "settings/account";
-
-  if (isAccountRoute) {
-    return (
-      <AccountSettingsPage
-        section={hashPath === "account/logs" ? "logs" : "preferences"}
-      />
-    );
-  }
+    route === "settings" ||
+    route === "settings/plan" ||
+    route === "settings/backup" ||
+    route === "settings/account" ||
+    route === "settings/logs";
 
   if (isSettingsRoute) {
-    return <SettingsPage section={settingsSectionFromPath(hashPath)} />;
+    return <SettingsPage section={settingsSectionFromPath(route)} />;
   }
 
   return <VaultShell />;
