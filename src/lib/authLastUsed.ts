@@ -3,17 +3,51 @@ import type { Session } from "@supabase/supabase-js";
 export type AuthLastMethod = "google" | "email";
 
 const STORAGE_KEY = "mpv_auth_last_method";
+const STORAGE_MAP_KEY = "mpv_auth_last_method_by_user";
 const PENDING_AUTH_METHOD_KEY = "mpv_pending_auth_method";
 export const AUTH_LAST_METHOD_CHANGED = "mpv-auth-last-method-changed";
 
-export function getAuthLastMethod(): AuthLastMethod | null {
-  if (typeof window === "undefined") return null;
-  const v = window.localStorage.getItem(STORAGE_KEY);
-  return v === "google" || v === "email" ? v : null;
+function readMethodMap(): Record<string, AuthLastMethod> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(STORAGE_MAP_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Record<string, AuthLastMethod>;
+      if (parsed && typeof parsed === "object") return parsed;
+    }
+  } catch {
+    /* ignore */
+  }
+  const legacy = window.localStorage.getItem(STORAGE_KEY);
+  if (legacy === "google" || legacy === "email") {
+    return { __legacy__: legacy };
+  }
+  return {};
 }
 
-export function setAuthLastMethod(method: AuthLastMethod): void {
+function writeMethodMap(map: Record<string, AuthLastMethod>): void {
   if (typeof window === "undefined") return;
+  window.localStorage.setItem(STORAGE_MAP_KEY, JSON.stringify(map));
+}
+
+export function getAuthLastMethod(userId?: string): AuthLastMethod | null {
+  if (typeof window === "undefined") return null;
+  const map = readMethodMap();
+  if (userId && (map[userId] === "google" || map[userId] === "email")) {
+    return map[userId];
+  }
+  if (map.__legacy__ === "google" || map.__legacy__ === "email") return map.__legacy__;
+  const legacy = window.localStorage.getItem(STORAGE_KEY);
+  return legacy === "google" || legacy === "email" ? legacy : null;
+}
+
+export function setAuthLastMethod(method: AuthLastMethod, userId?: string): void {
+  if (typeof window === "undefined") return;
+  if (userId) {
+    const map = readMethodMap();
+    map[userId] = method;
+    writeMethodMap(map);
+  }
   window.localStorage.setItem(STORAGE_KEY, method);
   window.dispatchEvent(new CustomEvent(AUTH_LAST_METHOD_CHANGED));
 }
@@ -21,6 +55,7 @@ export function setAuthLastMethod(method: AuthLastMethod): void {
 export function clearAuthLastMethod(): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(STORAGE_KEY);
+  window.localStorage.removeItem(STORAGE_MAP_KEY);
 }
 
 /** Set immediately before starting a sign-in flow. */
@@ -60,14 +95,14 @@ export function applyPendingAuthMethod(): boolean {
 }
 
 /** After OAuth redirect session is ready (web or native callback). */
-export function recordGoogleSignIn(): void {
+export function recordGoogleSignIn(userId?: string): void {
   clearPendingAuthMethod();
-  setAuthLastMethod("google");
+  setAuthLastMethod("google", userId);
 }
 
-export function recordEmailSignIn(): void {
+export function recordEmailSignIn(userId?: string): void {
   clearPendingAuthMethod();
-  setAuthLastMethod("email");
+  setAuthLastMethod("email", userId);
 }
 
 /** @deprecated Prefer applyPendingAuthMethod / recordGoogleSignIn */

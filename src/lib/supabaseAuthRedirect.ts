@@ -6,9 +6,11 @@ import {
 } from "./passwordRecoveryPending";
 import {
   applyPendingAuthMethod,
+  getAuthLastMethod,
   markPendingAuthMethod,
   recordEmailSignIn,
   recordGoogleSignIn,
+  setAuthLastMethod,
 } from "./authLastUsed";
 import { getSupabase, isSupabaseConfigured } from "./supabaseClient";
 
@@ -71,11 +73,17 @@ export async function completeOAuthFromUrl(url?: string): Promise<boolean> {
       return false;
     }
     if (data.session) {
+      const userId = data.session.user.id;
       if (!applyPendingAuthMethod()) {
         if (isPasswordRecoveryPending() || urlIndicatesPasswordRecovery()) {
-          recordEmailSignIn();
+          recordEmailSignIn(userId);
         } else {
-          recordGoogleSignIn();
+          recordGoogleSignIn(userId);
+        }
+      } else {
+        const pending = getAuthLastMethod();
+        if (pending === "google" || pending === "email") {
+          setAuthLastMethod(pending, userId);
         }
       }
     }
@@ -177,10 +185,16 @@ export async function ensureOAuthSessionFromUrl(): Promise<void> {
   const { data } = await supabase.auth.getSession();
   if (!data.session) return;
 
-  if (applyPendingAuthMethod()) return;
-  if (isPasswordRecoveryPending() || urlIndicatesPasswordRecovery()) {
-    recordEmailSignIn();
+  if (applyPendingAuthMethod()) {
+    const pending = getAuthLastMethod();
+    if (pending === "google" || pending === "email") {
+      setAuthLastMethod(pending, data.session.user.id);
+    }
     return;
   }
-  if (completedOAuth || hadOAuthCode) recordGoogleSignIn();
+  if (isPasswordRecoveryPending() || urlIndicatesPasswordRecovery()) {
+    recordEmailSignIn(data.session.user.id);
+    return;
+  }
+  if (completedOAuth || hadOAuthCode) recordGoogleSignIn(data.session.user.id);
 }

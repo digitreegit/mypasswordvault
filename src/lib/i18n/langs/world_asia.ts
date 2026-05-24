@@ -1,6 +1,7 @@
 import { MESSAGES_EN as en } from "../en";
 import { AUTH_CN, AUTH_ID, AUTH_JP } from "./auth_i18n";
 import { PRICING_CN, PRICING_ID, PRICING_JP } from "./pricing_i18n";
+import { SETTINGS_CN, SETTINGS_ID, SETTINGS_JP } from "./settings_i18n";
 
 export const MESSAGES_CN: Record<string, string> = {
   ...en,
@@ -104,6 +105,7 @@ export const MESSAGES_CN: Record<string, string> = {
   "pwdGen.cAmbiguous": "排除易混淆字符",
   ...AUTH_CN,
   ...PRICING_CN,
+  ...SETTINGS_CN,
 };
 
 export const MESSAGES_JP: Record<string, string> = {
@@ -212,6 +214,7 @@ export const MESSAGES_JP: Record<string, string> = {
   "pwdGen.cAmbiguous": "紛らわしい文字を除外",
   ...AUTH_JP,
   ...PRICING_JP,
+  ...SETTINGS_JP,
 };
 
 export const MESSAGES_ID: Record<string, string> = {
@@ -321,4 +324,5 @@ export const MESSAGES_ID: Record<string, string> = {
   "pwdGen.cAmbiguous": "Kecualikan karakter ambigu",
   ...AUTH_ID,
   ...PRICING_ID,
+  ...SETTINGS_ID,
 };

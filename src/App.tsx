@@ -53,12 +53,32 @@ function Router() {
 }
 
 function VaultShell() {
-  return (
-    <>
-      <HtmlLang />
-      <Router />
-    </>
-  );
+  return <Router />;
+}
+
+function AuthenticatedVaultRoutes({ hashPath }: { hashPath: string }) {
+  const isAccountRoute =
+    hashPath === "account" || hashPath === "account/logs";
+
+  const isSettingsRoute =
+    hashPath === "settings" ||
+    hashPath === "settings/plan" ||
+    hashPath === "settings/backup" ||
+    hashPath === "settings/account";
+
+  if (isAccountRoute) {
+    return (
+      <AccountSettingsPage
+        section={hashPath === "account/logs" ? "logs" : "preferences"}
+      />
+    );
+  }
+
+  if (isSettingsRoute) {
+    return <SettingsPage section={settingsSectionFromPath(hashPath)} />;
+  }
+
+  return <VaultShell />;
 }
 
 function AuthenticatedApp() {
@@ -69,15 +89,6 @@ function AuthenticatedApp() {
   if (hashPath === "pricing") {
     return <PricingPage />;
   }
-
-  const isAccountRoute =
-    hashPath === "account" || hashPath === "account/logs";
-
-  const isSettingsRoute =
-    hashPath === "settings" ||
-    hashPath === "settings/plan" ||
-    hashPath === "settings/backup" ||
-    hashPath === "settings/account";
 
   if (configured && loading) {
     return (
@@ -91,27 +102,10 @@ function AuthenticatedApp() {
     return <AuthScreen />;
   }
 
-  if (isAccountRoute) {
-    return (
-      <VaultProvider userId={session.user.id}>
-        <AccountSettingsPage
-          section={hashPath === "account/logs" ? "logs" : "preferences"}
-        />
-      </VaultProvider>
-    );
-  }
-
-  if (isSettingsRoute) {
-    return (
-      <VaultProvider userId={session.user.id}>
-        <SettingsPage section={settingsSectionFromPath(hashPath)} />
-      </VaultProvider>
-    );
-  }
-
   return (
     <VaultProvider userId={session.user.id}>
-      <VaultShell />
+      <HtmlLang />
+      <AuthenticatedVaultRoutes hashPath={hashPath} />
     </VaultProvider>
   );
 }

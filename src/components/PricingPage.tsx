@@ -4,8 +4,10 @@ import { translate } from "../lib/i18n/bundles";
 import {
   detectBrowserLocale,
   normalizeLocale,
+  readStoredLocale,
   type Locale,
 } from "../lib/i18n/locale";
+import { subscribeLocaleChanged } from "../lib/appLocale";
 import { getSupabase, isSupabaseConfigured } from "../lib/supabaseClient";
 import { FREE_ENTRY_LIMIT, fetchUserLicensed } from "../lib/entitlements";
 import { isNativeApp } from "../lib/platform";
@@ -28,7 +30,9 @@ function clearCheckoutQuery() {
 
 export function PricingPage() {
   const { configured, loading, session, signInWithGoogle } = useAuth();
-  const [locale] = useState<Locale>(() => normalizeLocale(detectBrowserLocale()));
+  const [locale, setLocale] = useState<Locale>(
+    () => readStoredLocale() ?? normalizeLocale(detectBrowserLocale())
+  );
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [licensed, setLicensed] = useState<boolean | null>(null);
@@ -51,6 +55,8 @@ export function PricingPage() {
   useEffect(() => {
     void reloadLicense();
   }, [reloadLicense]);
+
+  useEffect(() => subscribeLocaleChanged(setLocale), []);
 
   useEffect(() => {
     const q = parseCheckoutQuery();

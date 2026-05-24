@@ -17,6 +17,7 @@ import {
   readStoredLocale,
   type Locale,
 } from "../lib/i18n/locale";
+import { LOCALE_CHANGED, notifyLocaleChanged } from "../lib/appLocale";
 import { isNativeApp } from "../lib/platform";
 import { requestPasswordResetEmail } from "../lib/passwordReset";
 import {
@@ -138,6 +139,7 @@ export function AuthScreen() {
     const L = normalizeLocale(next);
     setLocale(L);
     persistStoredLocale(L);
+    notifyLocaleChanged(L);
     setError(null);
     setInfo(null);
   };
@@ -145,6 +147,15 @@ export function AuthScreen() {
   useEffect(() => {
     document.documentElement.lang = localeToHtmlLang(locale);
   }, [locale]);
+
+  useEffect(() => {
+    const onLocaleChange = (event: Event) => {
+      const next = (event as CustomEvent<Locale>).detail;
+      if (next) setLocale(normalizeLocale(next));
+    };
+    window.addEventListener(LOCALE_CHANGED, onLocaleChange);
+    return () => window.removeEventListener(LOCALE_CHANGED, onLocaleChange);
+  }, []);
 
   useEffect(() => {
     const onFocus = () => refreshLastUsed();

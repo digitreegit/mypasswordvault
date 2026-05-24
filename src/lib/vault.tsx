@@ -51,11 +51,14 @@ import {
 } from "./storage";
 import { generateTotpSecretBase32, verifyTotp } from "./totp";
 import { AppError } from "./errors";
+import { notifyLocaleChanged } from "./appLocale";
 import { translate } from "./i18n/bundles";
 import {
   detectBrowserLocale,
   LOCALE_STORAGE_KEY,
   normalizeLocale,
+  persistStoredLocale,
+  readStoredLocale,
   type Locale,
 } from "./i18n/locale";
 import { buildVaultBackupJson, parseVaultBackup } from "./vaultBackup";
@@ -169,16 +172,6 @@ export function VaultProvider({
   const lastActivityRef = useRef<number>(Date.now());
   const localeRef = useRef<Locale>("en");
   const pushDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  function readStoredLocale(): Locale | null {
-    try {
-      const raw = localStorage.getItem(LOCALE_STORAGE_KEY);
-      if (raw) return normalizeLocale(raw);
-    } catch {
-      /* ignore */
-    }
-    return null;
-  }
 
   const [locale, setLocaleState] = useState<Locale>(
     () => readStoredLocale() ?? detectBrowserLocale()
@@ -344,11 +337,8 @@ export function VaultProvider({
   const setLocale = useCallback(async (next: Locale) => {
     const L = normalizeLocale(next);
     setLocaleState(L);
-    try {
-      localStorage.setItem(LOCALE_STORAGE_KEY, L);
-    } catch {
-      /* ignore */
-    }
+    persistStoredLocale(L);
+    notifyLocaleChanged(L);
     const m = await getMeta();
     if (m) {
       const updated: VaultMeta = { ...m, locale: L, updatedAt: Date.now() };

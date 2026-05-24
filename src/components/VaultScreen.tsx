@@ -100,11 +100,19 @@ function CategorySelect({
 
     const updatePosition = () => {
       const rect = buttonRef.current!.getBoundingClientRect();
+      const gap = 4;
+      const minWidth = Math.max(rect.width, 176);
+      let left = rect.left;
+      if (left + minWidth > window.innerWidth - 8) {
+        left = Math.max(8, window.innerWidth - 8 - minWidth);
+      }
       setPanelStyle({
         position: "fixed",
-        top: rect.bottom + 4,
-        left: rect.left,
-        width: rect.width,
+        top: rect.bottom + gap,
+        left,
+        minWidth,
+        width: "max-content",
+        maxWidth: Math.min(320, window.innerWidth - 16),
         zIndex: 9999,
         maxHeight: "min(16rem, 50vh)",
       });
@@ -152,7 +160,7 @@ function CategorySelect({
 
   const itemClass = (selected: boolean) =>
     [
-      "w-full text-left px-3 py-2 text-sm transition-colors",
+      "block w-full whitespace-nowrap text-left px-3 py-2 text-sm transition-colors",
       selected ? "bg-ink-50 text-ink-900" : "text-ink-800 hover:bg-ink-50",
     ].join(" ");
 
@@ -172,7 +180,7 @@ function CategorySelect({
       >
         <span className="min-w-0 flex-1 truncate">{label}</span>
         <ChevronDownIcon
-          className="h-4 w-4 shrink-0 text-ink-400"
+          className="h-3.5 w-3.5 shrink-0 text-ink-400"
           aria-hidden
         />
       </button>
@@ -206,10 +214,10 @@ function CategorySelect({
                 {c.name}
               </button>
             ))}
-            <div className="my-1 border-t border-ink-200" role="separator" />
+            <div className="mx-3 my-1 border-t border-ink-200" role="separator" />
             <button
               type="button"
-              className="w-full px-3 py-2 text-left text-sm font-medium text-ink-800 hover:bg-ink-50"
+              className="block w-full whitespace-nowrap px-3 py-2 text-left text-sm font-medium text-ink-800 hover:bg-ink-50"
               onClick={handleAdd}
             >
               {t("vault.addShort")}
@@ -229,6 +237,8 @@ const VAULT_PAGE = "max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8";
 /** Figma toolbar: white pill buttons with light border */
 const VAULT_TOOLBAR_BTN =
   "inline-flex items-center justify-center gap-1.5 rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-800 shadow-sm hover:bg-ink-50 transition-colors disabled:opacity-50 disabled:pointer-events-none shrink-0";
+const VAULT_TOOLBAR_BTN_PRIMARY =
+  "inline-flex items-center justify-center gap-1.5 rounded-lg border border-accent-600 bg-accent-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-accent-700 transition-colors disabled:opacity-50 disabled:pointer-events-none shrink-0";
 const VAULT_TOOLBAR_BTN_ICON =
   "inline-flex items-center justify-center rounded-lg border border-ink-200 bg-white p-2 text-ink-600 shadow-sm hover:bg-ink-50 transition-colors shrink-0 min-w-[2.5rem] min-h-[2.5rem]";
 
@@ -575,17 +585,17 @@ export function VaultScreen() {
           className={`w-full bg-white ${
             showEntryLimitBanner
               ? ""
-              : "pt-[max(0.625rem,env(safe-area-inset-top))]"
+              : "pt-[max(0.375rem,env(safe-area-inset-top))]"
           }`}
         >
           <div className="w-full border-b border-ink-200">
             <div
-              className={`${VAULT_PAGE} flex items-center justify-between gap-3 py-1.5 sm:py-2`}
+              className={`${VAULT_PAGE} flex items-center justify-between gap-3 py-1 sm:py-1.5`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <Shield className="w-7 h-auto text-accent-500 shrink-0" />
                 <span
-                  className="font-brand font-semibold text-base sm:text-[1.0625rem] text-ink-900 tracking-tight truncate"
+                  className="font-brand font-semibold text-base sm:text-[1.0625rem] text-ink-900 tracking-tight truncate leading-none -translate-y-0.5"
                   translate="no"
                 >
                   {t("app.brandName")}
@@ -627,9 +637,9 @@ export function VaultScreen() {
       </div>
 
       <main className="flex-1 min-w-0 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-        <div className={`${VAULT_PAGE} py-5 sm:py-6`}>
+        <div className={`${VAULT_PAGE} pt-3 pb-5 sm:pt-4 sm:pb-6`}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 mb-1">
-          <h1 className="font-sans text-2xl sm:text-[1.75rem] font-bold text-ink-900 tracking-tight shrink-0">
+          <h1 className="font-sans text-xl sm:text-2xl font-semibold text-ink-900 tracking-tight shrink-0">
             {t("vault.pageTitle")}
           </h1>
           <div className="relative w-full min-w-0 sm:w-[25rem] sm:max-w-[25rem] shrink-0">
@@ -670,7 +680,7 @@ export function VaultScreen() {
             </button>
             <button
               type="button"
-              className={VAULT_TOOLBAR_BTN}
+              className={VAULT_TOOLBAR_BTN_PRIMARY}
               onClick={addEntry}
               disabled={atEntryLimit}
               aria-label={t("vault.addRow")}
@@ -803,13 +813,13 @@ export function VaultScreen() {
                   >
                     {t("vault.colUser")}
                   </Th>
-                  <th className="px-3 py-2.5 sm:px-4 font-medium">
+                  <th className="px-3 py-1 sm:px-4 font-medium">
                     {t("vault.colPass")}
                   </th>
-                  <th className="px-3 py-2.5 sm:px-4 font-medium">
+                  <th className="px-3 py-1 sm:px-4 font-medium">
                     {t("vault.colNote")}
                   </th>
-                  <th className="pl-3 pr-4 sm:pr-5 py-2.5 font-medium text-right">
+                  <th className="pl-3 pr-4 sm:pr-5 py-1 font-medium text-right">
                     {t("vault.colAction")}
                   </th>
                 </tr>
@@ -859,7 +869,7 @@ export function VaultScreen() {
           </div>
         </div>
 
-        <p className="mx-auto max-w-2xl text-center text-xs text-ink-400 leading-relaxed mt-4 sm:mt-6 px-2">
+        <p className="w-full text-left text-xs text-ink-400 leading-normal mt-2 sm:mt-4">
           {t("vault.footer")}
         </p>
         </div>
@@ -1305,7 +1315,7 @@ function Th({
 }) {
   return (
     <th
-      className="px-3 py-2.5 sm:px-4 font-medium cursor-pointer select-none hover:text-ink-600"
+      className="px-3 py-1 sm:px-4 font-medium cursor-pointer select-none hover:text-ink-600"
       onClick={onClick}
       aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : undefined}
     >

@@ -3,11 +3,12 @@ import { useVault } from "../lib/vault";
 import { useAuth } from "../lib/auth";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { ChevronDown, Shield } from "./Icons";
+import { LOCALES, LOCALE_LABELS, type Locale } from "../lib/i18n/locale";
+import { AccountCredentialPanel } from "./AccountCredentialPanel";
 import { PlanBadge } from "./PlanBadge";
 import { UserMenuDropdown } from "./UserMenuDropdown";
 import { downloadJsonFile } from "../lib/vaultBackup";
 import { isAppError } from "../lib/errors";
-import { isNativeApp } from "../lib/platform";
 
 export type SettingsSection = "general" | "plan" | "backup" | "account";
 
@@ -31,6 +32,8 @@ function sidebarNavClass(active: boolean): string {
       : "text-ink-600 hover:bg-ink-50 hover:text-ink-900",
   ].join(" ");
 }
+
+const SETTINGS_PAGE = "max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8";
 
 export function SettingsPage({ section }: { section: SettingsSection }) {
   const {
@@ -58,9 +61,15 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   const [licenseKeyCopied, setLicenseKeyCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const brandHomeHref = isNativeApp() ? undefined : "/";
   const vaultHref = "/app/#";
   const showAccountSections = Boolean(configured && user);
+  const atEntryLimit = entries.length >= freeEntryLimit;
+  const showHeaderUpgrade = atEntryLimit && !licensed && entitlementLoaded;
+
+  function goToPricing(e?: React.MouseEvent) {
+    e?.preventDefault();
+    window.location.hash = "#/pricing";
+  }
 
   const navItems = useMemo(() => {
     const items: { id: SettingsSection; label: string }[] = [
@@ -146,7 +155,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
 
   function renderGeneral() {
     return (
-      <div className="card p-5 sm:p-6 space-y-3">
+      <div className="card p-5 sm:p-6 space-y-6">
         <div>
           <label className="label" htmlFor="settings-autolock">
             {t("settings.autoLock")}
@@ -192,6 +201,37 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
           </div>
           <p className="text-xs text-ink-500 mt-2 leading-snug">
             {t("settings.autoLockHint")}
+          </p>
+        </div>
+
+        <div className="border-t border-ink-100 pt-6">
+          <label className="label" htmlFor="settings-language">
+            {t("settings.language")}
+          </label>
+          <div className="relative">
+            <select
+              id="settings-language"
+              className="input w-full appearance-none bg-white pr-11"
+              value={locale}
+              onChange={(e) => {
+                void setLocale(e.target.value as Locale);
+              }}
+            >
+              {LOCALES.map((loc) => (
+                <option key={loc} value={loc}>
+                  {LOCALE_LABELS[loc]}
+                </option>
+              ))}
+            </select>
+            <span
+              className="pointer-events-none absolute inset-y-0 right-3 flex items-center justify-end text-ink-400"
+              aria-hidden
+            >
+              <ChevronDown />
+            </span>
+          </div>
+          <p className="text-xs text-ink-500 mt-2 leading-snug">
+            {t("settings.languageHint")}
           </p>
         </div>
       </div>
@@ -282,8 +322,8 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   function renderBackup() {
     return (
       <div className="space-y-4">
-        <div className="card p-5 sm:p-6 space-y-3">
-          <p className="text-sm text-ink-600 leading-snug">{t("settings.syncHint")}</p>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-5 sm:p-6">
+          <p className="text-sm text-amber-900 leading-snug">{t("settings.syncHint")}</p>
         </div>
         <div className="card p-5 sm:p-6 space-y-3">
           <h3 className="text-sm font-semibold text-ink-800">
@@ -333,7 +373,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
               <div className="flex gap-2">
                 <button
                   type="button"
-                  className="btn-secondary text-xs flex-1"
+                  className="btn-secondary text-sm flex-1"
                   onClick={() => setImportDraft(null)}
                   disabled={busy}
                 >
@@ -341,7 +381,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
                 </button>
                 <button
                   type="button"
-                  className="btn-primary text-xs flex-1 bg-amber-700 hover:bg-amber-800"
+                  className="btn-primary text-sm flex-1 bg-amber-700 hover:bg-amber-800"
                   onClick={() => void applyImport()}
                   disabled={busy}
                 >
@@ -359,16 +399,14 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     if (!showAccountSections || !user) return null;
     const email = user.email ?? user.id;
     return (
-      <div className="card p-5 sm:p-6 space-y-4">
-        <div className="space-y-1">
-          <p className="label mb-0">{t("auth.email")}</p>
-          <p className="text-sm text-ink-800 break-all leading-snug">
-            {t("settings.signedInAs", { email })}
-          </p>
-        </div>
+      <div className="space-y-4">
+        <AccountCredentialPanel
+          user={user}
+          t={t}
+          onMessage={(msg) => setBackupToast(msg)}
+        />
 
-        <hr className="border-ink-200" />
-
+        <div className="card p-5 sm:p-6 space-y-4">
         <div className="space-y-2">
           <button
             type="button"
@@ -421,6 +459,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
           </button>
           <p className="text-xs text-red-700 leading-snug">{t("settings.deleteAccountHint")}</p>
         </div>
+        </div>
       </div>
     );
   }
@@ -439,59 +478,58 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-gradient-to-br from-ink-50 to-ink-100">
-      <header className="relative z-30 shrink-0 overflow-visible border-b border-ink-200 bg-white/90 backdrop-blur-sm py-3">
-        <div className="flex items-center justify-between gap-3 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 overflow-visible">
-          {brandHomeHref ? (
-            <a
-              href={brandHomeHref}
-              className="flex items-center gap-2 min-w-0 rounded-md outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2"
-              aria-label={t("auth.brandHomeAria")}
-            >
-              <Shield className="w-8 h-auto text-accent-500 shrink-0" />
+    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-white">
+      <header className="w-full bg-white pt-[max(0.375rem,env(safe-area-inset-top))]">
+        <div className="w-full border-b border-ink-200">
+          <div
+            className={`${SETTINGS_PAGE} flex items-center justify-between gap-3 py-1 sm:py-1.5`}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Shield className="w-7 h-auto text-accent-500 shrink-0" />
               <span
-                className="font-brand font-semibold text-base text-ink-800 tracking-tight truncate"
-                translate="no"
-              >
-                {t("app.brandName")}
-              </span>
-            </a>
-          ) : (
-            <div className="flex items-center gap-2 min-w-0">
-              <Shield className="w-8 h-auto text-accent-500 shrink-0" />
-              <span
-                className="font-brand font-semibold text-base text-ink-800 tracking-tight truncate"
+                className="font-brand font-semibold text-base sm:text-[1.0625rem] text-ink-900 tracking-tight truncate leading-none -translate-y-0.5"
                 translate="no"
               >
                 {t("app.brandName")}
               </span>
             </div>
-          )}
-          <div className="flex items-center gap-2 shrink-0 min-w-0">
-            {configured && user?.id ? (
-              entitlementLoaded ? (
-                <PlanBadge
-                  label={
-                    licensed
-                      ? t("vault.licenseBadgePro")
-                      : t("vault.licenseBadgeFree")
-                  }
-                />
-              ) : (
-                <span
-                  className="h-[1.375rem] w-[2.75rem] rounded-full bg-ink-100 animate-pulse shrink-0"
-                  aria-hidden
-                />
-              )
-            ) : null}
-            <UserMenuDropdown />
+            <div className="flex items-center gap-2.5 shrink-0">
+              {configured && user?.id ? (
+                <>
+                  {showHeaderUpgrade ? (
+                    <a
+                      href="#/pricing"
+                      className="vault-header-upgrade-btn"
+                      onClick={goToPricing}
+                    >
+                      {t("vault.entryLimitUpgrade")}
+                    </a>
+                  ) : null}
+                  {entitlementLoaded ? (
+                    <PlanBadge
+                      label={
+                        licensed
+                          ? t("vault.licenseBadgePro")
+                          : t("vault.licenseBadgeFree")
+                      }
+                    />
+                  ) : (
+                    <span
+                      className="h-[1.375rem] w-[2.75rem] rounded-full bg-ink-100 animate-pulse shrink-0"
+                      aria-hidden
+                    />
+                  )}
+                </>
+              ) : null}
+              <UserMenuDropdown />
+            </div>
           </div>
         </div>
       </header>
 
       <div className="flex flex-1 flex-col min-h-0 w-full">
-        <div className="flex flex-1 flex-col md:flex-row min-h-0 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
-        <aside className="shrink-0 md:w-56 lg:w-60 border-b md:border-b-0 md:border-y-0 md:border-l md:border-r border-ink-200 bg-white/60 md:bg-white/70 px-4 py-4 md:py-8 md:pl-6 md:pr-4">
+        <div className={`flex flex-1 flex-col md:flex-row min-h-0 ${SETTINGS_PAGE}`}>
+        <aside className="shrink-0 md:w-56 lg:w-60 px-0 py-4 md:py-8 md:pr-4">
           <a
             href={vaultHref}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-600 hover:text-ink-900 transition-colors"

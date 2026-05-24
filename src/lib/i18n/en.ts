@@ -221,6 +221,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.autoLockHint":
     "Locks automatically when there is no mouse or keyboard activity.",
   "settings.language": "Language",
+  "settings.languageHint": "Applies to the app interface on this device.",
   "settings.danger": "Danger zone",
   "settings.resetVault": "Reset vault (delete all data)",
   "settings.resetDesc":
@@ -242,6 +243,17 @@ export const MESSAGES_EN: Record<string, string> = {
 
   "settings.accountTitle": "Account",
   "settings.signedInAs": "Signed in as {{email}}",
+  "settings.changePasswordTitle": "Change your password",
+  "settings.changePasswordSubtitle":
+    "Welcome back! Choose a new strong password and save it to proceed.",
+  "settings.currentPassword": "Current password",
+  "settings.updateEmailTitle": "Update email address",
+  "settings.updateEmailLabel": "Provide a new email address",
+  "settings.updateEmailPlaceholder": "example@email.com",
+  "settings.updateEmailHint":
+    "A confirmation email will be sent to the provided email address.",
+  "settings.updateEmailConfirm": "Confirm",
+  "settings.updateEmailTooltip": "Update email address",
   "settings.signOut": "Sign out",
   "settings.signOutHint":
     "Ends your session. Cloud sync stops, but this device keeps its local vault until you reset or delete the account.",
@@ -326,7 +338,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "vault.categoriesTitle": "Categories",
   "vault.categoriesHint":
     "Add names here, then assign each row from the Category column. Save applies name changes.",
-  "vault.addCategory": "Add category",
+  "vault.addCategory": "+ Add Category",
   "vault.deleteCategory": "Remove category",
   "vault.deleteCategoryConfirm":
     "Remove this category? Entries using it become uncategorized.",

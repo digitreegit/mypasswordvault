@@ -212,6 +212,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.autoLock": "자동 잠금 (분)",
   "settings.autoLockHint": "마우스/키보드 입력이 없으면 자동으로 잠깁니다.",
   "settings.language": "언어",
+  "settings.languageHint": "이 기기에서 앱 화면에 표시되는 언어입니다.",
   "settings.danger": "위험 구역",
   "settings.resetVault": "Vault 초기화 (모든 데이터 삭제)",
   "settings.resetDesc":
@@ -233,6 +234,16 @@ export const MESSAGES_KR: Record<string, string> = {
 
   "settings.accountTitle": "계정",
   "settings.signedInAs": "로그인: {{email}}",
+  "settings.changePasswordTitle": "비밀번호 변경",
+  "settings.changePasswordSubtitle":
+    "다시 오신 것을 환영합니다! 새로운 강력한 비밀번호를 입력하고 저장하세요.",
+  "settings.currentPassword": "현재 비밀번호",
+  "settings.updateEmailTitle": "이메일 주소 변경",
+  "settings.updateEmailLabel": "새 이메일 주소를 입력하세요",
+  "settings.updateEmailPlaceholder": "example@email.com",
+  "settings.updateEmailHint": "입력한 이메일 주소로 확인 메일이 발송됩니다.",
+  "settings.updateEmailConfirm": "확인",
+  "settings.updateEmailTooltip": "이메일 주소 변경",
   "settings.signOut": "로그아웃",
   "settings.signOutHint":
     "로그인 세션만 종료합니다. 클라우드 동기화는 멈추지만, 계정 삭제나 금고 초기화 전까지 이 기기의 로컬 데이터는 남습니다.",
@@ -317,7 +328,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "vault.categoriesTitle": "카테고리",
   "vault.categoriesHint":
     "이름을 추가·수정한 뒤 저장하세요. 표의 카테고리 열에서 항목에 지정할 수 있습니다.",
-  "vault.addCategory": "카테고리 추가",
+  "vault.addCategory": "+ 카테고리 추가",
   "vault.deleteCategory": "카테고리 삭제",
   "vault.deleteCategoryConfirm":
     "이 카테고리를 삭제할까요? 사용 중인 항목은 분류 없음으로 바뀝니다.",

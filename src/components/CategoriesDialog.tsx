@@ -20,6 +20,27 @@ function reorderBeforeTarget(
   return next;
 }
 
+function reorderAfterTarget(
+  list: VaultCategory[],
+  draggedId: string,
+  targetId: string
+): VaultCategory[] {
+  if (draggedId === targetId) return list;
+  const idxDrag = list.findIndex((x) => x.id === draggedId);
+  const idxTarget = list.findIndex((x) => x.id === targetId);
+  if (idxDrag === -1 || idxTarget === -1) return list;
+  const item = list[idxDrag];
+  const rest = list.filter((x) => x.id !== draggedId);
+  const newTargetIdx = rest.findIndex((x) => x.id === targetId);
+  if (newTargetIdx === -1) return list;
+  const next = [...rest];
+  next.splice(newTargetIdx + 1, 0, item);
+  return next;
+}
+
+const DROP_LINE_CLASS =
+  "pointer-events-none absolute left-1 right-1 z-10 h-0.5 rounded-full bg-ink-200";
+
 export function CategoriesDialog({
   onClose,
   startWithNewCategory = false,
@@ -31,7 +52,10 @@ export function CategoriesDialog({
   const [draft, setDraft] = useState<VaultCategory[]>(categories);
   const [busy, setBusy] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [dropIndicator, setDropIndicator] = useState<{
+    id: string;
+    position: "before" | "after";
+  } | null>(null);
   const pendingFocusIdRef = useRef<string | null>(null);
   const seededNewRef = useRef(false);
 
@@ -95,7 +119,7 @@ export function CategoriesDialog({
               {t("vault.categoriesTitle")}
             </h1>
             <button type="button" className="btn-ghost text-sm shrink-0" onClick={onClose}>
-              {t("common.cancel")}
+              {t("common.close")}
             </button>
           </div>
         </div>
@@ -103,36 +127,59 @@ export function CategoriesDialog({
           <p className="text-sm text-ink-600 leading-snug">{t("vault.categoriesHint")}</p>
           <p className="text-xs text-ink-500 leading-snug">{t("vault.dragToReorder")}</p>
           <ul className="space-y-2">
-            {draft.map((c) => (
+            {draft.map((c) => {
+              const showDropLineBefore =
+                dropIndicator?.id === c.id &&
+                dropIndicator.position === "before" &&
+                draggingId !== null &&
+                draggingId !== c.id;
+              const showDropLineAfter =
+                dropIndicator?.id === c.id &&
+                dropIndicator.position === "after" &&
+                draggingId !== null &&
+                draggingId !== c.id;
+              return (
               <li
                 key={c.id}
                 className={[
-                  "flex items-center gap-1.5 rounded-md border border-transparent px-0.5 py-0.5 transition-colors",
+                  "relative flex items-center gap-1.5 rounded-md border border-transparent px-0.5 py-0.5 transition-colors",
                   draggingId === c.id ? "opacity-50" : "",
-                  dragOverId === c.id && draggingId && draggingId !== c.id
-                    ? "border-accent-300 bg-accent-50/60"
-                    : "",
                 ].join(" ")}
                 onDragOver={(e) => {
                   if (busy || !draggingId || draggingId === c.id) return;
                   e.preventDefault();
                   e.dataTransfer.dropEffect = "move";
-                  setDragOverId(c.id);
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const position =
+                    e.clientY - rect.top > rect.height / 2 ? "after" : "before";
+                  setDropIndicator({ id: c.id, position });
                 }}
                 onDragLeave={(e) => {
                   if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-                    setDragOverId((cur) => (cur === c.id ? null : cur));
+                    setDropIndicator((cur) => (cur?.id === c.id ? null : cur));
                   }
                 }}
                 onDrop={(e) => {
                   e.preventDefault();
                   const draggedId = e.dataTransfer.getData("text/plain");
-                  setDragOverId(null);
+                  const position =
+                    dropIndicator?.id === c.id ? dropIndicator.position : "before";
+                  setDropIndicator(null);
                   setDraggingId(null);
                   if (!draggedId || draggedId === c.id) return;
-                  setDraft((prev) => reorderBeforeTarget(prev, draggedId, c.id));
+                  setDraft((prev) =>
+                    position === "after"
+                      ? reorderAfterTarget(prev, draggedId, c.id)
+                      : reorderBeforeTarget(prev, draggedId, c.id)
+                  );
                 }}
               >
+                {showDropLineBefore ? (
+                  <div className={`${DROP_LINE_CLASS} -top-1`} aria-hidden />
+                ) : null}
+                {showDropLineAfter ? (
+                  <div className={`${DROP_LINE_CLASS} -bottom-1`} aria-hidden />
+                ) : null}
                 <span
                   draggable={!busy}
                   role="button"
@@ -154,7 +201,7 @@ export function CategoriesDialog({
                   }}
                   onDragEnd={() => {
                     setDraggingId(null);
-                    setDragOverId(null);
+                    setDropIndicator(null);
                   }}
                   onKeyDown={(e) => {
                     if (busy) return;
@@ -201,11 +248,14 @@ export function CategoriesDialog({
                   <Trash />
                 </button>
               </li>
-            ))}
+              );
+            })}
           </ul>
+        </div>
+        <div className="px-5 py-3 border-t border-ink-100 flex items-center justify-between gap-2">
           <button
             type="button"
-            className="btn-secondary text-sm w-full"
+            className="btn-secondary text-sm shrink-0"
             disabled={busy}
             onClick={() => {
               const id = newId();
@@ -215,14 +265,14 @@ export function CategoriesDialog({
           >
             {t("vault.addCategory")}
           </button>
-        </div>
-        <div className="px-5 py-3 border-t border-ink-100 flex justify-end gap-2">
-          <button type="button" className="btn-ghost" onClick={onClose} disabled={busy}>
-            {t("common.cancel")}
-          </button>
-          <button type="button" className="btn-primary" onClick={() => void save()} disabled={busy}>
-            {t("common.save")}
-          </button>
+          <div className="flex justify-end gap-2">
+            <button type="button" className="btn-ghost" onClick={onClose} disabled={busy}>
+              {t("common.cancel")}
+            </button>
+            <button type="button" className="btn-primary" onClick={() => void save()} disabled={busy}>
+              {t("common.save")}
+            </button>
+          </div>
         </div>
       </div>
     </div>

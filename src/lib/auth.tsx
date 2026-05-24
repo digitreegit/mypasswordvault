@@ -6,7 +6,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
+import type { AuthChangeEvent, Session, User, UserIdentity } from "@supabase/supabase-js";
 import { getSupabase, isSupabaseConfigured } from "./supabaseClient";
 import { getOAuthRedirectUrl } from "./platform";
 import { isNativeApp, signInWithGoogleNative } from "./nativeAuth";
@@ -21,6 +21,7 @@ import {
   getAuthLastMethod,
   markPendingAuthMethod,
   recordEmailSignIn,
+  setAuthLastMethod,
 } from "./authLastUsed";
 import {
   clearPasswordRecoveryPending,
@@ -38,23 +39,71 @@ import {
   type SignInLogMethod,
 } from "./signInLogs";
 
+function identitySignedInAt(identity?: UserIdentity): number {
+  if (!identity?.last_sign_in_at) return -1;
+  const ms = Date.parse(identity.last_sign_in_at);
+  return Number.isFinite(ms) ? ms : -1;
+}
+
+function preferredProviderWhenBothLinked(
+  google?: UserIdentity,
+  email?: UserIdentity
+): SignInLogMethod | null {
+  const gAt = identitySignedInAt(google);
+  const eAt = identitySignedInAt(email);
+  if (gAt < 0 && eAt < 0) return null;
+  return gAt >= eAt ? "google" : "email";
+}
+
+/** True when the account can sign in with email + password (not Google-only). */
+export function userSupportsEmailPassword(user: User): boolean {
+  const providers = user.app_metadata?.providers;
+  if (Array.isArray(providers)) return providers.includes("email");
+  return user.identities?.some((i) => i.provider === "email") ?? false;
+}
+
+function signInMethodFromUser(user: User, lastUsed?: SignInLogMethod | null): SignInLogMethod {
+  const identities = user.identities ?? [];
+  const googleIdentity = identities.find((i) => i.provider === "google");
+  const emailIdentity = identities.find((i) => i.provider === "email");
+  const hasGoogle = Boolean(googleIdentity);
+  const hasEmail = Boolean(emailIdentity);
+
+  if (hasGoogle && !hasEmail) return "google";
+  if (hasEmail && !hasGoogle) return "email";
+
+  const preferred = preferredProviderWhenBothLinked(googleIdentity, emailIdentity);
+  if (preferred) return preferred;
+
+  const providers = user.app_metadata?.providers;
+  if (Array.isArray(providers)) {
+    if (providers.includes("google") && !providers.includes("email")) return "google";
+    if (providers.includes("email") && !providers.includes("google")) return "email";
+  }
+
+  const primary = user.app_metadata?.provider;
+  if (primary === "google" || primary === "email") return primary;
+
+  if (lastUsed === "google" || lastUsed === "email") return lastUsed;
+
+  if (hasGoogle && !userSupportsEmailPassword(user)) return "google";
+  if (userSupportsEmailPassword(user)) return "email";
+  if (hasGoogle) return "google";
+  return "unknown";
+}
+
 function signInMethodForAuthEvent(
   event: AuthChangeEvent,
   session: Session
 ): SignInLogMethod {
   if (event === "PASSWORD_RECOVERY") return "email";
+  const lastUsed = getAuthLastMethod(session.user.id);
+  return signInMethodFromUser(session.user, lastUsed);
+}
 
-  const stored = getAuthLastMethod();
-  if (stored === "google" || stored === "email") return stored;
-
-  const provider = session.user.app_metadata?.provider;
-  if (provider === "google") return "google";
-  if (provider === "email") return "email";
-
-  const identities = session.user.identities ?? [];
-  if (identities.some((i) => i.provider === "email")) return "email";
-  if (identities.some((i) => i.provider === "google")) return "google";
-  return "unknown";
+/** Primary sign-in method for the current user (for account UI). */
+export function getUserSignInMethod(user: User): SignInLogMethod {
+  return signInMethodFromUser(user, getAuthLastMethod(user.id));
 }
 
 function recordSignInMethodFromAuthEvent(event: AuthChangeEvent): void {
@@ -130,8 +179,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         next?.user?.id
       ) {
         recordSignInMethodFromAuthEvent(event);
+        const method = signInMethodForAuthEvent(event, next);
+        if (method === "google" || method === "email") {
+          setAuthLastMethod(method, next.user.id);
+        }
         appendSignInLog(next.user.id, {
-          method: signInMethodForAuthEvent(event, next),
+          method,
           event,
         });
       }
