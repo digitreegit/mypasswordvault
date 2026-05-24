@@ -6,7 +6,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import type { AuthChangeEvent, Session, User, UserIdentity } from "@supabase/supabase-js";
+import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 import { getSupabase, isSupabaseConfigured } from "./supabaseClient";
 import { getOAuthRedirectUrl } from "./platform";
 import { isNativeApp, signInWithGoogleNative } from "./nativeAuth";
@@ -16,12 +16,9 @@ import {
   isDuplicateSignUpResponse,
 } from "./authErrors";
 import {
-  applyPendingAuthMethod,
   clearPendingAuthMethod,
-  getAuthLastMethod,
-  markPendingAuthMethod,
-  recordEmailSignIn,
-  setAuthLastMethod,
+  clearSignInAttempt,
+  markSignInAttempt,
 } from "./authLastUsed";
 import {
   clearPasswordRecoveryPending,
@@ -33,95 +30,14 @@ import {
   requestAccountDeletion,
 } from "./accountDeletion";
 import { stripAuthParamsFromUrl } from "./supabaseAuthRedirect";
-import {
-  appendSignInLog,
-  clearSignInLogsForUser,
-  type SignInLogMethod,
-} from "./signInLogs";
+import { finalizeSignIn } from "./signInRecord";
+import { getUserSignInMethod, userSupportsEmailPassword } from "./signInMethod";
 
-function identitySignedInAt(identity?: UserIdentity): number {
-  if (!identity?.last_sign_in_at) return -1;
-  const ms = Date.parse(identity.last_sign_in_at);
-  return Number.isFinite(ms) ? ms : -1;
-}
-
-function preferredProviderWhenBothLinked(
-  google?: UserIdentity,
-  email?: UserIdentity
-): SignInLogMethod | null {
-  const gAt = identitySignedInAt(google);
-  const eAt = identitySignedInAt(email);
-  if (gAt < 0 && eAt < 0) return null;
-  return gAt >= eAt ? "google" : "email";
-}
-
-/** True when the account can sign in with email + password (not Google-only). */
-export function userSupportsEmailPassword(user: User): boolean {
-  const providers = user.app_metadata?.providers;
-  if (Array.isArray(providers)) return providers.includes("email");
-  return user.identities?.some((i) => i.provider === "email") ?? false;
-}
-
-function signInMethodFromUser(user: User, lastUsed?: SignInLogMethod | null): SignInLogMethod {
-  const identities = user.identities ?? [];
-  const googleIdentity = identities.find((i) => i.provider === "google");
-  const emailIdentity = identities.find((i) => i.provider === "email");
-  const hasGoogle = Boolean(googleIdentity);
-  const hasEmail = Boolean(emailIdentity);
-
-  if (hasGoogle && !hasEmail) return "google";
-  if (hasEmail && !hasGoogle) return "email";
-
-  if (lastUsed === "google" || lastUsed === "email") return lastUsed;
-
-  const preferred = preferredProviderWhenBothLinked(googleIdentity, emailIdentity);
-  if (preferred) return preferred;
-
-  const providers = user.app_metadata?.providers;
-  if (Array.isArray(providers)) {
-    if (providers.includes("google") && !providers.includes("email")) return "google";
-    if (providers.includes("email") && !providers.includes("google")) return "email";
-  }
-
-  const primary = user.app_metadata?.provider;
-  if (primary === "google" || primary === "email") return primary;
-
-  if (hasGoogle && !userSupportsEmailPassword(user)) return "google";
-  if (userSupportsEmailPassword(user)) return "email";
-  if (hasGoogle) return "google";
-  return "unknown";
-}
-
-function signInMethodForAuthEvent(
-  event: AuthChangeEvent,
-  session: Session
-): SignInLogMethod {
-  if (event === "PASSWORD_RECOVERY") return "email";
-  const lastUsed = getAuthLastMethod(session.user.id);
-  if (lastUsed === "google" || lastUsed === "email") return lastUsed;
-  return signInMethodFromUser(session.user, lastUsed);
-}
-
-/** Primary sign-in method for the current user (for account UI). */
-export function getUserSignInMethod(user: User): SignInLogMethod {
-  return signInMethodFromUser(user, getAuthLastMethod(user.id));
-}
-
-function recordSignInMethodFromAuthEvent(
-  event: AuthChangeEvent,
-  userId: string
-): void {
-  if (event === "PASSWORD_RECOVERY" || isPasswordRecoveryPending()) {
-    recordEmailSignIn(userId);
-    return;
-  }
-  applyPendingAuthMethod(userId);
-}
+export { getUserSignInMethod, userSupportsEmailPassword };
 
 interface AuthContextValue {
   configured: boolean;
   loading: boolean;
-  /** True after recovery email link until account password is updated. */
   passwordRecoveryPending: boolean;
   session: Session | null;
   user: User | null;
@@ -136,6 +52,15 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+async function resolveSessionAfterPasswordSignIn(
+  sessionFromResponse: Session | null
+): Promise<Session | null> {
+  if (sessionFromResponse) return sessionFromResponse;
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data } = await supabase.auth.getSession();
+  return data.session ?? null;
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(isSupabaseConfigured);
@@ -174,21 +99,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event === "PASSWORD_RECOVERY") {
         setPasswordRecoveryPending();
         setPasswordRecoveryPendingState(true);
-        markPendingAuthMethod("email");
-      }
-      if (
-        (event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") &&
-        next?.user?.id
-      ) {
-        recordSignInMethodFromAuthEvent(event, next.user.id);
-        const method = signInMethodForAuthEvent(event, next);
-        if (method === "google" || method === "email") {
-          setAuthLastMethod(method, next.user.id);
-        }
-        appendSignInLog(next.user.id, {
-          method,
-          event,
-        });
       }
       setSession(next);
     });
@@ -200,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
-    markPendingAuthMethod("google");
+    markSignInAttempt("google");
     if (isNativeApp()) {
       await signInWithGoogleNative();
       return;
@@ -216,45 +126,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
     });
     if (error) {
-      clearPendingAuthMethod();
+      clearSignInAttempt();
       throw error;
     }
   }, []);
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
-    markPendingAuthMethod("email");
+    const trimmed = email.trim();
+    markSignInAttempt("email");
     const supabase = getSupabase();
     if (!supabase) throw new Error("Supabase not configured");
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: trimmed,
       password,
     });
     if (error) {
-      clearPendingAuthMethod();
+      clearSignInAttempt();
       throw error;
+    }
+    const session = await resolveSessionAfterPasswordSignIn(data.session);
+    if (session) {
+      finalizeSignIn(session, "email", "SIGNED_IN", trimmed);
     }
   }, []);
 
   const signUpWithEmail = useCallback(async (email: string, password: string) => {
-    markPendingAuthMethod("email");
+    const trimmed = email.trim();
+    markSignInAttempt("email");
     const supabase = getSupabase();
     if (!supabase) throw new Error("Supabase not configured");
     const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
+      email: trimmed,
       password,
       options: { emailRedirectTo: getOAuthRedirectUrl() },
     });
     if (error) {
-      clearPendingAuthMethod();
+      clearSignInAttempt();
       if (isAuthEmailTakenError(error)) throw new AuthEmailTakenError();
       throw error;
     }
     if (isDuplicateSignUpResponse(data)) {
-      clearPendingAuthMethod();
+      clearSignInAttempt();
       throw new AuthEmailTakenError();
     }
-    if (!data.session) {
-      clearPendingAuthMethod();
+    const session = await resolveSessionAfterPasswordSignIn(data.session);
+    if (session) {
+      finalizeSignIn(session, "email", "SIGNED_IN", trimmed);
+    } else {
+      clearSignInAttempt();
     }
   }, []);
 
@@ -278,13 +197,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
     clearPasswordRecoveryPending();
     setPasswordRecoveryPendingState(false);
-    recordEmailSignIn(sessionData.session.user.id);
+    const { data: after } = await supabase.auth.getSession();
+    const session = after.session ?? sessionData.session;
+    finalizeSignIn(session, "email", "PASSWORD_RECOVERY", session.user.email);
     stripAuthParamsFromUrl();
   }, []);
 
   const signOut = useCallback(async () => {
     const supabase = getSupabase();
     if (!supabase) return;
+    clearSignInAttempt();
     clearPendingAuthMethod();
     clearPasswordRecoveryPending();
     setPasswordRecoveryPendingState(false);
@@ -293,10 +215,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteAccount = useCallback(async () => {
-    const uid = session?.user?.id;
     await requestAccountDeletion();
-    if (uid) clearSignInLogsForUser(uid);
     await clearAllLocalAppData();
+    clearSignInAttempt();
     clearPendingAuthMethod();
     clearPasswordRecoveryPending();
     setPasswordRecoveryPendingState(false);

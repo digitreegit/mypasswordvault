@@ -694,18 +694,18 @@ export function VaultScreen() {
             className="vault-entry-limit-banner pt-[env(safe-area-inset-top,0px)]"
           >
             <div
-              className={`${VAULT_PAGE} flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between`}
+              className={`${VAULT_PAGE} flex flex-col gap-2 py-1.5 sm:flex-row sm:items-center sm:justify-between sm:py-2`}
             >
-              <div className="flex min-w-0 gap-3">
+              <div className="flex min-w-0 items-center gap-2">
                 <InformationCircleIcon
-                  className="vault-entry-limit-banner__icon mt-0.5 h-5 w-5 shrink-0"
+                  className="vault-entry-limit-banner__icon h-4 w-4 shrink-0"
                   aria-hidden
                 />
-                <p className="vault-entry-limit-banner__text min-w-0 text-sm leading-snug">
+                <p className="vault-entry-limit-banner__text min-w-0 text-xs leading-snug sm:text-sm">
                   {t("vault.entryLimitBanner", { limit: freeEntryLimit })}
                 </p>
               </div>
-              <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
+              <div className="flex shrink-0 items-center gap-1.5 self-end sm:self-auto">
                 <a
                   href="#/pricing"
                   className="vault-entry-limit-banner__cta"
@@ -719,7 +719,7 @@ export function VaultScreen() {
                   onClick={dismissEntryLimitBanner}
                   aria-label={t("vault.entryLimitBannerDismiss")}
                 >
-                  <XMarkIcon className="h-5 w-5" aria-hidden />
+                  <XMarkIcon className="h-4 w-4" aria-hidden />
                 </button>
               </div>
             </div>

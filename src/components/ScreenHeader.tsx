@@ -6,9 +6,9 @@ import type { Locale } from "../lib/i18n/locale";
 interface ScreenHeaderProps {
   pageTitle: React.ReactNode;
   brandName: string;
-  locale: Locale;
-  onLocaleChange: (l: Locale) => void | Promise<void>;
-  languageAriaLabel: string;
+  locale?: Locale;
+  onLocaleChange?: (l: Locale) => void | Promise<void>;
+  languageAriaLabel?: string;
   /** Shield + brand link here when set (e.g. `/` from sign-in → marketing site). */
   brandHomeHref?: string;
   brandHomeAriaLabel?: string;
@@ -21,6 +21,8 @@ interface ScreenHeaderProps {
   /** Shown under the page title (e.g. auth sign-in subtitle). */
   subtitle?: React.ReactNode;
   titleClassName?: string;
+  /** When false, hides the top-right language menu. Defaults to true. */
+  showLanguageMenu?: boolean;
 }
 
 export function ScreenHeader({
@@ -37,6 +39,7 @@ export function ScreenHeader({
   titleId,
   subtitle,
   titleClassName = "text-xl font-semibold text-ink-900 tracking-tight",
+  showLanguageMenu = true,
 }: ScreenHeaderProps) {
   return (
     <header
@@ -72,12 +75,14 @@ export function ScreenHeader({
             </span>
           </div>
         )}
-        <LanguageMenu
-          value={locale}
-          onChange={(l) => void Promise.resolve(onLocaleChange(l))}
-          ariaLabel={languageAriaLabel}
-          align="right"
-        />
+        {showLanguageMenu && locale && onLocaleChange ? (
+          <LanguageMenu
+            value={locale}
+            onChange={(l) => void Promise.resolve(onLocaleChange(l))}
+            ariaLabel={languageAriaLabel ?? "Language"}
+            align="right"
+          />
+        ) : null}
       </div>
       <div className="space-y-1">
         <div className="flex items-start justify-between gap-2">

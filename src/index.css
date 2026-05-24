@@ -57,13 +57,13 @@ body {
     color: #111827;
   }
   .vault-entry-limit-banner__cta {
-    @apply inline-flex shrink-0 items-center justify-center rounded-lg border border-ink-200 bg-white px-4 py-2 text-sm font-medium text-ink-900 shadow-sm transition-colors;
+    @apply inline-flex shrink-0 items-center justify-center rounded-md border border-ink-200 bg-white px-2.5 py-1 text-xs font-medium text-ink-900 shadow-sm transition-colors;
   }
   .vault-entry-limit-banner__cta:hover {
     @apply bg-ink-50;
   }
   .vault-entry-limit-banner__close {
-    @apply inline-flex shrink-0 items-center justify-center rounded-lg p-2 text-ink-900 transition-colors;
+    @apply inline-flex shrink-0 items-center justify-center rounded-md p-1 text-ink-900 transition-colors;
   }
   .vault-entry-limit-banner__close:hover {
     background-color: rgba(0, 0, 0, 0.08);

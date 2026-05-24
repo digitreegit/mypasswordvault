@@ -8,8 +8,6 @@ export const SETTINGS_CN: Record<string, string> = {
   "settings.navGeneral": "常规",
   "settings.navPlan": "套餐",
   "settings.navBackup": "备份",
-  "settings.navSignInLogs": "登录记录",
-  "settings.signInLogsSubtitle": "此浏览器上的最近登录记录（仅存储在本设备）。",
   "settings.generalSubtitle": "此设备上的自动锁定及其他保险库偏好设置。",
   "settings.planSubtitle": "条目限制与许可证状态。",
   "settings.backupSubtitle": "云同步与可选的离线备份文件。",
@@ -53,7 +51,6 @@ export const SETTINGS_CN: Record<string, string> = {
   "nav.userMenu": "账户菜单",
   "settings.openAccountPage": "账户偏好",
   "account.backToVault": "返回保险库",
-  "account.navSignInLogs": "登录记录",
   "settings.licenseTitle": "套餐与条目限制",
   "settings.licenseFree":
     "免费：此账户最多 {{limit}} 个密码条目。服务器无法读取密码内容。",
@@ -83,8 +80,6 @@ export const SETTINGS_JP: Record<string, string> = {
   "settings.navGeneral": "一般",
   "settings.navPlan": "プラン",
   "settings.navBackup": "バックアップ",
-  "settings.navSignInLogs": "サインイン履歴",
-  "settings.signInLogsSubtitle": "このブラウザでの最近のサインイン（端末にのみ保存）。",
   "settings.generalSubtitle": "このデバイスの自動ロックなど、Vault の環境設定です。",
   "settings.planSubtitle": "エントリー上限とライセンスの状態です。",
   "settings.backupSubtitle": "クラウド同期とオフラインのバックアップファイルです。",
@@ -129,7 +124,6 @@ export const SETTINGS_JP: Record<string, string> = {
   "nav.userMenu": "アカウントメニュー",
   "settings.openAccountPage": "アカウント設定",
   "account.backToVault": "Vault に戻る",
-  "account.navSignInLogs": "サインイン履歴",
   "settings.licenseTitle": "プランとエントリー上限",
   "settings.licenseFree":
     "無料: このアカウントはパスワードエントリー最大 {{limit}} 件。サーバーはパスワード内容を知りません。",
@@ -160,9 +154,6 @@ export const SETTINGS_ID: Record<string, string> = {
   "settings.navGeneral": "Umum",
   "settings.navPlan": "Paket",
   "settings.navBackup": "Cadangan",
-  "settings.navSignInLogs": "Log masuk",
-  "settings.signInLogsSubtitle":
-    "Peristiwa masuk terbaru di browser ini (disimpan secara lokal di perangkat Anda).",
   "settings.generalSubtitle": "Kunci otomatis dan preferensi brankas lainnya di perangkat ini.",
   "settings.planSubtitle": "Batas entri dan status lisensi Anda.",
   "settings.backupSubtitle": "Sinkronisasi cloud dan file cadangan offline opsional.",
@@ -207,7 +198,6 @@ export const SETTINGS_ID: Record<string, string> = {
   "nav.userMenu": "Menu akun",
   "settings.openAccountPage": "Preferensi akun",
   "account.backToVault": "Kembali ke brankas",
-  "account.navSignInLogs": "Log masuk",
   "settings.licenseTitle": "Paket & batas entri",
   "settings.licenseFree":
     "Gratis: maksimal {{limit}} entri kata sandi untuk akun ini. Server tidak dapat membaca isi kata sandi.",
@@ -238,9 +228,6 @@ export const SETTINGS_ES: Record<string, string> = {
   "settings.navGeneral": "General",
   "settings.navPlan": "Plan",
   "settings.navBackup": "Copia de seguridad",
-  "settings.navSignInLogs": "Registro de inicios de sesión",
-  "settings.signInLogsSubtitle":
-    "Inicios de sesión recientes en este navegador (almacenados localmente en tu dispositivo).",
   "settings.generalSubtitle": "Bloqueo automático y otras preferencias de la bóveda en este dispositivo.",
   "settings.planSubtitle": "Límites de entradas y estado de la licencia.",
   "settings.backupSubtitle": "Sincronización en la nube y archivos de copia offline opcionales.",
@@ -285,7 +272,6 @@ export const SETTINGS_ES: Record<string, string> = {
   "nav.userMenu": "Menú de cuenta",
   "settings.openAccountPage": "Preferencias de cuenta",
   "account.backToVault": "Volver a la bóveda",
-  "account.navSignInLogs": "Registro de inicios de sesión",
   "settings.licenseTitle": "Plan y límite de entradas",
   "settings.licenseFree":
     "Gratis: hasta {{limit}} entradas de contraseña en esta cuenta. El servidor no puede leer el contenido.",
@@ -316,9 +302,6 @@ export const SETTINGS_DE: Record<string, string> = {
   "settings.navGeneral": "Allgemein",
   "settings.navPlan": "Tarif",
   "settings.navBackup": "Sicherung",
-  "settings.navSignInLogs": "Anmeldeprotokoll",
-  "settings.signInLogsSubtitle":
-    "Letzte Anmeldungen in diesem Browser (lokal auf Ihrem Gerät gespeichert).",
   "settings.generalSubtitle": "Automatische Sperre und andere Tresor-Einstellungen auf diesem Gerät.",
   "settings.planSubtitle": "Eintragslimits und Lizenzstatus.",
   "settings.backupSubtitle": "Cloud-Sync und optionale Offline-Sicherungsdateien.",
@@ -363,7 +346,6 @@ export const SETTINGS_DE: Record<string, string> = {
   "nav.userMenu": "Kontomenü",
   "settings.openAccountPage": "Kontoeinstellungen",
   "account.backToVault": "Zurück zum Tresor",
-  "account.navSignInLogs": "Anmeldeprotokoll",
   "settings.licenseTitle": "Tarif & Eintragslimit",
   "settings.licenseFree":
     "Kostenlos: bis zu {{limit}} Passworteinträge für dieses Konto. Der Server kann Passwortinhalte nicht lesen.",
@@ -394,9 +376,6 @@ export const SETTINGS_FR: Record<string, string> = {
   "settings.navGeneral": "Général",
   "settings.navPlan": "Forfait",
   "settings.navBackup": "Sauvegarde",
-  "settings.navSignInLogs": "Journal de connexion",
-  "settings.signInLogsSubtitle":
-    "Connexions récentes sur ce navigateur (stockées localement sur votre appareil).",
   "settings.generalSubtitle": "Verrouillage automatique et autres préférences du coffre sur cet appareil.",
   "settings.planSubtitle": "Limites d'entrées et statut de la licence.",
   "settings.backupSubtitle": "Synchronisation cloud et fichiers de sauvegarde hors ligne optionnels.",
@@ -441,7 +420,6 @@ export const SETTINGS_FR: Record<string, string> = {
   "nav.userMenu": "Menu du compte",
   "settings.openAccountPage": "Préférences du compte",
   "account.backToVault": "Retour au coffre",
-  "account.navSignInLogs": "Journal de connexion",
   "settings.licenseTitle": "Forfait et limite d'entrées",
   "settings.licenseFree":
     "Gratuit : jusqu'à {{limit}} entrées de mot de passe pour ce compte. Le serveur ne peut pas lire le contenu.",
@@ -472,9 +450,6 @@ export const SETTINGS_IT: Record<string, string> = {
   "settings.navGeneral": "Generale",
   "settings.navPlan": "Piano",
   "settings.navBackup": "Backup",
-  "settings.navSignInLogs": "Registro accessi",
-  "settings.signInLogsSubtitle":
-    "Accessi recenti su questo browser (salvati localmente sul dispositivo).",
   "settings.generalSubtitle": "Blocco automatico e altre preferenze del vault su questo dispositivo.",
   "settings.planSubtitle": "Limiti di voci e stato della licenza.",
   "settings.backupSubtitle": "Sincronizzazione cloud e file di backup offline opzionali.",
@@ -519,7 +494,6 @@ export const SETTINGS_IT: Record<string, string> = {
   "nav.userMenu": "Menu account",
   "settings.openAccountPage": "Preferenze account",
   "account.backToVault": "Torna al vault",
-  "account.navSignInLogs": "Registro accessi",
   "settings.licenseTitle": "Piano e limite voci",
   "settings.licenseFree":
     "Gratuito: fino a {{limit}} voci password per questo account. Il server non può leggere il contenuto.",

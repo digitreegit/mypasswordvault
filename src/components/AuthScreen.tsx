@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../lib/auth";
 import { AuthEmailTakenError, isAuthEmailTakenError } from "../lib/authErrors";
 import {
   AUTH_LAST_METHOD_CHANGED,
+  getAuthLastEmail,
   getAuthLastMethod,
   markPendingAuthMethod,
   type AuthLastMethod,
@@ -117,11 +118,14 @@ export function AuthScreen() {
   const [view, setView] = useState<AuthView>(() =>
     passwordRecoveryPending ? "new-password" : "signin"
   );
-  /** Bump to re-read `mpv_auth_last_method` from localStorage after each login attempt. */
+  /** Bump to re-read last-used method from localStorage after each login attempt. */
   const [lastUsedRevision, setLastUsedRevision] = useState(0);
-  const lastUsed: AuthLastMethod | null = getAuthLastMethod();
+  const [email, setEmail] = useState(() => getAuthLastEmail() ?? "");
+  const lastUsed: AuthLastMethod | null = useMemo(
+    () => getAuthLastMethod(),
+    [lastUsedRevision]
+  );
   void lastUsedRevision;
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);

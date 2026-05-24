@@ -78,17 +78,6 @@ export function UserMenuDropdown({ className = "" }: { className?: string }) {
           >
             {t("settings.title")}
           </a>
-          <a
-            role="menuitem"
-            href="#/settings/logs"
-            className={MENU_ITEM}
-            onClick={(e) => {
-              e.preventDefault();
-              go("#/settings/logs");
-            }}
-          >
-            {t("settings.navSignInLogs")}
-          </a>
           <div className={`${MENU_DIVIDER} mt-1`} role="separator" />
           <button
             type="button"

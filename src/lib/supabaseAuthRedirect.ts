@@ -1,39 +1,31 @@
-import type { EmailOtpType } from "@supabase/supabase-js";
+import type { EmailOtpType, Session } from "@supabase/supabase-js";
 import {
-  isPasswordRecoveryPending,
   setPasswordRecoveryPending,
   urlIndicatesPasswordRecovery,
 } from "./passwordRecoveryPending";
-import {
-  applyPendingAuthMethod,
-  getAuthLastMethod,
-  markPendingAuthMethod,
-  recordEmailSignIn,
-  recordGoogleSignIn,
-  setAuthLastMethod,
-} from "./authLastUsed";
+import { takeSignInAttempt } from "./authLastUsed";
 import { getSupabase, isSupabaseConfigured } from "./supabaseClient";
+import { finalizeSignIn } from "./signInRecord";
 
-function parseOAuthCode(url: string): string | null {
-  try {
-    const parsed = new URL(url);
-    const fromQuery = parsed.searchParams.get("code");
-    if (fromQuery) return fromQuery;
-    const hash = parsed.hash?.startsWith("#")
-      ? parsed.hash.slice(1)
-      : parsed.hash;
-    if (hash) {
-      const hashParams = new URLSearchParams(hash);
-      return hashParams.get("code");
+function parseOAuthCodeFromLocation(): string | null {
+  if (typeof window === "undefined") return null;
+
+  const fromSearch = new URLSearchParams(window.location.search).get("code");
+  if (fromSearch) return fromSearch;
+
+  const hash = window.location.hash.replace(/^#/, "");
+  if (!hash) return null;
+
+  if (hash.startsWith("/")) {
+    const q = hash.indexOf("?");
+    if (q >= 0) {
+      const fromRoute = new URLSearchParams(hash.slice(q + 1)).get("code");
+      if (fromRoute) return fromRoute;
     }
-  } catch {
-    /* fall through */
-  }
-  if (typeof window === "undefined") {
     return null;
   }
-  const params = new URLSearchParams(window.location.search);
-  return params.get("code");
+
+  return new URLSearchParams(hash).get("code");
 }
 
 function hashHasAuthTokens(): boolean {
@@ -55,12 +47,34 @@ export function stripAuthParamsFromUrl(): void {
   }
 }
 
-/**
- * Exchange PKCE `code` from OAuth redirect (web URL or native deep link).
- */
+async function sessionAfterAuth(
+  sessionFromExchange: Session | null
+): Promise<Session | null> {
+  if (sessionFromExchange) return sessionFromExchange;
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data } = await supabase.auth.getSession();
+  return data.session ?? null;
+}
+
 export async function completeOAuthFromUrl(url?: string): Promise<boolean> {
   if (!isSupabaseConfigured) return false;
-  const code = url ? parseOAuthCode(url) : parseOAuthCode(window.location.href);
+
+  let code: string | null = null;
+  if (url) {
+    try {
+      const parsed = new URL(url);
+      code = parsed.searchParams.get("code");
+      if (!code && parsed.hash) {
+        const hash = parsed.hash.replace(/^#/, "");
+        code = new URLSearchParams(hash).get("code");
+      }
+    } catch {
+      code = null;
+    }
+  } else {
+    code = parseOAuthCodeFromLocation();
+  }
   if (!code) return false;
 
   try {
@@ -72,20 +86,11 @@ export async function completeOAuthFromUrl(url?: string): Promise<boolean> {
       console.error("OAuth code exchange failed", error);
       return false;
     }
-    if (data.session) {
-      const userId = data.session.user.id;
-      if (!applyPendingAuthMethod(userId)) {
-        if (isPasswordRecoveryPending() || urlIndicatesPasswordRecovery()) {
-          recordEmailSignIn(userId);
-        } else {
-          recordGoogleSignIn(userId);
-        }
-      } else {
-        const pending = getAuthLastMethod();
-        if (pending === "google" || pending === "email") {
-          setAuthLastMethod(pending, userId);
-        }
-      }
+
+    const session = await sessionAfterAuth(data.session);
+    if (session) {
+      const method = takeSignInAttempt() ?? "google";
+      finalizeSignIn(session, method, "SIGNED_IN");
     }
 
     if (typeof window !== "undefined" && !url?.includes("://")) {
@@ -98,10 +103,6 @@ export async function completeOAuthFromUrl(url?: string): Promise<boolean> {
   }
 }
 
-/**
- * Password-reset / magic-link emails redirect with tokens in the hash, or token_hash in query.
- * Must run before React mounts so AuthProvider sees a recovery session.
- */
 async function completeAuthTokensFromUrl(): Promise<boolean> {
   if (!isSupabaseConfigured || typeof window === "undefined") return false;
 
@@ -113,10 +114,8 @@ async function completeAuthTokensFromUrl(): Promise<boolean> {
   const type = search.get("type");
 
   if (token_hash && type) {
-    if (type === "recovery") {
-      setPasswordRecoveryPending();
-      markPendingAuthMethod("email");
-    }
+    const isRecovery = type === "recovery";
+    if (isRecovery) setPasswordRecoveryPending();
     const { error } = await supabase.auth.verifyOtp({
       token_hash,
       type: type as EmailOtpType,
@@ -126,6 +125,14 @@ async function completeAuthTokensFromUrl(): Promise<boolean> {
       return false;
     }
     stripAuthParamsFromUrl();
+    const session = await sessionAfterAuth(null);
+    if (session) {
+      finalizeSignIn(
+        session,
+        "email",
+        isRecovery ? "PASSWORD_RECOVERY" : "SIGNED_IN"
+      );
+    }
     return true;
   }
 
@@ -137,10 +144,9 @@ async function completeAuthTokensFromUrl(): Promise<boolean> {
   const refresh_token = hashParams.get("refresh_token");
 
   if (access_token && refresh_token) {
-    if (urlIndicatesPasswordRecovery() || hashParams.get("type") === "recovery") {
-      setPasswordRecoveryPending();
-      markPendingAuthMethod("email");
-    }
+    const isRecovery =
+      urlIndicatesPasswordRecovery() || hashParams.get("type") === "recovery";
+    if (isRecovery) setPasswordRecoveryPending();
     const { error } = await supabase.auth.setSession({
       access_token,
       refresh_token,
@@ -150,51 +156,43 @@ async function completeAuthTokensFromUrl(): Promise<boolean> {
       return false;
     }
     stripAuthParamsFromUrl();
+    const session = await sessionAfterAuth(null);
+    if (session) {
+      finalizeSignIn(
+        session,
+        "email",
+        isRecovery ? "PASSWORD_RECOVERY" : "SIGNED_IN"
+      );
+    }
     return true;
   }
 
   const code = hashParams.get("code");
   if (code) {
+    const isRecovery = hashParams.get("type") === "recovery";
+    if (isRecovery) setPasswordRecoveryPending();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
       console.error("exchangeCodeForSession from hash failed", error);
       return false;
     }
-    if (hashParams.get("type") === "recovery") {
-      setPasswordRecoveryPending();
-      markPendingAuthMethod("email");
-    }
     stripAuthParamsFromUrl();
+    const session = await sessionAfterAuth(null);
+    if (session) {
+      finalizeSignIn(
+        session,
+        isRecovery ? "email" : takeSignInAttempt() ?? "google",
+        isRecovery ? "PASSWORD_RECOVERY" : "SIGNED_IN"
+      );
+    }
     return true;
   }
 
   return false;
 }
 
-/**
- * OAuth (PKCE) code exchange + recovery/magic-link hash tokens before React mounts.
- */
 export async function ensureOAuthSessionFromUrl(): Promise<void> {
   if (!isSupabaseConfigured || typeof window === "undefined") return;
-  const hadOAuthCode = Boolean(parseOAuthCode(window.location.href));
   const completedOAuth = await completeOAuthFromUrl();
   if (!completedOAuth) await completeAuthTokensFromUrl();
-
-  const supabase = getSupabase();
-  if (!supabase) return;
-  const { data } = await supabase.auth.getSession();
-  if (!data.session) return;
-
-  if (applyPendingAuthMethod(data.session.user.id)) {
-    const pending = getAuthLastMethod();
-    if (pending === "google" || pending === "email") {
-      setAuthLastMethod(pending, data.session.user.id);
-    }
-    return;
-  }
-  if (isPasswordRecoveryPending() || urlIndicatesPasswordRecovery()) {
-    recordEmailSignIn(data.session.user.id);
-    return;
-  }
-  if (completedOAuth || hadOAuthCode) recordGoogleSignIn(data.session.user.id);
 }

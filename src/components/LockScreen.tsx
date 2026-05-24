@@ -6,6 +6,17 @@ import { isAppError } from "../lib/errors";
 import { passkeyRegisteredForCurrentSite } from "../lib/passkey";
 import { isNativeApp } from "../lib/platform";
 
+const LOCK_BTN_BASE =
+  "inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+const LOCK_BTN_PRIMARY = `${LOCK_BTN_BASE} w-full border border-accent-600 bg-accent-600 text-white hover:bg-accent-700`;
+const LOCK_BTN_SECONDARY_COMPACT = `${LOCK_BTN_BASE} shrink-0 border border-ink-200 bg-white text-ink-800 hover:bg-ink-50 whitespace-nowrap`;
+const LOCK_BTN_DANGER = `${LOCK_BTN_BASE} flex-1 min-w-0 border border-red-600 bg-red-600 text-white hover:bg-red-700 whitespace-nowrap`;
+
+const LOCK_TAB_BASE =
+  "flex-1 min-w-0 px-1 pb-2.5 pt-0.5 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30 focus-visible:ring-offset-2 rounded-t-md";
+const LOCK_TAB_ACTIVE = `${LOCK_TAB_BASE} border-accent-600 text-accent-700`;
+const LOCK_TAB_INACTIVE = `${LOCK_TAB_BASE} border-transparent text-ink-500 hover:text-ink-800 hover:border-ink-200`;
+
 export function LockScreen() {
   const {
     unlock,
@@ -13,8 +24,6 @@ export function LockScreen() {
     isPasskeySupported,
     meta,
     resetVault,
-    locale,
-    setLocale,
     t,
   } = useVault();
   const brandHomeHref = isNativeApp() ? undefined : "/";
@@ -81,9 +90,7 @@ export function LockScreen() {
         <ScreenHeader
           brandName={t("app.brandName")}
           pageTitle={t("lock.title")}
-          locale={locale}
-          onLocaleChange={(l) => void setLocale(l)}
-          languageAriaLabel={t("settings.language")}
+          showLanguageMenu={false}
           brandHomeHref={brandHomeHref}
           brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
         />
@@ -100,7 +107,7 @@ export function LockScreen() {
         {canPasskey && (
           <button
             type="button"
-            className="btn-primary w-full"
+            className={LOCK_BTN_PRIMARY}
             onClick={() => void handlePasskey()}
             disabled={busy}
           >
@@ -108,7 +115,7 @@ export function LockScreen() {
           </button>
         )}
 
-        <div className="pt-1">
+        <div className="pt-1 text-center">
           <button
             type="button"
             className="text-sm text-accent-600 hover:underline font-medium"
@@ -119,7 +126,13 @@ export function LockScreen() {
         </div>
 
         {showBackup && (
-          <form onSubmit={handle} className="space-y-4 border-t border-ink-100 pt-4">
+          <>
+            <div
+              className="-mx-5 sm:-mx-8 border-t border-ink-200"
+              role="separator"
+              aria-hidden
+            />
+            <form onSubmit={handle} className="space-y-4 pt-4">
             <p className="text-xs text-ink-500">{t("lock.backupHint")}</p>
             <div>
               <label className="label">{t("lock.masterPw")}</label>
@@ -144,31 +157,44 @@ export function LockScreen() {
                 </button>
               </div>
             </div>
-            <div className="flex gap-2 text-sm">
+            <div
+              role="tablist"
+              aria-label={`${t("lock.backupTotpTab")} / ${t("lock.backupRecoveryTab")}`}
+              className="flex border-b border-ink-200"
+            >
               <button
                 type="button"
-                className={
-                  backupMode === "totp"
-                    ? "btn-primary flex-1"
-                    : "btn-secondary flex-1"
-                }
+                role="tab"
+                id="lock-backup-tab-totp"
+                aria-selected={backupMode === "totp"}
+                aria-controls="lock-backup-panel"
+                className={backupMode === "totp" ? LOCK_TAB_ACTIVE : LOCK_TAB_INACTIVE}
                 onClick={() => setBackupMode("totp")}
               >
                 {t("lock.backupTotpTab")}
               </button>
               <button
                 type="button"
+                role="tab"
+                id="lock-backup-tab-recovery"
+                aria-selected={backupMode === "recovery"}
+                aria-controls="lock-backup-panel"
                 className={
-                  backupMode === "recovery"
-                    ? "btn-primary flex-1"
-                    : "btn-secondary flex-1"
+                  backupMode === "recovery" ? LOCK_TAB_ACTIVE : LOCK_TAB_INACTIVE
                 }
                 onClick={() => setBackupMode("recovery")}
               >
                 {t("lock.backupRecoveryTab")}
               </button>
             </div>
-            <div>
+            <div
+              id="lock-backup-panel"
+              role="tabpanel"
+              className="space-y-4 pt-1"
+              aria-labelledby={
+                backupMode === "totp" ? "lock-backup-tab-totp" : "lock-backup-tab-recovery"
+              }
+            >
               <label className="label">
                 {backupMode === "totp" ? t("lock.totp") : t("lock.recoveryCode")}
               </label>
@@ -190,7 +216,7 @@ export function LockScreen() {
             {error && <div className="text-sm text-red-600">{error}</div>}
             <button
               type="submit"
-              className="btn-primary w-full"
+              className={LOCK_BTN_PRIMARY}
               disabled={
                 busy ||
                 !pw ||
@@ -200,7 +226,7 @@ export function LockScreen() {
               <Lock /> {t("lock.unlockBackup")}
             </button>
 
-            <div className="pt-2">
+            <div className="pt-2 text-center">
               {!confirmReset ? (
                 <button
                   type="button"
@@ -212,17 +238,17 @@ export function LockScreen() {
               ) : (
                 <div className="space-y-2 text-xs">
                   <p className="text-red-600">{t("lock.resetWarn")}</p>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 justify-center">
                     <button
                       type="button"
-                      className="btn-secondary text-xs"
+                      className={LOCK_BTN_SECONDARY_COMPACT}
                       onClick={() => setConfirmReset(false)}
                     >
                       {t("common.cancel")}
                     </button>
                     <button
                       type="button"
-                      className="btn-danger text-xs"
+                      className={LOCK_BTN_DANGER}
                       onClick={async () => {
                         await resetVault();
                       }}
@@ -234,6 +260,7 @@ export function LockScreen() {
               )}
             </div>
           </form>
+          </>
         )}
       </div>
     </div>

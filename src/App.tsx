@@ -56,7 +56,7 @@ function VaultShell() {
 }
 
 function normalizeHashPath(path: string): string {
-  if (path === "account/logs") return "settings/logs";
+  if (path === "account/logs" || path === "settings/logs") return "settings";
   if (path === "account") return "settings/account";
   return path;
 }
@@ -74,8 +74,7 @@ function AuthenticatedVaultRoutes({ hashPath }: { hashPath: string }) {
     route === "settings" ||
     route === "settings/plan" ||
     route === "settings/backup" ||
-    route === "settings/account" ||
-    route === "settings/logs";
+    route === "settings/account";
 
   if (isSettingsRoute) {
     return <SettingsPage section={settingsSectionFromPath(route)} />;
