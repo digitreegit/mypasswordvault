@@ -40,6 +40,9 @@ export default {
           "monospace",
         ],
       },
+      fontSize: {
+        xs: ["0.875rem", { lineHeight: "1.25rem" }],
+      },
     },
   },
   plugins: [],

@@ -294,7 +294,7 @@
           grid-column: 1;
           min-width: 0;
           max-width: 100%;
-          font-size: clamp(0.82rem, 3.5vw, 1rem);
+          font-size: clamp(0.875rem, 3.5vw, 1rem);
         }
 
         .landing-header-main .landing-menu-toggle {
@@ -494,7 +494,7 @@
       }
       .mono {
         font-family: "IBM Plex Mono", ui-monospace, monospace;
-        font-size: 0.82rem;
+        font-size: 0.875rem;
       }
       section {
         margin-top: 4rem;
@@ -634,7 +634,7 @@
         color: var(--accent2);
         line-height: 1.55;
         font-family: "IBM Plex Mono", ui-monospace, monospace;
-        font-size: clamp(0.72rem, 2.8vw, 0.82rem);
+        font-size: clamp(0.72rem, 2.8vw, 0.875rem);
         font-weight: 400;
         letter-spacing: 0.01em;
         white-space: pre;
@@ -774,7 +774,7 @@
         padding-top: 2rem;
         border-top: 1px solid var(--line);
         text-align: center;
-        font-size: 0.82rem;
+        font-size: 0.875rem;
         color: var(--muted);
       }
       footer a {

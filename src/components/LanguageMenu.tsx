@@ -17,6 +17,8 @@ interface Props {
    * `compact` — current language label + Heroicons chevron (e.g. pricing bar).
    */
   appearance?: "globe" | "compact";
+  /** Override trigger button classes (e.g. vault header icon row). */
+  triggerClassName?: string;
 }
 
 export function LanguageMenu({
@@ -26,6 +28,7 @@ export function LanguageMenu({
   align = "right",
   className,
   appearance = "globe",
+  triggerClassName,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({});
@@ -130,7 +133,8 @@ export function LanguageMenu({
         className={
           appearance === "compact"
             ? "input text-sm py-1.5 pl-3 pr-9 max-w-[12rem] w-full min-w-0 text-left relative flex items-center text-ink-800 hover:bg-ink-50/80"
-            : "btn-ghost p-2 rounded-lg text-ink-600 hover:text-ink-900 hover:bg-ink-100"
+            : triggerClassName ??
+              "btn-ghost p-2 rounded-lg text-ink-600 hover:text-ink-900 hover:bg-ink-100"
         }
         aria-expanded={open}
         aria-haspopup="listbox"
@@ -146,7 +150,11 @@ export function LanguageMenu({
             />
           </>
         ) : (
-          <Globe width={20} height={20} className="shrink-0" />
+          <Globe
+            width={triggerClassName ? 18 : 20}
+            height={triggerClassName ? 18 : 20}
+            className="shrink-0"
+          />
         )}
       </button>
       {panel}

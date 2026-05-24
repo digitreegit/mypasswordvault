@@ -7,6 +7,7 @@ import { LOCALES, LOCALE_LABELS, localeToHtmlLang, type Locale } from "../lib/i1
 import { AccountCredentialPanel } from "./AccountCredentialPanel";
 import { PlanBadge } from "./PlanBadge";
 import { UserMenuDropdown } from "./UserMenuDropdown";
+import { LanguageMenu } from "./LanguageMenu";
 import { downloadJsonFile } from "../lib/vaultBackup";
 import { formatSignInLogMeta, formatSignInLogTime, getSignInLogs, subscribeSignInLogsChanged, type SignInLogEntry } from "../lib/signInLogs";
 import { isAppError } from "../lib/errors";
@@ -24,12 +25,6 @@ export function settingsSectionFromPath(hashPath: string): SettingsSection {
 function settingsHref(section: SettingsSection): string {
   if (section === "general") return "#/settings";
   return `#/settings/${section}`;
-}
-
-function signInLogEventLabel(event: string, t: (key: string) => string): string {
-  if (event === "SIGNED_IN") return t("account.signInEvent.signedIn");
-  if (event === "PASSWORD_RECOVERY") return t("account.signInEvent.passwordRecovery");
-  return event;
 }
 
 function SignInLogMethodIcon({ method }: { method: SignInLogEntry["method"] }) {
@@ -52,6 +47,9 @@ function sidebarNavClass(active: boolean): string {
 }
 
 const SETTINGS_PAGE = "max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8";
+
+const SETTINGS_HEADER_ICON_BTN =
+  "inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-600 hover:bg-ink-50 transition-colors shrink-0";
 
 export function SettingsPage({ section }: { section: SettingsSection }) {
   const {
@@ -447,9 +445,6 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
                       {t(`account.signInMethod.${row.method}`)}
                     </p>
                     <p className="text-xs text-ink-500 leading-snug mt-0.5">
-                      {signInLogEventLabel(row.event, t)}
-                    </p>
-                    <p className="text-xs text-ink-500 leading-snug mt-0.5">
                       {formatSignInLogMeta(row, t)}
                     </p>
                   </div>
@@ -597,6 +592,13 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
                 </>
               ) : null}
               <UserMenuDropdown />
+              <LanguageMenu
+                value={locale}
+                onChange={(l) => void setLocale(l)}
+                ariaLabel={t("settings.language")}
+                align="right"
+                triggerClassName={SETTINGS_HEADER_ICON_BTN}
+              />
             </div>
           </div>
         </div>

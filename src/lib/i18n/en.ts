@@ -351,6 +351,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "vault.categoriesHint":
     "Add names here, then assign each row from the Category column. Save applies name changes.",
   "vault.addCategory": "+ Add Category",
+  "vault.addCategoryMenu": "Add category",
   "vault.deleteCategory": "Remove category",
   "vault.deleteCategoryConfirm":
     "Remove this category? Entries using it become uncategorized.",

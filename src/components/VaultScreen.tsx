@@ -26,6 +26,7 @@ import {
   ExternalLink,
   Check,
 } from "./Icons";
+import { LanguageMenu } from "./LanguageMenu";
 import { PlanBadge } from "./PlanBadge";
 import { UserMenuDropdown } from "./UserMenuDropdown";
 import { isAppError } from "../lib/errors";
@@ -55,6 +56,88 @@ function isEntryDraftComplete(e: DecryptedEntry): boolean {
   );
 }
 
+function filterEntriesByQuery(
+  entries: DecryptedEntry[],
+  query: string,
+  categories: VaultCategory[]
+): DecryptedEntry[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return entries;
+  const entryCategoryLabel = (e: DecryptedEntry): string => {
+    if (!e.categoryId) return "";
+    return categories.find((c) => c.id === e.categoryId)?.name ?? "";
+  };
+  return entries.filter(
+    (e) =>
+      e.site.toLowerCase().includes(q) ||
+      e.url.toLowerCase().includes(q) ||
+      e.username.toLowerCase().includes(q) ||
+      e.notes.toLowerCase().includes(q) ||
+      e.memo.toLowerCase().includes(q) ||
+      entryCategoryLabel(e).toLowerCase().includes(q)
+  );
+}
+
+function sortVaultEntries(
+  entries: DecryptedEntry[],
+  query: string,
+  sortKey: SortKey,
+  sortDir: "asc" | "desc",
+  categories: VaultCategory[],
+  draftEntryIds: string[],
+  pinEntryIds: string[] = [],
+  pinSnapshots?: Map<string, DecryptedEntry>
+): DecryptedEntry[] {
+  const arr = filterEntriesByQuery(entries, query, categories);
+  const sortBucket = (e: DecryptedEntry): string => {
+    if (!e.categoryId) return "";
+    return categories.find((c) => c.id === e.categoryId)?.name ?? "\uFFFF";
+  };
+  const entryForSort = (e: DecryptedEntry): DecryptedEntry => {
+    if (pinEntryIds.includes(e.id)) {
+      const snap = pinSnapshots?.get(e.id);
+      if (snap) return snap;
+    }
+    return e;
+  };
+  const compare = (a: DecryptedEntry, b: DecryptedEntry): number => {
+    const sa = entryForSort(a);
+    const sb = entryForSort(b);
+    const c0 = sortBucket(sa).localeCompare(sortBucket(sb), undefined, {
+      sensitivity: "base",
+    });
+    const groupDir = sortKey === "category" ? (sortDir === "asc" ? 1 : -1) : 1;
+    if (c0 !== 0) return c0 * groupDir;
+    const dir = sortDir === "asc" ? 1 : -1;
+    if (sortKey === "category") {
+      return sa.site.localeCompare(sb.site, undefined, { sensitivity: "base" });
+    }
+    if (sortKey === "updatedAt") {
+      if (sa.updatedAt < sb.updatedAt) return -1 * dir;
+      if (sa.updatedAt > sb.updatedAt) return 1 * dir;
+      return 0;
+    }
+    if (sortKey === "site") {
+      return sa.site.localeCompare(sb.site, undefined, { sensitivity: "base" }) * dir;
+    }
+    if (sortKey === "username") {
+      return sa.username.localeCompare(sb.username, undefined, {
+        sensitivity: "base",
+      }) * dir;
+    }
+    return 0;
+  };
+
+  const topIds = draftEntryIds.filter((id, i, a) => a.indexOf(id) === i);
+  const pinnedSet = new Set(topIds);
+  const pinned = topIds
+    .map((id) => arr.find((e) => e.id === id))
+    .filter((e): e is DecryptedEntry => !!e);
+  const sortable = arr.filter((e) => !pinnedSet.has(e.id));
+  sortable.sort(compare);
+  return [...pinned, ...sortable];
+}
+
 type TFn = (key: string, vars?: Record<string, string | number>) => string;
 
 /** Mobile entry card: single column, full-width fields */
@@ -68,6 +151,7 @@ function CategorySelect({
   className,
   onEditFocus,
   onEditBlur,
+  onOpenChange,
   t,
 }: {
   value: string;
@@ -77,6 +161,7 @@ function CategorySelect({
   className?: string;
   onEditFocus?: () => void;
   onEditBlur?: () => void;
+  onOpenChange?: (open: boolean) => void;
   t: TFn;
 }) {
   const [open, setOpen] = useState(false);
@@ -91,9 +176,16 @@ function CategorySelect({
   }, [value, categories, t]);
 
   const closeMenu = useCallback(() => {
+    onOpenChange?.(false);
     setOpen(false);
     onEditBlur?.();
-  }, [onEditBlur]);
+  }, [onEditBlur, onOpenChange]);
+
+  const openMenu = useCallback(() => {
+    onEditFocus?.();
+    onOpenChange?.(true);
+    setOpen(true);
+  }, [onEditFocus, onOpenChange]);
 
   useLayoutEffect(() => {
     if (!open || !buttonRef.current) return;
@@ -115,6 +207,9 @@ function CategorySelect({
         maxWidth: Math.min(320, window.innerWidth - 16),
         zIndex: 9999,
         maxHeight: "min(16rem, 50vh)",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
       });
     };
 
@@ -148,14 +243,14 @@ function CategorySelect({
 
   function pick(categoryId: string) {
     onChange(categoryId);
-    setOpen(false);
-    onEditBlur?.();
+    closeMenu();
   }
 
-  function handleAdd() {
-    setOpen(false);
+  function handleAdd(e: React.PointerEvent | React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
     onAddCategory();
-    onEditBlur?.();
+    closeMenu();
   }
 
   const itemClass = (selected: boolean) =>
@@ -171,8 +266,8 @@ function CategorySelect({
         type="button"
         className={`flex w-full items-center gap-1 text-left ${className ?? ""}`.trim()}
         onClick={() => {
-          if (!open) onEditFocus?.();
-          setOpen((v) => !v);
+          if (open) closeMenu();
+          else openMenu();
         }}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -191,8 +286,10 @@ function CategorySelect({
             role="listbox"
             aria-label={t("vault.colCategory")}
             style={panelStyle}
-            className="overflow-y-auto rounded-lg border border-ink-200 bg-white py-1 shadow-lg"
+            className="rounded-lg border border-ink-200 bg-white shadow-lg"
+            onMouseDown={(e) => e.stopPropagation()}
           >
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-1">
             <button
               type="button"
               role="option"
@@ -214,14 +311,16 @@ function CategorySelect({
                 {c.name}
               </button>
             ))}
-            <div className="mx-3 my-1 border-t border-ink-200" role="separator" />
+            </div>
+            <div className="shrink-0 border-t border-ink-200 bg-white">
             <button
               type="button"
-              className="block w-full whitespace-nowrap px-3 py-2 text-left text-sm font-medium text-ink-800 hover:bg-ink-50"
-              onClick={handleAdd}
+              className="block w-full whitespace-nowrap px-3 py-2.5 text-left text-sm font-medium text-ink-800 hover:bg-ink-50"
+              onPointerDown={handleAdd}
             >
-              {t("vault.addShort")}
+              {t("vault.addCategoryMenu")}
             </button>
+            </div>
           </div>,
           document.body
         )}
@@ -242,6 +341,9 @@ const VAULT_TOOLBAR_BTN_PRIMARY =
 const VAULT_TOOLBAR_BTN_ICON =
   "inline-flex items-center justify-center rounded-lg border border-ink-200 bg-white p-2 text-ink-600 shadow-sm hover:bg-ink-50 transition-colors shrink-0 min-w-[2.5rem] min-h-[2.5rem]";
 
+const VAULT_HEADER_ICON_BTN =
+  "inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-600 hover:bg-ink-50 transition-colors shrink-0";
+
 export function VaultScreen() {
   const { configured, user } = useAuth();
   const {
@@ -256,6 +358,8 @@ export function VaultScreen() {
     freeEntryLimit,
     licensed,
     entitlementLoaded,
+    locale,
+    setLocale,
   } = useVault();
 
   const [query, setQuery] = useState("");
@@ -274,9 +378,19 @@ export function VaultScreen() {
   );
   /** Entry ids still being created — kept at top until draft is complete. */
   const [draftEntryIds, setDraftEntryIds] = useState<string[]>([]);
-  /** Rows with focus or pointer inside — held in place until edit ends and pointer leaves. */
+  /** Rows being edited — sort position frozen until pointer leaves and delay elapses. */
   const [pinEntryIds, setPinEntryIds] = useState<string[]>([]);
+  /** Bumped when edit session ends so filtered list re-sorts reliably. */
+  const [sortRevision, setSortRevision] = useState(0);
   const unpinTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  /** Sort snapshot taken when editing starts so field updates do not re-order the row. */
+  const pinSortSnapshotsRef = useRef<Map<string, DecryptedEntry>>(new Map());
+  /** Row id order frozen for the duration of an edit session. */
+  const editDisplayOrderRef = useRef<string[] | null>(null);
+  /** Synchronous mirror of pinEntryIds — avoids re-sort before React state flushes. */
+  const pinEntryIdsRef = useRef<string[]>([]);
+  /** Entry id whose category dropdown is open (suppresses premature unpin). */
+  const categoryMenuOpenEntryIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     setEntryLimitBannerDismissed(readEntryLimitBannerDismissed(user?.id));
@@ -290,23 +404,85 @@ export function VaultScreen() {
     }
   }, []);
 
-  const pinEntry = useCallback((id: string) => {
-    setPinEntryIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  const shouldKeepRowPinned = useCallback((id: string): boolean => {
+    if (categoryMenuOpenEntryIdRef.current === id) return true;
+    const row = document.querySelector<HTMLElement>(
+      `[data-vault-entry-id="${CSS.escape(id)}"]`
+    );
+    if (!row) return false;
+    if (row.matches(":hover")) return true;
+    if (row.contains(document.activeElement)) return true;
+    return false;
   }, []);
 
-  const unpinEntry = useCallback((id: string) => {
-    setPinEntryIds((prev) => {
-      const next = prev.filter((x) => x !== id);
-      return next.length === prev.length ? prev : next;
-    });
-  }, []);
+  const registerCategoryMenuOpen = useCallback(
+    (entryId: string, open: boolean) => {
+      if (open) {
+        categoryMenuOpenEntryIdRef.current = entryId;
+        cancelScheduledUnpin(entryId);
+      } else if (categoryMenuOpenEntryIdRef.current === entryId) {
+        categoryMenuOpenEntryIdRef.current = null;
+      }
+    },
+    [cancelScheduledUnpin]
+  );
+
+  const unpinEntry = useCallback(
+    (id: string) => {
+      const next = pinEntryIdsRef.current.filter((x) => x !== id);
+      if (next.length === pinEntryIdsRef.current.length) return;
+      pinEntryIdsRef.current = next;
+      pinSortSnapshotsRef.current.delete(id);
+      const clearingSession = next.length === 0;
+      if (clearingSession) {
+        editDisplayOrderRef.current = null;
+        pinSortSnapshotsRef.current.clear();
+      }
+      setPinEntryIds(next);
+      setDraftEntryIds((prev) => {
+        const entry = entries.find((e) => e.id === id);
+        if (!entry || !isEntryDraftComplete(entry)) return prev;
+        const without = prev.filter((x) => x !== id);
+        return without.length === prev.length ? prev : without;
+      });
+      if (clearingSession) {
+        setSortRevision((r) => r + 1);
+      }
+    },
+    [entries]
+  );
 
   const pinEntryRow = useCallback(
     (id: string) => {
       cancelScheduledUnpin(id);
-      pinEntry(id);
+      if (!pinSortSnapshotsRef.current.has(id)) {
+        const entry = entries.find((e) => e.id === id);
+        if (entry) pinSortSnapshotsRef.current.set(id, { ...entry });
+      }
+      if (!editDisplayOrderRef.current) {
+        editDisplayOrderRef.current = sortVaultEntries(
+          entries,
+          query,
+          sortKey,
+          sortDir,
+          categories,
+          draftEntryIds
+        ).map((e) => e.id);
+      }
+      if (!pinEntryIdsRef.current.includes(id)) {
+        pinEntryIdsRef.current = [...pinEntryIdsRef.current, id];
+        setPinEntryIds([...pinEntryIdsRef.current]);
+      }
     },
-    [cancelScheduledUnpin, pinEntry]
+    [
+      cancelScheduledUnpin,
+      entries,
+      query,
+      sortKey,
+      sortDir,
+      categories,
+      draftEntryIds,
+    ]
   );
 
   const scheduleUnpinRow = useCallback(
@@ -314,11 +490,12 @@ export function VaultScreen() {
       cancelScheduledUnpin(id);
       const timer = setTimeout(() => {
         unpinTimersRef.current.delete(id);
+        if (shouldKeepRowPinned(id)) return;
         unpinEntry(id);
       }, ROW_UNPIN_DELAY_MS);
       unpinTimersRef.current.set(id, timer);
     },
-    [cancelScheduledUnpin, unpinEntry]
+    [cancelScheduledUnpin, unpinEntry, shouldKeepRowPinned]
   );
 
   useEffect(() => {
@@ -341,67 +518,34 @@ export function VaultScreen() {
   }, [entries, pinEntryIds]);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const cats = categories;
-    const entryCategoryLabel = (e: DecryptedEntry): string => {
-      if (!e.categoryId) return "";
-      return cats.find((c) => c.id === e.categoryId)?.name ?? "";
-    };
-    const sortBucket = (e: DecryptedEntry): string => {
-      if (!e.categoryId) return "";
-      return cats.find((c) => c.id === e.categoryId)?.name ?? "\uFFFF";
-    };
-    const arr = entries.filter(
-      (e) =>
-        !q ||
-        e.site.toLowerCase().includes(q) ||
-        e.url.toLowerCase().includes(q) ||
-        e.username.toLowerCase().includes(q) ||
-        e.notes.toLowerCase().includes(q) ||
-        e.memo.toLowerCase().includes(q) ||
-        entryCategoryLabel(e).toLowerCase().includes(q)
-    );
-    const compare = (a: DecryptedEntry, b: DecryptedEntry): number => {
-      const c0 = sortBucket(a).localeCompare(sortBucket(b), undefined, {
-        sensitivity: "base",
-      });
-      const groupDir = sortKey === "category" ? (sortDir === "asc" ? 1 : -1) : 1;
-      if (c0 !== 0) return c0 * groupDir;
-      const dir = sortDir === "asc" ? 1 : -1;
-      if (sortKey === "category") {
-        return a.site.localeCompare(b.site, undefined, { sensitivity: "base" });
-      }
-      if (sortKey === "updatedAt") {
-        if (a.updatedAt < b.updatedAt) return -1 * dir;
-        if (a.updatedAt > b.updatedAt) return 1 * dir;
-        return 0;
-      }
-      if (sortKey === "site") {
-        return a.site.localeCompare(b.site, undefined, { sensitivity: "base" }) * dir;
-      }
-      if (sortKey === "username") {
-        return a.username.localeCompare(b.username, undefined, {
-          sensitivity: "base",
-        }) * dir;
-      }
-      return 0;
-    };
+    const arr = filterEntriesByQuery(entries, query, categories);
 
-    const topIds: string[] = [];
-    for (const id of draftEntryIds) {
-      if (!topIds.includes(id)) topIds.push(id);
+    if (pinEntryIdsRef.current.length > 0 && editDisplayOrderRef.current) {
+      const byId = new Map(arr.map((e) => [e.id, e]));
+      const ordered: DecryptedEntry[] = [];
+      const seen = new Set<string>();
+      for (const id of editDisplayOrderRef.current) {
+        const e = byId.get(id);
+        if (e) {
+          ordered.push(e);
+          seen.add(id);
+        }
+      }
+      for (const e of arr) {
+        if (!seen.has(e.id)) ordered.push(e);
+      }
+      return ordered;
     }
-    for (const id of pinEntryIds) {
-      if (!topIds.includes(id)) topIds.push(id);
-    }
-    const pinnedSet = new Set(topIds);
-    const pinned = topIds
-      .map((id) => arr.find((e) => e.id === id))
-      .filter((e): e is DecryptedEntry => !!e);
-    const sortable = arr.filter((e) => !pinnedSet.has(e.id));
-    sortable.sort(compare);
-    return [...pinned, ...sortable];
-  }, [entries, query, sortKey, sortDir, categories, draftEntryIds, pinEntryIds]);
+
+    return sortVaultEntries(
+      entries,
+      query,
+      sortKey,
+      sortDir,
+      categories,
+      draftEntryIds
+    );
+  }, [entries, query, sortKey, sortDir, categories, draftEntryIds, pinEntryIds, sortRevision]);
 
   const categorySummaryParts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -630,6 +774,13 @@ export function VaultScreen() {
                   </>
                 ) : null}
                 <UserMenuDropdown />
+                <LanguageMenu
+                  value={locale}
+                  onChange={(l) => void setLocale(l)}
+                  ariaLabel={t("settings.language")}
+                  align="right"
+                  triggerClassName={VAULT_HEADER_ICON_BTN}
+                />
               </div>
             </div>
           </div>
@@ -771,6 +922,8 @@ export function VaultScreen() {
                   categories={categories}
                   onPinEntryRow={pinEntryRow}
                   onScheduleUnpinEntryRow={scheduleUnpinRow}
+                  onCancelScheduledUnpinEntryRow={cancelScheduledUnpin}
+                  onRegisterCategoryMenuOpen={registerCategoryMenuOpen}
                   onOpenCategoriesAddNew={openCategoriesAddNew}
                   t={t}
                 />
@@ -860,6 +1013,8 @@ export function VaultScreen() {
                     categories={categories}
                     onPinEntryRow={pinEntryRow}
                     onScheduleUnpinEntryRow={scheduleUnpinRow}
+                    onCancelScheduledUnpinEntryRow={cancelScheduledUnpin}
+                    onRegisterCategoryMenuOpen={registerCategoryMenuOpen}
                     onOpenCategoriesAddNew={openCategoriesAddNew}
                     t={t}
                   />
@@ -961,6 +1116,8 @@ interface RowProps {
   copiedKey: string | null;
   onPinEntryRow: (id: string) => void;
   onScheduleUnpinEntryRow: (id: string) => void;
+  onCancelScheduledUnpinEntryRow: (id: string) => void;
+  onRegisterCategoryMenuOpen: (entryId: string, open: boolean) => void;
   onOpenCategoriesAddNew: () => void;
   t: TFn;
 }
@@ -969,29 +1126,59 @@ function useEntryRowEdit(
   entryId: string,
   rowRef: React.RefObject<HTMLElement | null>,
   onPinEntryRow: (id: string) => void,
-  onScheduleUnpinEntryRow: (id: string) => void
+  onScheduleUnpinEntryRow: (id: string) => void,
+  onCancelScheduledUnpinEntryRow: (id: string) => void,
+  onRegisterCategoryMenuOpen: (entryId: string, open: boolean) => void
 ) {
-  const tryScheduleUnpin = useCallback(() => {
-    requestAnimationFrame(() => {
-      const row = rowRef.current;
-      if (row?.contains(document.activeElement)) return;
-      onScheduleUnpinEntryRow(entryId);
-    });
-  }, [entryId, onScheduleUnpinEntryRow, rowRef]);
+  const categoryMenuOpenRef = useRef(false);
 
   const onEditFocus = useCallback(() => {
     onPinEntryRow(entryId);
   }, [entryId, onPinEntryRow]);
 
   const onEditBlur = useCallback(() => {
-    tryScheduleUnpin();
-  }, [tryScheduleUnpin]);
+    /* Re-sort is deferred until the pointer leaves the row (see onRowMouseLeave). */
+  }, []);
 
   const onRowMouseLeave = useCallback(() => {
-    tryScheduleUnpin();
-  }, [tryScheduleUnpin]);
+    if (categoryMenuOpenRef.current) return;
+    onScheduleUnpinEntryRow(entryId);
+  }, [entryId, onScheduleUnpinEntryRow]);
 
-  return { onEditFocus, onEditBlur, onRowMouseLeave };
+  const onRowMouseEnter = useCallback(() => {
+    onCancelScheduledUnpinEntryRow(entryId);
+  }, [entryId, onCancelScheduledUnpinEntryRow]);
+
+  const onCategoryOpenChange = useCallback(
+    (open: boolean) => {
+      categoryMenuOpenRef.current = open;
+      onRegisterCategoryMenuOpen(entryId, open);
+      if (open) {
+        onPinEntryRow(entryId);
+      } else {
+        requestAnimationFrame(() => {
+          if (categoryMenuOpenRef.current) return;
+          if (rowRef.current?.matches(":hover")) return;
+          onScheduleUnpinEntryRow(entryId);
+        });
+      }
+    },
+    [
+      entryId,
+      onPinEntryRow,
+      onRegisterCategoryMenuOpen,
+      onScheduleUnpinEntryRow,
+      rowRef,
+    ]
+  );
+
+  return {
+    onEditFocus,
+    onEditBlur,
+    onRowMouseLeave,
+    onRowMouseEnter,
+    onCategoryOpenChange,
+  };
 }
 
 function MobileEntryCard({
@@ -1008,16 +1195,26 @@ function MobileEntryCard({
   copiedKey,
   onPinEntryRow,
   onScheduleUnpinEntryRow,
+  onCancelScheduledUnpinEntryRow,
+  onRegisterCategoryMenuOpen,
   onOpenCategoriesAddNew,
   t,
 }: RowProps) {
   const [confirmDel, setConfirmDel] = useState(false);
   const rowRef = useRef<HTMLElement>(null);
-  const { onEditFocus, onEditBlur, onRowMouseLeave } = useEntryRowEdit(
+  const {
+    onEditFocus,
+    onEditBlur,
+    onRowMouseLeave,
+    onRowMouseEnter,
+    onCategoryOpenChange,
+  } = useEntryRowEdit(
     entry.id,
     rowRef,
     onPinEntryRow,
-    onScheduleUnpinEntryRow
+    onScheduleUnpinEntryRow,
+    onCancelScheduledUnpinEntryRow,
+    onRegisterCategoryMenuOpen
   );
 
   return (
@@ -1025,6 +1222,7 @@ function MobileEntryCard({
       ref={rowRef}
       data-vault-entry-id={entry.id}
       className={`rounded-xl border border-ink-200 bg-white p-3 sm:p-4 min-w-0 w-full shadow-sm ${MOBILE_CARD_STACK}`}
+      onMouseEnter={onRowMouseEnter}
       onMouseLeave={onRowMouseLeave}
     >
       <BlurInput
@@ -1049,6 +1247,7 @@ function MobileEntryCard({
           onAddCategory={onOpenCategoriesAddNew}
           onEditFocus={onEditFocus}
           onEditBlur={onEditBlur}
+          onOpenChange={onCategoryOpenChange}
           t={t}
         />
       </div>
@@ -1286,6 +1485,9 @@ function BlurInput({
       spellCheck={spellCheck}
       autoComplete={autoComplete}
       onFocus={onEditFocus}
+      onPointerDown={(e) => {
+        if (e.button === 0) onEditFocus?.();
+      }}
       onChange={(e) => setLocal(e.target.value)}
       onBlur={() => {
         if (local !== value) onCommit(local);
@@ -1345,16 +1547,26 @@ function Row({
   copiedKey,
   onPinEntryRow,
   onScheduleUnpinEntryRow,
+  onCancelScheduledUnpinEntryRow,
+  onRegisterCategoryMenuOpen,
   onOpenCategoriesAddNew,
   t,
 }: RowProps) {
   const [confirmDel, setConfirmDel] = useState(false);
   const rowRef = useRef<HTMLTableSectionElement>(null);
-  const { onEditFocus, onEditBlur, onRowMouseLeave } = useEntryRowEdit(
+  const {
+    onEditFocus,
+    onEditBlur,
+    onRowMouseLeave,
+    onRowMouseEnter,
+    onCategoryOpenChange,
+  } = useEntryRowEdit(
     entry.id,
     rowRef,
     onPinEntryRow,
-    onScheduleUnpinEntryRow
+    onScheduleUnpinEntryRow,
+    onCancelScheduledUnpinEntryRow,
+    onRegisterCategoryMenuOpen
   );
 
   return (
@@ -1362,6 +1574,7 @@ function Row({
       ref={rowRef}
       data-vault-entry-id={entry.id}
       className="group"
+      onMouseEnter={onRowMouseEnter}
       onMouseLeave={onRowMouseLeave}
     >
       <tr className="border-t border-ink-100 hover:bg-ink-50/60 group">
@@ -1374,6 +1587,7 @@ function Row({
             onAddCategory={onOpenCategoriesAddNew}
             onEditFocus={onEditFocus}
             onEditBlur={onEditBlur}
+            onOpenChange={onCategoryOpenChange}
             t={t}
           />
         </td>
@@ -1583,6 +1797,9 @@ function ExpandTextInput({
       placeholder={placeholder}
       spellCheck={false}
       onFocus={onEditFocus}
+      onPointerDown={(e) => {
+        if (e.button === 0) onEditFocus?.();
+      }}
       onBlur={() => {
         if (local !== value) onCommit(local);
         onEditBlur?.();
@@ -1675,6 +1892,9 @@ function BlurCellInput({
       spellCheck={spellCheck}
       autoComplete={autoComplete}
       onFocus={onEditFocus}
+      onPointerDown={(e) => {
+        if (e.button === 0) onEditFocus?.();
+      }}
       onChange={(e) => setLocal(e.target.value)}
       onBlur={() => {
         if (local !== value) onCommit(local);
