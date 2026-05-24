@@ -347,7 +347,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "vault.totalItems": "전체 {{count}}개",
   "vault.entryLimitBanner":
     "이 계정의 무료 한도({{limit}}개)에 도달했습니다. 한 번 업그레이드하면 항목을 무제한으로 추가할 수 있습니다.",
-  "vault.entryLimitUpgrade": "요금제 보기·업그레이드",
+  "vault.entryLimitUpgrade": "업그레이드",
+  "vault.entryLimitBannerDismiss": "알림 닫기",
   "vault.entryLimitModalTitle": "항목 한도 도달",
   "vault.entryLimitModalBody":
     "무료 플랜에서는 비밀번호 항목을 최대 {{limit}}개까지 저장할 수 있습니다. 영구 라이선스를 구매하면 계속 추가할 수 있습니다.",
@@ -362,7 +363,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "vault.ttCollapseRow": "URL·상세 메모 접기",
 
   "vault.phUrl": "https://…",
-  "vault.phUser": "user@example.com",
+  "vault.phUser": "username",
   "vault.phPass": "비밀번호",
   "vault.ttOpenTab": "새 탭에서 열기",
   "vault.ttCopyUser": "사용자명 복사",

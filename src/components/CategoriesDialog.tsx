@@ -20,17 +20,31 @@ function reorderBeforeTarget(
   return next;
 }
 
-export function CategoriesDialog({ onClose }: { onClose: () => void }) {
+export function CategoriesDialog({
+  onClose,
+  startWithNewCategory = false,
+}: {
+  onClose: () => void;
+  startWithNewCategory?: boolean;
+}) {
   const { categories, setCategories, deleteCategory, t } = useVault();
   const [draft, setDraft] = useState<VaultCategory[]>(categories);
   const [busy, setBusy] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const pendingFocusIdRef = useRef<string | null>(null);
+  const seededNewRef = useRef(false);
 
   useEffect(() => {
+    if (startWithNewCategory && !seededNewRef.current) {
+      seededNewRef.current = true;
+      const id = newId();
+      pendingFocusIdRef.current = id;
+      setDraft([...categories, { id, name: "" }]);
+      return;
+    }
     setDraft(categories);
-  }, [categories]);
+  }, [categories, startWithNewCategory]);
 
   useLayoutEffect(() => {
     const id = pendingFocusIdRef.current;

@@ -45,6 +45,39 @@ body {
     @apply rounded-xl bg-white border border-ink-200 shadow-sm;
   }
 
+  .vault-entry-limit-banner {
+    width: 100%;
+    background-color: #ffd700;
+    border-bottom: 1px solid #e6c200;
+  }
+  .vault-entry-limit-banner__text {
+    color: #111827;
+  }
+  .vault-entry-limit-banner__icon {
+    color: #111827;
+  }
+  .vault-entry-limit-banner__cta {
+    @apply inline-flex shrink-0 items-center justify-center rounded-lg border border-ink-200 bg-white px-4 py-2 text-sm font-medium text-ink-900 shadow-sm transition-colors;
+  }
+  .vault-entry-limit-banner__cta:hover {
+    @apply bg-ink-50;
+  }
+  .vault-entry-limit-banner__close {
+    @apply inline-flex shrink-0 items-center justify-center rounded-lg p-2 text-ink-900 transition-colors;
+  }
+  .vault-entry-limit-banner__close:hover {
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+  .vault-header-upgrade-btn {
+    @apply inline-flex shrink-0 items-center justify-center rounded-full border px-2 py-1 text-[0.5625rem] font-semibold transition-colors sm:text-[0.625rem];
+    border-color: #c7d2fe;
+    background-color: #eef2ff;
+    color: #4338ca;
+  }
+  .vault-header-upgrade-btn:hover {
+    background-color: #e0e7ff;
+  }
+
   /* Thin range slider (password generator length, etc.) */
   .range-thin {
     @apply block h-5 w-full cursor-pointer bg-transparent;

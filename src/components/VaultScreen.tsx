@@ -1,9 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   ChevronDownIcon,
   ChevronUpDownIcon,
   InformationCircleIcon,
   MagnifyingGlassIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useVault, type DecryptedEntry } from "../lib/vault";
 import { newId, type VaultCategory } from "../lib/storage";
@@ -34,6 +36,16 @@ type SortKey = "category" | "site" | "username" | "updatedAt";
 /** After editing ends and the pointer leaves the row, wait before re-sorting. */
 const ROW_UNPIN_DELAY_MS = 1000;
 
+const ENTRY_LIMIT_BANNER_DISMISSED_KEY = "mpv_entry_limit_banner_dismissed";
+
+function readEntryLimitBannerDismissed(userId?: string | null): boolean {
+  if (typeof window === "undefined" || !userId) return false;
+  return (
+    window.localStorage.getItem(`${ENTRY_LIMIT_BANNER_DISMISSED_KEY}:${userId}`) ===
+    "1"
+  );
+}
+
 /** New rows stay pinned until site, username, and password are all filled. */
 function isEntryDraftComplete(e: DecryptedEntry): boolean {
   return (
@@ -48,12 +60,170 @@ type TFn = (key: string, vars?: Record<string, string | number>) => string;
 /** Mobile entry card: single column, full-width fields */
 const MOBILE_CARD_STACK = "flex flex-col gap-3 min-w-0 w-full";
 
+function CategorySelect({
+  value,
+  categories,
+  onChange,
+  onAddCategory,
+  className,
+  onEditFocus,
+  onEditBlur,
+  t,
+}: {
+  value: string;
+  categories: VaultCategory[];
+  onChange: (categoryId: string) => void;
+  onAddCategory: () => void;
+  className?: string;
+  onEditFocus?: () => void;
+  onEditBlur?: () => void;
+  t: TFn;
+}) {
+  const [open, setOpen] = useState(false);
+  const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({});
+  const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const label = useMemo(() => {
+    if (!value) return t("vault.uncategorized");
+    return categories.find((c) => c.id === value)?.name ?? t("vault.uncategorized");
+  }, [value, categories, t]);
+
+  const closeMenu = useCallback(() => {
+    setOpen(false);
+    onEditBlur?.();
+  }, [onEditBlur]);
+
+  useLayoutEffect(() => {
+    if (!open || !buttonRef.current) return;
+
+    const updatePosition = () => {
+      const rect = buttonRef.current!.getBoundingClientRect();
+      setPanelStyle({
+        position: "fixed",
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+        zIndex: 9999,
+        maxHeight: "min(16rem, 50vh)",
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node;
+      if (rootRef.current?.contains(target)) return;
+      if (panelRef.current?.contains(target)) return;
+      closeMenu();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeMenu();
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, closeMenu]);
+
+  function pick(categoryId: string) {
+    onChange(categoryId);
+    setOpen(false);
+    onEditBlur?.();
+  }
+
+  function handleAdd() {
+    setOpen(false);
+    onAddCategory();
+    onEditBlur?.();
+  }
+
+  const itemClass = (selected: boolean) =>
+    [
+      "w-full text-left px-3 py-2 text-sm transition-colors",
+      selected ? "bg-ink-50 text-ink-900" : "text-ink-800 hover:bg-ink-50",
+    ].join(" ");
+
+  return (
+    <div ref={rootRef} className="relative min-w-0 w-full">
+      <button
+        ref={buttonRef}
+        type="button"
+        className={`flex w-full items-center gap-1 text-left ${className ?? ""}`.trim()}
+        onClick={() => {
+          if (!open) onEditFocus?.();
+          setOpen((v) => !v);
+        }}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={t("vault.colCategory")}
+      >
+        <span className="min-w-0 flex-1 truncate">{label}</span>
+        <ChevronDownIcon
+          className="h-4 w-4 shrink-0 text-ink-400"
+          aria-hidden
+        />
+      </button>
+      {open &&
+        createPortal(
+          <div
+            ref={panelRef}
+            role="listbox"
+            aria-label={t("vault.colCategory")}
+            style={panelStyle}
+            className="overflow-y-auto rounded-lg border border-ink-200 bg-white py-1 shadow-lg"
+          >
+            <button
+              type="button"
+              role="option"
+              aria-selected={!value}
+              className={itemClass(!value)}
+              onClick={() => pick("")}
+            >
+              {t("vault.uncategorized")}
+            </button>
+            {categories.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                role="option"
+                aria-selected={value === c.id}
+                className={itemClass(value === c.id)}
+                onClick={() => pick(c.id)}
+              >
+                {c.name}
+              </button>
+            ))}
+            <div className="my-1 border-t border-ink-200" role="separator" />
+            <button
+              type="button"
+              className="w-full px-3 py-2 text-left text-sm font-medium text-ink-800 hover:bg-ink-50"
+              onClick={handleAdd}
+            >
+              {t("vault.addShort")}
+            </button>
+          </div>,
+          document.body
+        )}
+    </div>
+  );
+}
+
 /** Sort dropdown: compact gray chevron toward the trailing edge */
 const heroChevronSort =
   "pointer-events-none absolute right-2 top-1/2 h-4 w-4 shrink-0 -translate-y-1/2 text-ink-400";
-/** Category-style selects inside cards */
-const heroChevronField =
-  "pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 shrink-0 -translate-y-1/2 text-ink-400";
 
 const VAULT_PAGE = "max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8";
 /** Figma toolbar: white pill buttons with light border */
@@ -84,15 +254,23 @@ export function VaultScreen() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [generatorFor, setGeneratorFor] = useState<string | null>(null);
   const [showCategories, setShowCategories] = useState(false);
+  const [categoriesStartWithNew, setCategoriesStartWithNew] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("category");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [entryLimitModalOpen, setEntryLimitModalOpen] = useState(false);
+  const [entryLimitBannerDismissed, setEntryLimitBannerDismissed] = useState(
+    () => readEntryLimitBannerDismissed(user?.id)
+  );
   /** Entry ids still being created — kept at top until draft is complete. */
   const [draftEntryIds, setDraftEntryIds] = useState<string[]>([]);
   /** Rows with focus or pointer inside — held in place until edit ends and pointer leaves. */
   const [pinEntryIds, setPinEntryIds] = useState<string[]>([]);
   const unpinTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  useEffect(() => {
+    setEntryLimitBannerDismissed(readEntryLimitBannerDismissed(user?.id));
+  }, [user?.id]);
 
   const cancelScheduledUnpin = useCallback((id: string) => {
     const timer = unpinTimersRef.current.get(id);
@@ -319,6 +497,35 @@ export function VaultScreen() {
     }
   }
 
+  const showEntryLimitBanner =
+    atEntryLimit && !licensed && !entryLimitBannerDismissed;
+  const showHeaderUpgrade = atEntryLimit && !licensed && entitlementLoaded;
+
+  function goToPricing(e?: React.MouseEvent) {
+    e?.preventDefault();
+    window.location.hash = "#/pricing";
+  }
+
+  function dismissEntryLimitBanner() {
+    setEntryLimitBannerDismissed(true);
+    if (user?.id) {
+      window.localStorage.setItem(
+        `${ENTRY_LIMIT_BANNER_DISMISSED_KEY}:${user.id}`,
+        "1"
+      );
+    }
+  }
+
+  const openCategoriesAddNew = useCallback(() => {
+    setCategoriesStartWithNew(true);
+    setShowCategories(true);
+  }, []);
+
+  const closeCategoriesDialog = useCallback(() => {
+    setShowCategories(false);
+    setCategoriesStartWithNew(false);
+  }, []);
+
   return (
     <div
       className="min-h-screen min-h-[100dvh] flex flex-col bg-white"
@@ -326,40 +533,98 @@ export function VaultScreen() {
       onTouchStart={touchActivity}
       onKeyDown={touchActivity}
     >
-      <header className="bg-white border-b border-ink-200 sticky top-0 z-10 pt-[max(0.625rem,env(safe-area-inset-top))]">
-        <div
-          className={`${VAULT_PAGE} flex items-center justify-between gap-3 py-1.5 sm:py-2`}
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Shield className="w-7 h-auto text-accent-500 shrink-0" />
-            <span
-              className="font-brand font-semibold text-base sm:text-[1.0625rem] text-ink-900 tracking-tight truncate"
-              translate="no"
+      <div className="sticky top-0 z-10 w-full">
+        {showEntryLimitBanner && (
+          <div
+            role="status"
+            className="vault-entry-limit-banner pt-[env(safe-area-inset-top,0px)]"
+          >
+            <div
+              className={`${VAULT_PAGE} flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between`}
             >
-              {t("app.brandName")}
-            </span>
-          </div>
-          <div className="flex items-center gap-2.5 shrink-0">
-            {configured && user?.id ? (
-              entitlementLoaded ? (
-                <PlanBadge
-                  label={
-                    licensed
-                      ? t("vault.licenseBadgePro")
-                      : t("vault.licenseBadgeFree")
-                  }
-                />
-              ) : (
-                <span
-                  className="h-[1.375rem] w-[2.75rem] rounded-full bg-ink-100 animate-pulse shrink-0"
+              <div className="flex min-w-0 gap-3">
+                <InformationCircleIcon
+                  className="vault-entry-limit-banner__icon mt-0.5 h-5 w-5 shrink-0"
                   aria-hidden
                 />
-              )
-            ) : null}
-            <UserMenuDropdown />
+                <p className="vault-entry-limit-banner__text min-w-0 text-sm leading-snug">
+                  {t("vault.entryLimitBanner", { limit: freeEntryLimit })}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
+                <a
+                  href="#/pricing"
+                  className="vault-entry-limit-banner__cta"
+                  onClick={goToPricing}
+                >
+                  {t("vault.entryLimitUpgrade")}
+                </a>
+                <button
+                  type="button"
+                  className="vault-entry-limit-banner__close"
+                  onClick={dismissEntryLimitBanner}
+                  aria-label={t("vault.entryLimitBannerDismiss")}
+                >
+                  <XMarkIcon className="h-5 w-5" aria-hidden />
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </header>
+        )}
+        <header
+          className={`w-full bg-white ${
+            showEntryLimitBanner
+              ? ""
+              : "pt-[max(0.625rem,env(safe-area-inset-top))]"
+          }`}
+        >
+          <div className="w-full border-b border-ink-200">
+            <div
+              className={`${VAULT_PAGE} flex items-center justify-between gap-3 py-1.5 sm:py-2`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Shield className="w-7 h-auto text-accent-500 shrink-0" />
+                <span
+                  className="font-brand font-semibold text-base sm:text-[1.0625rem] text-ink-900 tracking-tight truncate"
+                  translate="no"
+                >
+                  {t("app.brandName")}
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5 shrink-0">
+                {configured && user?.id ? (
+                  <>
+                    {showHeaderUpgrade ? (
+                      <a
+                        href="#/pricing"
+                        className="vault-header-upgrade-btn"
+                        onClick={goToPricing}
+                      >
+                        {t("vault.entryLimitUpgrade")}
+                      </a>
+                    ) : null}
+                    {entitlementLoaded ? (
+                      <PlanBadge
+                        label={
+                          licensed
+                            ? t("vault.licenseBadgePro")
+                            : t("vault.licenseBadgeFree")
+                        }
+                      />
+                    ) : (
+                      <span
+                        className="h-[1.375rem] w-[2.75rem] rounded-full bg-ink-100 animate-pulse shrink-0"
+                        aria-hidden
+                      />
+                    )}
+                  </>
+                ) : null}
+                <UserMenuDropdown />
+              </div>
+            </div>
+          </div>
+        </header>
+      </div>
 
       <main className="flex-1 min-w-0 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div className={`${VAULT_PAGE} py-5 sm:py-6`}>
@@ -394,7 +659,10 @@ export function VaultScreen() {
             <button
               type="button"
               className={VAULT_TOOLBAR_BTN_ICON}
-              onClick={() => setShowCategories(true)}
+              onClick={() => {
+                setCategoriesStartWithNew(false);
+                setShowCategories(true);
+              }}
               title={t("vault.manageCategories")}
               aria-label={t("vault.manageCategories")}
             >
@@ -422,32 +690,6 @@ export function VaultScreen() {
             </button>
           </div>
         </div>
-        {atEntryLimit && (
-          <div
-            role="status"
-            className="mb-4 rounded-lg border border-ink-200 bg-white px-3 py-3 sm:px-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between shadow-sm"
-          >
-            <div className="flex gap-3 min-w-0">
-              <InformationCircleIcon
-                className="h-5 w-5 shrink-0 text-ink-500 mt-0.5"
-                aria-hidden
-              />
-              <p className="text-sm text-ink-800 leading-snug min-w-0">
-                {t("vault.entryLimitBanner", { limit: freeEntryLimit })}
-              </p>
-            </div>
-            <a
-              href="#/pricing"
-              className="btn-primary text-sm shrink-0 justify-center sm:min-w-[10rem]"
-              onClick={(e) => {
-                e.preventDefault();
-                window.location.hash = "#/pricing";
-              }}
-            >
-              {t("vault.entryLimitUpgrade")}
-            </a>
-          </div>
-        )}
         <p className="mt-2 sm:mt-2.5 mb-1 text-right text-xs text-ink-500 tabular-nums leading-snug">
           {t("vault.totalItems", { count: filtered.length })}
           {categorySummaryParts.length > 0 && (
@@ -519,6 +761,7 @@ export function VaultScreen() {
                   categories={categories}
                   onPinEntryRow={pinEntryRow}
                   onScheduleUnpinEntryRow={scheduleUnpinRow}
+                  onOpenCategoriesAddNew={openCategoriesAddNew}
                   t={t}
                 />
               </li>
@@ -607,6 +850,7 @@ export function VaultScreen() {
                     categories={categories}
                     onPinEntryRow={pinEntryRow}
                     onScheduleUnpinEntryRow={scheduleUnpinRow}
+                    onOpenCategoriesAddNew={openCategoriesAddNew}
                     t={t}
                   />
                 ))
@@ -615,7 +859,7 @@ export function VaultScreen() {
           </div>
         </div>
 
-        <p className="mx-auto max-w-2xl text-center text-xs text-ink-400 leading-relaxed mt-10 sm:mt-12 px-2">
+        <p className="mx-auto max-w-2xl text-center text-xs text-ink-400 leading-relaxed mt-4 sm:mt-6 px-2">
           {t("vault.footer")}
         </p>
         </div>
@@ -684,7 +928,10 @@ export function VaultScreen() {
         </div>
       )}
       {showCategories && (
-        <CategoriesDialog onClose={() => setShowCategories(false)} />
+        <CategoriesDialog
+          onClose={closeCategoriesDialog}
+          startWithNewCategory={categoriesStartWithNew}
+        />
       )}
     </div>
   );
@@ -704,6 +951,7 @@ interface RowProps {
   copiedKey: string | null;
   onPinEntryRow: (id: string) => void;
   onScheduleUnpinEntryRow: (id: string) => void;
+  onOpenCategoriesAddNew: () => void;
   t: TFn;
 }
 
@@ -750,6 +998,7 @@ function MobileEntryCard({
   copiedKey,
   onPinEntryRow,
   onScheduleUnpinEntryRow,
+  onOpenCategoriesAddNew,
   t,
 }: RowProps) {
   const [confirmDel, setConfirmDel] = useState(false);
@@ -782,24 +1031,16 @@ function MobileEntryCard({
         <span className="text-xs font-medium text-ink-600 block">
           {t("vault.colCategory")}
         </span>
-        <div className="relative w-full min-w-0">
-          <select
-            className="input w-full cursor-pointer appearance-none pr-9"
-            value={entry.categoryId}
-            onChange={(e) => onChange({ categoryId: e.target.value })}
-            onFocus={onEditFocus}
-            onBlur={onEditBlur}
-            aria-label={t("vault.colCategory")}
-          >
-            <option value="">{t("vault.uncategorized")}</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          <ChevronDownIcon className={heroChevronField} aria-hidden />
-        </div>
+        <CategorySelect
+          className="input w-full cursor-pointer"
+          value={entry.categoryId}
+          categories={categories}
+          onChange={(categoryId) => onChange({ categoryId })}
+          onAddCategory={onOpenCategoriesAddNew}
+          onEditFocus={onEditFocus}
+          onEditBlur={onEditBlur}
+          t={t}
+        />
       </div>
 
       <div className="space-y-1 w-full min-w-0">
@@ -885,14 +1126,14 @@ function MobileEntryCard({
 
       {expanded ? (
         <div className="w-full border-t border-ink-100 pt-3 space-y-3">
-          <div className="space-y-1 w-full min-w-0">
+          <div className="flex w-full min-w-0 items-start gap-3">
             <label
-              className="text-xs font-medium text-ink-600 block"
+              className="w-14 shrink-0 pt-2 text-xs font-medium text-ink-600 sm:w-16"
               htmlFor={`m-url-${entry.id}`}
             >
               {t("vault.colUrl")}
             </label>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center min-w-0 w-full">
+            <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
               <ExpandTextInput
                 id={`m-url-${entry.id}`}
                 value={entry.url}
@@ -903,7 +1144,7 @@ function MobileEntryCard({
               />
               {entry.url ? (
                 <a
-                  className="shrink-0 self-start p-2.5 text-ink-400 hover:text-accent-600 rounded-md border border-ink-200 bg-white touch-manipulation inline-flex"
+                  className="inline-flex shrink-0 self-start rounded-md border border-ink-200 bg-white p-2.5 text-ink-400 touch-manipulation hover:text-accent-600"
                   href={
                     /^https?:\/\//i.test(entry.url)
                       ? entry.url
@@ -918,21 +1159,23 @@ function MobileEntryCard({
               ) : null}
             </div>
           </div>
-          <div className="space-y-1 w-full min-w-0">
+          <div className="flex w-full min-w-0 items-start gap-3">
             <label
-              className="text-xs font-medium text-ink-600 block"
+              className="w-14 shrink-0 pt-2 text-xs font-medium text-ink-600 sm:w-16"
               htmlFor={`m-memo-${entry.id}`}
             >
               {t("vault.colMemo")}
             </label>
-            <ExpandMemoArea
-              id={`m-memo-${entry.id}`}
-              value={entry.memo}
-              onCommit={(memo) => onChange({ memo })}
-              placeholder={t("vault.phMemo")}
-              onEditFocus={onEditFocus}
-              onEditBlur={onEditBlur}
-            />
+            <div className="min-w-0 flex-1">
+              <ExpandMemoArea
+                id={`m-memo-${entry.id}`}
+                value={entry.memo}
+                onCommit={(memo) => onChange({ memo })}
+                placeholder={t("vault.phMemo")}
+                onEditFocus={onEditFocus}
+                onEditBlur={onEditBlur}
+              />
+            </div>
           </div>
         </div>
       ) : null}
@@ -1092,6 +1335,7 @@ function Row({
   copiedKey,
   onPinEntryRow,
   onScheduleUnpinEntryRow,
+  onOpenCategoriesAddNew,
   t,
 }: RowProps) {
   const [confirmDel, setConfirmDel] = useState(false);
@@ -1112,21 +1356,16 @@ function Row({
     >
       <tr className="border-t border-ink-100 hover:bg-ink-50/60 group">
         <td className="px-1.5 py-1 align-middle">
-          <select
+          <CategorySelect
             className="cell-input w-full min-w-[5.5rem] max-w-[12rem] cursor-pointer appearance-none text-ink-800 bg-white"
             value={entry.categoryId}
-            onChange={(e) => onChange({ categoryId: e.target.value })}
-            onFocus={onEditFocus}
-            onBlur={onEditBlur}
-            aria-label={t("vault.colCategory")}
-          >
-            <option value="">{t("vault.uncategorized")}</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            categories={categories}
+            onChange={(categoryId) => onChange({ categoryId })}
+            onAddCategory={onOpenCategoriesAddNew}
+            onEditFocus={onEditFocus}
+            onEditBlur={onEditBlur}
+            t={t}
+          />
         </td>
         <Cell
           value={entry.site}
@@ -1245,15 +1484,15 @@ function Row({
       {expanded ? (
         <tr className="bg-ink-50/90 border-t border-ink-100">
           <td colSpan={6} className="px-3 py-3 sm:px-4 sm:py-3 align-top">
-            <div className="space-y-3 max-w-4xl">
-              <div>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
                 <label
-                  className="text-xs font-medium text-ink-600 block mb-1"
+                  className="w-14 shrink-0 pt-2 text-xs font-medium text-ink-600 sm:w-16"
                   htmlFor={`vault-url-${entry.id}`}
                 >
                   {t("vault.colUrl")}
                 </label>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-1">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
                   <ExpandTextInput
                     id={`vault-url-${entry.id}`}
                     value={entry.url}
@@ -1264,7 +1503,7 @@ function Row({
                   />
                   {entry.url ? (
                     <a
-                      className="shrink-0 self-start sm:self-auto p-2.5 sm:p-2 text-ink-400 hover:text-accent-600 rounded-md border border-ink-200 bg-white touch-manipulation inline-flex"
+                      className="inline-flex shrink-0 rounded-md border border-ink-200 bg-white p-2 text-ink-400 touch-manipulation hover:text-accent-600"
                       href={
                         /^https?:\/\//i.test(entry.url)
                           ? entry.url
@@ -1279,21 +1518,23 @@ function Row({
                   ) : null}
                 </div>
               </div>
-              <div>
+              <div className="flex items-start gap-3">
                 <label
-                  className="text-xs font-medium text-ink-600 block mb-1"
+                  className="w-14 shrink-0 pt-2 text-xs font-medium text-ink-600 sm:w-16"
                   htmlFor={`vault-memo-${entry.id}`}
                 >
                   {t("vault.colMemo")}
                 </label>
-                <ExpandMemoArea
-                  id={`vault-memo-${entry.id}`}
-                  value={entry.memo}
-                  onCommit={(memo) => onChange({ memo })}
-                  placeholder={t("vault.phMemo")}
-                  onEditFocus={onEditFocus}
-                  onEditBlur={onEditBlur}
-                />
+                <div className="min-w-0 flex-1">
+                  <ExpandMemoArea
+                    id={`vault-memo-${entry.id}`}
+                    value={entry.memo}
+                    onCommit={(memo) => onChange({ memo })}
+                    placeholder={t("vault.phMemo")}
+                    onEditFocus={onEditFocus}
+                    onEditBlur={onEditBlur}
+                  />
+                </div>
               </div>
             </div>
           </td>

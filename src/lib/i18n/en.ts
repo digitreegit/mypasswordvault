@@ -356,14 +356,15 @@ export const MESSAGES_EN: Record<string, string> = {
   "vault.totalItems": "Total: {{count}} items",
   "vault.entryLimitBanner":
     "You have reached the free limit of {{limit}} password entries on this account. Upgrade once to add unlimited entries.",
-  "vault.entryLimitUpgrade": "View plans & upgrade",
+  "vault.entryLimitUpgrade": "Upgrade",
+  "vault.entryLimitBannerDismiss": "Dismiss notification",
   "vault.entryLimitModalTitle": "Entry limit reached",
   "vault.entryLimitModalBody":
     "The free plan includes up to {{limit}} password entries. Purchase a permanent license to keep adding entries.",
   "vault.entryLimitModalCta": "See pricing",
   "vault.entryLimitModalClose": "Close",
   "vault.summaryUncategorized": "Uncategorized",
-  "vault.newEntry": "New entry",
+  "vault.newEntry": "new entry",
   "vault.sortBy": "Sort by",
   "vault.sortRecent": "Recently updated",
 
@@ -372,8 +373,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "vault.ttCollapseRow": "Hide URL and memo",
 
   "vault.phUrl": "https://…",
-  "vault.phUser": "user@example.com",
-  "vault.phPass": "Password",
+  "vault.phUser": "username",
+  "vault.phPass": "password",
 
   "vault.ttOpenTab": "Open in new tab",
   "vault.ttCopyUser": "Copy username",
