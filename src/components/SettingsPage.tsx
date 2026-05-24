@@ -39,7 +39,7 @@ function SignInLogMethodIcon({ method }: { method: SignInLogEntry["method"] }) {
 
 function sidebarNavClass(active: boolean): string {
   return [
-    "block rounded-md px-3 py-2 text-sm font-medium transition-colors",
+    "block rounded-md px-3 py-2 text-[14px] font-medium transition-colors",
     active
       ? "bg-ink-100 text-ink-900"
       : "text-ink-600 hover:bg-ink-50 hover:text-ink-900",
@@ -609,7 +609,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
         <aside className="shrink-0 md:w-56 lg:w-60 px-0 py-4 md:py-8 md:pr-4">
           <a
             href={vaultHref}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-600 hover:text-ink-900 transition-colors"
+            className="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink-600 hover:text-ink-900 transition-colors"
           >
             <ArrowLeftIcon className="h-4 w-4 shrink-0" aria-hidden />
             {t("account.backToVault")}

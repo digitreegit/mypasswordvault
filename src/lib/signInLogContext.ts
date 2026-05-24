@@ -5,6 +5,13 @@ export type SignInLogDevice = "desktop" | "mobile" | "tablet" | "ios" | "android
 
 const LOCATION_FETCH_MS = 4000;
 
+/** ipwho.is free tier blocks browser CORS — lookup via same-origin Vercel API. */
+function signInGeoLookupUrl(): string {
+  if (typeof window === "undefined") return "/api/sign-in-geo";
+  if (isNativeApp()) return "https://mypasswordvault.app/api/sign-in-geo";
+  return `${window.location.origin}/api/sign-in-geo`;
+}
+
 function isMobileUserAgent(ua: string): boolean {
   return /iPhone|iPod|Android.*Mobile|webOS|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(
     ua
@@ -66,8 +73,9 @@ async function fetchLocationFromIp(): Promise<string | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), LOCATION_FETCH_MS);
   try {
-    const res = await fetch("https://ipwho.is/", {
+    const res = await fetch(signInGeoLookupUrl(), {
       signal: controller.signal,
+      credentials: "same-origin",
     });
     if (!res.ok) return null;
     const data = (await res.json()) as {

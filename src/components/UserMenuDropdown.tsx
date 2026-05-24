@@ -4,9 +4,9 @@ import { useVault } from "../lib/vault";
 import { User } from "./Icons";
 
 const MENU_ITEM =
-  "block w-full text-left px-3 py-2 text-xs font-normal text-ink-800 hover:bg-ink-50 transition-colors no-underline";
+  "block w-full text-left px-3 py-2 text-sm font-normal text-ink-800 hover:bg-ink-50 transition-colors no-underline";
 const MENU_ITEM_SIGN_OUT =
-  "block w-full text-left px-3 py-2 text-xs font-normal text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors";
+  "block w-full text-left px-3 py-2 text-sm font-normal text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors";
 const MENU_DIVIDER = "border-t border-ink-200";
 
 export function UserMenuDropdown({ className = "" }: { className?: string }) {
@@ -61,7 +61,7 @@ export function UserMenuDropdown({ className = "" }: { className?: string }) {
           className="absolute right-0 top-[calc(100%+0.35rem)] z-50 min-w-[13.75rem] rounded-lg border border-ink-200 bg-white py-1.5 shadow-[0_8px_24px_rgba(18,18,22,0.12)]"
         >
           <p
-            className="m-0 px-3 pt-2 pb-1.5 text-[11px] text-ink-500 leading-snug break-all"
+            className="m-0 px-3 pt-2 pb-1.5 text-[13px] text-ink-500 leading-snug break-all"
             role="presentation"
           >
             {email}
