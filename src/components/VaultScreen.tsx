@@ -36,6 +36,20 @@ import { useAuth } from "../lib/auth";
 
 type SortKey = "category" | "site" | "username" | "updatedAt";
 
+function emptyDraftEntry(id: string): DecryptedEntry {
+  return {
+    id,
+    categoryId: "",
+    site: "",
+    url: "",
+    username: "",
+    password: "",
+    notes: "",
+    memo: "",
+    updatedAt: Date.now(),
+  };
+}
+
 /** After editing ends and the pointer leaves the row, wait before re-sorting. */
 const ROW_UNPIN_DELAY_MS = 1000;
 
@@ -639,19 +653,25 @@ export function VaultScreen() {
     return parts;
   }, [filtered, categories, t]);
 
-  const mobileDetailEntry = useMemo(
-    () =>
-      mobileDetailId
-        ? (entries.find((e) => e.id === mobileDetailId) ?? null)
-        : null,
-    [entries, mobileDetailId]
-  );
+  const mobileDetailEntry = useMemo(() => {
+    if (!mobileDetailId) return null;
+    const found = entries.find((e) => e.id === mobileDetailId);
+    if (found) return found;
+    if (draftEntryIds.includes(mobileDetailId)) {
+      return emptyDraftEntry(mobileDetailId);
+    }
+    return null;
+  }, [entries, mobileDetailId, draftEntryIds]);
 
   useEffect(() => {
-    if (mobileDetailId && !entries.some((e) => e.id === mobileDetailId)) {
+    if (
+      mobileDetailId &&
+      !entries.some((e) => e.id === mobileDetailId) &&
+      !draftEntryIds.includes(mobileDetailId)
+    ) {
       setMobileDetailId(null);
     }
-  }, [entries, mobileDetailId]);
+  }, [entries, mobileDetailId, draftEntryIds]);
 
   useEffect(() => {
     if (!mobileDetailId) return;
@@ -733,6 +753,7 @@ export function VaultScreen() {
       const without = draftEntryIdsRef.current.filter((x) => x !== id);
       draftEntryIdsRef.current = without;
       setDraftEntryIds(without);
+      setMobileDetailId((cur) => (cur === id ? null : cur));
       if (isAppError(e) && e.code === "errors.entryLimitReached") {
         setEntryLimitModalOpen(true);
         return;
@@ -830,18 +851,18 @@ export function VaultScreen() {
             className="vault-entry-limit-banner pt-[env(safe-area-inset-top,0px)]"
           >
             <div
-              className={`${VAULT_PAGE} flex flex-col gap-2 py-1.5 sm:flex-row sm:items-center sm:justify-between sm:py-2`}
+              className={`${VAULT_PAGE} flex items-center gap-2 py-1.5 sm:py-2`}
             >
-              <div className="flex min-w-0 items-center gap-2">
+              <div className="flex min-w-0 flex-1 items-start gap-2">
                 <InformationCircleIcon
-                  className="vault-entry-limit-banner__icon h-4 w-4 shrink-0"
+                  className="vault-entry-limit-banner__icon mt-0.5 h-4 w-4 shrink-0"
                   aria-hidden
                 />
-                <p className="vault-entry-limit-banner__text min-w-0 text-xs leading-snug sm:text-sm">
+                <p className="vault-entry-limit-banner__text min-w-0 flex-1 break-words text-xs leading-snug sm:text-sm">
                   {t("vault.entryLimitBanner", { limit: freeEntryLimit })}
                 </p>
               </div>
-              <div className="flex shrink-0 items-center gap-1.5 self-end sm:self-auto">
+              <div className="flex shrink-0 items-center gap-1.5">
                 <a
                   href="#/pricing"
                   className="vault-entry-limit-banner__cta"
@@ -957,8 +978,9 @@ export function VaultScreen() {
               enterKeyHint="search"
             />
           </div>
-          <div className="flex w-full items-center gap-2 min-w-0 md:ml-auto md:w-auto md:justify-end">
-            <div className="md:hidden flex items-center gap-2 min-w-0 flex-1">
+          <div className="md:hidden flex w-full flex-col gap-0 mb-1.5">
+            <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] gap-x-2 items-center">
+            <div className="col-start-1 flex items-center gap-2 min-w-0">
               <label
                 className="text-xs font-medium text-ink-600 shrink-0"
                 htmlFor="vault-mobile-sort"
@@ -997,10 +1019,52 @@ export function VaultScreen() {
                 <ChevronUpDownIcon className="h-3.5 w-3.5" />
               </button>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="col-start-2 flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                className={VAULT_TOOLBAR_BTN_ICON}
+                onClick={() => {
+                  setCategoriesStartWithNew(false);
+                  setShowCategories(true);
+                }}
+                title={t("vault.manageCategories")}
+                aria-label={t("vault.manageCategories")}
+              >
+                <Folder />
+              </button>
+              <button
+                type="button"
+                className={VAULT_TOOLBAR_BTN_PRIMARY}
+                onClick={addEntry}
+                disabled={atEntryLimit}
+                title={t("vault.addRow")}
+                aria-label={t("vault.addRow")}
+              >
+                <Plus />
+                <span>{t("vault.addShort")}</span>
+              </button>
+              <button
+                type="button"
+                className={VAULT_TOOLBAR_BTN_ICON}
+                onClick={lock}
+                title={t("vault.lock")}
+                aria-label={t("vault.lock")}
+              >
+                <Lock />
+              </button>
+            </div>
+            </div>
+            <p className="mt-2 mb-1 w-full min-w-0 text-left text-xs text-ink-500 tabular-nums leading-snug break-words">
+              {t("vault.totalItems", { count: filtered.length })}
+              {categorySummaryParts.length > 0 && (
+                <span>{` (${categorySummaryParts.join(", ")})`}</span>
+              )}
+            </p>
+          </div>
+          <div className="hidden md:flex w-full items-center gap-2 ml-auto w-auto justify-end">
             <button
               type="button"
-              className={`${VAULT_TOOLBAR_BTN_ICON} hidden md:inline-flex`}
+              className={VAULT_TOOLBAR_BTN_ICON}
               onClick={() => setShowAll((v) => !v)}
               title={t("vault.ttPasswords")}
               aria-label={showAll ? t("vault.maskAll") : t("vault.revealAll")}
@@ -1039,16 +1103,9 @@ export function VaultScreen() {
             >
               <Lock />
             </button>
-            </div>
           </div>
         </div>
         <p className="hidden md:block mt-2 sm:mt-2.5 mb-1 text-right text-xs text-ink-500 tabular-nums leading-snug">
-          {t("vault.totalItems", { count: filtered.length })}
-          {categorySummaryParts.length > 0 && (
-            <span>{` (${categorySummaryParts.join(", ")})`}</span>
-          )}
-        </p>
-        <p className="md:hidden mt-2 mb-3 text-right text-xs text-ink-500 tabular-nums leading-snug">
           {t("vault.totalItems", { count: filtered.length })}
           {categorySummaryParts.length > 0 && (
             <span>{` (${categorySummaryParts.join(", ")})`}</span>

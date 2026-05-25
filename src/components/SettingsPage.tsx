@@ -33,6 +33,15 @@ function settingsTabClass(active: boolean): string {
     : `${base} border-transparent text-ink-500 hover:text-ink-800 hover:border-ink-200`;
 }
 
+function sidebarNavClass(active: boolean): string {
+  return [
+    "block rounded-md px-3 py-2 text-[14px] font-medium transition-colors",
+    active
+      ? "bg-ink-100 text-ink-900"
+      : "text-ink-600 hover:bg-ink-50 hover:text-ink-900",
+  ].join(" ");
+}
+
 const SETTINGS_PAGE = "max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8";
 
 const SETTINGS_HEADER_ICON_BTN =
@@ -539,8 +548,10 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
       </header>
 
       <div className="flex flex-1 flex-col min-h-0 w-full">
-        <div className={`flex flex-1 flex-col min-h-0 ${SETTINGS_PAGE}`}>
-          <div className="shrink-0 py-4 sm:py-6">
+        <div
+          className={`flex flex-1 flex-col md:flex-row min-h-0 ${SETTINGS_PAGE}`}
+        >
+          <aside className="hidden md:block shrink-0 md:w-56 lg:w-60 md:py-8 md:pr-4">
             <a
               href={vaultHref}
               className="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink-600 hover:text-ink-900 transition-colors"
@@ -548,30 +559,56 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
               <ArrowLeftIcon className="h-4 w-4 shrink-0" aria-hidden />
               {t("account.backToVault")}
             </a>
-          </div>
 
-          <main className="flex-1 min-w-0 overflow-y-auto pb-6 sm:pb-10">
-            <nav
-              className="flex gap-0 border-b border-ink-200 overflow-x-auto -mx-1 px-1"
-              role="tablist"
-              aria-label={t("settings.navAria")}
-            >
+            <p className="mt-6 mb-2 text-[0.65rem] font-semibold uppercase tracking-wider text-ink-400">
+              {t("settings.sidebarSection")}
+            </p>
+            <nav className="flex flex-col gap-0.5" aria-label={t("settings.navAria")}>
               {navItems.map((item) => (
                 <a
                   key={item.id}
                   id={`settings-tab-${item.id}`}
                   href={settingsHref(item.id)}
-                  role="tab"
-                  aria-selected={activeSection === item.id}
-                  className={settingsTabClass(activeSection === item.id)}
+                  className={sidebarNavClass(activeSection === item.id)}
                 >
                   {item.label}
                 </a>
               ))}
             </nav>
+          </aside>
+
+          <main className="flex-1 min-w-0 overflow-y-auto py-6 sm:py-10 md:pl-6 md:pr-2 pb-6 sm:pb-10">
+            <div className="md:hidden space-y-4">
+              <a
+                href={vaultHref}
+                className="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink-600 hover:text-ink-900 transition-colors"
+              >
+                <ArrowLeftIcon className="h-4 w-4 shrink-0" aria-hidden />
+                {t("account.backToVault")}
+              </a>
+
+              <nav
+                className="flex gap-0 border-b border-ink-200 overflow-x-auto -mx-1 px-1"
+                role="tablist"
+                aria-label={t("settings.navAria")}
+              >
+                {navItems.map((item) => (
+                  <a
+                    key={item.id}
+                    id={`settings-tab-${item.id}`}
+                    href={settingsHref(item.id)}
+                    role="tab"
+                    aria-selected={activeSection === item.id}
+                    className={settingsTabClass(activeSection === item.id)}
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </nav>
+            </div>
 
             <div
-              className="w-full max-w-none space-y-6 mt-6 sm:mt-8"
+              className="w-full max-w-none space-y-6 mt-6 md:mt-0"
               role="tabpanel"
               aria-labelledby={`settings-tab-${activeSection}`}
             >
