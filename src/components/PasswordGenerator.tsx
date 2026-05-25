@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   DEFAULT_GEN,
   generatePassword,
@@ -14,9 +15,75 @@ interface Props {
   onClose: () => void;
 }
 
+function clampGenOptions(o: GenOptions): GenOptions {
+  const length = Math.max(8, Math.min(64, o.length));
+  const minDigits = o.digits
+    ? Math.min(Math.max(0, Math.floor(o.minDigits)), length)
+    : 0;
+  const minSymbols = o.symbols
+    ? Math.min(Math.max(0, Math.floor(o.minSymbols)), length)
+    : 0;
+  return { ...o, length, minDigits, minSymbols };
+}
+
+function MinCountControl({
+  label,
+  value,
+  max,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  disabled?: boolean;
+  onChange: (next: number) => void;
+}) {
+  return (
+    <div
+      className={[
+        "flex items-center justify-between gap-2 rounded-md border border-ink-200 px-2 py-1.5 text-sm",
+        disabled ? "opacity-50" : "",
+      ].join(" ")}
+    >
+      <span className="text-ink-700">{label}</span>
+      <div className="flex items-center gap-1 shrink-0">
+        <button
+          type="button"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-ink-200 bg-white text-ink-600 hover:bg-ink-50 disabled:opacity-40 disabled:pointer-events-none"
+          disabled={disabled || value <= 0}
+          onClick={() => onChange(value - 1)}
+          aria-label={`${label} decrease`}
+        >
+          −
+        </button>
+        <span className="w-6 text-center tabular-nums font-medium text-ink-800">
+          {value}
+        </span>
+        <button
+          type="button"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-ink-200 bg-white text-ink-600 hover:bg-ink-50 disabled:opacity-40 disabled:pointer-events-none"
+          disabled={disabled || value >= max}
+          onClick={() => onChange(value + 1)}
+          aria-label={`${label} increase`}
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function PasswordGenerator({ initial, onUse, onClose }: Props) {
   const { t } = useVault();
-  const [opts, setOpts] = useState<GenOptions>({ ...DEFAULT_GEN, ...initial });
+  const [opts, setOpts] = useState<GenOptions>(() =>
+    clampGenOptions({ ...DEFAULT_GEN, ...initial })
+  );
+  const setGenOpts = (patch: Partial<GenOptions> | ((o: GenOptions) => GenOptions)) => {
+    setOpts((o) =>
+      clampGenOptions(typeof patch === "function" ? patch(o) : { ...o, ...patch })
+    );
+  };
   const [value, setValue] = useState<string>(() => generatePassword(opts));
   const [copied, setCopied] = useState(false);
   const strengthScore = useMemo(() => passwordStrengthScore(value), [value]);
@@ -40,13 +107,12 @@ export function PasswordGenerator({ initial, onUse, onClose }: Props) {
     }
   }
 
-  const classLabels = (
+  const charsetLabels = (
     [
       ["lower", "pwdGen.cLower"],
       ["upper", "pwdGen.cUpper"],
       ["digits", "pwdGen.cDigits"],
       ["symbols", "pwdGen.cSymbols"],
-      ["avoidAmbiguous", "pwdGen.cAmbiguous"],
     ] as const
   ).map(([k, msg]) => ({ key: k, msg }));
 
@@ -55,9 +121,9 @@ export function PasswordGenerator({ initial, onUse, onClose }: Props) {
   const lengthFillPct =
     ((opts.length - lengthMin) / (lengthMax - lengthMin)) * 100;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 bg-ink-900/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+      className="fixed inset-0 z-[60] bg-ink-900/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
       onClick={onClose}
     >
       <div
@@ -101,7 +167,7 @@ export function PasswordGenerator({ initial, onUse, onClose }: Props) {
         <div>
           <label className="label flex items-center justify-between">
             <span>{t("pwdGen.length")}</span>
-            <span className="text-ink-500 font-mono">{opts.length}</span>
+            <span className="text-ink-500 tabular-nums">{opts.length}</span>
           </label>
           <input
             type="range"
@@ -109,7 +175,7 @@ export function PasswordGenerator({ initial, onUse, onClose }: Props) {
             max={lengthMax}
             value={opts.length}
             onChange={(e) =>
-              setOpts((o) => ({ ...o, length: Number(e.target.value) }))
+              setGenOpts({ length: Number(e.target.value) })
             }
             className="range-thin w-full"
             style={
@@ -118,22 +184,65 @@ export function PasswordGenerator({ initial, onUse, onClose }: Props) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          {classLabels.map(({ key: k, msg }) => (
-            <label
-              key={k}
-              className="flex items-center gap-2 rounded-md border border-ink-200 px-2 py-1.5 cursor-pointer hover:bg-ink-50"
-            >
-              <input
-                type="checkbox"
-                checked={opts[k]}
-                onChange={(e) =>
-                  setOpts((o) => ({ ...o, [k]: e.target.checked }))
-                }
-              />
-              <span>{t(msg)}</span>
-            </label>
-          ))}
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            {charsetLabels.map(({ key: k, msg }) => (
+              <label
+                key={k}
+                className="flex items-center gap-2 rounded-md border border-ink-200 px-2 py-1.5 cursor-pointer hover:bg-ink-50"
+              >
+                <input
+                  type="checkbox"
+                  checked={opts[k]}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    if (k === "digits") {
+                      setGenOpts((o) => ({
+                        ...o,
+                        digits: checked,
+                        minDigits: checked ? Math.max(o.minDigits, 1) : 0,
+                      }));
+                    } else if (k === "symbols") {
+                      setGenOpts((o) => ({
+                        ...o,
+                        symbols: checked,
+                        minSymbols: checked ? Math.max(o.minSymbols, 1) : 0,
+                      }));
+                    } else {
+                      setGenOpts({ [k]: checked });
+                    }
+                  }}
+                />
+                <span>{t(msg)}</span>
+              </label>
+            ))}
+          </div>
+
+          <label className="flex w-full items-center gap-2 rounded-md border border-ink-200 px-2 py-1.5 text-sm cursor-pointer hover:bg-ink-50">
+            <input
+              type="checkbox"
+              checked={opts.avoidAmbiguous}
+              onChange={(e) =>
+                setGenOpts({ avoidAmbiguous: e.target.checked })
+              }
+            />
+            <span>{t("pwdGen.cAmbiguous")}</span>
+          </label>
+
+          <MinCountControl
+            label={t("pwdGen.minDigits")}
+            value={opts.minDigits}
+            max={opts.length}
+            disabled={!opts.digits}
+            onChange={(minDigits) => setGenOpts({ minDigits })}
+          />
+          <MinCountControl
+            label={t("pwdGen.minSymbols")}
+            value={opts.minSymbols}
+            max={opts.length}
+            disabled={!opts.symbols}
+            onChange={(minSymbols) => setGenOpts({ minSymbols })}
+          />
         </div>
 
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap sm:justify-end">
@@ -153,6 +262,7 @@ export function PasswordGenerator({ initial, onUse, onClose }: Props) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

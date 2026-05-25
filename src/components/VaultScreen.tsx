@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { createPortal } from "react-dom";
 import {
   ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   ChevronUpDownIcon,
   InformationCircleIcon,
   MagnifyingGlassIcon,
@@ -47,13 +49,13 @@ function readEntryLimitBannerDismissed(userId?: string | null): boolean {
   );
 }
 
-/** New rows stay pinned until site, username, and password are all filled. */
-function isEntryDraftComplete(e: DecryptedEntry): boolean {
-  return (
-    e.site.trim() !== "" &&
-    e.username.trim() !== "" &&
-    e.password.trim() !== ""
-  );
+function entryCategoryLabel(
+  categoryId: string,
+  categories: VaultCategory[],
+  t: TFn
+): string {
+  if (!categoryId) return t("vault.uncategorized");
+  return categories.find((c) => c.id === categoryId)?.name ?? t("vault.uncategorized");
 }
 
 function filterEntriesByQuery(
@@ -103,28 +105,41 @@ function sortVaultEntries(
   const compare = (a: DecryptedEntry, b: DecryptedEntry): number => {
     const sa = entryForSort(a);
     const sb = entryForSort(b);
-    const c0 = sortBucket(sa).localeCompare(sortBucket(sb), undefined, {
-      sensitivity: "base",
-    });
-    const groupDir = sortKey === "category" ? (sortDir === "asc" ? 1 : -1) : 1;
-    if (c0 !== 0) return c0 * groupDir;
     const dir = sortDir === "asc" ? 1 : -1;
+
     if (sortKey === "category") {
+      const c0 = sortBucket(sa).localeCompare(sortBucket(sb), undefined, {
+        sensitivity: "base",
+      });
+      const groupDir = sortDir === "asc" ? 1 : -1;
+      if (c0 !== 0) return c0 * groupDir;
       return sa.site.localeCompare(sb.site, undefined, { sensitivity: "base" });
     }
+
     if (sortKey === "updatedAt") {
       if (sa.updatedAt < sb.updatedAt) return -1 * dir;
       if (sa.updatedAt > sb.updatedAt) return 1 * dir;
-      return 0;
+      return sa.site.localeCompare(sb.site, undefined, { sensitivity: "base" });
     }
+
     if (sortKey === "site") {
-      return sa.site.localeCompare(sb.site, undefined, { sensitivity: "base" }) * dir;
-    }
-    if (sortKey === "username") {
+      const siteCmp = sa.site.localeCompare(sb.site, undefined, {
+        sensitivity: "base",
+      });
+      if (siteCmp !== 0) return siteCmp * dir;
       return sa.username.localeCompare(sb.username, undefined, {
         sensitivity: "base",
-      }) * dir;
+      });
     }
+
+    if (sortKey === "username") {
+      const userCmp = sa.username.localeCompare(sb.username, undefined, {
+        sensitivity: "base",
+      });
+      if (userCmp !== 0) return userCmp * dir;
+      return sa.site.localeCompare(sb.site, undefined, { sensitivity: "base" });
+    }
+
     return 0;
   };
 
@@ -138,10 +153,59 @@ function sortVaultEntries(
   return [...pinned, ...sortable];
 }
 
-type TFn = (key: string, vars?: Record<string, string | number>) => string;
+function orderEntriesByIds(
+  arr: DecryptedEntry[],
+  orderIds: string[]
+): DecryptedEntry[] {
+  const byId = new Map(arr.map((e) => [e.id, e]));
+  const ordered: DecryptedEntry[] = [];
+  const seen = new Set<string>();
+  for (const id of orderIds) {
+    const e = byId.get(id);
+    if (e) {
+      ordered.push(e);
+      seen.add(id);
+    }
+  }
+  for (const e of arr) {
+    if (!seen.has(e.id)) ordered.push(e);
+  }
+  return ordered;
+}
 
-/** Mobile entry card: single column, full-width fields */
-const MOBILE_CARD_STACK = "flex flex-col gap-3 min-w-0 w-full";
+/** Re-sort after one row is saved; rows still being edited stay at their anchor index. */
+function resortKeepingPinnedAnchors(
+  entries: DecryptedEntry[],
+  query: string,
+  sortKey: SortKey,
+  sortDir: "asc" | "desc",
+  categories: VaultCategory[],
+  draftEntryIds: string[],
+  pinnedIds: string[],
+  anchorOrder: string[]
+): string[] {
+  const sorted = sortVaultEntries(
+    entries,
+    query,
+    sortKey,
+    sortDir,
+    categories,
+    draftEntryIds
+  ).map((e) => e.id);
+  if (pinnedIds.length === 0) return sorted;
+
+  const result = [...sorted];
+  for (const pinId of pinnedIds) {
+    const anchorIdx = anchorOrder.indexOf(pinId);
+    const currentIdx = result.indexOf(pinId);
+    if (anchorIdx === -1 || currentIdx === -1) continue;
+    result.splice(currentIdx, 1);
+    result.splice(Math.min(anchorIdx, result.length), 0, pinId);
+  }
+  return result;
+}
+
+type TFn = (key: string, vars?: Record<string, string | number>) => string;
 
 function CategorySelect({
   value,
@@ -275,7 +339,7 @@ function CategorySelect({
       >
         <span className="min-w-0 flex-1 truncate">{label}</span>
         <ChevronDownIcon
-          className="h-3.5 w-3.5 shrink-0 text-ink-400"
+          className="ml-1.5 h-3.5 w-3.5 shrink-0 text-ink-400"
           aria-hidden
         />
       </button>
@@ -334,12 +398,10 @@ const heroChevronSort =
 
 const VAULT_PAGE = "max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8";
 /** Figma toolbar: white pill buttons with light border */
-const VAULT_TOOLBAR_BTN =
-  "inline-flex items-center justify-center gap-1.5 rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-800 shadow-sm hover:bg-ink-50 transition-colors disabled:opacity-50 disabled:pointer-events-none shrink-0";
 const VAULT_TOOLBAR_BTN_PRIMARY =
-  "inline-flex items-center justify-center gap-1.5 rounded-lg border border-accent-600 bg-accent-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-accent-700 transition-colors disabled:opacity-50 disabled:pointer-events-none shrink-0";
+  "inline-flex items-center justify-center gap-1.5 rounded-lg border border-accent-600 bg-accent-600 px-3 py-2 min-h-[2.5rem] text-sm font-medium text-white shadow-sm hover:bg-accent-700 transition-colors disabled:opacity-50 disabled:pointer-events-none shrink-0";
 const VAULT_TOOLBAR_BTN_ICON =
-  "inline-flex items-center justify-center rounded-lg border border-ink-200 bg-white p-2 text-ink-600 shadow-sm hover:bg-ink-50 transition-colors shrink-0 min-w-[2.5rem] min-h-[2.5rem]";
+  "inline-flex items-center justify-center rounded-lg border border-ink-200 bg-white h-10 min-w-10 text-ink-600 shadow-sm hover:bg-ink-50 transition-colors shrink-0";
 
 const VAULT_HEADER_ICON_BTN =
   "inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-600 hover:bg-ink-50 transition-colors shrink-0";
@@ -363,6 +425,7 @@ export function VaultScreen() {
   } = useVault();
 
   const [query, setQuery] = useState("");
+  const [mobileDetailId, setMobileDetailId] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -376,7 +439,7 @@ export function VaultScreen() {
   const [entryLimitBannerDismissed, setEntryLimitBannerDismissed] = useState(
     () => readEntryLimitBannerDismissed(user?.id)
   );
-  /** Entry ids still being created — kept at top until draft is complete. */
+  /** Entry ids still being created — kept at top until edit session ends. */
   const [draftEntryIds, setDraftEntryIds] = useState<string[]>([]);
   /** Rows being edited — sort position frozen until pointer leaves and delay elapses. */
   const [pinEntryIds, setPinEntryIds] = useState<string[]>([]);
@@ -389,6 +452,12 @@ export function VaultScreen() {
   const editDisplayOrderRef = useRef<string[] | null>(null);
   /** Synchronous mirror of pinEntryIds — avoids re-sort before React state flushes. */
   const pinEntryIdsRef = useRef<string[]>([]);
+  /** Synchronous mirror of draftEntryIds. */
+  const draftEntryIdsRef = useRef<string[]>([]);
+  /** Latest entries for pin/unpin handlers outside render. */
+  const entriesRef = useRef(entries);
+  entriesRef.current = entries;
+  draftEntryIdsRef.current = draftEntryIds;
   /** Entry id whose category dropdown is open (suppresses premature unpin). */
   const categoryMenuOpenEntryIdRef = useRef<string | null>(null);
 
@@ -427,62 +496,78 @@ export function VaultScreen() {
     [cancelScheduledUnpin]
   );
 
+  const captureEditDisplayOrder = useCallback(() => {
+    if (!editDisplayOrderRef.current) {
+      editDisplayOrderRef.current = sortVaultEntries(
+        entriesRef.current,
+        query,
+        sortKey,
+        sortDir,
+        categories,
+        draftEntryIdsRef.current
+      ).map((e) => e.id);
+    }
+  }, [query, sortKey, sortDir, categories]);
+
   const unpinEntry = useCallback(
     (id: string) => {
-      const next = pinEntryIdsRef.current.filter((x) => x !== id);
-      if (next.length === pinEntryIdsRef.current.length) return;
-      pinEntryIdsRef.current = next;
-      pinSortSnapshotsRef.current.delete(id);
-      const clearingSession = next.length === 0;
-      if (clearingSession) {
+      const wasPinned = pinEntryIdsRef.current.includes(id);
+      const wasDraft = draftEntryIdsRef.current.includes(id);
+      if (!wasPinned && !wasDraft && !editDisplayOrderRef.current) return;
+
+      if (wasPinned) {
+        const next = pinEntryIdsRef.current.filter((x) => x !== id);
+        pinEntryIdsRef.current = next;
+        pinSortSnapshotsRef.current.delete(id);
+        if (next.length === 0) {
+          pinSortSnapshotsRef.current.clear();
+        }
+        setPinEntryIds(next);
+      }
+
+      const nextDraft = draftEntryIdsRef.current.filter((x) => x !== id);
+      if (nextDraft.length !== draftEntryIdsRef.current.length) {
+        draftEntryIdsRef.current = nextDraft;
+        setDraftEntryIds(nextDraft);
+      }
+
+      const remainingPins = pinEntryIdsRef.current;
+      const anchor = editDisplayOrderRef.current;
+
+      if (remainingPins.length > 0 && anchor) {
+        editDisplayOrderRef.current = resortKeepingPinnedAnchors(
+          entriesRef.current,
+          query,
+          sortKey,
+          sortDir,
+          categories,
+          nextDraft,
+          remainingPins,
+          anchor
+        );
+      } else {
         editDisplayOrderRef.current = null;
-        pinSortSnapshotsRef.current.clear();
       }
-      setPinEntryIds(next);
-      setDraftEntryIds((prev) => {
-        const entry = entries.find((e) => e.id === id);
-        if (!entry || !isEntryDraftComplete(entry)) return prev;
-        const without = prev.filter((x) => x !== id);
-        return without.length === prev.length ? prev : without;
-      });
-      if (clearingSession) {
-        setSortRevision((r) => r + 1);
-      }
+
+      setSortRevision((r) => r + 1);
     },
-    [entries]
+    [query, sortKey, sortDir, categories]
   );
 
   const pinEntryRow = useCallback(
     (id: string) => {
       cancelScheduledUnpin(id);
       if (!pinSortSnapshotsRef.current.has(id)) {
-        const entry = entries.find((e) => e.id === id);
+        const entry = entriesRef.current.find((e) => e.id === id);
         if (entry) pinSortSnapshotsRef.current.set(id, { ...entry });
       }
-      if (!editDisplayOrderRef.current) {
-        editDisplayOrderRef.current = sortVaultEntries(
-          entries,
-          query,
-          sortKey,
-          sortDir,
-          categories,
-          draftEntryIds
-        ).map((e) => e.id);
-      }
+      captureEditDisplayOrder();
       if (!pinEntryIdsRef.current.includes(id)) {
         pinEntryIdsRef.current = [...pinEntryIdsRef.current, id];
         setPinEntryIds([...pinEntryIdsRef.current]);
       }
     },
-    [
-      cancelScheduledUnpin,
-      entries,
-      query,
-      sortKey,
-      sortDir,
-      categories,
-      draftEntryIds,
-    ]
+    [cancelScheduledUnpin, captureEditDisplayOrder]
   );
 
   const scheduleUnpinRow = useCallback(
@@ -505,36 +590,22 @@ export function VaultScreen() {
     };
   }, []);
 
-  useEffect(() => {
-    setDraftEntryIds((prev) => {
-      const next = prev.filter((id) => {
-        const e = entries.find((x) => x.id === id);
-        if (!e) return false;
-        if (!isEntryDraftComplete(e)) return true;
-        return pinEntryIds.includes(id);
-      });
-      return next.length === prev.length ? prev : next;
-    });
-  }, [entries, pinEntryIds]);
-
   const filtered = useMemo(() => {
     const arr = filterEntriesByQuery(entries, query, categories);
+    const hasActivePins = pinEntryIdsRef.current.length > 0;
 
-    if (pinEntryIdsRef.current.length > 0 && editDisplayOrderRef.current) {
-      const byId = new Map(arr.map((e) => [e.id, e]));
-      const ordered: DecryptedEntry[] = [];
-      const seen = new Set<string>();
-      for (const id of editDisplayOrderRef.current) {
-        const e = byId.get(id);
-        if (e) {
-          ordered.push(e);
-          seen.add(id);
-        }
+    if (hasActivePins) {
+      if (!editDisplayOrderRef.current) {
+        editDisplayOrderRef.current = sortVaultEntries(
+          entries,
+          query,
+          sortKey,
+          sortDir,
+          categories,
+          draftEntryIds
+        ).map((e) => e.id);
       }
-      for (const e of arr) {
-        if (!seen.has(e.id)) ordered.push(e);
-      }
-      return ordered;
+      return orderEntriesByIds(arr, editDisplayOrderRef.current);
     }
 
     return sortVaultEntries(
@@ -567,6 +638,29 @@ export function VaultScreen() {
     }
     return parts;
   }, [filtered, categories, t]);
+
+  const mobileDetailEntry = useMemo(
+    () =>
+      mobileDetailId
+        ? (entries.find((e) => e.id === mobileDetailId) ?? null)
+        : null,
+    [entries, mobileDetailId]
+  );
+
+  useEffect(() => {
+    if (mobileDetailId && !entries.some((e) => e.id === mobileDetailId)) {
+      setMobileDetailId(null);
+    }
+  }, [entries, mobileDetailId]);
+
+  useEffect(() => {
+    if (!mobileDetailId) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileDetailId]);
 
   function toggleReveal(id: string) {
     setRevealed((prev) => {
@@ -612,9 +706,17 @@ export function VaultScreen() {
     touchActivity();
   }
 
+  useEffect(() => {
+    if (!mobileDetailId) return;
+    pinEntryRow(mobileDetailId);
+  }, [mobileDetailId, pinEntryRow]);
+
   async function addEntry() {
     const id = newId();
-    setDraftEntryIds((prev) => [id, ...prev.filter((x) => x !== id)]);
+    const nextDraft = [id, ...draftEntryIdsRef.current.filter((x) => x !== id)];
+    draftEntryIdsRef.current = nextDraft;
+    setDraftEntryIds(nextDraft);
+    setMobileDetailId(id);
     try {
       await upsertEntry({
         id,
@@ -626,8 +728,11 @@ export function VaultScreen() {
         notes: "",
         memo: "",
       });
+      pinEntryRow(id);
     } catch (e) {
-      setDraftEntryIds((prev) => prev.filter((x) => x !== id));
+      const without = draftEntryIdsRef.current.filter((x) => x !== id);
+      draftEntryIdsRef.current = without;
+      setDraftEntryIds(without);
       if (isAppError(e) && e.code === "errors.entryLimitReached") {
         setEntryLimitModalOpen(true);
         return;
@@ -637,13 +742,18 @@ export function VaultScreen() {
   }
 
   async function handleRemoveEntry(id: string) {
-    setDraftEntryIds((prev) => prev.filter((x) => x !== id));
+    const without = draftEntryIdsRef.current.filter((x) => x !== id);
+    draftEntryIdsRef.current = without;
+    setDraftEntryIds(without);
+    setMobileDetailId((cur) => (cur === id ? null : cur));
     cancelScheduledUnpin(id);
     unpinEntry(id);
     await removeEntry(id);
   }
 
   function toggleSort(k: SortKey) {
+    editDisplayOrderRef.current = null;
+    setSortRevision((r) => r + 1);
     if (sortKey === k) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else {
       setSortKey(k);
@@ -671,14 +781,40 @@ export function VaultScreen() {
   }
 
   const openCategoriesAddNew = useCallback(() => {
+    if (mobileDetailId) {
+      cancelScheduledUnpin(mobileDetailId);
+      pinEntryRow(mobileDetailId);
+      registerCategoryMenuOpen(mobileDetailId, true);
+    }
     setCategoriesStartWithNew(true);
     setShowCategories(true);
-  }, []);
+  }, [mobileDetailId, cancelScheduledUnpin, pinEntryRow, registerCategoryMenuOpen]);
 
   const closeCategoriesDialog = useCallback(() => {
     setShowCategories(false);
     setCategoriesStartWithNew(false);
-  }, []);
+    if (mobileDetailId) {
+      registerCategoryMenuOpen(mobileDetailId, false);
+    }
+  }, [mobileDetailId, registerCategoryMenuOpen]);
+
+  const openPasswordGenerator = useCallback(
+    (entryId: string) => {
+      cancelScheduledUnpin(entryId);
+      pinEntryRow(entryId);
+      registerCategoryMenuOpen(entryId, true);
+      setGeneratorFor(entryId);
+    },
+    [cancelScheduledUnpin, pinEntryRow, registerCategoryMenuOpen]
+  );
+
+  const closePasswordGenerator = useCallback(() => {
+    const entryId = generatorFor;
+    setGeneratorFor(null);
+    if (entryId) {
+      registerCategoryMenuOpen(entryId, false);
+    }
+  }, [generatorFor, registerCategoryMenuOpen]);
 
   return (
     <div
@@ -789,11 +925,11 @@ export function VaultScreen() {
 
       <main className="flex-1 min-w-0 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div className={`${VAULT_PAGE} pt-3 pb-5 sm:pt-4 sm:pb-6`}>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 mb-1">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4 mb-1">
           <h1 className="font-sans text-xl sm:text-2xl font-semibold text-ink-900 tracking-tight shrink-0">
             {t("vault.pageTitle")}
           </h1>
-          <div className="relative w-full min-w-0 sm:w-[25rem] sm:max-w-[25rem] shrink-0">
+          <div className="relative w-full md:hidden">
             <MagnifyingGlassIcon
               className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400"
               aria-hidden
@@ -807,10 +943,64 @@ export function VaultScreen() {
               enterKeyHint="search"
             />
           </div>
-          <div className="flex items-center gap-2 shrink-0 self-end sm:ml-auto sm:self-auto">
+          <div className="relative hidden md:block w-full min-w-0 md:w-[25rem] md:max-w-[25rem] shrink-0">
+            <MagnifyingGlassIcon
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400"
+              aria-hidden
+            />
+            <input
+              className="input w-full pl-9 shadow-sm"
+              placeholder={t("vault.searchPlaceholder")}
+              title={t("vault.search")}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              enterKeyHint="search"
+            />
+          </div>
+          <div className="flex w-full items-center gap-2 min-w-0 md:ml-auto md:w-auto md:justify-end">
+            <div className="md:hidden flex items-center gap-2 min-w-0 flex-1">
+              <label
+                className="text-xs font-medium text-ink-600 shrink-0"
+                htmlFor="vault-mobile-sort"
+              >
+                {t("vault.sortBy")}
+              </label>
+              <div className="relative min-w-0 flex-1">
+                <select
+                  id="vault-mobile-sort"
+                  className="input w-full appearance-none py-1.5 pl-3 pr-9 text-sm min-w-0"
+                  value={sortKey}
+                  onChange={(e) => {
+                    const k = e.target.value as SortKey;
+                    editDisplayOrderRef.current = null;
+                    setSortRevision((r) => r + 1);
+                    setSortKey(k);
+                    setSortDir(k === "updatedAt" ? "desc" : "asc");
+                  }}
+                >
+                  <option value="updatedAt">{t("vault.sortRecent")}</option>
+                  <option value="category">{t("vault.colCategory")}</option>
+                  <option value="site">{t("vault.colSite")}</option>
+                </select>
+                <ChevronDownIcon className={heroChevronSort} aria-hidden />
+              </div>
+              <button
+                type="button"
+                className="btn-secondary text-sm px-2.5 min-w-[2.5rem] shrink-0 touch-manipulation"
+                onClick={() => {
+                  editDisplayOrderRef.current = null;
+                  setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                  setSortRevision((r) => r + 1);
+                }}
+                aria-label={sortDir === "asc" ? "Ascending" : "Descending"}
+              >
+                <ChevronUpDownIcon className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
-              className={VAULT_TOOLBAR_BTN_ICON}
+              className={`${VAULT_TOOLBAR_BTN_ICON} hidden md:inline-flex`}
               onClick={() => setShowAll((v) => !v)}
               title={t("vault.ttPasswords")}
               aria-label={showAll ? t("vault.maskAll") : t("vault.revealAll")}
@@ -834,6 +1024,7 @@ export function VaultScreen() {
               className={VAULT_TOOLBAR_BTN_PRIMARY}
               onClick={addEntry}
               disabled={atEntryLimit}
+              title={t("vault.addRow")}
               aria-label={t("vault.addRow")}
             >
               <Plus />
@@ -841,56 +1032,28 @@ export function VaultScreen() {
             </button>
             <button
               type="button"
-              className={VAULT_TOOLBAR_BTN}
+              className={VAULT_TOOLBAR_BTN_ICON}
               onClick={lock}
               title={t("vault.lock")}
               aria-label={t("vault.lock")}
             >
               <Lock />
-              <span>{t("vault.lock")}</span>
             </button>
+            </div>
           </div>
         </div>
-        <p className="mt-2 sm:mt-2.5 mb-1 text-right text-xs text-ink-500 tabular-nums leading-snug">
+        <p className="hidden md:block mt-2 sm:mt-2.5 mb-1 text-right text-xs text-ink-500 tabular-nums leading-snug">
           {t("vault.totalItems", { count: filtered.length })}
           {categorySummaryParts.length > 0 && (
             <span>{` (${categorySummaryParts.join(", ")})`}</span>
           )}
         </p>
-        <div className="md:hidden flex items-center gap-2 mb-3 min-w-0">
-          <label
-            className="text-xs font-medium text-ink-600 shrink-0"
-            htmlFor="vault-mobile-sort"
-          >
-            {t("vault.sortBy")}
-          </label>
-          <div className="relative min-w-0 flex-1">
-            <select
-              id="vault-mobile-sort"
-              className="input w-full appearance-none py-1.5 pl-3 pr-9 text-sm min-w-0"
-              value={sortKey}
-              onChange={(e) => {
-                const k = e.target.value as SortKey;
-                setSortKey(k);
-                setSortDir(k === "updatedAt" ? "desc" : "asc");
-              }}
-            >
-              <option value="category">{t("vault.colCategory")}</option>
-              <option value="updatedAt">{t("vault.sortRecent")}</option>
-              <option value="site">{t("vault.colSite")}</option>
-              <option value="username">{t("vault.colUser")}</option>
-            </select>
-            <ChevronDownIcon className={heroChevronSort} aria-hidden />
-          </div>
-          <button
-            type="button"
-            className="btn-secondary text-sm px-2.5 min-w-[2.5rem] shrink-0"
-            onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
-            aria-label={sortDir === "asc" ? "Ascending" : "Descending"}
-          >
-            <ChevronUpDownIcon className="h-3.5 w-3.5" />
-          </button>
-        </div>
+        <p className="md:hidden mt-2 mb-3 text-right text-xs text-ink-500 tabular-nums leading-snug">
+          {t("vault.totalItems", { count: filtered.length })}
+          {categorySummaryParts.length > 0 && (
+            <span>{` (${categorySummaryParts.join(", ")})`}</span>
+          )}
+        </p>
 
         <ul className="md:hidden space-y-3 list-none p-0 m-0">
           {filtered.length === 0 ? (
@@ -908,23 +1071,10 @@ export function VaultScreen() {
           ) : (
             filtered.map((e) => (
               <li key={e.id}>
-                <MobileEntryCard
+                <MobileEntryRow
                   entry={e}
-                  expanded={expandedIds.has(e.id)}
-                  onToggleExpand={() => toggleExpanded(e.id)}
-                  revealed={showAll || revealed.has(e.id)}
-                  toggleReveal={() => toggleReveal(e.id)}
-                  onChange={(patch) => upsertEntry({ id: e.id, ...patch })}
-                  onDelete={() => void handleRemoveEntry(e.id)}
-                  onGenerate={() => setGeneratorFor(e.id)}
-                  onCopy={copyText}
-                  copiedKey={copiedKey}
                   categories={categories}
-                  onPinEntryRow={pinEntryRow}
-                  onScheduleUnpinEntryRow={scheduleUnpinRow}
-                  onCancelScheduledUnpinEntryRow={cancelScheduledUnpin}
-                  onRegisterCategoryMenuOpen={registerCategoryMenuOpen}
-                  onOpenCategoriesAddNew={openCategoriesAddNew}
+                  onOpen={() => setMobileDetailId(e.id)}
                   t={t}
                 />
               </li>
@@ -932,15 +1082,41 @@ export function VaultScreen() {
           )}
         </ul>
 
+        {mobileDetailEntry ? (
+          <MobileEntryDetail
+            entry={mobileDetailEntry}
+            onClose={() => {
+              cancelScheduledUnpin(mobileDetailEntry.id);
+              unpinEntry(mobileDetailEntry.id);
+              setMobileDetailId(null);
+            }}
+            revealed={showAll || revealed.has(mobileDetailEntry.id)}
+            toggleReveal={() => toggleReveal(mobileDetailEntry.id)}
+            onChange={(patch) =>
+              upsertEntry({ id: mobileDetailEntry.id, ...patch })
+            }
+            onDelete={() => void handleRemoveEntry(mobileDetailEntry.id)}
+            onGenerate={() => openPasswordGenerator(mobileDetailEntry.id)}
+            onCopy={copyText}
+            copiedKey={copiedKey}
+            categories={categories}
+            onPinEntryRow={pinEntryRow}
+            onScheduleUnpinEntryRow={scheduleUnpinRow}
+            onCancelScheduledUnpinEntryRow={cancelScheduledUnpin}
+            onRegisterCategoryMenuOpen={registerCategoryMenuOpen}
+            onOpenCategoriesAddNew={openCategoriesAddNew}
+            t={t}
+          />
+        ) : null}
+
         <div className="overflow-hidden rounded-lg border border-ink-200 bg-white shadow-sm hidden md:block">
           <div className="overflow-x-auto overscroll-x-contain">
-            <table className="w-full text-sm min-w-[56rem]">
+            <table className="w-full text-sm min-w-[48rem]">
               <colgroup>
                 <col style={{ width: "10%" }} />
-                <col style={{ width: "14%" }} />
-                <col style={{ width: "22%" }} />
-                <col style={{ width: "30%" }} />
-                <col style={{ width: "14%" }} />
+                <col style={{ width: "20%" }} />
+                <col style={{ width: "24%" }} />
+                <col style={{ width: "36%" }} />
                 <col style={{ width: "10%" }} />
               </colgroup>
               <thead className="border-b border-ink-200 bg-white text-ink-400 text-xs">
@@ -969,9 +1145,6 @@ export function VaultScreen() {
                   <th className="px-3 py-1 sm:px-4 font-medium">
                     {t("vault.colPass")}
                   </th>
-                  <th className="px-3 py-1 sm:px-4 font-medium">
-                    {t("vault.colNote")}
-                  </th>
                   <th className="pl-3 pr-4 sm:pr-5 py-1 font-medium text-right">
                     {t("vault.colAction")}
                   </th>
@@ -981,7 +1154,7 @@ export function VaultScreen() {
                 <tbody>
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={5}
                       className="text-center py-16 text-ink-500"
                     >
                       {t("vault.empty")}{" "}
@@ -1007,7 +1180,7 @@ export function VaultScreen() {
                     toggleReveal={() => toggleReveal(e.id)}
                     onChange={(patch) => upsertEntry({ id: e.id, ...patch })}
                     onDelete={() => void handleRemoveEntry(e.id)}
-                    onGenerate={() => setGeneratorFor(e.id)}
+                    onGenerate={() => openPasswordGenerator(e.id)}
                     onCopy={copyText}
                     copiedKey={copiedKey}
                     categories={categories}
@@ -1032,10 +1205,10 @@ export function VaultScreen() {
 
       {generatorFor && (
         <PasswordGenerator
-          onClose={() => setGeneratorFor(null)}
+          onClose={closePasswordGenerator}
           onUse={async (pw) => {
             await upsertEntry({ id: generatorFor, password: pw });
-            setGeneratorFor(null);
+            closePasswordGenerator();
           }}
         />
       )}
@@ -1147,7 +1320,8 @@ function useEntryRowEdit(
 
   const onRowMouseEnter = useCallback(() => {
     onCancelScheduledUnpinEntryRow(entryId);
-  }, [entryId, onCancelScheduledUnpinEntryRow]);
+    onPinEntryRow(entryId);
+  }, [entryId, onCancelScheduledUnpinEntryRow, onPinEntryRow]);
 
   const onCategoryOpenChange = useCallback(
     (open: boolean) => {
@@ -1181,11 +1355,41 @@ function useEntryRowEdit(
   };
 }
 
-function MobileEntryCard({
+function MobileEntryRow({
   entry,
   categories,
-  expanded,
-  onToggleExpand,
+  onOpen,
+  t,
+}: {
+  entry: DecryptedEntry;
+  categories: VaultCategory[];
+  onOpen: () => void;
+  t: TFn;
+}) {
+  const catLabel = entryCategoryLabel(entry.categoryId, categories, t);
+  const siteLabel = entry.site.trim() || t("vault.newEntry");
+
+  return (
+    <button
+      type="button"
+      className="w-full rounded-xl border border-ink-200 bg-white px-3 py-3 flex items-center gap-2.5 text-left shadow-sm active:bg-ink-50 touch-manipulation"
+      onClick={onOpen}
+    >
+      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+        <span className="text-xs font-medium text-ink-500 truncate">
+          {catLabel}
+        </span>
+        <span className="font-medium text-ink-900 truncate">{siteLabel}</span>
+      </div>
+      <ChevronRightIcon className="h-4 w-4 shrink-0 text-ink-400" aria-hidden />
+    </button>
+  );
+}
+
+function MobileEntryDetail({
+  entry,
+  onClose,
+  categories,
   revealed,
   toggleReveal,
   onChange,
@@ -1199,9 +1403,9 @@ function MobileEntryCard({
   onRegisterCategoryMenuOpen,
   onOpenCategoriesAddNew,
   t,
-}: RowProps) {
+}: Omit<RowProps, "expanded" | "onToggleExpand"> & { onClose: () => void }) {
   const [confirmDel, setConfirmDel] = useState(false);
-  const rowRef = useRef<HTMLElement>(null);
+  const rowRef = useRef<HTMLDivElement>(null);
   const {
     onEditFocus,
     onEditBlur,
@@ -1217,218 +1421,216 @@ function MobileEntryCard({
     onRegisterCategoryMenuOpen
   );
 
-  return (
-    <article
+  const siteLabel = entry.site.trim() || t("vault.newEntry");
+
+  return createPortal(
+    <div
       ref={rowRef}
       data-vault-entry-id={entry.id}
-      className={`rounded-xl border border-ink-200 bg-white p-3 sm:p-4 min-w-0 w-full shadow-sm ${MOBILE_CARD_STACK}`}
+      className="fixed inset-0 z-50 flex flex-col bg-white md:hidden"
       onMouseEnter={onRowMouseEnter}
       onMouseLeave={onRowMouseLeave}
     >
-      <BlurInput
-        id={`m-site-${entry.id}`}
-        className="input w-full min-w-0 font-medium text-base"
-        value={entry.site}
-        placeholder={t("vault.newEntry")}
-        onCommit={(site) => onChange({ site })}
-        onEditFocus={onEditFocus}
-        onEditBlur={onEditBlur}
-      />
-
-      <div className="space-y-1 w-full">
-        <span className="text-xs font-medium text-ink-600 block">
-          {t("vault.colCategory")}
-        </span>
-        <CategorySelect
-          className="input w-full cursor-pointer"
-          value={entry.categoryId}
-          categories={categories}
-          onChange={(categoryId) => onChange({ categoryId })}
-          onAddCategory={onOpenCategoriesAddNew}
-          onEditFocus={onEditFocus}
-          onEditBlur={onEditBlur}
-          onOpenChange={onCategoryOpenChange}
-          t={t}
-        />
-      </div>
-
-      <div className="space-y-1 w-full min-w-0">
-        <label
-          className="text-xs font-medium text-ink-600 block"
-          htmlFor={`m-user-${entry.id}`}
-        >
-          {t("vault.colUser")}
-        </label>
-        <div className="flex w-full min-w-0 items-center gap-0.5">
-          <BlurInput
-            id={`m-user-${entry.id}`}
-            className="input min-w-0 flex-1 w-0"
-            value={entry.username}
-            placeholder={t("vault.phUser")}
-            onCommit={(username) => onChange({ username })}
-            onEditFocus={onEditFocus}
-            onEditBlur={onEditBlur}
-          />
-          <IconBtn
-            onClick={() => onCopy(entry.username, `un:${entry.id}`)}
-            title={t("vault.ttCopyUser")}
-          >
-            {copiedKey === `un:${entry.id}` ? <Check /> : <Copy />}
-          </IconBtn>
-        </div>
-      </div>
-
-      <div className="space-y-1 w-full min-w-0">
-        <label
-          className="text-xs font-medium text-ink-600 block"
-          htmlFor={`m-pass-${entry.id}`}
-        >
-          {t("vault.colPass")}
-        </label>
-        <div className="flex w-full min-w-0 items-center gap-0.5">
-          <BlurInput
-            id={`m-pass-${entry.id}`}
-            className="input min-w-0 flex-1 w-0 font-mono text-sm"
-            type={revealed ? "text" : "password"}
-            value={entry.password}
-            placeholder={t("vault.phPass")}
-            spellCheck={false}
-            autoComplete="off"
-            onCommit={(password) => onChange({ password })}
-            onEditFocus={onEditFocus}
-            onEditBlur={onEditBlur}
-          />
-          <IconBtn
-            onClick={toggleReveal}
-            title={revealed ? t("vault.hide") : t("vault.show")}
-          >
-            {revealed ? <EyeOff /> : <Eye />}
-          </IconBtn>
-          <IconBtn
-            onClick={() => onCopy(entry.password, `pw:${entry.id}`)}
-            title={t("vault.ttCopyPass")}
-          >
-            {copiedKey === `pw:${entry.id}` ? <Check /> : <Copy />}
-          </IconBtn>
-          <IconBtn onClick={onGenerate} title={t("vault.ttGenPass")}>
-            <Refresh />
-          </IconBtn>
-        </div>
-      </div>
-
-      <div className="space-y-1 w-full min-w-0">
-        <label
-          className="text-xs font-medium text-ink-600 block"
-          htmlFor={`m-notes-${entry.id}`}
-        >
-          {t("vault.colNotes")}
-        </label>
-        <BlurInput
-          id={`m-notes-${entry.id}`}
-          className="input w-full min-w-0"
-          value={entry.notes}
-          onCommit={(notes) => onChange({ notes })}
-          onEditFocus={onEditFocus}
-          onEditBlur={onEditBlur}
-        />
-      </div>
-
-      {expanded ? (
-        <div className="w-full border-t border-ink-100 pt-3 space-y-3">
-          <div className="flex w-full min-w-0 items-start gap-3">
-            <label
-              className="w-14 shrink-0 pt-2 text-xs font-medium text-ink-600 sm:w-16"
-              htmlFor={`m-url-${entry.id}`}
-            >
-              {t("vault.colUrl")}
-            </label>
-            <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-              <ExpandTextInput
-                id={`m-url-${entry.id}`}
-                value={entry.url}
-                onCommit={(url) => onChange({ url })}
-                placeholder={t("vault.phUrl")}
-                onEditFocus={onEditFocus}
-                onEditBlur={onEditBlur}
-              />
-              {entry.url ? (
-                <a
-                  className="inline-flex shrink-0 self-start rounded-md border border-ink-200 bg-white p-2.5 text-ink-400 touch-manipulation hover:text-accent-600"
-                  href={
-                    /^https?:\/\//i.test(entry.url)
-                      ? entry.url
-                      : `https://${entry.url}`
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={t("vault.ttOpenTab")}
-                >
-                  <ExternalLink />
-                </a>
-              ) : null}
-            </div>
-          </div>
-          <div className="flex w-full min-w-0 items-start gap-3">
-            <label
-              className="w-14 shrink-0 pt-2 text-xs font-medium text-ink-600 sm:w-16"
-              htmlFor={`m-memo-${entry.id}`}
-            >
-              {t("vault.colMemo")}
-            </label>
-            <div className="min-w-0 flex-1">
-              <ExpandMemoArea
-                id={`m-memo-${entry.id}`}
-                value={entry.memo}
-                onCommit={(memo) => onChange({ memo })}
-                placeholder={t("vault.phMemo")}
-                onEditFocus={onEditFocus}
-                onEditBlur={onEditBlur}
-              />
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      <div className="flex w-full items-center justify-between gap-2 pt-1 border-t border-ink-100">
-        {!confirmDel ? (
-          <button
-            type="button"
-            className="text-sm text-red-600 hover:text-red-700 inline-flex items-center gap-1.5 py-2 touch-manipulation"
-            onClick={() => setConfirmDel(true)}
-          >
-            <Trash />
-            {t("vault.ttDelete")}
-          </button>
-        ) : (
-          <div className="flex items-center gap-2 text-sm">
-            <button
-              type="button"
-              className="text-ink-500 hover:text-ink-700 px-2 py-1"
-              onClick={() => setConfirmDel(false)}
-            >
-              {t("common.cancel")}
-            </button>
-            <button
-              type="button"
-              className="text-red-600 font-medium px-2 py-1"
-              onClick={onDelete}
-            >
-              {t("common.confirm")}
-            </button>
-          </div>
-        )}
+      <header className="shrink-0 flex items-center gap-2 border-b border-ink-200 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))]">
         <button
           type="button"
-          className="text-xs text-accent-600 hover:underline py-2 touch-manipulation shrink-0"
-          onClick={onToggleExpand}
+          className="inline-flex items-center justify-center rounded-lg p-2 text-ink-600 hover:bg-ink-100 touch-manipulation shrink-0"
+          onClick={onClose}
+          aria-label={t("vault.mobileBack")}
         >
-          {expanded ? t("vault.ttCollapseRow") : t("vault.ttExpandRow")}
+          <ChevronLeftIcon className="h-5 w-5" aria-hidden />
         </button>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs text-ink-500 truncate">
+            {entryCategoryLabel(entry.categoryId, categories, t)}
+          </p>
+          <p className="font-semibold text-ink-900 truncate">{siteLabel}</p>
+        </div>
+        <div className="shrink-0">
+          {!confirmDel ? (
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-lg p-2 text-ink-400 hover:text-red-600 hover:bg-red-50 touch-manipulation min-w-9 min-h-9"
+              onClick={() => setConfirmDel(true)}
+              title={t("vault.ttDelete")}
+              aria-label={t("vault.ttDelete")}
+            >
+              <Trash />
+            </button>
+          ) : (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                className="text-xs text-ink-500 hover:text-ink-700 px-2 py-1.5 touch-manipulation"
+                onClick={() => setConfirmDel(false)}
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                type="button"
+                className="text-xs text-red-600 font-medium px-2 py-1.5 touch-manipulation"
+                onClick={onDelete}
+              >
+                {t("common.confirm")}
+              </button>
+            </div>
+          )}
+        </div>
+      </header>
+
+      <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="space-y-1 w-full">
+          <span className="text-xs font-medium text-ink-600 block">
+            {t("vault.colSite")}
+          </span>
+          <BlurInput
+            id={`m-site-${entry.id}`}
+            className="input w-full min-w-0 font-medium"
+            value={entry.site}
+            placeholder={t("vault.newEntry")}
+            onCommit={(site) => onChange({ site })}
+            onEditFocus={onEditFocus}
+            onEditBlur={onEditBlur}
+          />
+        </div>
+
+        <div className="space-y-1 w-full">
+          <span className="text-xs font-medium text-ink-600 block">
+            {t("vault.colCategory")}
+          </span>
+          <CategorySelect
+            className="input w-full cursor-pointer"
+            value={entry.categoryId}
+            categories={categories}
+            onChange={(categoryId) => onChange({ categoryId })}
+            onAddCategory={onOpenCategoriesAddNew}
+            onEditFocus={onEditFocus}
+            onEditBlur={onEditBlur}
+            onOpenChange={onCategoryOpenChange}
+            t={t}
+          />
+        </div>
+
+        <div className="space-y-1 w-full min-w-0">
+          <label
+            className="text-xs font-medium text-ink-600 block"
+            htmlFor={`m-user-${entry.id}`}
+          >
+            {t("vault.colUser")}
+          </label>
+          <div className="flex w-full min-w-0 items-center gap-0.5">
+            <BlurInput
+              id={`m-user-${entry.id}`}
+              className="input min-w-0 flex-1 w-0"
+              value={entry.username}
+              placeholder={t("vault.phUser")}
+              onCommit={(username) => onChange({ username })}
+              onEditFocus={onEditFocus}
+              onEditBlur={onEditBlur}
+            />
+            <IconBtn
+              onClick={() => onCopy(entry.username, `un:${entry.id}`)}
+              title={t("vault.ttCopyUser")}
+            >
+              {copiedKey === `un:${entry.id}` ? <Check /> : <Copy />}
+            </IconBtn>
+          </div>
+        </div>
+
+        <div className="space-y-1 w-full min-w-0">
+          <label
+            className="text-xs font-medium text-ink-600 block"
+            htmlFor={`m-pass-${entry.id}`}
+          >
+            {t("vault.colPass")}
+          </label>
+          <div className="flex w-full min-w-0 items-center gap-0.5">
+            <BlurInput
+              id={`m-pass-${entry.id}`}
+              className="input min-w-0 flex-1 w-0"
+              type={revealed ? "text" : "password"}
+              value={entry.password}
+              placeholder={t("vault.phPass")}
+              spellCheck={false}
+              autoComplete="off"
+              onCommit={(password) => onChange({ password })}
+              onEditFocus={onEditFocus}
+              onEditBlur={onEditBlur}
+            />
+            <IconBtn
+              onClick={toggleReveal}
+              title={revealed ? t("vault.hide") : t("vault.show")}
+            >
+              {revealed ? <EyeOff /> : <Eye />}
+            </IconBtn>
+            <IconBtn
+              onClick={() => onCopy(entry.password, `pw:${entry.id}`)}
+              title={t("vault.ttCopyPass")}
+            >
+              {copiedKey === `pw:${entry.id}` ? <Check /> : <Copy />}
+            </IconBtn>
+            <IconBtn onClick={onGenerate} title={t("vault.ttGenPass")}>
+              <Refresh />
+            </IconBtn>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+              <div className="space-y-1 w-full min-w-0">
+                <label
+                  className="text-xs font-medium text-ink-600 block"
+                  htmlFor={`m-url-${entry.id}`}
+                >
+                  {t("vault.colUrl")}
+                </label>
+                <div className="flex w-full min-w-0 items-center gap-0.5">
+                  <ExpandTextInput
+                    id={`m-url-${entry.id}`}
+                    value={entry.url}
+                    onCommit={(url) => onChange({ url })}
+                    placeholder={t("vault.phUrl")}
+                    onEditFocus={onEditFocus}
+                    onEditBlur={onEditBlur}
+                  />
+                  {entry.url ? (
+                    <a
+                      className="inline-flex shrink-0 items-center justify-center rounded-md border border-ink-200 bg-white p-2 text-ink-400 touch-manipulation hover:text-accent-600 min-w-9 min-h-9"
+                      href={
+                        /^https?:\/\//i.test(entry.url)
+                          ? entry.url
+                          : `https://${entry.url}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={t("vault.ttOpenTab")}
+                    >
+                      <ExternalLink />
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+              <div className="space-y-1 w-full min-w-0">
+                <label
+                  className="text-xs font-medium text-ink-600 block"
+                  htmlFor={`m-memo-${entry.id}`}
+                >
+                  {t("vault.colMemo")}
+                </label>
+                <ExpandMemoArea
+                  id={`m-memo-${entry.id}`}
+                  value={entry.memo}
+                  onCommit={(memo) => onChange({ memo })}
+                  placeholder={t("vault.phMemo")}
+                  onEditFocus={onEditFocus}
+                  onEditBlur={onEditBlur}
+                />
+              </div>
+        </div>
       </div>
-    </article>
+    </div>,
+    document.body
   );
 }
-
 function IconBtn({
   children,
   onClick,
@@ -1658,23 +1860,23 @@ function Row({
             </button>
           </div>
         </td>
-        <Cell
-          value={entry.notes}
-          onChange={(v) => onChange({ notes: v })}
-          onEditFocus={onEditFocus}
-          onEditBlur={onEditBlur}
-        />
         <td className="pl-2 pr-3 sm:pr-4 py-1 align-middle">
           <div className="flex w-full items-center justify-end gap-2.5">
             {!confirmDel ? (
-              <button
-                type="button"
-                className="text-ink-400 hover:text-red-600 p-2 sm:p-1 touch-manipulation min-w-8 min-h-8 inline-flex items-center justify-center"
-                onClick={() => setConfirmDel(true)}
-                title={t("vault.ttDelete")}
-              >
-                <Trash />
-              </button>
+              <>
+                <span
+                  className="h-5 w-px bg-ink-100 shrink-0 self-center"
+                  aria-hidden
+                />
+                <button
+                  type="button"
+                  className="text-ink-400 hover:text-red-600 p-2 sm:p-1 touch-manipulation min-w-8 min-h-8 inline-flex items-center justify-center"
+                  onClick={() => setConfirmDel(true)}
+                  title={t("vault.ttDelete")}
+                >
+                  <Trash />
+                </button>
+              </>
             ) : (
               <div className="inline-flex items-center gap-1">
                 <button
@@ -1707,7 +1909,7 @@ function Row({
       </tr>
       {expanded ? (
         <tr className="bg-ink-50/90 border-t border-ink-100">
-          <td colSpan={6} className="px-3 py-3 sm:px-4 sm:py-3 align-top">
+          <td colSpan={5} className="px-3 py-3 sm:px-4 sm:py-3 align-top">
             <div className="space-y-3">
               <div className="flex items-start gap-3">
                 <label

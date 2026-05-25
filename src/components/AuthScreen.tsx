@@ -5,6 +5,7 @@ import {
   AUTH_LAST_METHOD_CHANGED,
   getAuthLastEmail,
   getAuthLastMethod,
+  getAuthLastMethodForEmail,
   markPendingAuthMethod,
   type AuthLastMethod,
 } from "../lib/authLastUsed";
@@ -121,10 +122,14 @@ export function AuthScreen() {
   /** Bump to re-read last-used method from localStorage after each login attempt. */
   const [lastUsedRevision, setLastUsedRevision] = useState(0);
   const [email, setEmail] = useState(() => getAuthLastEmail() ?? "");
-  const lastUsed: AuthLastMethod | null = useMemo(
-    () => getAuthLastMethod(),
-    [lastUsedRevision]
-  );
+  const lastUsed: AuthLastMethod | null = useMemo(() => {
+    const trimmed = email.trim();
+    if (trimmed) {
+      const byEmail = getAuthLastMethodForEmail(trimmed);
+      if (byEmail) return byEmail;
+    }
+    return getAuthLastMethod();
+  }, [lastUsedRevision, email]);
   void lastUsedRevision;
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -349,7 +354,7 @@ export function AuthScreen() {
             )}
             <button
               type="submit"
-              className="btn-primary w-full py-2.5"
+              className="btn-primary w-full"
               disabled={busy || !password || !passwordConfirm}
             >
               {busy ? t("app.loading") : t("auth.saveNewPassword")}
@@ -372,7 +377,7 @@ export function AuthScreen() {
             {info && <p className={authInfoBoxClass}>{info}</p>}
             <button
               type="submit"
-              className="btn-primary w-full py-2.5"
+              className="btn-primary w-full"
               disabled={busy || !email.trim()}
             >
               {busy ? t("app.loading") : t("auth.sendResetLink")}
@@ -401,7 +406,7 @@ export function AuthScreen() {
               )}
               <button
                 type="button"
-                className="btn-secondary w-full justify-center border-ink-200 bg-white py-2.5 shadow-sm hover:bg-ink-50"
+                className="btn-secondary w-full justify-center border-ink-200 bg-white shadow-sm hover:bg-ink-50"
                 onClick={() => void onGoogle()}
                 disabled={busy}
               >
@@ -471,7 +476,7 @@ export function AuthScreen() {
 
               <button
                 type="submit"
-                className="btn-primary w-full py-2.5 mt-5"
+                className="btn-primary w-full mt-5"
                 disabled={busy || !email.trim() || !password}
               >
                 {busy

@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import {
   EnvelopeIcon,
   PencilSquareIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { getUserSignInMethod, useAuth, userSupportsEmailPassword } from "../lib/auth";
+import { AUTH_LAST_METHOD_CHANGED } from "../lib/authLastUsed";
+import { getUserSignInMethod, useAuth } from "../lib/auth";
 import { isAppError } from "../lib/errors";
 import { Eye, EyeOff, GoogleIcon } from "./Icons";
 
@@ -106,9 +107,6 @@ function PasswordInput({
   );
 }
 
-const CONFIRM_BTN =
-  "btn text-sm bg-emerald-300 hover:bg-emerald-400 text-ink-900 border border-emerald-400/40";
-
 export function AccountCredentialPanel({
   user,
   t,
@@ -119,9 +117,16 @@ export function AccountCredentialPanel({
   onMessage: (msg: string | null) => void;
 }) {
   const { signInWithEmail, updatePassword, updateEmail } = useAuth();
+  const [, bumpAuthMethod] = useState(0);
+
+  useEffect(() => {
+    const onChange = () => bumpAuthMethod((n) => n + 1);
+    window.addEventListener(AUTH_LAST_METHOD_CHANGED, onChange);
+    return () => window.removeEventListener(AUTH_LAST_METHOD_CHANGED, onChange);
+  }, []);
+
   const signInMethod = getUserSignInMethod(user);
-  const showEmailActions =
-    signInMethod === "email" && userSupportsEmailPassword(user);
+  const showEmailActions = signInMethod === "email";
   const email = user.email ?? user.id;
 
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -147,7 +152,7 @@ export function AccountCredentialPanel({
 
   function closeEmailModal() {
     setEmailOpen(false);
-    setEmailDraft(user.email ?? "");
+    setEmailDraft("");
     setError(null);
   }
 
@@ -196,7 +201,13 @@ export function AccountCredentialPanel({
   const methodLabel =
     signInMethod === "google"
       ? t("account.signInMethod.google")
-      : t("account.signInMethod.email");
+      : signInMethod === "email"
+        ? t("account.signInMethod.email")
+        : t("account.signInMethod.unknown");
+
+  const passwordFormReady =
+    currentPw.trim().length > 0 && newPw.trim().length > 0;
+  const emailFormReady = emailDraft.trim().length > 0;
 
   return (
     <>
@@ -227,10 +238,10 @@ export function AccountCredentialPanel({
               </button>
               <button
                 type="button"
-                className="btn-secondary p-2 min-w-[2.25rem] min-h-[2.25rem]"
+                className="btn-secondary h-10 min-w-10 px-0"
                 onClick={() => {
                   setError(null);
-                  setEmailDraft(user.email ?? "");
+                  setEmailDraft("");
                   setEmailOpen(true);
                 }}
                 title={t("settings.updateEmailTooltip")}
@@ -277,7 +288,11 @@ export function AccountCredentialPanel({
               autoComplete="new-password"
             />
             <hr className="border-ink-200" />
-            <button type="submit" className={`${CONFIRM_BTN} w-full`} disabled={busy}>
+            <button
+              type="submit"
+              className="btn-primary text-sm w-full"
+              disabled={busy || !passwordFormReady}
+            >
               {busy ? t("app.loading") : t("auth.saveNewPassword")}
             </button>
           </form>
@@ -301,8 +316,8 @@ export function AccountCredentialPanel({
               <button
                 type="submit"
                 form="account-update-email"
-                className={CONFIRM_BTN}
-                disabled={busy}
+                className="btn-primary text-sm"
+                disabled={busy || !emailFormReady}
               >
                 {busy ? t("app.loading") : t("settings.updateEmailConfirm")}
               </button>

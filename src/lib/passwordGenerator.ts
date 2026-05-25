@@ -7,6 +7,10 @@ export interface GenOptions {
   digits: boolean;
   symbols: boolean;
   avoidAmbiguous: boolean;
+  /** Minimum digit count when `digits` is enabled. */
+  minDigits: number;
+  /** Minimum symbol count when `symbols` is enabled. */
+  minSymbols: number;
 }
 
 export const DEFAULT_GEN: GenOptions = {
@@ -16,6 +20,8 @@ export const DEFAULT_GEN: GenOptions = {
   digits: true,
   symbols: true,
   avoidAmbiguous: true,
+  minDigits: 1,
+  minSymbols: 1,
 };
 
 const LOWER = "abcdefghijklmnopqrstuvwxyz";
@@ -39,6 +45,36 @@ function buildAlphabet(opts: GenOptions): string {
   return pool;
 }
 
+function filterCharset(set: string, avoidAmbiguous: boolean): string {
+  if (!avoidAmbiguous) return set;
+  return set
+    .split("")
+    .filter((c) => !AMBIG.has(c))
+    .join("");
+}
+
+function effectiveMinimums(
+  opts: GenOptions,
+  len: number
+): { minDigits: number; minSymbols: number } {
+  let minDigits = opts.digits ? Math.max(0, Math.floor(opts.minDigits)) : 0;
+  let minSymbols = opts.symbols ? Math.max(0, Math.floor(opts.minSymbols)) : 0;
+  const base = (opts.lower ? 1 : 0) + (opts.upper ? 1 : 0);
+  let total = base + minDigits + minSymbols;
+  while (total > len && (minDigits > 0 || minSymbols > 0)) {
+    if (minSymbols >= minDigits && minSymbols > 0) minSymbols--;
+    else if (minDigits > 0) minDigits--;
+    total--;
+  }
+  return { minDigits, minSymbols };
+}
+
+function pickFrom(set: string, avoidAmbiguous: boolean): string {
+  const filtered = filterCharset(set, avoidAmbiguous);
+  if (!filtered) throw new Error("empty charset");
+  return filtered[pickIndex(filtered.length)];
+}
+
 // Rejection sampling to remove modulo bias.
 function pickIndex(max: number): number {
   if (max <= 0) throw new Error("empty alphabet");
@@ -56,19 +92,19 @@ export function generatePassword(opts: GenOptions = DEFAULT_GEN): string {
   const pool = buildAlphabet(opts);
   if (!pool) return "";
   const len = Math.max(4, Math.min(opts.length, 128));
+  const { minDigits, minSymbols } = effectiveMinimums(opts, len);
 
-  // Ensure at least one character from each enabled class for entropy diversity.
   const required: string[] = [];
-  const addOne = (set: string) => {
-    const filtered = opts.avoidAmbiguous
-      ? set.split("").filter((c) => !AMBIG.has(c)).join("")
-      : set;
-    if (filtered) required.push(filtered[pickIndex(filtered.length)]);
+  const addMany = (set: string, count: number) => {
+    if (count <= 0) return;
+    for (let i = 0; i < count; i++) {
+      required.push(pickFrom(set, opts.avoidAmbiguous));
+    }
   };
-  if (opts.lower) addOne(LOWER);
-  if (opts.upper) addOne(UPPER);
-  if (opts.digits) addOne(DIGITS);
-  if (opts.symbols) addOne(SYMBOLS);
+  if (opts.lower) addMany(LOWER, 1);
+  if (opts.upper) addMany(UPPER, 1);
+  if (opts.digits) addMany(DIGITS, minDigits);
+  if (opts.symbols) addMany(SYMBOLS, minSymbols);
 
   const out: string[] = [...required];
   while (out.length < len) out.push(pool[pickIndex(pool.length)]);

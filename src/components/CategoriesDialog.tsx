@@ -1,4 +1,5 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useVault } from "../lib/vault";
 import { newId, type VaultCategory } from "../lib/storage";
 import { GripVertical, Trash } from "./Icons";
@@ -41,6 +42,29 @@ function reorderAfterTarget(
 const DROP_LINE_CLASS =
   "pointer-events-none absolute left-1 right-1 z-10 h-0.5 rounded-full bg-ink-200";
 
+function categoriesDraftDirty(
+  draft: VaultCategory[],
+  saved: VaultCategory[]
+): boolean {
+  const savedById = new Map(saved.map((c) => [c.id, c.name.trim()]));
+
+  for (const c of draft) {
+    const trimmed = c.name.trim();
+    const original = savedById.get(c.id);
+    if (original === undefined) {
+      if (trimmed.length > 0) return true;
+      continue;
+    }
+    if (trimmed !== original) return true;
+  }
+
+  const draftExistingIds = draft
+    .filter((c) => savedById.has(c.id))
+    .map((c) => c.id);
+  const savedIds = saved.map((c) => c.id);
+  return draftExistingIds.join("|") !== savedIds.join("|");
+}
+
 export function CategoriesDialog({
   onClose,
   startWithNewCategory = false,
@@ -79,6 +103,11 @@ export function CategoriesDialog({
     });
   }, [draft]);
 
+  const canSave = useMemo(
+    () => categoriesDraftDirty(draft, categories),
+    [draft, categories]
+  );
+
   async function save() {
     setBusy(true);
     try {
@@ -103,8 +132,8 @@ export function CategoriesDialog({
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40">
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/40">
       <div
         className="card w-full max-w-md max-h-[85vh] overflow-hidden flex flex-col shadow-lg"
         role="dialog"
@@ -269,12 +298,18 @@ export function CategoriesDialog({
             <button type="button" className="btn-ghost" onClick={onClose} disabled={busy}>
               {t("common.cancel")}
             </button>
-            <button type="button" className="btn-primary" onClick={() => void save()} disabled={busy}>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => void save()}
+              disabled={busy || !canSave}
+            >
               {t("common.save")}
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

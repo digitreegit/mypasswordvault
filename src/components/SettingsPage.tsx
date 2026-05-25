@@ -25,13 +25,12 @@ function settingsHref(section: SettingsSection): string {
   return `#/settings/${section}`;
 }
 
-function sidebarNavClass(active: boolean): string {
-  return [
-    "block rounded-md px-3 py-2 text-[14px] font-medium transition-colors",
-    active
-      ? "bg-ink-100 text-ink-900"
-      : "text-ink-600 hover:bg-ink-50 hover:text-ink-900",
-  ].join(" ");
+function settingsTabClass(active: boolean): string {
+  const base =
+    "shrink-0 px-3 sm:px-4 pb-2.5 pt-1 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30 focus-visible:ring-offset-2 rounded-t-md";
+  return active
+    ? `${base} border-accent-600 text-accent-700`
+    : `${base} border-transparent text-ink-500 hover:text-ink-800 hover:border-ink-200`;
 }
 
 const SETTINGS_PAGE = "max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8";
@@ -540,51 +539,58 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
       </header>
 
       <div className="flex flex-1 flex-col min-h-0 w-full">
-        <div className={`flex flex-1 flex-col md:flex-row min-h-0 ${SETTINGS_PAGE}`}>
-        <aside className="shrink-0 md:w-56 lg:w-60 px-0 py-4 md:py-8 md:pr-4">
-          <a
-            href={vaultHref}
-            className="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink-600 hover:text-ink-900 transition-colors"
-          >
-            <ArrowLeftIcon className="h-4 w-4 shrink-0" aria-hidden />
-            {t("account.backToVault")}
-          </a>
+        <div className={`flex flex-1 flex-col min-h-0 ${SETTINGS_PAGE}`}>
+          <div className="shrink-0 py-4 sm:py-6">
+            <a
+              href={vaultHref}
+              className="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink-600 hover:text-ink-900 transition-colors"
+            >
+              <ArrowLeftIcon className="h-4 w-4 shrink-0" aria-hidden />
+              {t("account.backToVault")}
+            </a>
+          </div>
 
-          <p className="mt-6 mb-2 text-[0.65rem] font-semibold uppercase tracking-wider text-ink-400">
-            {t("settings.sidebarSection")}
-          </p>
-          <nav className="flex md:flex-col gap-1 md:gap-0.5" aria-label={t("settings.navAria")}>
-            {navItems.map((item) => (
-              <React.Fragment key={item.id}>
+          <main className="flex-1 min-w-0 overflow-y-auto pb-6 sm:pb-10">
+            <nav
+              className="flex gap-0 border-b border-ink-200 overflow-x-auto -mx-1 px-1"
+              role="tablist"
+              aria-label={t("settings.navAria")}
+            >
+              {navItems.map((item) => (
                 <a
+                  key={item.id}
+                  id={`settings-tab-${item.id}`}
                   href={settingsHref(item.id)}
-                  className={sidebarNavClass(activeSection === item.id)}
+                  role="tab"
+                  aria-selected={activeSection === item.id}
+                  className={settingsTabClass(activeSection === item.id)}
                 >
                   {item.label}
                 </a>
-              </React.Fragment>
-            ))}
-          </nav>
-        </aside>
+              ))}
+            </nav>
 
-        <main className="flex-1 min-w-0 overflow-y-auto py-6 sm:py-10 md:pl-6 md:pr-2">
-          <div className="w-full max-w-none space-y-6">
-            <div className="space-y-1">
-              <h1 className="text-2xl font-semibold text-ink-900 tracking-tight">
-                {pageTitle}
-              </h1>
-              <p className="text-sm text-ink-500 leading-snug">{pageSubtitle}</p>
+            <div
+              className="w-full max-w-none space-y-6 mt-6 sm:mt-8"
+              role="tabpanel"
+              aria-labelledby={`settings-tab-${activeSection}`}
+            >
+              <div className="space-y-1">
+                <h1 className="text-2xl font-semibold text-ink-900 tracking-tight">
+                  {pageTitle}
+                </h1>
+                <p className="text-sm text-ink-500 leading-snug">{pageSubtitle}</p>
+              </div>
+
+              {backupToast && (
+                <p className="text-sm text-ink-600 bg-white border border-ink-200 rounded-md px-3 py-2 leading-snug">
+                  {backupToast}
+                </p>
+              )}
+
+              {renderSectionContent()}
             </div>
-
-            {backupToast && (
-              <p className="text-sm text-ink-600 bg-white border border-ink-200 rounded-md px-3 py-2 leading-snug">
-                {backupToast}
-              </p>
-            )}
-
-            {renderSectionContent()}
-          </div>
-        </main>
+          </main>
         </div>
       </div>
     </div>

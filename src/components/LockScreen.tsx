@@ -7,7 +7,7 @@ import { passkeyRegisteredForCurrentSite } from "../lib/passkey";
 import { isNativeApp } from "../lib/platform";
 
 const LOCK_BTN_BASE =
-  "inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+  "inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 min-h-[2.5rem] text-sm font-medium shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 const LOCK_BTN_PRIMARY = `${LOCK_BTN_BASE} w-full border border-accent-600 bg-accent-600 text-white hover:bg-accent-700`;
 const LOCK_BTN_SECONDARY_COMPACT = `${LOCK_BTN_BASE} shrink-0 border border-ink-200 bg-white text-ink-800 hover:bg-ink-50 whitespace-nowrap`;
 const LOCK_BTN_DANGER = `${LOCK_BTN_BASE} flex-1 min-w-0 border border-red-600 bg-red-600 text-white hover:bg-red-700 whitespace-nowrap`;
