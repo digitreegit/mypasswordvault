@@ -94,7 +94,10 @@ interface VaultContextValue {
     masterPassword: string,
     autoLockMinutes: number
   ) => Promise<void>;
-  registerPasskeyInSetup: () => Promise<void>;
+  registerPasskeyInSetup: (opts: {
+    hints?: ("client-device" | "security-key" | "hybrid")[];
+    label: string;
+  }) => Promise<void>;
   beginBackupTotpEnrollment: () => Promise<{ totpSecretBase32: string }>;
   confirmBackupTotpEnrollment: (code: string) => Promise<{ recoveryCodes: string[] }>;
   /** Skip backup TOTP; still issues one-time recovery codes. */
@@ -404,7 +407,11 @@ export function VaultProvider({
     []
   );
 
-  const registerPasskeyInSetup = useCallback(async () => {
+  const registerPasskeyInSetup = useCallback(
+    async (opts: {
+      hints?: ("client-device" | "security-key" | "hybrid")[];
+      label: string;
+    }) => {
     const pending = pendingSetupRef.current;
     if (!pending) throw new AppError("errors.noPendingSetup");
     if (!userId) throw new AppError("errors.passkeyNeedsSignIn");
@@ -415,6 +422,8 @@ export function VaultProvider({
       userName: label,
       excludeCredentialIds: pending.passkeys.map((p) => p.id),
       prfSaltB64: pending.prfSalt,
+      hints: opts.hints,
+      label: opts.label,
     });
     pending.passkeys.push(passkey);
     const prfBytes = readPrfFirst(
@@ -425,8 +434,13 @@ export function VaultProvider({
         prfBytes,
         pending.dataKeyBytes
       );
+    } else if (!pending.passkeyDataKeyWrap) {
+      pending.passkeys.pop();
+      throw new AppError("errors.passkeyNoPasswordless");
     }
-  }, [userId]);
+  },
+    [userId]
+  );
 
   const beginBackupTotpEnrollment = useCallback(async () => {
     const pending = pendingSetupRef.current;

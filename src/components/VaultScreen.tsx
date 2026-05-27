@@ -1200,8 +1200,8 @@ export function VaultScreen() {
                 <col style={{ width: "10%" }} />
                 <col style={{ width: "20%" }} />
                 <col style={{ width: "24%" }} />
-                <col style={{ width: "36%" }} />
-                <col style={{ width: "10%" }} />
+                <col style={{ width: "34%" }} />
+                <col style={{ width: "12%" }} />
               </colgroup>
               <thead className="border-b border-ink-200 bg-white text-ink-400 text-xs">
                 <tr className="text-left">
@@ -1551,18 +1551,18 @@ function MobileEntryDetail({
             >
               <Trash />
             </button>
-          ) : (
-            <div className="flex items-center gap-1">
+            ) : (
+            <div className="inline-flex shrink-0 flex-nowrap items-center gap-1 whitespace-nowrap">
               <button
                 type="button"
-                className="text-xs text-ink-500 hover:text-ink-700 px-2 py-1.5 touch-manipulation"
+                className="shrink-0 whitespace-nowrap text-xs text-ink-500 hover:text-ink-700 px-2 py-1.5 touch-manipulation"
                 onClick={() => setConfirmDel(false)}
               >
                 {t("common.cancel")}
               </button>
               <button
                 type="button"
-                className="text-xs text-red-600 font-medium px-2 py-1.5 touch-manipulation"
+                className="shrink-0 whitespace-nowrap text-xs text-red-600 font-medium px-2 py-1.5 touch-manipulation"
                 onClick={onDelete}
               >
                 {t("common.confirm")}
@@ -1954,8 +1954,8 @@ function Row({
             </button>
           </div>
         </td>
-        <td className="pl-2 pr-3 sm:pr-4 py-1 align-middle">
-          <div className="flex w-full items-center justify-end gap-2.5">
+        <td className="w-[1%] whitespace-nowrap pl-2 pr-3 sm:pr-4 py-1 align-middle">
+          <div className="flex w-full flex-nowrap items-center justify-end gap-2.5">
             {!confirmDel ? (
               <>
                 <span
@@ -1972,17 +1972,17 @@ function Row({
                 </button>
               </>
             ) : (
-              <div className="inline-flex items-center gap-1">
+              <div className="inline-flex shrink-0 flex-nowrap items-center gap-1 whitespace-nowrap">
                 <button
                   type="button"
-                  className="text-xs text-ink-500 hover:text-ink-700 px-1"
+                  className="shrink-0 whitespace-nowrap text-xs text-ink-500 hover:text-ink-700 px-1"
                   onClick={() => setConfirmDel(false)}
                 >
                   {t("common.cancel")}
                 </button>
                 <button
                   type="button"
-                  className="text-xs text-red-600 hover:text-red-700 px-1 font-medium"
+                  className="shrink-0 whitespace-nowrap text-xs text-red-600 hover:text-red-700 px-1 font-medium"
                   onClick={onDelete}
                 >
                   {t("common.confirm")}

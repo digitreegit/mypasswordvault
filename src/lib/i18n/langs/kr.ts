@@ -100,6 +100,20 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.pageTitlePasskey": "패스키 등록",
   "setup.pageTitleBackupTotp": "백업 인증 앱",
   "setup.pageTitleRecovery": "복구 코드",
+  "setup.stepperAria": "설정 진행 단계",
+  "setup.stepPassword": "마스터 비밀번호",
+  "setup.stepPasskey": "패스키",
+  "setup.stepBackupTotp": "인증 앱",
+  "setup.stepRecovery": "복구 코드",
+  "setup.passkeyHelpTitle": "패스키란?",
+  "setup.passkeyHelpBody":
+    "패스키는 기기의 보안 칩(Secure Enclave, TPM 등)으로 본인임을 증명합니다. Touch ID, Face ID, 지문, 또는 기기 PIN으로 승인합니다. 개인 키는 기기 밖으로 나가지 않으며, 서버에는 공개 키만 저장됩니다.\n\n매일 vault를 열 때 생체 인식이나 PIN만 사용하면 됩니다. 마스터 비밀번호나 OTP를 매번 입력할 필요가 없습니다.",
+  "setup.passkeyHelpGotIt": "알겠습니다",
+  "setup.backupTotpRecommend":
+    "안전을 위해 권장합니다 — 패스키를 쓸 수 없을 때 쓰는 백업입니다.",
+  "setup.recoveryCalloutTitle": "이 코드를 안전한 곳에 보관하세요",
+  "setup.recoveryCalloutBody":
+    "아래 일회용 코드는 패스키·인증 앱과 별도로 제공됩니다. 기기를 잃었을 때 마스터 비밀번호와 함께 사용할 수 있으며, 각 코드는 한 번만 쓸 수 있습니다. 비밀번호 관리 앱이나 인쇄본 등 오프라인에 보관하세요.",
   "setup.pageTitle2fa": "2단계 인증",
   "setup.title": "My Password Vault 설정",
   "setup.subtitle":
@@ -112,13 +126,30 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.next2fa": "다음 — 2단계 인증 설정",
   "setup.nextRecovery": "다음 — 복구 코드 저장",
   "setup.passkeyIntro":
-    "이 기기에 패스키를 등록합니다(Face ID, Touch ID, Windows Hello, 지문, 기기 PIN). 매일 잠금 해제에 사용합니다.",
+    "이 기기의 패스키를 켠 뒤 계속하세요. Touch ID·Face ID를 우선 사용하고, 생체 인식을 쓸 수 없을 때는 기기 PIN으로 대체됩니다.",
   "setup.registerPasskey": "패스키 등록",
+  "setup.passkeyContinue": "계속",
+  "setup.passkeyRegistering": "등록 중…",
+  "setup.passkeyMethodsLoading": "사용 가능한 옵션 확인 중…",
+  "setup.passkeyMethodsHint":
+    "이 기기에 패스키 하나를 등록합니다. 보안 키 등 다른 기기는 나중에 설정에서 추가할 수 있습니다.",
+  "setup.passkeyMethodAdded": "등록됨",
+  "setup.passkeyPinIncluded":
+    "자동 포함 — 생체 인식을 사용할 수 없을 때 이 기기 PIN으로 잠금 해제합니다.",
+  "setup.passkeyPinIncludedBadge": "포함",
+  "setup.passkeyMethodTouchId": "Touch ID",
+  "setup.passkeyMethodFaceId": "Face ID",
+  "setup.passkeyMethodFingerprint": "지문",
+  "setup.passkeyMethodBiometric": "생체 인증",
+  "setup.passkeyMethodWindowsHello": "Windows Hello",
+  "setup.passkeyMethodPin": "기기 PIN",
+  "setup.passkeyMethodSecurityKey": "보안 키",
+  "setup.passkeyMethodPhone": "휴대폰 패스키",
   "setup.passkeyUnsupported": "이 브라우저에서는 패스키를 사용할 수 없습니다.",
   "setup.backupTotpIntro":
-    "백업용 인증 앱(TOTP)을 설정합니다. QR을 스캔하거나 비밀키를 입력한 뒤 6자리 코드로 확인합니다.",
+    "Google Authenticator, 1Password, Authy 등으로 QR을 스캔한 뒤, 6자리 코드를 입력해 확인하세요.",
   "setup.recoveryIntro":
-    "아래 일회용 복구 코드를 복사해 안전한 곳에 보관하세요. 패스키를 잃었을 때 각 코드는 한 번만 사용할 수 있습니다.",
+    "아래 코드를 복사하거나 다운로드한 뒤, 저장했음을 확인해 주세요.",
   "setup.recoveryAck": "복구 코드를 안전한 곳에 저장했습니다.",
   "setup.copyRecoveryCodes": "복구 코드 전체 복사",
   "setup.copyRecoveryCodesDone": "복사됨",
@@ -126,7 +157,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.downloadRecoveryCodesDone": "다운로드됨",
   "setup.skipBackupTotp": "건너뛰기 — 인증 앱 없이 계속",
   "setup.backupTotpSkipWarn":
-    "인증 앱은 패스키가 동작하지 않을 때 쓰는 백업입니다. 필수가 아니며, 건너뛰면 패스키와 복구 코드만으로 계속할 수 있습니다.",
+    "안전을 위해 권장합니다 — 패스키를 쓸 수 없을 때 쓰는 백업입니다. 건너뛸 수 있지만, 설정은 약 1분이면 됩니다.",
   "setup.forgetWarn":
     "비밀번호를 잊으면 vault를 복구할 수 없습니다. 잊은 경우 데이터를 모두 잃고 새로 시작해야 합니다.",
   "setup.2faIntro":
@@ -148,7 +179,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "lock.unlockPasskey": "패스키로 잠금 해제",
   "lock.passkeyWrongSite":
     "패스키는 {{site}}에서 등록되었고 이 사이트에서는 사용할 수 없습니다. 아래 백업 로그인(마스터 비밀번호 + 인증 앱 또는 복구 코드)을 사용하세요. 잠금 해제 후 이 사이트에서 새 패스키를 등록할 수 있습니다.",
-  "lock.useBackup": "백업 로그인 (마스터 비밀번호)",
+  "lock.useBackup": "백업 로그인",
   "lock.hideBackup": "백업 로그인 숨기기",
   "lock.backupHint": "백업: 마스터 비밀번호 + 인증 앱 코드 또는 복구 코드",
   "lock.backupTotpTab": "인증 앱",

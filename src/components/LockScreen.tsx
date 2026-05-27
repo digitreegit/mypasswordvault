@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useVault } from "../lib/vault";
-import { Lock, Eye, EyeOff } from "./Icons";
+import { LockOpen, Eye, EyeOff } from "./Icons";
 import { ScreenHeader } from "./ScreenHeader";
 import { isAppError } from "../lib/errors";
 import { passkeyRegisteredForCurrentSite } from "../lib/passkey";
@@ -111,6 +111,7 @@ export function LockScreen() {
             onClick={() => void handlePasskey()}
             disabled={busy}
           >
+            <LockOpen className="w-4 h-4 shrink-0" aria-hidden />
             {t("lock.unlockPasskey")}
           </button>
         )}
@@ -223,22 +224,24 @@ export function LockScreen() {
                 (backupMode === "totp" ? code.length !== 6 : code.length < 8)
               }
             >
-              <Lock /> {t("lock.unlockBackup")}
+              <LockOpen className="w-4 h-4 shrink-0" aria-hidden /> {t("lock.unlockBackup")}
             </button>
 
-            <div className="pt-2 text-center">
+            <div className="pt-2">
               {!confirmReset ? (
-                <button
-                  type="button"
-                  className="text-xs text-ink-500 hover:text-red-600"
-                  onClick={() => setConfirmReset(true)}
-                >
-                  {t("lock.forget")}
-                </button>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    className="text-xs text-ink-500 hover:text-red-600"
+                    onClick={() => setConfirmReset(true)}
+                  >
+                    {t("lock.forget")}
+                  </button>
+                </div>
               ) : (
-                <div className="space-y-2 text-xs">
-                  <p className="text-red-600">{t("lock.resetWarn")}</p>
-                  <div className="flex gap-2 justify-center">
+                <div className="space-y-2 text-xs text-left">
+                  <p className="text-red-600 leading-snug mb-3">{t("lock.resetWarn")}</p>
+                  <div className="flex gap-2 justify-start">
                     <button
                       type="button"
                       className={LOCK_BTN_SECONDARY_COMPACT}

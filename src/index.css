@@ -45,6 +45,17 @@ body {
     @apply rounded-xl bg-white border border-ink-200 shadow-sm;
   }
 
+  /** Inline caution copy (setup warnings, etc.) — change color/size here only. */
+  .caution-notice {
+    @apply text-xs text-amber-600 leading-snug;
+  }
+  .caution-notice--with-icon {
+    @apply flex gap-2;
+  }
+  .caution-notice__icon {
+    @apply h-4 w-4 shrink-0 mt-0.5;
+  }
+
   .vault-entry-limit-banner {
     width: 100%;
     background-color: #fef08a;

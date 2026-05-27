@@ -1,4 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
+import {
+  QuestionMarkCircleIcon,
+  ShieldCheckIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import { CautionNotice } from "./CautionNotice";
 import { useVault } from "../lib/vault";
 import {
   copyTextForClipboard,
@@ -11,8 +17,150 @@ import { ScreenHeader } from "./ScreenHeader";
 import { downloadTextFile } from "../lib/downloadTextFile";
 import { isAppError } from "../lib/errors";
 import { isNativeApp } from "../lib/platform";
+import { PasskeySetupPicker } from "./PasskeySetupPicker";
+import type { PasskeyMethodId, PasskeyMethodOption } from "../lib/passkeyMethods";
 
 type Stage = "password" | "passkey" | "backup-totp" | "recovery";
+
+type TFn = (key: string, vars?: Record<string, string | number>) => string;
+
+const SETUP_STEPS: { id: Stage; labelKey: string }[] = [
+  { id: "password", labelKey: "setup.stepPassword" },
+  { id: "passkey", labelKey: "setup.stepPasskey" },
+  { id: "backup-totp", labelKey: "setup.stepBackupTotp" },
+  { id: "recovery", labelKey: "setup.stepRecovery" },
+];
+
+function SetupStepper({ stage, t }: { stage: Stage; t: TFn }) {
+  const currentIdx = SETUP_STEPS.findIndex((s) => s.id === stage);
+
+  return (
+    <nav aria-label={t("setup.stepperAria")} className="mb-6">
+      <ol className="flex items-start">
+        {SETUP_STEPS.map((step, i) => {
+          const done = i < currentIdx;
+          const active = i === currentIdx;
+          const lineDone = i > 0 && i <= currentIdx;
+          return (
+            <li
+              key={step.id}
+              className="relative flex flex-1 flex-col items-center min-w-0"
+              aria-current={active ? "step" : undefined}
+            >
+              {i > 0 && (
+                <span
+                  aria-hidden
+                  className={[
+                    "absolute top-3 right-1/2 h-px -translate-y-1/2",
+                    lineDone ? "bg-ink-300" : "bg-ink-200",
+                  ].join(" ")}
+                  style={{ width: "calc(100% - 1.5rem)", marginRight: "0.75rem" }}
+                />
+              )}
+              <span
+                className={[
+                  "relative z-[1] flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[0.65rem] font-semibold transition-colors",
+                  active
+                    ? "bg-accent-600 text-white ring-2 ring-accent-100"
+                    : done
+                      ? "bg-ink-100 text-ink-500"
+                      : "bg-ink-100 text-ink-400",
+                ].join(" ")}
+              >
+                {done ? <Check className="h-3 w-3" /> : i + 1}
+              </span>
+              <span
+                className={[
+                  "mt-1.5 px-0.5 text-center text-[0.65rem] leading-tight sm:text-xs",
+                  active
+                    ? "font-semibold text-ink-900"
+                    : done
+                      ? "font-medium text-ink-500"
+                      : "text-ink-400",
+                ].join(" ")}
+              >
+                {t(step.labelKey)}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
+function SetupCallout({
+  variant,
+  title,
+  children,
+}: {
+  variant: "recommend" | "important";
+  title?: string;
+  children: React.ReactNode;
+}) {
+  const styles =
+    variant === "recommend"
+      ? "border-amber-300 bg-amber-50 text-amber-950"
+      : "border-blue-200 bg-blue-50 text-blue-950";
+
+  return (
+    <div className={`rounded-lg border px-3.5 py-3 text-sm leading-snug ${styles}`}>
+      {title && (
+        <p className="mb-1 font-semibold flex items-center gap-1.5">
+          {variant === "important" && (
+            <ShieldCheckIcon className="h-4 w-4 shrink-0 text-blue-600" aria-hidden />
+          )}
+          {title}
+        </p>
+      )}
+      <p className={title ? "text-[0.8125rem] opacity-90" : "font-medium"}>
+        {children}
+      </p>
+    </div>
+  );
+}
+
+function PasskeyHelpModal({ t, onClose }: { t: TFn; onClose: () => void }) {
+  const paragraphs = t("setup.passkeyHelpBody").split("\n\n");
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40">
+      <div
+        className="card w-full max-w-md overflow-hidden flex flex-col shadow-lg"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="passkey-help-title"
+      >
+        <div className="px-5 py-4 border-b border-ink-200 flex items-start justify-between gap-2">
+          <h2
+            id="passkey-help-title"
+            className="font-sans text-lg font-semibold text-ink-900 tracking-tight"
+          >
+            {t("setup.passkeyHelpTitle")}
+          </h2>
+          <button
+            type="button"
+            className="btn-ghost p-1.5 -mr-1 text-ink-500 shrink-0"
+            onClick={onClose}
+            aria-label={t("common.close")}
+          >
+            <XMarkIcon className="h-5 w-5" aria-hidden />
+          </button>
+        </div>
+        <div className="px-5 py-4 space-y-3 text-sm text-ink-700 leading-relaxed">
+          {paragraphs.map((p) => (
+            <p key={p.slice(0, 24)}>{p}</p>
+          ))}
+        </div>
+        <div className="px-5 py-4 border-t border-ink-200 bg-ink-50/80">
+          <button type="button" className="btn-primary w-full" onClick={onClose}>
+            {t("setup.passkeyHelpGotIt")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function SetupScreen() {
   const {
@@ -36,6 +184,10 @@ export function SetupScreen() {
   const [autoLock, setAutoLock] = useState(5);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [passkeyHelpOpen, setPasskeyHelpOpen] = useState(false);
+  const [registeredPasskeyIds, setRegisteredPasskeyIds] = useState<
+    Set<PasskeyMethodId>
+  >(new Set());
 
   const [totpSecret, setTotpSecret] = useState<string>("");
   const [qrUrl, setQrUrl] = useState<string>("");
@@ -59,16 +211,42 @@ export function SetupScreen() {
     }
   }, [stage, totpSecret]);
 
-  const pageTitle = useMemo(() => {
+  const pageTitle = useMemo((): React.ReactNode => {
     switch (stage) {
       case "password":
         return t("setup.pageTitle");
       case "passkey":
-        return t("setup.pageTitlePasskey");
+        return (
+          <span className="inline-flex items-center gap-1.5">
+            {t("setup.pageTitlePasskey")}
+            <button
+              type="button"
+              className="inline-flex shrink-0 p-0.5 rounded-md text-accent-600 hover:text-accent-700 hover:bg-accent-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/40"
+              onClick={() => setPasskeyHelpOpen(true)}
+              aria-label={t("setup.passkeyHelpTitle")}
+              title={t("setup.passkeyHelpTitle")}
+            >
+              <QuestionMarkCircleIcon className="h-5 w-5" aria-hidden />
+            </button>
+          </span>
+        );
       case "backup-totp":
         return t("setup.pageTitleBackupTotp");
       case "recovery":
         return t("setup.pageTitleRecovery");
+    }
+  }, [stage, t]);
+
+  const stageIntro = useMemo(() => {
+    switch (stage) {
+      case "password":
+        return t("setup.subtitle");
+      case "passkey":
+        return t("setup.passkeyIntro");
+      case "backup-totp":
+        return t("setup.backupTotpIntro");
+      case "recovery":
+        return t("setup.recoveryIntro");
     }
   }, [stage, t]);
 
@@ -95,15 +273,27 @@ export function SetupScreen() {
     }
   }
 
-  async function handleRegisterPasskey() {
+  async function handlePasskeyContinue(toRegister: PasskeyMethodOption[]) {
     setError(null);
     if (!isPasskeySupported) {
       setError(t("errors.passkeyNotSupported"));
       return;
     }
     setBusy(true);
+    const completed = new Set(registeredPasskeyIds);
     try {
-      await registerPasskeyInSetup();
+      for (const method of toRegister) {
+        await registerPasskeyInSetup({
+          hints: method.hints ?? ["client-device"],
+          label: t(method.labelKey),
+        });
+        completed.add(method.id);
+        setRegisteredPasskeyIds(new Set(completed));
+      }
+      if (completed.size === 0) {
+        setError(t("errors.passkeyRequired"));
+        return;
+      }
       const { totpSecretBase32 } = await beginBackupTotpEnrollment();
       setTotpSecret(totpSecretBase32);
       setStage("backup-totp");
@@ -165,7 +355,7 @@ export function SetupScreen() {
 
   return (
     <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-ink-50 to-ink-100">
-      <div className="card w-full max-w-md p-5 sm:p-8">
+      <div className="card w-full max-w-lg px-5 pt-3 pb-5 sm:px-8 sm:pt-4 sm:pb-8">
         <ScreenHeader
           brandName={t("app.brandName")}
           pageTitle={pageTitle}
@@ -174,14 +364,21 @@ export function SetupScreen() {
           languageAriaLabel={t("settings.language")}
           brandHomeHref={brandHomeHref}
           brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
+          beforeTitle={
+            <div>
+              <div
+                className="-mx-5 sm:-mx-8 h-px bg-ink-200"
+                role="presentation"
+              />
+              <div className="pt-4">
+                <SetupStepper stage={stage} t={t} />
+              </div>
+            </div>
+          }
           className="mb-1"
         />
-        <p className="text-sm text-ink-500 mb-6 leading-snug">
-          {stage === "password" && t("setup.subtitle")}
-          {stage === "passkey" && t("setup.passkeyIntro")}
-          {stage === "backup-totp" && t("setup.backupTotpIntro")}
-          {stage === "recovery" && t("setup.recoveryIntro")}
-        </p>
+
+        <p className="text-sm text-ink-500 mb-5 leading-snug">{stageIntro}</p>
 
         {stage === "password" && (
           <div className="space-y-4">
@@ -276,54 +473,40 @@ export function SetupScreen() {
             >
               {t("setup.nextPasskey")}
             </button>
-            <p className="text-xs text-ink-500 leading-snug">{t("setup.forgetWarn")}</p>
+            <CautionNotice showIcon>{t("setup.forgetWarn")}</CautionNotice>
           </div>
         )}
 
         {stage === "passkey" && (
-          <div className="space-y-4">
-            <button
-              type="button"
-              className="btn-primary w-full"
-              onClick={handleRegisterPasskey}
-              disabled={busy || !isPasskeySupported}
-            >
-              {t("setup.registerPasskey")}
-            </button>
-            {!isPasskeySupported && (
-              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-2">
-                {t("setup.passkeyUnsupported")}
-              </p>
-            )}
-            {error && <div className="text-sm text-red-600">{error}</div>}
-            <button
-              type="button"
-              className="btn-secondary w-full"
-              onClick={async () => {
-                await abortSetup();
-                setStage("password");
-                setError(null);
-              }}
-              disabled={busy}
-            >
-              {t("setup.back")}
-            </button>
-          </div>
+          <PasskeySetupPicker
+            t={t}
+            busy={busy}
+            error={error}
+            registeredIds={registeredPasskeyIds}
+            unsupported={!isPasskeySupported}
+            onContinue={handlePasskeyContinue}
+            onBack={async () => {
+              await abortSetup();
+              setStage("password");
+              setError(null);
+              setRegisteredPasskeyIds(new Set());
+            }}
+          />
         )}
 
         {stage === "backup-totp" && (
           <div className="space-y-4">
-            <div className="flex flex-col items-center gap-3 p-4 rounded-lg bg-ink-50 border border-ink-200">
+            <div className="flex flex-col items-center gap-3 p-3.5 rounded-lg bg-ink-50 border border-ink-200">
               {qrUrl ? (
                 <img
                   src={qrUrl}
                   alt="TOTP QR"
-                  width={200}
-                  height={200}
-                  className="rounded-md bg-white p-2 max-w-full h-auto w-[min(100%,200px)]"
+                  width={160}
+                  height={160}
+                  className="rounded-md bg-white p-2 max-w-full h-auto w-[min(100%,160px)]"
                 />
               ) : (
-                <div className="w-[200px] h-[200px] bg-white rounded-md animate-pulse" />
+                <div className="w-[160px] h-[160px] bg-white rounded-md animate-pulse" />
               )}
               <div className="w-full">
                 <label className="label">{t("setup.secretKey")}</label>
@@ -374,22 +557,28 @@ export function SetupScreen() {
             >
               {t("setup.nextRecovery")}
             </button>
-            <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-md px-3 py-2.5 leading-snug">
-              {t("setup.backupTotpSkipWarn")}
-            </p>
-            <button
-              type="button"
-              className="btn-secondary w-full"
-              onClick={handleSkipTotp}
-              disabled={busy}
-            >
-              {t("setup.skipBackupTotp")}
-            </button>
+            <div className="border-t border-ink-200 pt-4 space-y-3">
+              <button
+                type="button"
+                className="btn-secondary w-full text-sm"
+                onClick={handleSkipTotp}
+                disabled={busy}
+              >
+                {t("setup.skipBackupTotp")}
+              </button>
+              <CautionNotice>{t("setup.backupTotpRecommend")}</CautionNotice>
+            </div>
           </div>
         )}
 
         {stage === "recovery" && (
           <div className="space-y-4">
+            <SetupCallout
+              variant="important"
+              title={t("setup.recoveryCalloutTitle")}
+            >
+              {t("setup.recoveryCalloutBody")}
+            </SetupCallout>
             <div className="relative">
               <ul className="font-mono text-sm bg-ink-50 border border-ink-200 rounded-lg p-3 pr-[4.5rem] space-y-1 list-none">
                 {recoveryCodes.map((c) => (
@@ -453,10 +642,10 @@ export function SetupScreen() {
                 </button>
               </div>
             </div>
-            <label className="flex items-start gap-2 text-sm text-ink-700 cursor-pointer">
+            <label className="flex items-start gap-2.5 text-sm text-ink-700 cursor-pointer">
               <input
                 type="checkbox"
-                className="mt-1"
+                className="mt-0.5"
                 checked={recoveryAck}
                 onChange={(e) => setRecoveryAck(e.target.checked)}
               />
@@ -473,6 +662,10 @@ export function SetupScreen() {
           </div>
         )}
       </div>
+
+      {passkeyHelpOpen && (
+        <PasskeyHelpModal t={t} onClose={() => setPasskeyHelpOpen(false)} />
+      )}
     </div>
   );
 }

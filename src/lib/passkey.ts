@@ -89,6 +89,8 @@ export async function registerVaultPasskey(opts: {
   userName: string;
   excludeCredentialIds: string[];
   prfSaltB64: string;
+  hints?: ("client-device" | "security-key" | "hybrid")[];
+  label?: string;
 }): Promise<{
   registration: RegistrationJSON;
   passkey: StoredPasskey;
@@ -108,6 +110,7 @@ export async function registerVaultPasskey(opts: {
     discoverable: "preferred",
     userVerification: "required",
     attestation: true,
+    hints: opts.hints,
     customProperties: {
       excludeCredentials: opts.excludeCredentialIds.map((id) => ({
         id,
@@ -124,6 +127,8 @@ export async function registerVaultPasskey(opts: {
     origin: expectedOrigin(),
     domain: rpId(),
     userVerified: true,
+  }).catch(() => {
+    throw new AppError("errors.passkeyFailed");
   });
   const passkey: StoredPasskey = {
     id: info.credential.id,
@@ -132,6 +137,7 @@ export async function registerVaultPasskey(opts: {
     counter: info.authenticator.counter,
     transports: info.credential.transports ?? [],
     createdAt: Date.now(),
+    label: opts.label,
   };
   return { registration, passkey, challenge };
 }

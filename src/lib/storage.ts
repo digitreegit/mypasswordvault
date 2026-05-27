@@ -20,6 +20,8 @@ export interface StoredPasskey {
   counter: number;
   transports: string[];
   createdAt: number;
+  /** User-facing label chosen during setup (e.g. "Touch ID", "Security key"). */
+  label?: string;
 }
 
 export interface VaultMeta {

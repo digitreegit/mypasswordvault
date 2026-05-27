@@ -2,6 +2,7 @@ import { MESSAGES_EN as en } from "../en";
 import { AUTH_DE, AUTH_ES, AUTH_FR, AUTH_IT } from "./auth_i18n";
 import { PRICING_DE, PRICING_ES, PRICING_FR, PRICING_IT } from "./pricing_i18n";
 import { SETTINGS_DE, SETTINGS_ES, SETTINGS_FR, SETTINGS_IT } from "./settings_i18n";
+import { SETUP_DE, SETUP_ES, SETUP_FR, SETUP_IT } from "./setup_i18n";
 
 export const MESSAGES_ES: Record<string, string> = {
   ...en,
@@ -16,26 +17,6 @@ export const MESSAGES_ES: Record<string, string> = {
   "autoLock.m30": "30 min",
   "autoLock.off": "Desactivado",
   "autoLock.offBad": "Desactivado (no recomendado)",
-  "setup.title": "Configurar My Password Vault",
-  "setup.subtitle":
-    "Crea una bóveda nueva en este dispositivo. La contraseña maestra no se guarda en ningún sitio.",
-  "setup.masterPw": "Contraseña maestra",
-  "setup.masterPwConfirm": "Confirmar contraseña maestra",
-  "setup.placeholderMin": "Al menos 10 caracteres",
-  "setup.autoLock": "Bloqueo automático (minutos)",
-  "setup.next2fa": "Siguiente — configurar 2FA",
-  "setup.forgetWarn":
-    "Si olvida la contraseña, la bóveda no se puede recuperar. Perderá todos los datos.",
-  "setup.2faIntro":
-    "Escanee el código QR con Google Authenticator, 1Password, Authy, etc., o introduzca la clave secreta. Luego introduzca el código de 6 dígitos para confirmar.",
-  "setup.secretKey": "Clave secreta (entrada manual)",
-  "setup.openOtpauth": "Abrir enlace otpauth://",
-  "setup.totpCode": "Código de 6 dígitos de la app",
-  "setup.back": "Atrás",
-  "setup.confirmStart": "Confirmar e iniciar",
-  "setup.errMin": "La contraseña maestra debe tener al menos 10 caracteres.",
-  "setup.errMismatch": "Las contraseñas no coinciden.",
-  "setup.errGeneric": "Algo salió mal.",
   "lock.title": "Bóveda bloqueada",
   "lock.subtitle":
     "Introduzca la contraseña maestra y el código de autenticación de 6 dígitos.",
@@ -110,6 +91,7 @@ export const MESSAGES_ES: Record<string, string> = {
   "pwdGen.cDigits": "Dígitos 0-9",
   "pwdGen.cSymbols": "Símbolos !@#$",
   "pwdGen.cAmbiguous": "Excluir caracteres ambiguos",
+  ...SETUP_ES,
   ...AUTH_ES,
   ...PRICING_ES,
   ...SETTINGS_ES,
@@ -128,26 +110,6 @@ export const MESSAGES_DE: Record<string, string> = {
   "autoLock.m30": "30 Min.",
   "autoLock.off": "Aus",
   "autoLock.offBad": "Aus (nicht empfohlen)",
-  "setup.title": "My Password Vault einrichten",
-  "setup.subtitle":
-    "Neuen Tresor auf diesem Gerät anlegen. Das Masterpasswort wird nirgends gespeichert.",
-  "setup.masterPw": "Masterpasswort",
-  "setup.masterPwConfirm": "Masterpasswort bestätigen",
-  "setup.placeholderMin": "Mindestens 10 Zeichen",
-  "setup.autoLock": "Automatische Sperre (Minuten)",
-  "setup.next2fa": "Weiter — Zwei-Faktor-Authentifizierung",
-  "setup.forgetWarn":
-    "Ohne Masterpasswort ist kein Zugriff möglich. Alle Daten gehen verloren.",
-  "setup.2faIntro":
-    "QR-Code mit Google Authenticator, 1Password, Authy usw. scannen oder Geheimschlüssel manuell eingeben. Anschließend den 6-stelligen Code eingeben.",
-  "setup.secretKey": "Geheimschlüssel (manuell)",
-  "setup.openOtpauth": "otpauth://-Link öffnen",
-  "setup.totpCode": "6-stelliger Code aus der App",
-  "setup.back": "Zurück",
-  "setup.confirmStart": "Bestätigen und starten",
-  "setup.errMin": "Das Masterpasswort muss mindestens 10 Zeichen haben.",
-  "setup.errMismatch": "Passwörter stimmen nicht überein.",
-  "setup.errGeneric": "Ein Fehler ist aufgetreten.",
   "lock.title": "Tresor gesperrt",
   "lock.subtitle": "Masterpasswort und 6-stelligen Code eingeben.",
   "lock.masterPw": "Masterpasswort",
@@ -220,6 +182,7 @@ export const MESSAGES_DE: Record<string, string> = {
   "pwdGen.cDigits": "Ziffern 0–9",
   "pwdGen.cSymbols": "Symbole !@#$",
   "pwdGen.cAmbiguous": "Mehrdeutige Zeichen ausschließen",
+  ...SETUP_DE,
   ...AUTH_DE,
   ...PRICING_DE,
   ...SETTINGS_DE,
@@ -238,26 +201,6 @@ export const MESSAGES_FR: Record<string, string> = {
   "autoLock.m30": "30 min",
   "autoLock.off": "Désactivé",
   "autoLock.offBad": "Désactivé (non recommandé)",
-  "setup.title": "Configurer My Password Vault",
-  "setup.subtitle":
-    "Créer un nouveau coffre sur cet appareil. Le mot de passe maître n’est stocké nulle part.",
-  "setup.masterPw": "Mot de passe maître",
-  "setup.masterPwConfirm": "Confirmer le mot de passe maître",
-  "setup.placeholderMin": "Au moins 10 caractères",
-  "setup.autoLock": "Verrouillage auto (minutes)",
-  "setup.next2fa": "Suivant — configurer 2FA",
-  "setup.forgetWarn":
-    "Si vous oubliez le mot de passe, le coffre est irrécupérable. Toutes les données seront perdues.",
-  "setup.2faIntro":
-    "Scannez le QR avec Google Authenticator, 1Password, Authy, etc., ou saisissez la clé secrète. Puis entrez le code à 6 chiffres pour confirmer.",
-  "setup.secretKey": "Clé secrète (saisie manuelle)",
-  "setup.openOtpauth": "Ouvrir le lien otpauth://",
-  "setup.totpCode": "Code à 6 chiffres de l’app",
-  "setup.back": "Retour",
-  "setup.confirmStart": "Confirmer et démarrer",
-  "setup.errMin": "Le mot de passe maître doit contenir au moins 10 caractères.",
-  "setup.errMismatch": "Les mots de passe ne correspondent pas.",
-  "setup.errGeneric": "Une erreur s’est produite.",
   "lock.title": "Coffre verrouillé",
   "lock.subtitle":
     "Saisissez le mot de passe maître et le code d’authentification à 6 chiffres.",
@@ -332,6 +275,7 @@ export const MESSAGES_FR: Record<string, string> = {
   "pwdGen.cDigits": "Chiffres 0-9",
   "pwdGen.cSymbols": "Symboles !@#$",
   "pwdGen.cAmbiguous": "Exclure les caractères ambigus",
+  ...SETUP_FR,
   ...AUTH_FR,
   ...PRICING_FR,
   ...SETTINGS_FR,
@@ -350,26 +294,6 @@ export const MESSAGES_IT: Record<string, string> = {
   "autoLock.m30": "30 min",
   "autoLock.off": "Off",
   "autoLock.offBad": "Off (sconsigliato)",
-  "setup.title": "Configura My Password Vault",
-  "setup.subtitle":
-    "Crea una nuova cassaforte su questo dispositivo. La password principale non viene mai memorizzata.",
-  "setup.masterPw": "Password principale",
-  "setup.masterPwConfirm": "Conferma password principale",
-  "setup.placeholderMin": "Almeno 10 caratteri",
-  "setup.autoLock": "Blocco automatico (minuti)",
-  "setup.next2fa": "Avanti — configura 2FA",
-  "setup.forgetWarn":
-    "Se dimentichi la password, la cassaforte non è recuperabile. Perderai tutti i dati.",
-  "setup.2faIntro":
-    "Scansiona il QR con Google Authenticator, 1Password, Authy, ecc., oppure inserisci la chiave segreta. Poi inserisci il codice a 6 cifre per confermare.",
-  "setup.secretKey": "Chiave segreta (inserimento manuale)",
-  "setup.openOtpauth": "Apri link otpauth://",
-  "setup.totpCode": "Codice a 6 cifre dall’app",
-  "setup.back": "Indietro",
-  "setup.confirmStart": "Conferma e avvia",
-  "setup.errMin": "La password principale deve avere almeno 10 caratteri.",
-  "setup.errMismatch": "Le password non coincidono.",
-  "setup.errGeneric": "Si è verificato un errore.",
   "lock.title": "Cassaforte bloccata",
   "lock.subtitle":
     "Inserisci la password principale e il codice di autenticazione a 6 cifre.",
@@ -444,6 +368,7 @@ export const MESSAGES_IT: Record<string, string> = {
   "pwdGen.cDigits": "Cifre 0-9",
   "pwdGen.cSymbols": "Simboli !@#$",
   "pwdGen.cAmbiguous": "Escludi caratteri ambigui",
+  ...SETUP_IT,
   ...AUTH_IT,
   ...PRICING_IT,
   ...SETTINGS_IT,

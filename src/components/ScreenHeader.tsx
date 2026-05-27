@@ -18,6 +18,8 @@ interface ScreenHeaderProps {
   shieldClassName?: string;
   /** Forwarded to `<h1>` for dialog `aria-labelledby` */
   titleId?: string;
+  /** Shown between the brand row and the page title (e.g. setup stepper). */
+  beforeTitle?: React.ReactNode;
   /** Shown under the page title (e.g. auth sign-in subtitle). */
   subtitle?: React.ReactNode;
   titleClassName?: string;
@@ -37,6 +39,7 @@ export function ScreenHeader({
   className,
   shieldClassName = "w-8 h-auto",
   titleId,
+  beforeTitle,
   subtitle,
   titleClassName = "text-xl font-semibold text-ink-900 tracking-tight",
   showLanguageMenu = true,
@@ -84,6 +87,7 @@ export function ScreenHeader({
           />
         ) : null}
       </div>
+      {beforeTitle}
       <div className="space-y-1">
         <div className="flex items-start justify-between gap-2">
           <h1 id={titleId} className={["font-sans", titleClassName].join(" ")}>

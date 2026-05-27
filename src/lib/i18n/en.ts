@@ -102,6 +102,20 @@ export const MESSAGES_EN: Record<string, string> = {
   "setup.pageTitlePasskey": "Register passkey",
   "setup.pageTitleBackupTotp": "Backup authenticator",
   "setup.pageTitleRecovery": "Recovery codes",
+  "setup.stepperAria": "Setup progress",
+  "setup.stepPassword": "Master password",
+  "setup.stepPasskey": "Passkey",
+  "setup.stepBackupTotp": "Authenticator",
+  "setup.stepRecovery": "Recovery code",
+  "setup.passkeyHelpTitle": "What is a passkey?",
+  "setup.passkeyHelpBody":
+    "A passkey uses your device’s secure hardware to prove it’s you — Touch ID, Face ID, fingerprint, or device PIN. Your private key never leaves the device; we only store a public key.\n\nWhen you unlock the vault, you approve with biometrics or PIN. No master password or codes to type every day.",
+  "setup.passkeyHelpGotIt": "Got it",
+  "setup.backupTotpRecommend":
+    "Recommended for safety — a backup if passkeys aren’t available on a device.",
+  "setup.recoveryCalloutTitle": "Store these codes somewhere safe",
+  "setup.recoveryCalloutBody":
+    "These one-time codes are separate from your passkey and authenticator app. If you lose your device, use a code with your master password to sign in. Each code works only once — keep them offline (password manager or printout).",
   "setup.pageTitle2fa": "Two-factor authentication",
   "setup.title": "Set up My Password Vault",
   "setup.subtitle":
@@ -114,14 +128,31 @@ export const MESSAGES_EN: Record<string, string> = {
   "setup.next2fa": "Next — set up two-factor authentication",
   "setup.nextRecovery": "Next — save recovery codes",
   "setup.passkeyIntro":
-    "Register a passkey on this device (Face ID, Touch ID, Windows Hello, fingerprint, or device PIN). This is how you will unlock the vault every day.",
+    "Turn on this device’s passkey, then continue. Touch ID or Face ID is used when available; your device PIN works as a fallback.",
   "setup.registerPasskey": "Register passkey",
+  "setup.passkeyContinue": "Continue",
+  "setup.passkeyRegistering": "Registering…",
+  "setup.passkeyMethodsLoading": "Checking available options…",
+  "setup.passkeyMethodsHint":
+    "This creates one passkey on this device. Security keys and other devices can be added later from Settings.",
+  "setup.passkeyMethodAdded": "Added",
+  "setup.passkeyPinIncluded":
+    "Included automatically — used when biometrics aren’t available on this device.",
+  "setup.passkeyPinIncludedBadge": "Included",
+  "setup.passkeyMethodTouchId": "Touch ID",
+  "setup.passkeyMethodFaceId": "Face ID",
+  "setup.passkeyMethodFingerprint": "Fingerprint",
+  "setup.passkeyMethodBiometric": "Biometrics",
+  "setup.passkeyMethodWindowsHello": "Windows Hello",
+  "setup.passkeyMethodPin": "Device PIN",
+  "setup.passkeyMethodSecurityKey": "Security key",
+  "setup.passkeyMethodPhone": "Phone passkey",
   "setup.passkeyUnsupported":
     "Passkeys are not available in this browser. Use Chrome, Safari, or Edge on a supported device.",
   "setup.backupTotpIntro":
-    "Set up a backup authenticator app (TOTP). Scan the QR code or enter the secret manually, then confirm with a 6-digit code.",
+    "Scan the QR code with Google Authenticator, 1Password, Authy, or similar. Then enter the 6-digit code to confirm.",
   "setup.recoveryIntro":
-    "Copy these one-time recovery codes and store them somewhere safe (password manager or printout). Each code works once if you lose your passkey.",
+    "Copy or download the codes below, then check the box to confirm you’ve saved them.",
   "setup.recoveryAck":
     "I have saved these recovery codes in a safe place.",
   "setup.copyRecoveryCodes": "Copy all recovery codes",
@@ -130,7 +161,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "setup.downloadRecoveryCodesDone": "Downloaded",
   "setup.skipBackupTotp": "Skip — continue without authenticator app",
   "setup.backupTotpSkipWarn":
-    "This authenticator app is a backup for when passkeys do not work on a device. It is optional — you can skip it and continue with your passkey and recovery codes only.",
+    "Recommended for safety — a backup if passkeys aren’t available on a device. You can skip, but setup takes about a minute.",
   "setup.forgetWarn":
     "If you forget your master password and lose your passkey and backups, the vault cannot be recovered.",
   "setup.2faIntro":
@@ -153,7 +184,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "lock.unlockPasskey": "Unlock with passkey",
   "lock.passkeyWrongSite":
     "Your passkey was created on {{site}}, not this site. Use backup sign-in below (master password + authenticator or recovery code). You can register a new passkey here after unlocking.",
-  "lock.useBackup": "Use backup sign-in (master password)",
+  "lock.useBackup": "Use backup sign-in",
   "lock.hideBackup": "Hide backup sign-in",
   "lock.backupHint":
     "Backup: master password plus authenticator code or a one-time recovery code.",
