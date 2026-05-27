@@ -16,6 +16,7 @@ import {
   isDuplicateSignUpResponse,
 } from "./authErrors";
 import {
+  clearAuthLastEmail,
   clearPendingAuthMethod,
   clearSignInAttempt,
   markSignInAttempt,
@@ -208,6 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) return;
     clearSignInAttempt();
     clearPendingAuthMethod();
+    clearAuthLastEmail();
     clearPasswordRecoveryPending();
     setPasswordRecoveryPendingState(false);
     stripAuthParamsFromUrl();

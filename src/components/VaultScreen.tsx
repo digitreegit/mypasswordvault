@@ -13,6 +13,7 @@ import { useVault, type DecryptedEntry } from "../lib/vault";
 import { newId, type VaultCategory } from "../lib/storage";
 import { PasswordGenerator } from "./PasswordGenerator";
 import { CategoriesDialog } from "./CategoriesDialog";
+import { PricingDrawer } from "./PricingDrawer";
 import {
   ChevronDown,
   ChevronUp,
@@ -55,12 +56,13 @@ const ROW_UNPIN_DELAY_MS = 1000;
 
 const ENTRY_LIMIT_BANNER_DISMISSED_KEY = "mpv_entry_limit_banner_dismissed";
 
-function readEntryLimitBannerDismissed(userId?: string | null): boolean {
-  if (typeof window === "undefined" || !userId) return false;
-  return (
-    window.localStorage.getItem(`${ENTRY_LIMIT_BANNER_DISMISSED_KEY}:${userId}`) ===
-    "1"
-  );
+/** Legacy: dismiss was persisted in localStorage and hid the banner permanently. */
+function clearLegacyEntryLimitBannerDismissed(userId?: string | null): void {
+  if (typeof window === "undefined") return;
+  if (userId) {
+    window.localStorage.removeItem(`${ENTRY_LIMIT_BANNER_DISMISSED_KEY}:${userId}`);
+  }
+  window.localStorage.removeItem(ENTRY_LIMIT_BANNER_DISMISSED_KEY);
 }
 
 function entryCategoryLabel(
@@ -450,9 +452,9 @@ export function VaultScreen() {
   const [sortKey, setSortKey] = useState<SortKey>("category");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [entryLimitModalOpen, setEntryLimitModalOpen] = useState(false);
-  const [entryLimitBannerDismissed, setEntryLimitBannerDismissed] = useState(
-    () => readEntryLimitBannerDismissed(user?.id)
-  );
+  const [pricingDrawerOpen, setPricingDrawerOpen] = useState(false);
+  /** Hidden for this vault visit only — resets when vault locks or count drops below limit. */
+  const [entryLimitBannerDismissed, setEntryLimitBannerDismissed] = useState(false);
   /** Entry ids still being created — kept at top until edit session ends. */
   const [draftEntryIds, setDraftEntryIds] = useState<string[]>([]);
   /** Rows being edited — sort position frozen until pointer leaves and delay elapses. */
@@ -476,8 +478,14 @@ export function VaultScreen() {
   const categoryMenuOpenEntryIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    setEntryLimitBannerDismissed(readEntryLimitBannerDismissed(user?.id));
+    clearLegacyEntryLimitBannerDismissed(user?.id);
   }, [user?.id]);
+
+  useEffect(() => {
+    if (entries.length < freeEntryLimit) {
+      setEntryLimitBannerDismissed(false);
+    }
+  }, [entries.length, freeEntryLimit]);
 
   const cancelScheduledUnpin = useCallback((id: string) => {
     const timer = unpinTimersRef.current.get(id);
@@ -786,19 +794,13 @@ export function VaultScreen() {
     atEntryLimit && !licensed && !entryLimitBannerDismissed;
   const showHeaderUpgrade = atEntryLimit && !licensed && entitlementLoaded;
 
-  function goToPricing(e?: React.MouseEvent) {
+  function openPricingDrawer(e?: React.MouseEvent) {
     e?.preventDefault();
-    window.location.hash = "#/pricing";
+    setPricingDrawerOpen(true);
   }
 
   function dismissEntryLimitBanner() {
     setEntryLimitBannerDismissed(true);
-    if (user?.id) {
-      window.localStorage.setItem(
-        `${ENTRY_LIMIT_BANNER_DISMISSED_KEY}:${user.id}`,
-        "1"
-      );
-    }
   }
 
   const openCategoriesAddNew = useCallback(() => {
@@ -863,13 +865,13 @@ export function VaultScreen() {
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
-                <a
-                  href="#/pricing"
+                <button
+                  type="button"
                   className="vault-entry-limit-banner__cta"
-                  onClick={goToPricing}
+                  onClick={openPricingDrawer}
                 >
                   {t("vault.entryLimitUpgrade")}
-                </a>
+                </button>
                 <button
                   type="button"
                   className="vault-entry-limit-banner__close"
@@ -906,13 +908,13 @@ export function VaultScreen() {
                 {configured && user?.id ? (
                   <>
                     {showHeaderUpgrade ? (
-                      <a
-                        href="#/pricing"
+                      <button
+                        type="button"
                         className="vault-header-upgrade-btn"
-                        onClick={goToPricing}
+                        onClick={openPricingDrawer}
                       >
                         {t("vault.entryLimitUpgrade")}
-                      </a>
+                      </button>
                     ) : null}
                     {entitlementLoaded ? (
                       <PlanBadge
@@ -1307,17 +1309,16 @@ export function VaultScreen() {
               >
                 {t("vault.entryLimitModalClose")}
               </button>
-              <a
-                href="#/pricing"
-                className="btn-primary text-sm w-full sm:w-auto text-center"
-                onClick={(e) => {
-                  e.preventDefault();
+              <button
+                type="button"
+                className="btn-primary text-sm w-full sm:w-auto"
+                onClick={() => {
                   setEntryLimitModalOpen(false);
-                  window.location.hash = "#/pricing";
+                  setPricingDrawerOpen(true);
                 }}
               >
                 {t("vault.entryLimitModalCta")}
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -1328,6 +1329,10 @@ export function VaultScreen() {
           startWithNewCategory={categoriesStartWithNew}
         />
       )}
+      <PricingDrawer
+        open={pricingDrawerOpen}
+        onClose={() => setPricingDrawerOpen(false)}
+      />
     </div>
   );
 }

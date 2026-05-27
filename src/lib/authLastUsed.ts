@@ -116,6 +116,11 @@ export function getAuthLastEmail(): string | null {
   return email || null;
 }
 
+export function clearAuthLastEmail(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(STORAGE_LAST_EMAIL_KEY);
+}
+
 export function setAuthLastMethod(
   method: AuthLastMethod,
   userId?: string,

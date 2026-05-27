@@ -8,6 +8,7 @@ import { AccountCredentialPanel } from "./AccountCredentialPanel";
 import { PlanBadge } from "./PlanBadge";
 import { UserMenuDropdown } from "./UserMenuDropdown";
 import { LanguageMenu } from "./LanguageMenu";
+import { PricingDrawer } from "./PricingDrawer";
 import { downloadJsonFile } from "../lib/vaultBackup";
 import { isAppError } from "../lib/errors";
 
@@ -71,6 +72,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   const [importDraft, setImportDraft] = useState<string | null>(null);
   const [backupToast, setBackupToast] = useState<string | null>(null);
   const [licenseKeyCopied, setLicenseKeyCopied] = useState(false);
+  const [pricingDrawerOpen, setPricingDrawerOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const vaultHref = "/app/#";
@@ -78,9 +80,9 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   const atEntryLimit = entries.length >= freeEntryLimit;
   const showHeaderUpgrade = atEntryLimit && !licensed && entitlementLoaded;
 
-  function goToPricing(e?: React.MouseEvent) {
+  function openPricingDrawer(e?: React.MouseEvent) {
     e?.preventDefault();
-    window.location.hash = "#/pricing";
+    setPricingDrawerOpen(true);
   }
 
   const navItems = useMemo(() => {
@@ -315,9 +317,13 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
         </p>
         <p className="text-xs text-ink-600 leading-snug">{t("settings.licensePaid")}</p>
         <div className="flex flex-col sm:flex-row gap-2 pt-1">
-          <a href="#/pricing" className="btn-primary justify-center flex-1 min-w-0">
+          <button
+            type="button"
+            className="btn-primary justify-center flex-1 min-w-0"
+            onClick={openPricingDrawer}
+          >
             {t("settings.licenseLink")}
-          </a>
+          </button>
           <button
             type="button"
             className="btn-secondary flex-1 min-w-0 sm:max-w-[11rem] sm:flex-none"
@@ -510,13 +516,13 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
               {configured && user?.id ? (
                 <>
                   {showHeaderUpgrade ? (
-                    <a
-                      href="#/pricing"
+                    <button
+                      type="button"
                       className="vault-header-upgrade-btn"
-                      onClick={goToPricing}
+                      onClick={openPricingDrawer}
                     >
                       {t("vault.entryLimitUpgrade")}
-                    </a>
+                    </button>
                   ) : null}
                   {entitlementLoaded ? (
                     <PlanBadge
@@ -630,6 +636,10 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
           </main>
         </div>
       </div>
+      <PricingDrawer
+        open={pricingDrawerOpen}
+        onClose={() => setPricingDrawerOpen(false)}
+      />
     </div>
   );
 }

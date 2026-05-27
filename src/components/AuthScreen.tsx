@@ -3,7 +3,6 @@ import { useAuth } from "../lib/auth";
 import { AuthEmailTakenError, isAuthEmailTakenError } from "../lib/authErrors";
 import {
   AUTH_LAST_METHOD_CHANGED,
-  getAuthLastEmail,
   getAuthLastMethod,
   getAuthLastMethodForEmail,
   markPendingAuthMethod,
@@ -121,7 +120,7 @@ export function AuthScreen() {
   );
   /** Bump to re-read last-used method from localStorage after each login attempt. */
   const [lastUsedRevision, setLastUsedRevision] = useState(0);
-  const [email, setEmail] = useState(() => getAuthLastEmail() ?? "");
+  const [email, setEmail] = useState("");
   const lastUsed: AuthLastMethod | null = useMemo(() => {
     const trimmed = email.trim();
     if (trimmed) {
