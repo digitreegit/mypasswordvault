@@ -56,13 +56,12 @@ const ROW_UNPIN_DELAY_MS = 1000;
 
 const ENTRY_LIMIT_BANNER_DISMISSED_KEY = "mpv_entry_limit_banner_dismissed";
 
-/** Legacy: dismiss was persisted in localStorage and hid the banner permanently. */
-function clearLegacyEntryLimitBannerDismissed(userId?: string | null): void {
-  if (typeof window === "undefined") return;
-  if (userId) {
-    window.localStorage.removeItem(`${ENTRY_LIMIT_BANNER_DISMISSED_KEY}:${userId}`);
-  }
-  window.localStorage.removeItem(ENTRY_LIMIT_BANNER_DISMISSED_KEY);
+function readEntryLimitBannerDismissed(userId?: string | null): boolean {
+  if (typeof window === "undefined" || !userId) return false;
+  return (
+    window.localStorage.getItem(`${ENTRY_LIMIT_BANNER_DISMISSED_KEY}:${userId}`) ===
+    "1"
+  );
 }
 
 function entryCategoryLabel(
@@ -351,9 +350,20 @@ function CategorySelect({
         }}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={t("vault.colCategory")}
+        aria-label={
+          !value ? `${t("vault.colCategory")}: ${t("vault.uncategorized")}` : t("vault.colCategory")
+        }
       >
-        <span className="min-w-0 flex-1 truncate">{label}</span>
+        <span className="min-w-0 flex-1 truncate flex items-center">
+          {!value ? (
+            <span
+              className="inline-block h-px w-2.5 shrink-0 rounded-full bg-ink-300"
+              aria-hidden
+            />
+          ) : (
+            label
+          )}
+        </span>
         <ChevronDownIcon
           className="ml-1.5 h-3.5 w-3.5 shrink-0 text-ink-400"
           aria-hidden
@@ -453,8 +463,10 @@ export function VaultScreen() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [entryLimitModalOpen, setEntryLimitModalOpen] = useState(false);
   const [pricingDrawerOpen, setPricingDrawerOpen] = useState(false);
-  /** Hidden for this vault visit only — resets when vault locks or count drops below limit. */
-  const [entryLimitBannerDismissed, setEntryLimitBannerDismissed] = useState(false);
+  const [entryLimitBannerDismissed, setEntryLimitBannerDismissed] = useState(
+    () => readEntryLimitBannerDismissed(user?.id)
+  );
+  const [entryLimitBannerEntered, setEntryLimitBannerEntered] = useState(false);
   /** Entry ids still being created — kept at top until edit session ends. */
   const [draftEntryIds, setDraftEntryIds] = useState<string[]>([]);
   /** Rows being edited — sort position frozen until pointer leaves and delay elapses. */
@@ -478,14 +490,8 @@ export function VaultScreen() {
   const categoryMenuOpenEntryIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    clearLegacyEntryLimitBannerDismissed(user?.id);
+    setEntryLimitBannerDismissed(readEntryLimitBannerDismissed(user?.id));
   }, [user?.id]);
-
-  useEffect(() => {
-    if (entries.length < freeEntryLimit) {
-      setEntryLimitBannerDismissed(false);
-    }
-  }, [entries.length, freeEntryLimit]);
 
   const cancelScheduledUnpin = useCallback((id: string) => {
     const timer = unpinTimersRef.current.get(id);
@@ -794,6 +800,15 @@ export function VaultScreen() {
     atEntryLimit && !licensed && !entryLimitBannerDismissed;
   const showHeaderUpgrade = atEntryLimit && !licensed && entitlementLoaded;
 
+  useEffect(() => {
+    if (!showEntryLimitBanner) {
+      setEntryLimitBannerEntered(false);
+      return;
+    }
+    const id = requestAnimationFrame(() => setEntryLimitBannerEntered(true));
+    return () => cancelAnimationFrame(id);
+  }, [showEntryLimitBanner]);
+
   function openPricingDrawer(e?: React.MouseEvent) {
     e?.preventDefault();
     setPricingDrawerOpen(true);
@@ -801,6 +816,12 @@ export function VaultScreen() {
 
   function dismissEntryLimitBanner() {
     setEntryLimitBannerDismissed(true);
+    if (user?.id) {
+      window.localStorage.setItem(
+        `${ENTRY_LIMIT_BANNER_DISMISSED_KEY}:${user.id}`,
+        "1"
+      );
+    }
   }
 
   const openCategoriesAddNew = useCallback(() => {
@@ -848,10 +869,13 @@ export function VaultScreen() {
     >
       <div className="sticky top-0 z-10 w-full">
         {showEntryLimitBanner && (
-          <div
-            role="status"
-            className="vault-entry-limit-banner pt-[env(safe-area-inset-top,0px)]"
-          >
+          <div className="overflow-hidden">
+            <div
+              role="status"
+              className={`vault-entry-limit-banner pt-[env(safe-area-inset-top,0px)] transition-transform duration-300 ease-out ${
+                entryLimitBannerEntered ? "translate-y-0" : "-translate-y-full"
+              }`}
+            >
             <div
               className={`${VAULT_PAGE} flex items-center gap-2 py-1.5 sm:py-2`}
             >
@@ -881,6 +905,7 @@ export function VaultScreen() {
                   <XMarkIcon className="h-4 w-4" aria-hidden />
                 </button>
               </div>
+            </div>
             </div>
           </div>
         )}
@@ -1428,7 +1453,9 @@ function MobileEntryRow({
   onOpen: () => void;
   t: TFn;
 }) {
-  const catLabel = entryCategoryLabel(entry.categoryId, categories, t);
+  const catLabel = entry.categoryId
+    ? entryCategoryLabel(entry.categoryId, categories, t)
+    : null;
   const siteLabel = entry.site.trim() || t("vault.newEntry");
 
   return (
@@ -1438,8 +1465,13 @@ function MobileEntryRow({
       onClick={onOpen}
     >
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-        <span className="text-xs font-medium text-ink-500 truncate">
-          {catLabel}
+        <span className="text-xs font-medium text-ink-500 truncate flex items-center min-h-[1rem]">
+          {catLabel ?? (
+            <span
+              className="inline-block h-px w-2.5 shrink-0 rounded-full bg-ink-300"
+              aria-hidden
+            />
+          )}
         </span>
         <span className="font-medium text-ink-900 truncate">{siteLabel}</span>
       </div>

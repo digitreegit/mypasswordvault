@@ -47,8 +47,8 @@ body {
 
   .vault-entry-limit-banner {
     width: 100%;
-    background-color: #ffd700;
-    border-bottom: 1px solid #e6c200;
+    background-color: #fef08a;
+    border-bottom: 1px solid #fde047;
   }
   .vault-entry-limit-banner__text {
     color: #111827;
