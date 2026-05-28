@@ -495,6 +495,13 @@ export const MESSAGES_EN: Record<string, string> = {
   "pricing.stripeNote": "Payments are processed by Stripe. You will leave this app to complete purchase.",
   "pricing.errSignIn": "Please sign in first.",
   "pricing.errCheckout": "Could not start checkout. Try again or contact support.",
+  "pricing.errPopupBlocked":
+    "Could not open the payment window. Allow pop-ups for this site and try again.",
+  "pricing.checkoutPopupTitle": "Payment window open",
+  "pricing.checkoutPopupBody":
+    "Complete your purchase in the popup window. Close it anytime to return here.",
+  "pricing.checkoutPopupFocus": "Show payment window",
+  "pricing.checkoutPopupDismiss": "Close",
   "pricing.opsTitle": "Operator checklist (Supabase + Stripe)",
   "pricing.ops1":
     "Run the SQL migration `20260515180000_user_entitlements.sql` in the Supabase SQL editor.",

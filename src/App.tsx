@@ -12,8 +12,13 @@ import {
   SettingsPage,
   settingsSectionFromPath,
 } from "./components/SettingsPage";
+import { CheckoutCancelRelay } from "./components/CheckoutCancelRelay";
 import { CheckoutPopupRelay } from "./components/CheckoutPopupRelay";
-import { isCheckoutPopupReturn, parseCheckoutReturn } from "./lib/checkoutReturn";
+import {
+  isCheckoutPopupCancelReturn,
+  isCheckoutPopupReturn,
+  parseCheckoutReturn,
+} from "./lib/checkoutReturn";
 
 function parseHashPath(): string {
   if (typeof window === "undefined") return "";
@@ -93,6 +98,10 @@ function AuthenticatedApp() {
 
   if (isCheckoutPopupReturn()) {
     return <CheckoutPopupRelay />;
+  }
+
+  if (isCheckoutPopupCancelReturn()) {
+    return <CheckoutCancelRelay />;
   }
 
   if (hashPath === "pricing") {

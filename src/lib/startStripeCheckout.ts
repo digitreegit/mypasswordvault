@@ -1,35 +1,95 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { markCheckoutPending } from "./checkoutReturn";
+import {
+  clearCheckoutPending,
+  clearCheckoutPopupMode,
+  markCheckoutPending,
+  markCheckoutPopupMode,
+} from "./checkoutReturn";
+import {
+  closeStripeCheckoutPopup,
+  navigateStripePopup,
+  openStripeCheckoutPopup,
+  watchCheckoutPopup,
+} from "./stripeCheckoutPopup";
 
 type CheckoutResponse = { url?: string; error?: string };
 
 export type StartStripeCheckoutResult =
-  | { ok: true; openedInNewTab: boolean }
+  | { ok: true; stopWatching: () => void }
   | { ok: false; reason: string };
 
-/** Starts Stripe Checkout. Prefers a new tab so the vault tab stays unlocked. */
-export async function startStripeCheckout(
+async function fetchCheckoutUrl(
   sb: SupabaseClient,
-): Promise<StartStripeCheckoutResult> {
+): Promise<{ url: string } | { error: string }> {
   const { data, error } = await sb.functions.invoke<CheckoutResponse>(
     "create-checkout-session",
     { body: {} },
   );
   if (error) {
-    return { ok: false, reason: error.message || "invoke_failed" };
+    return { error: error.message || "invoke_failed" };
   }
   if (data?.error) {
-    return { ok: false, reason: data.error };
+    return { error: data.error };
   }
   if (data?.url) {
-    markCheckoutPending();
-    // Named window without noopener so `window.opener` works for postMessage back to vault tab.
-    const popup = window.open(data.url, "mpw_stripe_checkout");
-    if (!popup) {
-      window.location.href = data.url;
-      return { ok: true, openedInNewTab: false };
-    }
-    return { ok: true, openedInNewTab: true };
+    return { url: data.url };
   }
-  return { ok: false, reason: "no_checkout_url" };
+  return { error: "no_checkout_url" };
+}
+
+/**
+ * Opens Stripe Checkout in a centered popup immediately (on user click),
+ * then loads the session URL when the server responds.
+ */
+export async function startStripeCheckout(
+  sb: SupabaseClient,
+  onPopupClosed?: () => void,
+): Promise<StartStripeCheckoutResult> {
+  closeStripeCheckoutPopup();
+  const popup = openStripeCheckoutPopup();
+  if (!popup) {
+    return { ok: false, reason: "popup_blocked" };
+  }
+
+  markCheckoutPending();
+  markCheckoutPopupMode();
+
+  const stopWatching = watchCheckoutPopup(popup, () => {
+    clearCheckoutPending();
+    clearCheckoutPopupMode();
+    onPopupClosed?.();
+  });
+
+  const stop = () => {
+    stopWatching();
+    onPopupClosed?.();
+  };
+
+  try {
+    const result = await fetchCheckoutUrl(sb);
+    if ("error" in result) {
+      popup.close();
+      clearCheckoutPending();
+      clearCheckoutPopupMode();
+      stopWatching();
+      return { ok: false, reason: result.error };
+    }
+    if (popup.closed) {
+      clearCheckoutPending();
+      clearCheckoutPopupMode();
+      stopWatching();
+      return { ok: false, reason: "popup_closed" };
+    }
+    navigateStripePopup(popup, result.url);
+    return { ok: true, stopWatching: stop };
+  } catch (e) {
+    popup.close();
+    clearCheckoutPending();
+    clearCheckoutPopupMode();
+    stopWatching();
+    return {
+      ok: false,
+      reason: e instanceof Error ? e.message : "checkout_failed",
+    };
+  }
 }

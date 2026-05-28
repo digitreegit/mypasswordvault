@@ -482,6 +482,13 @@ export const MESSAGES_KR: Record<string, string> = {
   "pricing.stripeNote": "결제는 Stripe에서 처리됩니다. 결제를 위해 잠시 외부 페이지로 이동합니다.",
   "pricing.errSignIn": "먼저 로그인하세요.",
   "pricing.errCheckout": "결제를 시작할 수 없습니다. 다시 시도하거나 문의하세요.",
+  "pricing.errPopupBlocked":
+    "결제 창을 열 수 없습니다. 이 사이트의 팝업을 허용한 뒤 다시 시도하세요.",
+  "pricing.checkoutPopupTitle": "결제 창이 열렸습니다",
+  "pricing.checkoutPopupBody":
+    "팝업 창에서 결제를 완료하세요. 창을 닫으면 이 화면으로 돌아옵니다.",
+  "pricing.checkoutPopupFocus": "결제 창 다시 열기",
+  "pricing.checkoutPopupDismiss": "닫기",
   "pricing.opsTitle": "운영 체크리스트 (Supabase + Stripe)",
   "pricing.ops1":
     "Supabase SQL Editor에서 `20260515180000_user_entitlements.sql` 마이그레이션을 실행하세요.",

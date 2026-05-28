@@ -2,12 +2,46 @@
 export type CheckoutReturn = "success" | "cancel";
 
 export const CHECKOUT_COMPLETE_MESSAGE = "mpw_checkout_complete";
+export const CHECKOUT_CANCEL_MESSAGE = "mpw_checkout_cancel";
+
+const CHECKOUT_POPUP_MODE_KEY = "mpw_checkout_popup";
 
 export function isCheckoutPopupReturn(): boolean {
   if (typeof window === "undefined") return false;
   if (parseCheckoutReturn() !== "success") return false;
   const opener = window.opener;
   return !!opener && !opener.closed;
+}
+
+export function isCheckoutPopupCancelReturn(): boolean {
+  if (typeof window === "undefined") return false;
+  if (parseCheckoutReturn() !== "cancel") return false;
+  const opener = window.opener;
+  return !!opener && !opener.closed;
+}
+
+export function markCheckoutPopupMode(): void {
+  try {
+    sessionStorage.setItem(CHECKOUT_POPUP_MODE_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+}
+
+export function clearCheckoutPopupMode(): void {
+  try {
+    sessionStorage.removeItem(CHECKOUT_POPUP_MODE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+export function isCheckoutPopupMode(): boolean {
+  try {
+    return sessionStorage.getItem(CHECKOUT_POPUP_MODE_KEY) === "1";
+  } catch {
+    return false;
+  }
 }
 
 function hashQuery(): URLSearchParams | null {
@@ -139,6 +173,7 @@ export async function finalizeCheckoutAfterPayment(
     }
     if (await refresh({ keepLoaded: true })) {
       clearCheckoutPending();
+      clearCheckoutPopupMode();
       clearCheckoutReturn();
       return true;
     }

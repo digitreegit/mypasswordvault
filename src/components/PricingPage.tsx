@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../lib/auth";
 import { translate } from "../lib/i18n/bundles";
 import {
@@ -15,11 +15,13 @@ import { useCheckoutReturn } from "../hooks/useCheckoutReturn";
 import { confirmCheckoutSession } from "../lib/confirmCheckoutSession";
 import {
   clearCheckoutPending,
+  clearCheckoutPopupMode,
   finalizeCheckoutAfterPayment,
   type CheckoutReturn,
 } from "../lib/checkoutReturn";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { PricingTiers } from "./PricingTiers";
+import { StripeCheckoutOverlay } from "./StripeCheckoutOverlay";
 
 export function PricingPage() {
   const { configured, loading, session, signInWithGoogle } = useAuth();
@@ -30,6 +32,8 @@ export function PricingPage() {
   const [err, setErr] = useState<string | null>(null);
   const [licensed, setLicensed] = useState<boolean | null>(null);
   const [checkoutFlash, setCheckoutFlash] = useState<string | null>(null);
+  const [checkoutOverlay, setCheckoutOverlay] = useState(false);
+  const stopWatchRef = useRef<(() => void) | null>(null);
 
   const t = useCallback(
     (k: string, v?: Record<string, string | number>) => translate(locale, k, v),
@@ -47,15 +51,13 @@ export function PricingPage() {
 
   const onCheckoutReturn = useCallback(
     ({ result, sessionId }: { result: CheckoutReturn; sessionId: string | null }) => {
-      setCheckoutFlash(
-        result === "success"
-          ? t("pricing.checkoutSuccess")
-          : t("pricing.checkoutCancel"),
-      );
       if (result === "cancel") {
         clearCheckoutPending();
+        clearCheckoutPopupMode();
+        setCheckoutFlash(t("pricing.checkoutCancel"));
         return;
       }
+      setCheckoutFlash(t("pricing.checkoutSuccess"));
       void (async () => {
         if (!uid) return;
         await finalizeCheckoutAfterPayment(
@@ -81,6 +83,13 @@ export function PricingPage() {
 
   useEffect(() => subscribeLocaleChanged(setLocale), []);
 
+  const dismissCheckoutOverlay = useCallback(() => {
+    stopWatchRef.current?.();
+    stopWatchRef.current = null;
+    setCheckoutOverlay(false);
+    setBusy(false);
+  }, []);
+
   async function startCheckout() {
     setErr(null);
     const sb = getSupabase();
@@ -89,15 +98,22 @@ export function PricingPage() {
       return;
     }
     setBusy(true);
+    setCheckoutOverlay(true);
     try {
-      const result = await startStripeCheckout(sb);
+      const result = await startStripeCheckout(sb, dismissCheckoutOverlay);
       if (!result.ok) {
-        setErr(t("pricing.errCheckout"));
+        dismissCheckoutOverlay();
+        if (result.reason === "popup_blocked") {
+          setErr(t("pricing.errPopupBlocked"));
+        } else if (result.reason !== "popup_closed") {
+          setErr(t("pricing.errCheckout"));
+        }
+        return;
       }
+      stopWatchRef.current = result.stopWatching;
     } catch (e) {
+      dismissCheckoutOverlay();
       setErr((e as Error)?.message ?? t("pricing.errCheckout"));
-    } finally {
-      setBusy(false);
     }
   }
 
@@ -151,6 +167,11 @@ export function PricingPage() {
           </ol>
         </section>
       </main>
+      <StripeCheckoutOverlay
+        open={checkoutOverlay}
+        t={t}
+        onDismiss={dismissCheckoutOverlay}
+      />
     </div>
   );
 }

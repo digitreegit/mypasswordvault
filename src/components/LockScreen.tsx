@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useCheckoutReturn } from "../hooks/useCheckoutReturn";
 import {
   clearCheckoutPending,
+  clearCheckoutPopupMode,
   type CheckoutReturn,
 } from "../lib/checkoutReturn";
 import { useVault } from "../lib/vault";
@@ -38,6 +39,7 @@ export function LockScreen() {
     ({ result, sessionId }: { result: CheckoutReturn; sessionId: string | null }) => {
       if (result === "cancel") {
         clearCheckoutPending();
+        clearCheckoutPopupMode();
         return;
       }
       void finalizePaidCheckout(sessionId);

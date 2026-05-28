@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  clearCheckoutPending,
+  clearCheckoutPopupMode,
   clearCheckoutReturn,
   getCheckoutSessionId,
+  isCheckoutPopupMode,
   parseCheckoutReturn,
   rememberCheckoutSessionId,
   type CheckoutReturn,
@@ -27,6 +30,13 @@ export function useCheckoutReturn(
     const sessionId = getCheckoutSessionId();
     if (sessionId) rememberCheckoutSessionId(sessionId);
     clearCheckoutReturn();
+
+    if (result === "cancel" && isCheckoutPopupMode()) {
+      clearCheckoutPending();
+      clearCheckoutPopupMode();
+      return;
+    }
+
     setCheckoutFlash(result);
     onReturn({ result, sessionId });
   }, [onReturn]);

@@ -2,23 +2,18 @@ import { useLayoutEffect } from "react";
 import { translate } from "../lib/i18n/bundles";
 import { detectBrowserLocale } from "../lib/i18n/locale";
 import {
-  CHECKOUT_COMPLETE_MESSAGE,
+  CHECKOUT_CANCEL_MESSAGE,
   clearCheckoutPending,
   clearCheckoutPopupMode,
   clearCheckoutReturn,
-  getCheckoutSessionId,
 } from "../lib/checkoutReturn";
 
-/** Stripe success tab opened from vault: notify opener (stays unlocked) and close. */
-export function CheckoutPopupRelay() {
+/** Stripe cancel/back in checkout popup: close popup without affecting the opener tab. */
+export function CheckoutCancelRelay() {
   useLayoutEffect(() => {
     const opener = window.opener;
-    const sessionId = getCheckoutSessionId();
     if (opener && !opener.closed) {
-      opener.postMessage(
-        { type: CHECKOUT_COMPLETE_MESSAGE, sessionId },
-        window.location.origin,
-      );
+      opener.postMessage({ type: CHECKOUT_CANCEL_MESSAGE }, window.location.origin);
     }
     clearCheckoutReturn();
     clearCheckoutPending();

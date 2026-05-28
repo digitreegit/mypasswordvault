@@ -12,6 +12,7 @@ import {
 import { useCheckoutReturn } from "../hooks/useCheckoutReturn";
 import {
   clearCheckoutPending,
+  clearCheckoutPopupMode,
   isCheckoutPending,
   type CheckoutReturn,
 } from "../lib/checkoutReturn";
@@ -463,6 +464,7 @@ export function VaultScreen() {
     ({ result, sessionId }: { result: CheckoutReturn; sessionId: string | null }) => {
       if (result === "cancel") {
         clearCheckoutPending();
+        clearCheckoutPopupMode();
         return;
       }
       setCheckoutPolling(true);
