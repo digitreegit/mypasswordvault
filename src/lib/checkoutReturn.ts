@@ -41,6 +41,33 @@ export function clearCheckoutReturn() {
 }
 
 const CHECKOUT_PENDING_KEY = "mpw_checkout_pending";
+const CHECKOUT_SESSION_KEY = "mpw_checkout_session_id";
+
+/** Persist session id before hash is cleared (same-tab Stripe return). */
+export function rememberCheckoutSessionId(sessionId: string) {
+  if (!sessionId.startsWith("cs_")) return;
+  try {
+    sessionStorage.setItem(CHECKOUT_SESSION_KEY, sessionId);
+  } catch {
+    /* ignore */
+  }
+}
+
+export function takeRememberedCheckoutSessionId(): string | null {
+  try {
+    const id = sessionStorage.getItem(CHECKOUT_SESSION_KEY)?.trim();
+    sessionStorage.removeItem(CHECKOUT_SESSION_KEY);
+    return id && id.startsWith("cs_") ? id : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Call on boot before redirects so Stripe `session_id` survives navigation. */
+export function captureCheckoutReturnFromUrl() {
+  const sessionId = getCheckoutSessionId();
+  if (sessionId) rememberCheckoutSessionId(sessionId);
+}
 
 /** Set before opening Stripe so we can refresh license when the user returns to this tab. */
 export function markCheckoutPending() {
@@ -84,8 +111,12 @@ export async function pollLicensedAfterCheckout(
 export async function finalizeCheckoutAfterPayment(
   refresh: () => Promise<boolean>,
   confirmSession?: (sessionId: string) => Promise<boolean>,
+  sessionIdFromReturn?: string | null,
 ): Promise<boolean> {
-  const sessionId = getCheckoutSessionId();
+  const sessionId =
+    sessionIdFromReturn?.trim() ||
+    getCheckoutSessionId() ||
+    takeRememberedCheckoutSessionId();
   if (sessionId && confirmSession) {
     try {
       await confirmSession(sessionId);
@@ -94,8 +125,11 @@ export async function finalizeCheckoutAfterPayment(
     }
     if (await refresh()) {
       clearCheckoutPending();
+      clearCheckoutReturn();
       return true;
     }
   }
-  return pollLicensedAfterCheckout(refresh);
+  const polled = await pollLicensedAfterCheckout(refresh);
+  if (polled) clearCheckoutReturn();
+  return polled;
 }

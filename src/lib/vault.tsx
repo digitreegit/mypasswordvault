@@ -68,7 +68,12 @@ import {
   reconcileCloudAtStartup,
   upsertRemoteVaultBackup,
 } from "./cloudVault";
-import { CHECKOUT_COMPLETE_MESSAGE } from "./checkoutReturn";
+import {
+  CHECKOUT_COMPLETE_MESSAGE,
+  clearCheckoutPending,
+  isCheckoutPending,
+  takeRememberedCheckoutSessionId,
+} from "./checkoutReturn";
 import { confirmCheckoutSession } from "./confirmCheckoutSession";
 import { FREE_ENTRY_LIMIT, fetchUserEntitlement } from "./entitlements";
 import { isSupabaseConfigured } from "./supabaseClient";
@@ -206,7 +211,14 @@ export function VaultProvider({
     setEntitlementLoaded(false);
     let licensedNow = false;
     try {
-      const ent = await fetchUserEntitlement(userId);
+      let ent = await fetchUserEntitlement(userId);
+      if (!ent.licensed && isCheckoutPending()) {
+        const sid = takeRememberedCheckoutSessionId();
+        if (sid && (await confirmCheckoutSession(sid))) {
+          ent = await fetchUserEntitlement(userId);
+          clearCheckoutPending();
+        }
+      }
       licensedNow = ent.licensed;
       setLicensed(ent.licensed);
       setLicenseKey(ent.stripeCheckoutSessionId);

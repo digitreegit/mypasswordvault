@@ -11,6 +11,7 @@ import "@fontsource/noto-sans-kr/700.css";
 import App from "./App";
 import "./index.css";
 import { setupNativeAuthListener } from "./lib/nativeAuth";
+import { captureCheckoutReturnFromUrl } from "./lib/checkoutReturn";
 import {
   redirectCheckoutReturnToApp,
   redirectDevIpToLocalhost,
@@ -19,6 +20,7 @@ import {
 import { ensureOAuthSessionFromUrl } from "./lib/supabaseAuthRedirect";
 
 setupNativeAuthListener();
+captureCheckoutReturnFromUrl();
 
 if (redirectVercelPreviewToCanonical()) {
   // Navigating to mypasswordvault.app — do not mount the app on *.vercel.app.

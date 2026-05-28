@@ -461,7 +461,7 @@ export function VaultScreen() {
   const [checkoutPolling, setCheckoutPolling] = useState(false);
 
   const onCheckoutReturn = useCallback(
-    (result: CheckoutReturn) => {
+    ({ result, sessionId }: { result: CheckoutReturn; sessionId: string | null }) => {
       if (result === "cancel") {
         clearCheckoutPending();
         return;
@@ -470,6 +470,7 @@ export function VaultScreen() {
       void finalizeCheckoutAfterPayment(
         refreshEntitlements,
         confirmCheckoutSession,
+        sessionId,
       ).finally(() => {
         setCheckoutPolling(false);
       });

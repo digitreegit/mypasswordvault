@@ -46,7 +46,7 @@ export function PricingPage() {
   }, [uid]);
 
   const onCheckoutReturn = useCallback(
-    (result: CheckoutReturn) => {
+    ({ result, sessionId }: { result: CheckoutReturn; sessionId: string | null }) => {
       setCheckoutFlash(
         result === "success"
           ? t("pricing.checkoutSuccess")
@@ -58,13 +58,18 @@ export function PricingPage() {
       }
       void (async () => {
         if (!uid) return;
-        await finalizeCheckoutAfterPayment(async () => {
-          setLicensed(await fetchUserLicensed(uid));
-          return await fetchUserLicensed(uid);
-        }, confirmCheckoutSession);
+        await finalizeCheckoutAfterPayment(
+          async () => {
+            const lic = await fetchUserLicensed(uid);
+            setLicensed(lic);
+            return lic;
+          },
+          confirmCheckoutSession,
+          sessionId,
+        );
       })();
     },
-    [reloadLicense, t, uid],
+    [t, uid],
   );
 
   useCheckoutReturn(onCheckoutReturn);
