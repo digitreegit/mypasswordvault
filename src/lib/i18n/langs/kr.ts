@@ -479,21 +479,19 @@ export const MESSAGES_KR: Record<string, string> = {
   "pricing.signInHint": "Google 계정은 라이선스와 암호화 금고를 연결하는 데만 사용됩니다.",
   "pricing.alreadyLicensed": "라이선스 적용됨 — 감사합니다",
   "pricing.ctaBuy": "안전한 결제 페이지로 이동",
-  "pricing.stripeNote": "결제는 Stripe에서 처리됩니다. 결제를 위해 잠시 외부 페이지로 이동합니다.",
+  "pricing.stripeNote": "결제는 Stripe 보안 모달에서 처리됩니다.",
   "pricing.errSignIn": "먼저 로그인하세요.",
   "pricing.errCheckout": "결제를 시작할 수 없습니다. 다시 시도하거나 문의하세요.",
-  "pricing.errPopupBlocked":
-    "결제 창을 열 수 없습니다. 이 사이트의 팝업을 허용한 뒤 다시 시도하세요.",
-  "pricing.checkoutPopupTitle": "결제 창이 열렸습니다",
-  "pricing.checkoutPopupBody":
-    "팝업 창에서 결제를 완료하세요. 창을 닫으면 이 화면으로 돌아옵니다.",
-  "pricing.checkoutPopupFocus": "결제 창 다시 열기",
-  "pricing.checkoutPopupDismiss": "닫기",
+  "pricing.errStripeKey":
+    "Stripe publishable key가 설정되지 않았습니다. Supabase에 STRIPE_PUBLISHABLE_KEY를 설정하거나 앱 빌드에 VITE_STRIPE_PUBLISHABLE_KEY를 추가하세요.",
+  "pricing.checkoutModalTitle": "보안 결제",
+  "pricing.checkoutModalLoading": "결제 화면을 불러오는 중…",
+  "pricing.checkoutModalClose": "닫기",
   "pricing.opsTitle": "운영 체크리스트 (Supabase + Stripe)",
   "pricing.ops1":
     "Supabase SQL Editor에서 `20260515180000_user_entitlements.sql` 마이그레이션을 실행하세요.",
   "pricing.ops2":
-    "Edge Functions `create-checkout-session`, `stripe-webhook`을 배포하고 STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PUBLIC_APP_URL(배포 URL, 프로덕션은 /app 포함), 선택 STRIPE_LICENSE_AMOUNT_CENTS(기본 499)를 설정하세요.",
+    "Edge Functions `create-checkout-session`, `stripe-webhook`을 배포하고 STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY(pk_…), STRIPE_WEBHOOK_SECRET, PUBLIC_APP_URL(배포 URL, 프로덕션은 /app 포함), 선택 STRIPE_LICENSE_AMOUNT_CENTS(기본 499)를 설정하세요. 앱 빌드에 VITE_STRIPE_PUBLISHABLE_KEY를 넣어도 됩니다.",
   "pricing.ops3": "Stripe 대시보드에서 `stripe-webhook` URL을 등록하고 checkout.session.completed 이벤트를 구독하세요.",
   "pricing.ops4": "결제 후 잠금 해제하거나 이 페이지를 열면 user_entitlements에서 라이선스를 다시 읽어 옵니다.",
 };

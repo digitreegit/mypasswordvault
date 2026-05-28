@@ -492,21 +492,19 @@ export const MESSAGES_EN: Record<string, string> = {
   "pricing.signInHint": "We use your Google account only to attach the license and encrypted vault.",
   "pricing.alreadyLicensed": "Licensed — thank you",
   "pricing.ctaBuy": "Continue to secure checkout",
-  "pricing.stripeNote": "Payments are processed by Stripe. You will leave this app to complete purchase.",
+  "pricing.stripeNote": "Payments are processed by Stripe in a secure checkout modal.",
   "pricing.errSignIn": "Please sign in first.",
   "pricing.errCheckout": "Could not start checkout. Try again or contact support.",
-  "pricing.errPopupBlocked":
-    "Could not open the payment window. Allow pop-ups for this site and try again.",
-  "pricing.checkoutPopupTitle": "Payment window open",
-  "pricing.checkoutPopupBody":
-    "Complete your purchase in the popup window. Close it anytime to return here.",
-  "pricing.checkoutPopupFocus": "Show payment window",
-  "pricing.checkoutPopupDismiss": "Close",
+  "pricing.errStripeKey":
+    "Stripe publishable key is not configured. Set STRIPE_PUBLISHABLE_KEY on Supabase or VITE_STRIPE_PUBLISHABLE_KEY in the app build.",
+  "pricing.checkoutModalTitle": "Secure checkout",
+  "pricing.checkoutModalLoading": "Loading checkout…",
+  "pricing.checkoutModalClose": "Close",
   "pricing.opsTitle": "Operator checklist (Supabase + Stripe)",
   "pricing.ops1":
     "Run the SQL migration `20260515180000_user_entitlements.sql` in the Supabase SQL editor.",
   "pricing.ops2":
-    "Deploy edge functions `create-checkout-session` and `stripe-webhook`; set secrets STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PUBLIC_APP_URL (your deployed app URL including /app if used), optional STRIPE_LICENSE_AMOUNT_CENTS (default 499).",
+    "Deploy edge functions `create-checkout-session` and `stripe-webhook`; set secrets STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY (pk_…), STRIPE_WEBHOOK_SECRET, PUBLIC_APP_URL (your deployed app URL including /app if used), optional STRIPE_LICENSE_AMOUNT_CENTS (default 499). Optionally set VITE_STRIPE_PUBLISHABLE_KEY in the app build.",
   "pricing.ops3": "In Stripe Dashboard, add the webhook endpoint URL for `stripe-webhook` and subscribe to checkout.session.completed.",
   "pricing.ops4": "After purchase, the app refreshes license from user_entitlements automatically when you unlock or open this page.",
 };

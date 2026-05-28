@@ -1,6 +1,7 @@
 /**
  * Creates a Stripe Checkout Session (one-time payment) for a permanent vault license.
- * Secrets: STRIPE_SECRET_KEY, PUBLIC_APP_URL (e.g. https://yoursite.com/app — include /app in prod).
+ * Secrets: STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY (pk_… for embedded checkout),
+ * PUBLIC_APP_URL (e.g. https://yoursite.com/app — include /app in prod).
  * Optional: STRIPE_LICENSE_AMOUNT_CENTS (default 499 = $4.99).
  */
 import { createClient } from "npm:@supabase/supabase-js@2.49.8";
@@ -75,34 +76,65 @@ Deno.serve(async (req) => {
   const user = userData.user;
 
   const stripe = new Stripe(stripeKey);
+  const publishableKey = Deno.env.get("STRIPE_PUBLISHABLE_KEY")?.trim() ?? "";
+
+  let uiMode: "embedded" | "hosted" = "embedded";
+  try {
+    const body = await req.json();
+    if (body?.ui_mode === "hosted") uiMode = "hosted";
+  } catch {
+    /* default embedded */
+  }
 
   const unitAmount = Number(Deno.env.get("STRIPE_LICENSE_AMOUNT_CENTS") ?? "499");
   if (!Number.isFinite(unitAmount) || unitAmount < 50) {
     return json({ error: "invalid_price_config" }, 500);
   }
 
+  const lineItems = [
+    {
+      quantity: 1,
+      price_data: {
+        currency: "usd",
+        unit_amount: unitAmount,
+        product_data: {
+          name: "My Password Vault — Permanent license",
+          description:
+            "Unlimited password entries for this account (one-time purchase).",
+        },
+      },
+    },
+  ];
+
+  const sessionBase = {
+    mode: "payment" as const,
+    customer_email: user.email ?? undefined,
+    client_reference_id: user.id,
+    metadata: { supabase_user_id: user.id },
+    line_items: lineItems,
+  };
+
   try {
+    if (uiMode === "embedded") {
+      const session = await stripe.checkout.sessions.create({
+        ...sessionBase,
+        ui_mode: "embedded",
+        return_url: `${appUrl}/#/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      });
+      if (!session.client_secret) {
+        return json({ error: "no_checkout_secret" }, 500);
+      }
+      return json({
+        client_secret: session.client_secret,
+        session_id: session.id,
+        publishable_key: publishableKey || undefined,
+      });
+    }
+
     const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      customer_email: user.email ?? undefined,
-      client_reference_id: user.id,
-      metadata: { supabase_user_id: user.id },
+      ...sessionBase,
       success_url: `${appUrl}/#/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/#/?checkout=cancel`,
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: unitAmount,
-            product_data: {
-              name: "My Password Vault — Permanent license",
-              description:
-                "Unlimited password entries for this account (one-time purchase).",
-            },
-          },
-        },
-      ],
     });
     if (!session.url) {
       return json({ error: "no_checkout_url" }, 500);

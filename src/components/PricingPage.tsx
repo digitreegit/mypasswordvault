@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../lib/auth";
 import { translate } from "../lib/i18n/bundles";
 import {
@@ -10,7 +10,6 @@ import {
 import { subscribeLocaleChanged } from "../lib/appLocale";
 import { getSupabase, isSupabaseConfigured } from "../lib/supabaseClient";
 import { fetchUserLicensed } from "../lib/entitlements";
-import { startStripeCheckout } from "../lib/startStripeCheckout";
 import { useCheckoutReturn } from "../hooks/useCheckoutReturn";
 import { confirmCheckoutSession } from "../lib/confirmCheckoutSession";
 import {
@@ -21,7 +20,7 @@ import {
 } from "../lib/checkoutReturn";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { PricingTiers } from "./PricingTiers";
-import { StripeCheckoutOverlay } from "./StripeCheckoutOverlay";
+import { StripeCheckoutModal } from "./StripeCheckoutModal";
 
 export function PricingPage() {
   const { configured, loading, session, signInWithGoogle } = useAuth();
@@ -32,8 +31,7 @@ export function PricingPage() {
   const [err, setErr] = useState<string | null>(null);
   const [licensed, setLicensed] = useState<boolean | null>(null);
   const [checkoutFlash, setCheckoutFlash] = useState<string | null>(null);
-  const [checkoutOverlay, setCheckoutOverlay] = useState(false);
-  const stopWatchRef = useRef<(() => void) | null>(null);
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
 
   const t = useCallback(
     (k: string, v?: Record<string, string | number>) => translate(locale, k, v),
@@ -83,39 +81,42 @@ export function PricingPage() {
 
   useEffect(() => subscribeLocaleChanged(setLocale), []);
 
-  const dismissCheckoutOverlay = useCallback(() => {
-    stopWatchRef.current?.();
-    stopWatchRef.current = null;
-    setCheckoutOverlay(false);
+  const handleCheckoutClose = useCallback(() => {
+    setCheckoutModalOpen(false);
     setBusy(false);
   }, []);
 
-  async function startCheckout() {
+  const handleCheckoutComplete = useCallback(
+    async (sessionId: string) => {
+      setCheckoutModalOpen(false);
+      setBusy(false);
+      if (!uid) return;
+      await finalizeCheckoutAfterPayment(
+        async () => {
+          const lic = await fetchUserLicensed(uid);
+          setLicensed(lic);
+          return lic;
+        },
+        confirmCheckoutSession,
+        sessionId,
+        () => setLicensed(true),
+      );
+      setCheckoutFlash(t("pricing.checkoutSuccess"));
+    },
+    [t, uid],
+  );
+
+  function startCheckout() {
     setErr(null);
-    const sb = getSupabase();
-    if (!sb || !session) {
+    if (!session) {
       setErr(t("pricing.errSignIn"));
       return;
     }
     setBusy(true);
-    setCheckoutOverlay(true);
-    try {
-      const result = await startStripeCheckout(sb, dismissCheckoutOverlay);
-      if (!result.ok) {
-        dismissCheckoutOverlay();
-        if (result.reason === "popup_blocked") {
-          setErr(t("pricing.errPopupBlocked"));
-        } else if (result.reason !== "popup_closed") {
-          setErr(t("pricing.errCheckout"));
-        }
-        return;
-      }
-      stopWatchRef.current = result.stopWatching;
-    } catch (e) {
-      dismissCheckoutOverlay();
-      setErr((e as Error)?.message ?? t("pricing.errCheckout"));
-    }
+    setCheckoutModalOpen(true);
   }
+
+  const sb = getSupabase();
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-ink-50 text-ink-800 flex flex-col">
@@ -152,7 +153,7 @@ export function PricingPage() {
           busy={busy}
           err={err}
           checkoutFlash={checkoutFlash}
-          onCheckout={() => void startCheckout()}
+          onCheckout={startCheckout}
           onSignIn={() => void signInWithGoogle()}
           layout="page"
         />
@@ -167,11 +168,15 @@ export function PricingPage() {
           </ol>
         </section>
       </main>
-      <StripeCheckoutOverlay
-        open={checkoutOverlay}
-        t={t}
-        onDismiss={dismissCheckoutOverlay}
-      />
+      {sb && checkoutModalOpen ? (
+        <StripeCheckoutModal
+          open={checkoutModalOpen}
+          sb={sb}
+          t={t}
+          onClose={handleCheckoutClose}
+          onComplete={handleCheckoutComplete}
+        />
+      ) : null}
     </div>
   );
 }

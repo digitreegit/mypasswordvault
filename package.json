@@ -24,6 +24,7 @@
     "@heroicons/react": "^2.2.0",
     "@passwordless-id/webauthn": "^2.4.0",
     "@simplewebauthn/browser": "^13.2.2",
+    "@stripe/stripe-js": "^9.7.0",
     "@supabase/supabase-js": "^2.105.4",
     "idb": "^8.0.0",
     "otpauth": "^9.3.4",
