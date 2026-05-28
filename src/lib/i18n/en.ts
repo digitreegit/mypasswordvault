@@ -135,6 +135,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "setup.passkeyMethodsLoading": "Checking available options…",
   "setup.passkeyMethodsHint":
     "This creates one passkey on this device. Security keys and other devices can be added later from Settings.",
+  "setup.passkeyPrfHint":
+    "Some browsers ask for Touch ID or Face ID twice: once to register the passkey, and once to enable passwordless unlock.",
   "setup.passkeyMethodAdded": "Added",
   "setup.passkeyPinIncluded":
     "Included automatically — used when biometrics aren’t available on this device.",

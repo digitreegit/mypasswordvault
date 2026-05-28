@@ -133,6 +133,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.passkeyMethodsLoading": "사용 가능한 옵션 확인 중…",
   "setup.passkeyMethodsHint":
     "이 기기에 패스키 하나를 등록합니다. 보안 키 등 다른 기기는 나중에 설정에서 추가할 수 있습니다.",
+  "setup.passkeyPrfHint":
+    "일부 브라우저에서는 Touch ID·Face ID를 두 번 요청합니다. 패스키 등록 1회, 비밀번호 없이 잠금 해제 설정 1회입니다.",
   "setup.passkeyMethodAdded": "등록됨",
   "setup.passkeyPinIncluded":
     "자동 포함 — 생체 인식을 사용할 수 없을 때 이 기기 PIN으로 잠금 해제합니다.",

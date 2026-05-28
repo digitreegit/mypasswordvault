@@ -213,6 +213,7 @@ export function PasskeySetupPicker({
       </div>
 
       <p className="text-xs text-ink-500 leading-snug">{t("setup.passkeyMethodsHint")}</p>
+      <p className="text-xs text-ink-500 leading-snug">{t("setup.passkeyPrfHint")}</p>
       {showLocalDevHint ? (
         <p className="text-xs text-ink-500 leading-snug">{t("setup.passkeyLocalHint")}</p>
       ) : null}

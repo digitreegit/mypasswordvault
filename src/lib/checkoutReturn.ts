@@ -103,12 +103,14 @@ export function isCheckoutPending(): boolean {
   }
 }
 
+export type RefreshEntitlementsOptions = { keepLoaded?: boolean };
+
 /** Stripe webhook can lag; optional confirm calls Stripe + upserts license immediately. */
 export async function pollLicensedAfterCheckout(
-  refresh: () => Promise<boolean>,
+  refresh: (opts?: RefreshEntitlementsOptions) => Promise<boolean>,
 ): Promise<boolean> {
   for (let i = 0; i < 15; i++) {
-    if (await refresh()) {
+    if (await refresh({ keepLoaded: true })) {
       clearCheckoutPending();
       return true;
     }
@@ -118,9 +120,10 @@ export async function pollLicensedAfterCheckout(
 }
 
 export async function finalizeCheckoutAfterPayment(
-  refresh: () => Promise<boolean>,
+  refresh: (opts?: RefreshEntitlementsOptions) => Promise<boolean>,
   confirmSession?: (sessionId: string) => Promise<boolean>,
   sessionIdFromReturn?: string | null,
+  onLicensedConfirmed?: () => void,
 ): Promise<boolean> {
   goToVaultMainAfterCheckout();
   const sessionId =
@@ -129,17 +132,21 @@ export async function finalizeCheckoutAfterPayment(
     takeRememberedCheckoutSessionId();
   if (sessionId && confirmSession) {
     try {
-      await confirmSession(sessionId);
+      const confirmed = await confirmSession(sessionId);
+      if (confirmed) onLicensedConfirmed?.();
     } catch (e) {
       console.warn("finalizeCheckoutAfterPayment confirm", e);
     }
-    if (await refresh()) {
+    if (await refresh({ keepLoaded: true })) {
       clearCheckoutPending();
       clearCheckoutReturn();
       return true;
     }
   }
   const polled = await pollLicensedAfterCheckout(refresh);
-  if (polled) clearCheckoutReturn();
+  if (polled) {
+    onLicensedConfirmed?.();
+    clearCheckoutReturn();
+  }
   return polled;
 }

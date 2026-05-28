@@ -145,7 +145,9 @@ interface VaultContextValue {
   entitlementLoaded: boolean;
   atEntryLimit: boolean;
   freeEntryLimit: number;
-  refreshEntitlements: () => Promise<boolean>;
+  refreshEntitlements: (opts?: { keepLoaded?: boolean }) => Promise<boolean>;
+  /** After Stripe payment — confirms session, applies PRO immediately, refreshes entitlements. */
+  finalizePaidCheckout: (sessionId?: string | null) => Promise<boolean>;
 }
 
 const VaultContext = createContext<VaultContextValue | null>(null);
@@ -202,14 +204,22 @@ export function VaultProvider({
     entitlementRef.current = { licensed, loaded: entitlementLoaded };
   }, [licensed, entitlementLoaded]);
 
-  const refreshEntitlements = useCallback(async (): Promise<boolean> => {
+  const applyLicensedOptimistic = useCallback((sessionId?: string | null) => {
+    setLicensed(true);
+    setEntitlementLoaded(true);
+    if (sessionId?.startsWith("cs_")) {
+      setLicenseKey(sessionId);
+    }
+  }, []);
+
+  const refreshEntitlements = useCallback(async (opts?: { keepLoaded?: boolean }): Promise<boolean> => {
     if (!userId || !isSupabaseConfigured) {
       setLicensed(true);
       setLicenseKey(null);
       setEntitlementLoaded(true);
       return true;
     }
-    setEntitlementLoaded(false);
+    if (!opts?.keepLoaded) setEntitlementLoaded(false);
     let licensedNow = false;
     try {
       let ent = await fetchUserEntitlement(userId);
@@ -232,6 +242,17 @@ export function VaultProvider({
     }
     return licensedNow;
   }, [userId]);
+
+  const finalizePaidCheckout = useCallback(
+    (sessionId?: string | null) =>
+      finalizeCheckoutAfterPayment(
+        refreshEntitlements,
+        confirmCheckoutSession,
+        sessionId,
+        () => applyLicensedOptimistic(sessionId),
+      ),
+    [refreshEntitlements, applyLicensedOptimistic],
+  );
 
   useEffect(() => {
     void refreshEntitlements();
@@ -392,15 +413,11 @@ export function VaultProvider({
         typeof data.sessionId === "string" && data.sessionId.startsWith("cs_")
           ? data.sessionId
           : null;
-      void finalizeCheckoutAfterPayment(
-        refreshEntitlements,
-        confirmCheckoutSession,
-        sid,
-      );
+      void finalizePaidCheckout(sid);
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [userId, refreshEntitlements]);
+  }, [userId, finalizePaidCheckout]);
 
   useLayoutEffect(() => {
     if (status === "unlocked" && !sessionRef.current) {
@@ -916,6 +933,7 @@ export function VaultProvider({
       atEntryLimit,
       freeEntryLimit: FREE_ENTRY_LIMIT,
       refreshEntitlements,
+      finalizePaidCheckout,
     }),
     [
       status,
@@ -948,6 +966,7 @@ export function VaultProvider({
       setCategories,
       deleteCategory,
       refreshEntitlements,
+      finalizePaidCheckout,
     ]
   );
 

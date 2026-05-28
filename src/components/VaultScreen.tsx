@@ -10,10 +10,8 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useCheckoutReturn } from "../hooks/useCheckoutReturn";
-import { confirmCheckoutSession } from "../lib/confirmCheckoutSession";
 import {
   clearCheckoutPending,
-  finalizeCheckoutAfterPayment,
   isCheckoutPending,
   type CheckoutReturn,
 } from "../lib/checkoutReturn";
@@ -454,7 +452,7 @@ export function VaultScreen() {
     freeEntryLimit,
     licensed,
     entitlementLoaded,
-    refreshEntitlements,
+    finalizePaidCheckout,
     locale,
     setLocale,
   } = useVault();
@@ -468,15 +466,11 @@ export function VaultScreen() {
         return;
       }
       setCheckoutPolling(true);
-      void finalizeCheckoutAfterPayment(
-        refreshEntitlements,
-        confirmCheckoutSession,
-        sessionId,
-      ).finally(() => {
+      void finalizePaidCheckout(sessionId).finally(() => {
         setCheckoutPolling(false);
       });
     },
-    [refreshEntitlements],
+    [finalizePaidCheckout],
   );
 
   const { checkoutFlash, dismissCheckoutFlash } =
@@ -838,6 +832,7 @@ export function VaultScreen() {
     (checkoutFlash === "success" || isCheckoutPending() || checkoutPolling) &&
     !licensed &&
     entitlementLoaded;
+  const showProBadge = licensed || awaitingLicenseAfterPay;
   const showEntryLimitBanner =
     atEntryLimit &&
     !licensed &&
@@ -1032,7 +1027,7 @@ export function VaultScreen() {
                     {entitlementLoaded ? (
                       <PlanBadge
                         label={
-                          licensed
+                          showProBadge
                             ? t("vault.licenseBadgePro")
                             : t("vault.licenseBadgeFree")
                         }

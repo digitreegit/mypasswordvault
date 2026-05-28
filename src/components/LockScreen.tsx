@@ -1,9 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useCheckoutReturn } from "../hooks/useCheckoutReturn";
-import { confirmCheckoutSession } from "../lib/confirmCheckoutSession";
 import {
   clearCheckoutPending,
-  finalizeCheckoutAfterPayment,
   type CheckoutReturn,
 } from "../lib/checkoutReturn";
 import { useVault } from "../lib/vault";
@@ -31,7 +29,7 @@ export function LockScreen() {
     isPasskeySupported,
     meta,
     resetVault,
-    refreshEntitlements,
+    finalizePaidCheckout,
     licensed,
     t,
   } = useVault();
@@ -42,13 +40,9 @@ export function LockScreen() {
         clearCheckoutPending();
         return;
       }
-      void finalizeCheckoutAfterPayment(
-        refreshEntitlements,
-        confirmCheckoutSession,
-        sessionId,
-      );
+      void finalizePaidCheckout(sessionId);
     },
-    [refreshEntitlements],
+    [finalizePaidCheckout],
   );
 
   const { checkoutFlash, dismissCheckoutFlash } =

@@ -66,6 +66,7 @@ export function PricingPage() {
           },
           confirmCheckoutSession,
           sessionId,
+          () => setLicensed(true),
         );
       })();
     },
