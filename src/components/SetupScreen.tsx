@@ -17,12 +17,24 @@ import { ScreenHeader } from "./ScreenHeader";
 import { downloadTextFile } from "../lib/downloadTextFile";
 import { isAppError } from "../lib/errors";
 import { isNativeApp } from "../lib/platform";
+import { isLocalDevHost } from "../lib/siteOrigin";
 import { PasskeySetupPicker } from "./PasskeySetupPicker";
 import type { PasskeyMethodId, PasskeyMethodOption } from "../lib/passkeyMethods";
 
 type Stage = "password" | "passkey" | "backup-totp" | "recovery";
 
 type TFn = (key: string, vars?: Record<string, string | number>) => string;
+
+function formatSetupError(e: unknown, t: TFn): string {
+  if (isAppError(e)) {
+    const msg = t(e.code);
+    if (import.meta.env.DEV && e.detail) {
+      return `${msg} (${e.detail})`;
+    }
+    return msg;
+  }
+  return (e as Error)?.message ?? t("setup.errGeneric");
+}
 
 const SETUP_STEPS: { id: Stage; labelKey: string }[] = [
   { id: "password", labelKey: "setup.stepPassword" },
@@ -265,9 +277,7 @@ export function SetupScreen() {
       await setup(pw, autoLock);
       setStage("passkey");
     } catch (e: unknown) {
-      setError(
-        isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
-      );
+      setError(formatSetupError(e, t));
     } finally {
       setBusy(false);
     }
@@ -298,9 +308,7 @@ export function SetupScreen() {
       setTotpSecret(totpSecretBase32);
       setStage("backup-totp");
     } catch (e: unknown) {
-      setError(
-        isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
-      );
+      setError(formatSetupError(e, t));
     } finally {
       setBusy(false);
     }
@@ -314,9 +322,7 @@ export function SetupScreen() {
       setRecoveryCodes(codes);
       setStage("recovery");
     } catch (e: unknown) {
-      setError(
-        isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
-      );
+      setError(formatSetupError(e, t));
     } finally {
       setBusy(false);
     }
@@ -330,9 +336,7 @@ export function SetupScreen() {
       setRecoveryCodes(codes);
       setStage("recovery");
     } catch (e: unknown) {
-      setError(
-        isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
-      );
+      setError(formatSetupError(e, t));
     } finally {
       setBusy(false);
     }
@@ -345,9 +349,7 @@ export function SetupScreen() {
     try {
       await finalizeEnrollment();
     } catch (e: unknown) {
-      setError(
-        isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
-      );
+      setError(formatSetupError(e, t));
     } finally {
       setBusy(false);
     }
@@ -484,6 +486,11 @@ export function SetupScreen() {
             error={error}
             registeredIds={registeredPasskeyIds}
             unsupported={!isPasskeySupported}
+            showLocalDevHint={
+              import.meta.env.DEV &&
+              typeof window !== "undefined" &&
+              isLocalDevHost(window.location.hostname)
+            }
             onContinue={handlePasskeyContinue}
             onBack={async () => {
               await abortSetup();

@@ -3,14 +3,31 @@
  * Secrets: STRIPE_SECRET_KEY, PUBLIC_APP_URL (e.g. https://yoursite.com/app — include /app in prod).
  * Optional: STRIPE_LICENSE_AMOUNT_CENTS (default 499 = $4.99).
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.8";
-import Stripe from "https://esm.sh/stripe@17.4.0?target=deno";
+import { createClient } from "npm:@supabase/supabase-js@2.49.8";
+import Stripe from "npm:stripe@17.4.0";
 
 const cors: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
+
+/** Stripe success redirect must land on the React app (`/app/`), not the marketing root. */
+function resolveAppBaseUrl(raw: string): string {
+  const trimmed = raw.trim().replace(/\/$/, "");
+  try {
+    const u = new URL(trimmed);
+    const path = u.pathname.replace(/\/$/, "") || "";
+    if (path === "" || path === "/") {
+      u.pathname = "/app";
+    } else if (path !== "/app" && !path.startsWith("/app/")) {
+      u.pathname = `${path}/app`.replace("//", "/");
+    }
+    return `${u.origin}${u.pathname}`.replace(/\/$/, "");
+  } catch {
+    return trimmed.endsWith("/app") ? trimmed : `${trimmed}/app`;
+  }
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -30,9 +47,8 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim();
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY")?.trim();
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY")?.trim();
-  const appUrl = (Deno.env.get("PUBLIC_APP_URL") ?? "https://mypasswordvault.app/app").replace(
-    /\/$/,
-    "",
+  const appUrl = resolveAppBaseUrl(
+    Deno.env.get("PUBLIC_APP_URL") ?? "https://mypasswordvault.app/app",
   );
 
   if (!supabaseUrl || !anonKey || !stripeKey) {
@@ -71,8 +87,8 @@ Deno.serve(async (req) => {
       customer_email: user.email ?? undefined,
       client_reference_id: user.id,
       metadata: { supabase_user_id: user.id },
-      success_url: `${appUrl}/#/pricing?checkout=success`,
-      cancel_url: `${appUrl}/#/pricing?checkout=cancel`,
+      success_url: `${appUrl}/#/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/#/?checkout=cancel`,
       line_items: [
         {
           quantity: 1,

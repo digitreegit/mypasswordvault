@@ -1,4 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { useCheckoutReturn } from "../hooks/useCheckoutReturn";
+import { confirmCheckoutSession } from "../lib/confirmCheckoutSession";
+import {
+  clearCheckoutPending,
+  finalizeCheckoutAfterPayment,
+  type CheckoutReturn,
+} from "../lib/checkoutReturn";
 import { useVault } from "../lib/vault";
 import { LockOpen, Eye, EyeOff } from "./Icons";
 import { ScreenHeader } from "./ScreenHeader";
@@ -24,8 +31,27 @@ export function LockScreen() {
     isPasskeySupported,
     meta,
     resetVault,
+    refreshEntitlements,
+    licensed,
     t,
   } = useVault();
+
+  const onCheckoutReturn = useCallback(
+    (result: CheckoutReturn) => {
+      if (result === "cancel") {
+        clearCheckoutPending();
+        return;
+      }
+      void finalizeCheckoutAfterPayment(
+        refreshEntitlements,
+        confirmCheckoutSession,
+      );
+    },
+    [refreshEntitlements],
+  );
+
+  const { checkoutFlash, dismissCheckoutFlash } =
+    useCheckoutReturn(onCheckoutReturn);
   const brandHomeHref = isNativeApp() ? undefined : "/";
   const [pw, setPw] = useState("");
   const [showMasterPw, setShowMasterPw] = useState(false);
@@ -95,6 +121,35 @@ export function LockScreen() {
           brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
         />
         <p className="text-sm text-ink-500 leading-snug">{t("lock.subtitle")}</p>
+
+        {checkoutFlash ? (
+          <div
+            role="status"
+            className={`rounded-md border px-3 py-2.5 text-sm leading-snug ${
+              checkoutFlash === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                : "border-ink-200 bg-ink-50 text-ink-700"
+            }`}
+          >
+            <p>
+              {checkoutFlash === "success"
+                ? t("pricing.checkoutSuccess")
+                : t("pricing.checkoutCancel")}
+            </p>
+            {checkoutFlash === "success" && licensed ? (
+              <p className="mt-1 font-medium text-emerald-900">
+                {t("pricing.youAreLicensed")} {t("lock.checkoutUnlockHint")}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              className="mt-2 text-xs font-medium text-ink-600 hover:text-ink-900 underline"
+              onClick={dismissCheckoutFlash}
+            >
+              {t("common.close")}
+            </button>
+          </div>
+        ) : null}
 
         {passkeyWrongSite && (
           <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-3 leading-snug">

@@ -9,6 +9,13 @@ import {
   MagnifyingGlassIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { useCheckoutReturn } from "../hooks/useCheckoutReturn";
+import { confirmCheckoutSession } from "../lib/confirmCheckoutSession";
+import {
+  clearCheckoutPending,
+  finalizeCheckoutAfterPayment,
+  type CheckoutReturn,
+} from "../lib/checkoutReturn";
 import { useVault, type DecryptedEntry } from "../lib/vault";
 import { newId, type VaultCategory } from "../lib/storage";
 import { PasswordGenerator } from "./PasswordGenerator";
@@ -446,9 +453,38 @@ export function VaultScreen() {
     freeEntryLimit,
     licensed,
     entitlementLoaded,
+    refreshEntitlements,
     locale,
     setLocale,
   } = useVault();
+
+  const [checkoutPolling, setCheckoutPolling] = useState(false);
+
+  const onCheckoutReturn = useCallback(
+    (result: CheckoutReturn) => {
+      if (result === "cancel") {
+        clearCheckoutPending();
+        return;
+      }
+      setCheckoutPolling(true);
+      void finalizeCheckoutAfterPayment(
+        refreshEntitlements,
+        confirmCheckoutSession,
+      ).finally(() => {
+        setCheckoutPolling(false);
+      });
+    },
+    [refreshEntitlements],
+  );
+
+  const { checkoutFlash, dismissCheckoutFlash } =
+    useCheckoutReturn(onCheckoutReturn);
+
+  useEffect(() => {
+    if (licensed && checkoutFlash === "success") {
+      dismissCheckoutFlash();
+    }
+  }, [licensed, checkoutFlash, dismissCheckoutFlash]);
 
   const [query, setQuery] = useState("");
   const [mobileDetailId, setMobileDetailId] = useState<string | null>(null);
@@ -796,9 +832,18 @@ export function VaultScreen() {
     }
   }
 
+  const awaitingLicenseAfterPay =
+    checkoutFlash === "success" &&
+    !licensed &&
+    entitlementLoaded &&
+    checkoutPolling;
   const showEntryLimitBanner =
-    atEntryLimit && !licensed && !entryLimitBannerDismissed;
-  const showHeaderUpgrade = atEntryLimit && !licensed && entitlementLoaded;
+    atEntryLimit &&
+    !licensed &&
+    !entryLimitBannerDismissed &&
+    !awaitingLicenseAfterPay;
+  const showHeaderUpgrade =
+    atEntryLimit && !licensed && entitlementLoaded && !awaitingLicenseAfterPay;
 
   useEffect(() => {
     if (!showEntryLimitBanner) {
@@ -868,6 +913,38 @@ export function VaultScreen() {
       onKeyDown={touchActivity}
     >
       <div className="sticky top-0 z-10 w-full">
+        {checkoutFlash ? (
+          <div
+            role="status"
+            className={`border-b px-4 py-2.5 sm:px-6 ${
+              checkoutFlash === "success"
+                ? "border-emerald-200 bg-emerald-50"
+                : "border-ink-200 bg-ink-50"
+            }`}
+          >
+            <div className={`${VAULT_PAGE} flex items-start gap-2`}>
+              <p
+                className={`min-w-0 flex-1 text-sm leading-snug ${
+                  checkoutFlash === "success"
+                    ? "text-emerald-900"
+                    : "text-ink-700"
+                }`}
+              >
+                {checkoutFlash === "success"
+                  ? t("pricing.checkoutSuccess")
+                  : t("pricing.checkoutCancel")}
+              </p>
+              <button
+                type="button"
+                className="shrink-0 rounded-md p-1 text-ink-500 hover:bg-black/5 hover:text-ink-800"
+                onClick={dismissCheckoutFlash}
+                aria-label={t("vault.entryLimitModalClose")}
+              >
+                <XMarkIcon className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+          </div>
+        ) : null}
         {showEntryLimitBanner && (
           <div className="overflow-hidden">
             <div
@@ -974,9 +1051,6 @@ export function VaultScreen() {
       <main className="flex-1 min-w-0 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div className={`${VAULT_PAGE} pt-3 pb-5 sm:pt-4 sm:pb-6`}>
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4 mb-1">
-          <h1 className="font-sans text-xl sm:text-2xl font-semibold text-ink-900 tracking-tight shrink-0">
-            {t("vault.pageTitle")}
-          </h1>
           <div className="relative w-full md:hidden">
             <MagnifyingGlassIcon
               className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400"

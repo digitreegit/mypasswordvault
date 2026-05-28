@@ -10,23 +10,16 @@ import {
 import { subscribeLocaleChanged } from "../lib/appLocale";
 import { getSupabase, isSupabaseConfigured } from "../lib/supabaseClient";
 import { fetchUserLicensed } from "../lib/entitlements";
+import { startStripeCheckout } from "../lib/startStripeCheckout";
+import { useCheckoutReturn } from "../hooks/useCheckoutReturn";
+import { confirmCheckoutSession } from "../lib/confirmCheckoutSession";
+import {
+  clearCheckoutPending,
+  finalizeCheckoutAfterPayment,
+  type CheckoutReturn,
+} from "../lib/checkoutReturn";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { PricingTiers } from "./PricingTiers";
-
-function parseCheckoutQuery(): "success" | "cancel" | null {
-  if (typeof window === "undefined") return null;
-  const q = window.location.hash.split("?")[1];
-  if (!q) return null;
-  const v = new URLSearchParams(q).get("checkout");
-  if (v === "success") return "success";
-  if (v === "cancel") return "cancel";
-  return null;
-}
-
-function clearCheckoutQuery() {
-  const base = window.location.hash.split("?")[0] || "#/pricing";
-  window.history.replaceState(null, "", base);
-}
 
 export function PricingPage() {
   const { configured, loading, session, signInWithGoogle } = useAuth();
@@ -52,23 +45,35 @@ export function PricingPage() {
     setLicensed(await fetchUserLicensed(uid));
   }, [uid]);
 
+  const onCheckoutReturn = useCallback(
+    (result: CheckoutReturn) => {
+      setCheckoutFlash(
+        result === "success"
+          ? t("pricing.checkoutSuccess")
+          : t("pricing.checkoutCancel"),
+      );
+      if (result === "cancel") {
+        clearCheckoutPending();
+        return;
+      }
+      void (async () => {
+        if (!uid) return;
+        await finalizeCheckoutAfterPayment(async () => {
+          setLicensed(await fetchUserLicensed(uid));
+          return await fetchUserLicensed(uid);
+        }, confirmCheckoutSession);
+      })();
+    },
+    [reloadLicense, t, uid],
+  );
+
+  useCheckoutReturn(onCheckoutReturn);
+
   useEffect(() => {
     void reloadLicense();
   }, [reloadLicense]);
 
   useEffect(() => subscribeLocaleChanged(setLocale), []);
-
-  useEffect(() => {
-    const q = parseCheckoutQuery();
-    if (q === "success") {
-      setCheckoutFlash(t("pricing.checkoutSuccess"));
-      clearCheckoutQuery();
-      void reloadLicense();
-    } else if (q === "cancel") {
-      setCheckoutFlash(t("pricing.checkoutCancel"));
-      clearCheckoutQuery();
-    }
-  }, [reloadLicense, t]);
 
   async function startCheckout() {
     setErr(null);
@@ -79,19 +84,10 @@ export function PricingPage() {
     }
     setBusy(true);
     try {
-      const { data, error } = await sb.functions.invoke<{ url?: string }>(
-        "create-checkout-session",
-        { body: {} },
-      );
-      if (error) {
-        setErr(error.message || t("pricing.errCheckout"));
-        return;
+      const result = await startStripeCheckout(sb);
+      if (!result.ok) {
+        setErr(t("pricing.errCheckout"));
       }
-      if (data?.url) {
-        window.location.href = data.url;
-        return;
-      }
-      setErr(t("pricing.errCheckout"));
     } catch (e) {
       setErr((e as Error)?.message ?? t("pricing.errCheckout"));
     } finally {

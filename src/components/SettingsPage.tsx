@@ -285,14 +285,14 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
                   {t("settings.licenseKeyLabel")}
                 </label>
                 <div className="flex gap-2 items-stretch">
-                  <input
+                  <div
                     id="settings-license-key"
-                    type="text"
-                    readOnly
-                    value={licenseKey}
-                    className="input w-full min-w-0 font-mono text-xs bg-white"
-                    spellCheck={false}
-                  />
+                    role="textbox"
+                    aria-readonly="true"
+                    className="flex-1 min-w-0 rounded-md border border-ink-200 bg-ink-100 px-3 py-2 font-mono text-xs text-ink-600 leading-snug break-all select-text cursor-default"
+                  >
+                    {licenseKey}
+                  </div>
                   <button
                     type="button"
                     className="btn-secondary shrink-0 self-stretch px-3"
@@ -312,21 +312,27 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
             ) : null}
           </>
         )}
-        <p className="text-xs text-ink-600 leading-snug border-t border-ink-100 pt-3">
+        <p className="text-sm text-ink-600 leading-relaxed border-t border-ink-100 pt-3">
           {t("settings.licenseFree", { limit: freeEntryLimit })}
         </p>
-        <p className="text-xs text-ink-600 leading-snug">{t("settings.licensePaid")}</p>
-        <div className="flex flex-col sm:flex-row gap-2 pt-1">
+        {!licensed ? (
+          <p className="text-sm text-ink-600 leading-relaxed">{t("settings.licensePaid")}</p>
+        ) : null}
+        <div
+          className={`flex flex-col sm:flex-row gap-2 pt-1 ${licensed ? "sm:justify-end" : ""}`}
+        >
+          {!licensed ? (
+            <button
+              type="button"
+              className="btn-primary justify-center flex-1 min-w-0"
+              onClick={openPricingDrawer}
+            >
+              {t("settings.licenseLink")}
+            </button>
+          ) : null}
           <button
             type="button"
-            className="btn-primary justify-center flex-1 min-w-0"
-            onClick={openPricingDrawer}
-          >
-            {t("settings.licenseLink")}
-          </button>
-          <button
-            type="button"
-            className="btn-secondary flex-1 min-w-0 sm:max-w-[11rem] sm:flex-none"
+            className={`btn-secondary min-w-0 ${licensed ? "w-full sm:w-auto" : "flex-1 sm:max-w-[11rem] sm:flex-none"}`}
             disabled={!entitlementLoaded}
             onClick={() => void refreshEntitlements()}
           >

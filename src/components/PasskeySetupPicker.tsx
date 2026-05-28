@@ -14,6 +14,7 @@ import {
   type PasskeyMethodId,
   type PasskeyMethodOption,
 } from "../lib/passkeyMethods";
+import { isIpLiteralHost } from "../lib/siteOrigin";
 
 type TFn = (key: string, vars?: Record<string, string | number>) => string;
 
@@ -76,6 +77,7 @@ interface PasskeySetupPickerProps {
   onContinue: (registrations: PasskeyMethodOption[]) => Promise<void>;
   onBack: () => void;
   unsupported: boolean;
+  showLocalDevHint?: boolean;
 }
 
 export function PasskeySetupPicker({
@@ -86,6 +88,7 @@ export function PasskeySetupPicker({
   onContinue,
   onBack,
   unsupported,
+  showLocalDevHint,
 }: PasskeySetupPickerProps) {
   const [methods, setMethods] = useState<PasskeyMethodOption[]>([]);
   const [selected, setSelected] = useState<Set<PasskeyMethodId>>(new Set());
@@ -124,9 +127,28 @@ export function PasskeySetupPicker({
   }
 
   const selectableCount = getSelectableMethods(methods).length;
+  const devIpBlocked =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    isIpLiteralHost(window.location.hostname);
+  const localhostAppUrl =
+    typeof window !== "undefined"
+      ? `http://localhost:${window.location.port || "5173"}/app/`
+      : "http://localhost:5173/app/";
 
   return (
     <div className="space-y-4">
+      {devIpBlocked ? (
+        <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-md p-3 leading-snug">
+          {t("errors.passkeyUseLocalhost")}{" "}
+          <a
+            href={localhostAppUrl}
+            className="font-medium text-accent-700 underline underline-offset-2"
+          >
+            {localhostAppUrl}
+          </a>
+        </p>
+      ) : null}
       <div className="rounded-xl border border-ink-200 bg-white overflow-hidden divide-y divide-ink-100">
         {methods.length === 0 ? (
           <div className="px-4 py-6 text-sm text-ink-500 text-center">
@@ -191,8 +213,11 @@ export function PasskeySetupPicker({
       </div>
 
       <p className="text-xs text-ink-500 leading-snug">{t("setup.passkeyMethodsHint")}</p>
+      {showLocalDevHint ? (
+        <p className="text-xs text-ink-500 leading-snug">{t("setup.passkeyLocalHint")}</p>
+      ) : null}
 
-      {unsupported && (
+      {unsupported && !devIpBlocked && (
         <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-2.5">
           {t("setup.passkeyUnsupported")}
         </p>

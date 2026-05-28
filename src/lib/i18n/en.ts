@@ -149,6 +149,10 @@ export const MESSAGES_EN: Record<string, string> = {
   "setup.passkeyMethodPhone": "Phone passkey",
   "setup.passkeyUnsupported":
     "Passkeys are not available in this browser. Use Chrome, Safari, or Edge on a supported device.",
+  "setup.passkeyLocalHint":
+    "For passkeys in local dev, use http://localhost:5173/app only (not 127.0.0.1 — browsers reject IP addresses for passkeys).",
+  "errors.passkeyUseLocalhost":
+    "Passkeys do not work on 127.0.0.1. Open http://localhost:5173/app/ instead (same app, valid domain for Touch ID).",
   "setup.backupTotpIntro":
     "Scan the QR code with Google Authenticator, 1Password, Authy, or similar. Then enter the 6-digit code to confirm.",
   "setup.recoveryIntro":
@@ -181,6 +185,8 @@ export const MESSAGES_EN: Record<string, string> = {
 
   "lock.title": "Vault Locked",
   "lock.subtitle": "Unlock with your passkey, or use a backup method below.",
+  "lock.checkoutUnlockHint":
+    "Unlock below to open your vault — your list is waiting.",
   "lock.unlockPasskey": "Unlock with passkey",
   "lock.passkeyWrongSite":
     "Your passkey was created on {{site}}, not this site. Use backup sign-in below (master password + authenticator or recovery code). You can register a new passkey here after unlocking.",
@@ -215,6 +221,16 @@ export const MESSAGES_EN: Record<string, string> = {
     "Passkey sign-in timed out. Try again, or use backup sign-in below.",
   "errors.passkeyWrongDomain":
     "This passkey does not apply on this site (passkeys are tied to where you registered them). Use backup sign-in below.",
+  "errors.passkeySetupSecurity":
+    "Could not register a passkey on this site. Use Safari or Chrome, complete the Touch ID / Face ID prompt, and always use the same address (127.0.0.1 vs localhost — pick one and stick to it).",
+  "errors.passkeySetupOrigin":
+    "The browser address does not match where this app is running. Open the vault at the same URL you started setup with (including 127.0.0.1 vs localhost).",
+  "errors.passkeySetupPrf":
+    "Passkey was created but encryption setup failed. Click Continue again and complete the second Touch ID / Face ID prompt, or try Safari. Clear site data for 127.0.0.1 if you keep retrying.",
+  "errors.passkeySetupUv":
+    "Touch ID / Face ID did not complete verification. Try again and finish the system prompt.",
+  "errors.passkeyInvalidState":
+    "A passkey for this site already exists in your password manager. Remove old passkeys for 127.0.0.1 in System Settings → Passwords, clear site data, then try again.",
   "errors.passkeyNoPasswordless":
     "Passkey unlock is not available on this device. Use backup sign-in with your master password.",
   "errors.passkeyRequired": "Register a passkey before continuing.",
@@ -446,6 +462,8 @@ export const MESSAGES_EN: Record<string, string> = {
     "Connect this app to Supabase (see README) to enable account billing and Stripe checkout.",
   "pricing.checkoutSuccess":
     "Payment received. If your license is not active yet, wait a few seconds and refresh this page.",
+  "pricing.checkoutClosingTab":
+    "Payment complete. Closing this tab and returning to your vault…",
   "pricing.checkoutCancel": "Checkout was cancelled. You can try again whenever you are ready.",
   "pricing.youAreLicensed": "Your account already has a permanent license. Thank you for your support.",
   "pricing.tierFree": "Free",

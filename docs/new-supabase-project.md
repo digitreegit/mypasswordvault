@@ -60,6 +60,8 @@ supabase functions deploy delete-account
 
 ## 6. Edge Functions (Stripe 라이선스)
 
+상세 단계·테스트 카드·문제 해결: **[billing-stripe.md](./billing-stripe.md)**.
+
 새 프로젝트에 함수 배포 및 시크릿 설정:
 
 ```bash

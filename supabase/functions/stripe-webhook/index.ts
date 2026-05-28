@@ -3,8 +3,8 @@
  * Secrets: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
  *   (or SUPABASE_SECRET_KEYS JSON with service_role).
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.8";
-import Stripe from "https://esm.sh/stripe@17.4.0?target=deno";
+import { createClient } from "npm:@supabase/supabase-js@2.49.8";
+import Stripe from "npm:stripe@17.4.0";
 
 function getServiceRoleKey(): string | undefined {
   const raw = Deno.env.get("SUPABASE_SECRET_KEYS");

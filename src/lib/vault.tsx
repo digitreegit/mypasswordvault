@@ -27,6 +27,7 @@ import {
   isPasskeySupported,
   newPrfSalt,
   passkeyRegisteredForCurrentSite,
+  derivePrfAfterRegistration,
   readPrfFirst,
   registerVaultPasskey,
 } from "./passkey";
@@ -67,6 +68,8 @@ import {
   reconcileCloudAtStartup,
   upsertRemoteVaultBackup,
 } from "./cloudVault";
+import { CHECKOUT_COMPLETE_MESSAGE } from "./checkoutReturn";
+import { confirmCheckoutSession } from "./confirmCheckoutSession";
 import { FREE_ENTRY_LIMIT, fetchUserEntitlement } from "./entitlements";
 import { isSupabaseConfigured } from "./supabaseClient";
 
@@ -136,7 +139,7 @@ interface VaultContextValue {
   entitlementLoaded: boolean;
   atEntryLimit: boolean;
   freeEntryLimit: number;
-  refreshEntitlements: () => Promise<void>;
+  refreshEntitlements: () => Promise<boolean>;
 }
 
 const VaultContext = createContext<VaultContextValue | null>(null);
@@ -193,16 +196,18 @@ export function VaultProvider({
     entitlementRef.current = { licensed, loaded: entitlementLoaded };
   }, [licensed, entitlementLoaded]);
 
-  const refreshEntitlements = useCallback(async () => {
+  const refreshEntitlements = useCallback(async (): Promise<boolean> => {
     if (!userId || !isSupabaseConfigured) {
       setLicensed(true);
       setLicenseKey(null);
       setEntitlementLoaded(true);
-      return;
+      return true;
     }
     setEntitlementLoaded(false);
+    let licensedNow = false;
     try {
       const ent = await fetchUserEntitlement(userId);
+      licensedNow = ent.licensed;
       setLicensed(ent.licensed);
       setLicenseKey(ent.stripeCheckoutSessionId);
     } catch (e) {
@@ -212,6 +217,7 @@ export function VaultProvider({
     } finally {
       setEntitlementLoaded(true);
     }
+    return licensedNow;
   }, [userId]);
 
   useEffect(() => {
@@ -312,6 +318,11 @@ export function VaultProvider({
       if (document.hidden) lastActivityRef.current = Date.now();
     };
     const onBeforeUnload = () => {
+      try {
+        if (sessionStorage.getItem("mpw_checkout_pending") === "1") return;
+      } catch {
+        /* ignore */
+      }
       lockInternal();
     };
     const onPageShow = (e: PageTransitionEvent) => {
@@ -326,6 +337,60 @@ export function VaultProvider({
       window.removeEventListener("pageshow", onPageShow);
     };
   }, [lockInternal]);
+
+  // Returning from Stripe in another tab: refresh license while vault stays unlocked.
+  useEffect(() => {
+    if (!userId || status !== "unlocked") return;
+    const syncAfterCheckout = () => {
+      try {
+        if (sessionStorage.getItem("mpw_checkout_pending") !== "1") return;
+      } catch {
+        return;
+      }
+      void refreshEntitlements().then((lic) => {
+        if (lic) {
+          try {
+            sessionStorage.removeItem("mpw_checkout_pending");
+          } catch {
+            /* ignore */
+          }
+        }
+      });
+    };
+    window.addEventListener("focus", syncAfterCheckout);
+    const onVis = () => {
+      if (!document.hidden) syncAfterCheckout();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.removeEventListener("focus", syncAfterCheckout);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [userId, status, refreshEntitlements]);
+
+  // Payment completed in popup tab — vault tab stays unlocked; apply PRO here.
+  useEffect(() => {
+    if (!userId || status !== "unlocked") return;
+    const onMessage = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
+      const data = e.data as { type?: string; sessionId?: string | null };
+      if (data?.type !== CHECKOUT_COMPLETE_MESSAGE) return;
+      void (async () => {
+        const sid = data.sessionId;
+        if (typeof sid === "string" && sid.startsWith("cs_")) {
+          await confirmCheckoutSession(sid);
+        }
+        await refreshEntitlements();
+        try {
+          sessionStorage.removeItem("mpw_checkout_pending");
+        } catch {
+          /* ignore */
+        }
+      })();
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [userId, status, refreshEntitlements]);
 
   useLayoutEffect(() => {
     if (status === "unlocked" && !sessionRef.current) {
@@ -417,7 +482,7 @@ export function VaultProvider({
     if (!userId) throw new AppError("errors.passkeyNeedsSignIn");
     const label =
       userId.length > 0 ? `user-${userId.slice(0, 8)}` : "vault-user";
-    const { registration, passkey } = await registerVaultPasskey({
+    const { passkey, prfBytes: regPrf } = await registerVaultPasskey({
       userId,
       userName: label,
       excludeCredentialIds: pending.passkeys.map((p) => p.id),
@@ -426,17 +491,18 @@ export function VaultProvider({
       label: opts.label,
     });
     pending.passkeys.push(passkey);
-    const prfBytes = readPrfFirst(
-      registration.clientExtensionResults as Record<string, unknown>
-    );
+    let prfBytes = regPrf;
+    if (!prfBytes) {
+      prfBytes = await derivePrfAfterRegistration(passkey, pending.prfSalt);
+    }
     if (prfBytes) {
       pending.passkeyDataKeyWrap = await wrapDataKeyWithPrf(
         prfBytes,
-        pending.dataKeyBytes
+        pending.dataKeyBytes,
       );
-    } else if (!pending.passkeyDataKeyWrap) {
+    } else {
       pending.passkeys.pop();
-      throw new AppError("errors.passkeyNoPasswordless");
+      throw new AppError("errors.passkeySetupPrf");
     }
   },
     [userId]

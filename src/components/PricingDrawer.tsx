@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../lib/auth";
 import { getSupabase } from "../lib/supabaseClient";
+import { startStripeCheckout } from "../lib/startStripeCheckout";
 import { useVault } from "../lib/vault";
 import { PricingTiers } from "./PricingTiers";
 
@@ -57,19 +58,10 @@ export function PricingDrawer({
     }
     setBusy(true);
     try {
-      const { data, error } = await sb.functions.invoke<{ url?: string }>(
-        "create-checkout-session",
-        { body: {} },
-      );
-      if (error) {
-        setErr(error.message || t("pricing.errCheckout"));
-        return;
+      const result = await startStripeCheckout(sb);
+      if (!result.ok) {
+        setErr(t("pricing.errCheckout"));
       }
-      if (data?.url) {
-        window.location.href = data.url;
-        return;
-      }
-      setErr(t("pricing.errCheckout"));
     } catch (e) {
       setErr((e as Error)?.message ?? t("pricing.errCheckout"));
     } finally {

@@ -12,6 +12,8 @@ import {
   SettingsPage,
   settingsSectionFromPath,
 } from "./components/SettingsPage";
+import { CheckoutPopupRelay } from "./components/CheckoutPopupRelay";
+import { isCheckoutPopupReturn, parseCheckoutReturn } from "./lib/checkoutReturn";
 
 function parseHashPath(): string {
   if (typeof window === "undefined") return "";
@@ -87,12 +89,17 @@ function AuthenticatedApp() {
   const { configured, loading, session, passwordRecoveryPending } = useAuth();
   const [bootLocale] = useState(() => detectBrowserLocale());
   const hashPath = useHashPath();
+  const checkoutSuccessReturn = parseCheckoutReturn() === "success";
+
+  if (isCheckoutPopupReturn()) {
+    return <CheckoutPopupRelay />;
+  }
 
   if (hashPath === "pricing") {
     return <PricingPage />;
   }
 
-  if (configured && loading) {
+  if (configured && (loading || (checkoutSuccessReturn && !session))) {
     return (
       <div className="min-h-screen min-h-[100dvh] flex items-center justify-center text-ink-500 px-4">
         {translate(bootLocale, "app.authLoading")}

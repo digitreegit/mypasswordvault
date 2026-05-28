@@ -146,6 +146,10 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.passkeyMethodSecurityKey": "보안 키",
   "setup.passkeyMethodPhone": "휴대폰 패스키",
   "setup.passkeyUnsupported": "이 브라우저에서는 패스키를 사용할 수 없습니다.",
+  "setup.passkeyLocalHint":
+    "로컬 개발에서 패스키는 http://localhost:5173/app 만 사용하세요 (127.0.0.1은 브라우저가 패스키 도메인으로 거부합니다).",
+  "errors.passkeyUseLocalhost":
+    "127.0.0.1에서는 패스키를 쓸 수 없습니다. http://localhost:5173/app/ 로 열어 주세요 (같은 앱이며 Touch ID에 맞는 주소입니다).",
   "setup.backupTotpIntro":
     "Google Authenticator, 1Password, Authy 등으로 QR을 스캔한 뒤, 6자리 코드를 입력해 확인하세요.",
   "setup.recoveryIntro":
@@ -176,6 +180,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.errGeneric": "오류가 발생했습니다.",
   "lock.title": "잠긴 Vault",
   "lock.subtitle": "패스키로 잠금 해제하거나, 아래 백업 방법을 사용하세요.",
+  "lock.checkoutUnlockHint":
+    "아래에서 잠금을 해제하면 금고 목록으로 들어갑니다.",
   "lock.unlockPasskey": "패스키로 잠금 해제",
   "lock.passkeyWrongSite":
     "패스키는 {{site}}에서 등록되었고 이 사이트에서는 사용할 수 없습니다. 아래 백업 로그인(마스터 비밀번호 + 인증 앱 또는 복구 코드)을 사용하세요. 잠금 해제 후 이 사이트에서 새 패스키를 등록할 수 있습니다.",
@@ -208,6 +214,16 @@ export const MESSAGES_KR: Record<string, string> = {
     "패스키 로그인 시간이 초과되었습니다. 다시 시도하거나 백업 로그인을 사용하세요.",
   "errors.passkeyWrongDomain":
     "이 사이트에서는 등록한 패스키를 사용할 수 없습니다(패스키는 등록한 도메인에 묶입니다). 아래 백업 로그인을 사용하세요.",
+  "errors.passkeySetupSecurity":
+    "이 환경에서 패스키를 등록하지 못했습니다. Safari 또는 Chrome을 쓰고, Touch ID / Face ID 안내를 끝까지 완료하세요. 주소도 항상 같게 쓰세요(127.0.0.1 vs localhost — 하나만 고르고 계속 쓰세요).",
+  "errors.passkeySetupOrigin":
+    "브라우저 주소가 이 앱과 맞지 않습니다. 설정을 시작한 것과 같은 URL로 금고를 여세요(127.0.0.1 vs localhost 포함).",
+  "errors.passkeySetupPrf":
+    "패스키는 만들어졌지만 암호화 연결에 실패했습니다. Continue를 다시 누르고 두 번째 Touch ID / Face ID 안내까지 완료하거나 Safari로 시도해 보세요. 반복하면 127.0.0.1 사이트 데이터를 지운 뒤 다시 시도하세요.",
+  "errors.passkeySetupUv":
+    "Touch ID / Face ID 확인이 끝나지 않았습니다. 시스템 안내를 끝까지 완료한 뒤 다시 시도하세요.",
+  "errors.passkeyInvalidState":
+    "이 사이트용 패스키가 이미 비밀번호 관리자에 있습니다. 시스템 설정 → 비밀번호에서 127.0.0.1 관련 패스키를 삭제하고, 사이트 데이터를 지운 뒤 다시 시도하세요.",
   "errors.passkeyNoPasswordless":
     "이 기기에서는 패스키만으로 잠금 해제할 수 없습니다. 마스터 비밀번호 백업 로그인을 사용하세요.",
   "errors.passkeyRequired": "계속하려면 패스키를 등록하세요.",
@@ -433,6 +449,8 @@ export const MESSAGES_KR: Record<string, string> = {
     "결제·라이선스를 쓰려면 README에 따라 Supabase를 연결하세요.",
   "pricing.checkoutSuccess":
     "결제가 접수되었습니다. 라이선스가 아직 반영되지 않았다면 잠시 후 이 페이지를 새로고침하세요.",
+  "pricing.checkoutClosingTab":
+    "결제가 완료되었습니다. 이 탭을 닫고 금고 화면으로 돌아갑니다…",
   "pricing.checkoutCancel": "결제를 취소했습니다. 준비되면 다시 시도할 수 있습니다.",
   "pricing.youAreLicensed": "이 계정에는 이미 영구 라이선스가 적용되어 있습니다. 감사합니다.",
   "pricing.tierFree": "무료",

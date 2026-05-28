@@ -56,6 +56,16 @@ Supabase + Resend 설정은 **[docs/auth-email-resend.md](./docs/auth-email-rese
 
 동기화는 `meta.updatedAt` 기준으로 **더 최근 스냅샷이 이깁니다**(로그인 직후 로컬과 클라우드가 모두 있을 때). 오프라인에서 여러 기기를 오래 각각 수정하면 나중에 한쪽이 덮어쓰일 수 있습니다.
 
+### Stripe 결제 (영구 라이선스)
+
+무료 **25개 항목** / 일회성 **$4.99** 무제한. 앱 내 **Settings → Plan** 또는 업그레이드 드로어에서 Stripe Checkout으로 결제합니다.
+
+**운영 설정:** Edge Functions `create-checkout-session`, `stripe-webhook` 배포 + Stripe webhook + DB 마이그레이션. 단계별 가이드 → **[docs/billing-stripe.md](./docs/billing-stripe.md)**.
+
+```bash
+npm run stripe:deploy   # Supabase CLI link 후
+```
+
 ## 빌드 및 실행
 
 ```bash
@@ -98,7 +108,9 @@ index.html              루트 랜딩(마케팅) — 빌드 시 dist/index.html
 app/index.html          React SPA 진입 — 빌드 시 dist/app/index.html (base: /app/)
 landing/index.html      개발용 참고; 배포 시 루트로 리다이렉트만 (원본 랜딩은 루트 index.html)
 supabase/
-  config.toml                      Edge Function JWT 검증 끔(send-auth-email, send-password-reset)
+  config.toml                      Edge Function JWT 설정
+  functions/create-checkout-session/  Stripe Checkout 세션 (로그인 JWT)
+  functions/stripe-webhook/           checkout.session.completed → 라이선스 부여
   functions/send-password-reset/   비밀번호 재설정 메일(Resend, Admin generateLink)
   functions/send-auth-email/       나머지 Auth 메일(Resend, Send Email Hook)
   migrations/                      Postgres 마이그레이션

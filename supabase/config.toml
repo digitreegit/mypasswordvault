@@ -13,6 +13,10 @@ verify_jwt = false
 [functions.create-checkout-session]
 verify_jwt = true
 
+# After Checkout redirect: verify session with Stripe and grant license (JWT).
+[functions.confirm-checkout-session]
+verify_jwt = true
+
 # Signed-in user permanently deletes account + cloud data (JWT verified by gateway).
 [functions.delete-account]
 verify_jwt = true

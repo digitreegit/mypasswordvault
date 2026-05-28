@@ -11,13 +11,21 @@ import "@fontsource/noto-sans-kr/700.css";
 import App from "./App";
 import "./index.css";
 import { setupNativeAuthListener } from "./lib/nativeAuth";
-import { redirectVercelPreviewToCanonical } from "./lib/siteOrigin";
+import {
+  redirectCheckoutReturnToApp,
+  redirectDevIpToLocalhost,
+  redirectVercelPreviewToCanonical,
+} from "./lib/siteOrigin";
 import { ensureOAuthSessionFromUrl } from "./lib/supabaseAuthRedirect";
 
 setupNativeAuthListener();
 
 if (redirectVercelPreviewToCanonical()) {
   // Navigating to mypasswordvault.app — do not mount the app on *.vercel.app.
+} else if (redirectDevIpToLocalhost()) {
+  // WebAuthn rejects IP rpIds — use localhost in dev.
+} else if (redirectCheckoutReturnToApp()) {
+  // Stripe return landed on marketing root — move to /app/ before mounting.
 } else void ensureOAuthSessionFromUrl()
   .catch((e) => console.error("ensureOAuthSessionFromUrl", e))
   .finally(() => {

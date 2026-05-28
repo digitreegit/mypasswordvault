@@ -147,34 +147,34 @@ export function PricingTiers({
             ))}
           </ul>
 
-          <div className={`${isDrawer ? "mt-4 pt-2" : "mt-6 pt-3"} border-t border-ink-100 space-y-2`}>
-            {!session ? (
-              <button
-                type="button"
-                className="btn-primary w-full justify-center"
-                disabled={!configured || busy || loading}
-                onClick={() => void onSignIn()}
-              >
-                {t("pricing.signInToBuy")}
-              </button>
-            ) : licensed === true ? (
-              <button type="button" className="btn-secondary w-full justify-center" disabled>
-                {t("pricing.alreadyLicensed")}
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="btn-primary w-full justify-center"
-                disabled={
-                  !configured || busy || loading || (Boolean(session) && licensed === null)
-                }
-                onClick={() => void onCheckout()}
-              >
-                {busy ? t("app.loading") : t("pricing.ctaBuy")}
-              </button>
-            )}
-            <p className="text-xs text-ink-500 leading-snug">{t("pricing.signInHint")}</p>
-          </div>
+          {licensed !== true ? (
+            <div
+              className={`${isDrawer ? "mt-4 pt-2" : "mt-6 pt-3"} border-t border-ink-100 space-y-2`}
+            >
+              {!session ? (
+                <button
+                  type="button"
+                  className="btn-primary w-full justify-center"
+                  disabled={!configured || busy || loading}
+                  onClick={() => void onSignIn()}
+                >
+                  {t("pricing.signInToBuy")}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn-primary w-full justify-center"
+                  disabled={
+                    !configured || busy || loading || (Boolean(session) && licensed === null)
+                  }
+                  onClick={() => void onCheckout()}
+                >
+                  {busy ? t("app.loading") : t("pricing.ctaBuy")}
+                </button>
+              )}
+              <p className="text-xs text-ink-500 leading-snug">{t("pricing.signInHint")}</p>
+            </div>
+          ) : null}
         </section>
       </div>
     </div>
