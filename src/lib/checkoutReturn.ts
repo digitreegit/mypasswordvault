@@ -69,6 +69,15 @@ export function captureCheckoutReturnFromUrl() {
   if (sessionId) rememberCheckoutSessionId(sessionId);
 }
 
+/** After Stripe payment, land on the vault list — not settings/pricing. */
+export function goToVaultMainAfterCheckout() {
+  if (typeof window === "undefined") return;
+  const route = window.location.hash.split("?")[0] || "#/";
+  if (route !== "#/" && route !== "#") {
+    window.location.hash = "#/";
+  }
+}
+
 /** Set before opening Stripe so we can refresh license when the user returns to this tab. */
 export function markCheckoutPending() {
   try {
@@ -113,6 +122,7 @@ export async function finalizeCheckoutAfterPayment(
   confirmSession?: (sessionId: string) => Promise<boolean>,
   sessionIdFromReturn?: string | null,
 ): Promise<boolean> {
+  goToVaultMainAfterCheckout();
   const sessionId =
     sessionIdFromReturn?.trim() ||
     getCheckoutSessionId() ||

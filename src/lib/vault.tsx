@@ -71,6 +71,7 @@ import {
 import {
   CHECKOUT_COMPLETE_MESSAGE,
   clearCheckoutPending,
+  finalizeCheckoutAfterPayment,
   isCheckoutPending,
   takeRememberedCheckoutSessionId,
 } from "./checkoutReturn";
@@ -380,29 +381,26 @@ export function VaultProvider({
     };
   }, [userId, status, refreshEntitlements]);
 
-  // Payment completed in popup tab — vault tab stays unlocked; apply PRO here.
+  // Payment completed in Stripe popup — stay on vault list, apply PRO on opener tab.
   useEffect(() => {
-    if (!userId || status !== "unlocked") return;
+    if (!userId) return;
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== window.location.origin) return;
       const data = e.data as { type?: string; sessionId?: string | null };
       if (data?.type !== CHECKOUT_COMPLETE_MESSAGE) return;
-      void (async () => {
-        const sid = data.sessionId;
-        if (typeof sid === "string" && sid.startsWith("cs_")) {
-          await confirmCheckoutSession(sid);
-        }
-        await refreshEntitlements();
-        try {
-          sessionStorage.removeItem("mpw_checkout_pending");
-        } catch {
-          /* ignore */
-        }
-      })();
+      const sid =
+        typeof data.sessionId === "string" && data.sessionId.startsWith("cs_")
+          ? data.sessionId
+          : null;
+      void finalizeCheckoutAfterPayment(
+        refreshEntitlements,
+        confirmCheckoutSession,
+        sid,
+      );
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [userId, status, refreshEntitlements]);
+  }, [userId, refreshEntitlements]);
 
   useLayoutEffect(() => {
     if (status === "unlocked" && !sessionRef.current) {

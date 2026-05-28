@@ -402,6 +402,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "vault.entryLimitBanner":
     "이 계정의 무료 한도({{limit}}개)에 도달했습니다. 한 번 업그레이드하면 항목을 무제한으로 추가할 수 있습니다.",
   "vault.entryLimitUpgrade": "업그레이드",
+  "vault.checkoutActivating": "라이선스를 적용하는 중…",
   "vault.entryLimitBannerDismiss": "알림 닫기",
   "vault.entryLimitModalTitle": "항목 한도 도달",
   "vault.entryLimitModalBody":

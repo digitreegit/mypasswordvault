@@ -12,12 +12,13 @@ import {
 export function CheckoutPopupRelay() {
   useLayoutEffect(() => {
     const opener = window.opener;
-    if (!opener || opener.closed) return;
     const sessionId = getCheckoutSessionId();
-    opener.postMessage(
-      { type: CHECKOUT_COMPLETE_MESSAGE, sessionId },
-      window.location.origin,
-    );
+    if (opener && !opener.closed) {
+      opener.postMessage(
+        { type: CHECKOUT_COMPLETE_MESSAGE, sessionId },
+        window.location.origin,
+      );
+    }
     clearCheckoutReturn();
     clearCheckoutPending();
     window.close();

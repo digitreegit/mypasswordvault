@@ -14,6 +14,7 @@ import { confirmCheckoutSession } from "../lib/confirmCheckoutSession";
 import {
   clearCheckoutPending,
   finalizeCheckoutAfterPayment,
+  isCheckoutPending,
   type CheckoutReturn,
 } from "../lib/checkoutReturn";
 import { useVault, type DecryptedEntry } from "../lib/vault";
@@ -834,10 +835,9 @@ export function VaultScreen() {
   }
 
   const awaitingLicenseAfterPay =
-    checkoutFlash === "success" &&
+    (checkoutFlash === "success" || isCheckoutPending() || checkoutPolling) &&
     !licensed &&
-    entitlementLoaded &&
-    checkoutPolling;
+    entitlementLoaded;
   const showEntryLimitBanner =
     atEntryLimit &&
     !licensed &&
@@ -914,6 +914,16 @@ export function VaultScreen() {
       onKeyDown={touchActivity}
     >
       <div className="sticky top-0 z-10 w-full">
+        {awaitingLicenseAfterPay ? (
+          <div
+            role="status"
+            className="border-b border-accent-200 bg-accent-50 px-4 py-2.5 sm:px-6"
+          >
+            <p className={`${VAULT_PAGE} text-sm text-accent-900 leading-snug`}>
+              {t("vault.checkoutActivating")}
+            </p>
+          </div>
+        ) : null}
         {checkoutFlash ? (
           <div
             role="status"

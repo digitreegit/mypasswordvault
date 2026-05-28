@@ -412,6 +412,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "vault.entryLimitBanner":
     "You have reached the free limit of {{limit}} password entries on this account. Upgrade once to add unlimited entries.",
   "vault.entryLimitUpgrade": "Upgrade",
+  "vault.checkoutActivating": "Activating your license…",
   "vault.entryLimitBannerDismiss": "Dismiss notification",
   "vault.entryLimitModalTitle": "Entry limit reached",
   "vault.entryLimitModalBody":

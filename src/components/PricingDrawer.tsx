@@ -4,6 +4,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../lib/auth";
 import { getSupabase } from "../lib/supabaseClient";
 import { startStripeCheckout } from "../lib/startStripeCheckout";
+import { goToVaultMainAfterCheckout } from "../lib/checkoutReturn";
 import { useVault } from "../lib/vault";
 import { PricingTiers } from "./PricingTiers";
 
@@ -57,6 +58,8 @@ export function PricingDrawer({
       return;
     }
     setBusy(true);
+    goToVaultMainAfterCheckout();
+    onClose();
     try {
       const result = await startStripeCheckout(sb);
       if (!result.ok) {
