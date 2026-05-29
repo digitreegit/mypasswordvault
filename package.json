@@ -26,6 +26,7 @@
     "@simplewebauthn/browser": "^13.2.2",
     "@stripe/stripe-js": "^9.7.0",
     "@supabase/supabase-js": "^2.105.4",
+    "@vercel/speed-insights": "^2.0.0",
     "idb": "^8.0.0",
     "otpauth": "^9.3.4",
     "qrcode": "^1.5.4",
