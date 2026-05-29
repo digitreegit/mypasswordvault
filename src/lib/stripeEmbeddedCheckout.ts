@@ -1,16 +1,17 @@
-/** Minimal types for Stripe Embedded Checkout (runtime API on js.stripe.com). */
+/** Stripe Embedded Checkout (runtime API on js.stripe.com). */
 export type StripeEmbeddedCheckout = {
   mount: (element: HTMLElement | string) => void;
+  unmount: () => void;
   destroy: () => void;
 };
 
-export type StripeEmbeddedInitOptions = {
-  clientSecret: string;
+export type StripeEmbeddedCheckoutOptions = {
+  fetchClientSecret: () => Promise<string>;
   onComplete?: () => void;
 };
 
 export type StripeWithEmbeddedCheckout = {
-  initEmbeddedCheckout: (
-    options: StripeEmbeddedInitOptions,
+  createEmbeddedCheckoutPage: (
+    options: StripeEmbeddedCheckoutOptions,
   ) => Promise<StripeEmbeddedCheckout>;
 };

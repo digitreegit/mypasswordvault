@@ -1,10 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import {
-  loadStripe,
-  type Stripe,
-} from "@stripe/stripe-js";
+import { loadStripe, type Stripe } from "@stripe/stripe-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   clearCheckoutPending,
@@ -21,6 +18,21 @@ import type {
 type TFn = (key: string) => string;
 
 type Phase = "loading" | "ready" | "error";
+
+function checkoutErrorMessage(reason: string, t: TFn): string {
+  switch (reason) {
+    case "no_publishable_key":
+      return t("pricing.errStripeKey");
+    case "unauthorized":
+      return t("pricing.errSignIn");
+    case "server_misconfigured":
+    case "stripe_error":
+    case "no_checkout_secret":
+      return t("pricing.errCheckout");
+    default:
+      return t("pricing.errCheckout");
+  }
+}
 
 export function StripeCheckoutModal({
   open,
@@ -77,11 +89,7 @@ export function StripeCheckoutModal({
         clearCheckoutPending();
         clearCheckoutPopupMode();
         setPhase("error");
-        setError(
-          created.reason === "no_publishable_key"
-            ? t("pricing.errStripeKey")
-            : t("pricing.errCheckout"),
-        );
+        setError(checkoutErrorMessage(created.reason, t));
         return;
       }
 
@@ -103,13 +111,21 @@ export function StripeCheckoutModal({
         return;
       }
 
-      try {
-        const embeddedStripe = stripe as Stripe & StripeWithEmbeddedCheckout;
-        if (typeof embeddedStripe.initEmbeddedCheckout !== "function") {
-          throw new Error("embedded_checkout_unsupported");
+      const embeddedStripe = stripe as Stripe & StripeWithEmbeddedCheckout;
+      if (typeof embeddedStripe.createEmbeddedCheckoutPage !== "function") {
+        clearCheckoutPending();
+        clearCheckoutPopupMode();
+        setPhase("error");
+        setError(t("pricing.errCheckout"));
+        if (import.meta.env.DEV) {
+          console.error("Stripe.createEmbeddedCheckoutPage is not available");
         }
-        const checkout = await embeddedStripe.initEmbeddedCheckout({
-          clientSecret,
+        return;
+      }
+
+      try {
+        const checkout = await embeddedStripe.createEmbeddedCheckoutPage({
+          fetchClientSecret: async () => clientSecret,
           onComplete: () => {
             const sid = sessionIdRef.current;
             destroyCheckout();
@@ -124,11 +140,14 @@ export function StripeCheckoutModal({
         checkout.mount(mountRef.current);
         checkoutRef.current = checkout;
         setPhase("ready");
-      } catch {
+      } catch (e) {
         clearCheckoutPending();
         clearCheckoutPopupMode();
         setPhase("error");
         setError(t("pricing.errCheckout"));
+        if (import.meta.env.DEV) {
+          console.error("Stripe embedded checkout mount failed", e);
+        }
       }
     })();
 
@@ -194,30 +213,25 @@ export function StripeCheckoutModal({
         </header>
 
         <div className="relative flex-1 min-h-0 overflow-y-auto overscroll-contain">
-          {phase === "loading" ? (
-            <div className="flex min-h-[22rem] flex-col items-center justify-center gap-3 px-6 py-10 text-center">
-              <div
-                className="h-8 w-8 rounded-full border-2 border-ink-200 border-t-accent-600 animate-spin"
-                aria-hidden
-              />
-              <p className="text-sm text-ink-600">{t("pricing.checkoutModalLoading")}</p>
-            </div>
-          ) : null}
-
-          {phase === "error" ? (
-            <div className="flex min-h-[14rem] flex-col items-center justify-center gap-4 px-6 py-10 text-center">
-              <p className="text-sm text-red-700">{error ?? t("pricing.errCheckout")}</p>
-              <button type="button" className="btn-secondary" onClick={handleClose}>
-                {t("pricing.checkoutModalClose")}
-              </button>
-            </div>
-          ) : null}
-
-          <div
-            ref={mountRef}
-            className={phase === "ready" ? "min-h-[22rem]" : "hidden"}
-            aria-busy={phase === "loading"}
-          />
+          <div ref={mountRef} className="relative min-h-[22rem] w-full">
+            {phase === "loading" ? (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white px-6 py-10 text-center">
+                <div
+                  className="h-8 w-8 rounded-full border-2 border-ink-200 border-t-accent-600 animate-spin"
+                  aria-hidden
+                />
+                <p className="text-sm text-ink-600">{t("pricing.checkoutModalLoading")}</p>
+              </div>
+            ) : null}
+            {phase === "error" ? (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-white px-6 py-10 text-center">
+                <p className="text-sm text-red-700">{error ?? t("pricing.errCheckout")}</p>
+                <button type="button" className="btn-secondary" onClick={handleClose}>
+                  {t("pricing.checkoutModalClose")}
+                </button>
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>,

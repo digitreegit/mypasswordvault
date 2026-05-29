@@ -119,6 +119,7 @@ Deno.serve(async (req) => {
       const session = await stripe.checkout.sessions.create({
         ...sessionBase,
         ui_mode: "embedded",
+        redirect_on_completion: "if_required",
         return_url: `${appUrl}/#/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       });
       if (!session.client_secret) {
@@ -141,7 +142,9 @@ Deno.serve(async (req) => {
     }
     return json({ url: session.url });
   } catch (e) {
+    const message =
+      e instanceof Error ? e.message : "stripe_error";
     console.error("Stripe checkout create failed", e);
-    return json({ error: "stripe_error" }, 502);
+    return json({ error: message.includes("Stripe") ? "stripe_error" : message }, 502);
   }
 });

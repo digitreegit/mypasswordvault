@@ -30,10 +30,21 @@ export async function createEmbeddedCheckoutSession(
     { body: { ui_mode: "embedded" } },
   );
   if (error) {
+    const ctx = error as { context?: { json?: () => Promise<CheckoutResponse> } };
+    try {
+      const body = await ctx.context?.json?.();
+      if (body?.error) return { ok: false, reason: body.error };
+    } catch {
+      /* ignore */
+    }
     return { ok: false, reason: error.message || "invoke_failed" };
   }
   if (data?.error) {
     return { ok: false, reason: data.error };
+  }
+  // Legacy hosted-checkout response (function not redeployed yet).
+  if (data && "url" in data && !data.client_secret) {
+    return { ok: false, reason: "no_checkout_secret" };
   }
   const clientSecret = data?.client_secret?.trim();
   const sessionId = data?.session_id?.trim();
