@@ -485,6 +485,9 @@ export const MESSAGES_KR: Record<string, string> = {
   "pricing.errStripeKey":
     "Stripe publishable key가 설정되지 않았습니다. Supabase에 STRIPE_PUBLISHABLE_KEY를 설정하거나 앱 빌드에 VITE_STRIPE_PUBLISHABLE_KEY를 추가하세요.",
   "pricing.checkoutModalTitle": "보안 결제",
+  "pricing.checkoutModalUpgradeIntro":
+    "PRO로 업그레이드하면 이 계정에서 비밀번호 항목을 무제한으로 저장할 수 있습니다. 일회 결제이며 구독은 없습니다.",
+  "pricing.checkoutModalFeaturesTitle": "포함 기능",
   "pricing.checkoutModalLoading": "결제 화면을 불러오는 중…",
   "pricing.checkoutModalClose": "닫기",
   "pricing.opsTitle": "운영 체크리스트 (Supabase + Stripe)",

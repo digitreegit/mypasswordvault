@@ -102,11 +102,16 @@ CLI가 출력하는 `whsec_…`를 로컬/스테이징 secret으로 사용합니
 ```
 VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...   # Stripe Dashboard → Developers → API keys
 ```
 
-`npm run dev` 후 `http://127.0.0.1:5173/app/` 에서 Google 로그인 → 설정 **Plan** 또는 항목 제한 시 **Upgrade** → **Continue to secure checkout**.
+로컬에서는 **`http://localhost:5173/app/`** 를 사용하세요 (`127.0.0.1`은 패스키/WebAuthn에서 문제가 날 수 있어 자동으로 `localhost`로 리다이렉트됩니다).
 
-결제 성공 시 Stripe가 `PUBLIC_APP_URL/#/?checkout=success` 로 리다이렉트하고, 앱이 라이선스를 다시 읽습니다.
+`npm run dev` 후 Google 로그인 → **Upgrade** → **Continue to secure checkout**. 결제 UI는 **앱 안 모달**(Stripe Embedded Checkout)에 표시됩니다.
+
+로컬 return URL은 Edge Function이 `return_base_url: http://localhost:5173/app` 을 받아 Stripe 세션에 반영합니다. Supabase secrets의 `STRIPE_SECRET_KEY`와 `STRIPE_PUBLISHABLE_KEY`는 **둘 다 test** 또는 **둘 다 live** 여야 합니다.
+
+`.env` 수정 후에는 dev 서버를 **재시작**하세요.
 
 ## 6. 테스트 카드 (Stripe 테스트 모드)
 
@@ -132,6 +137,8 @@ VITE_SUPABASE_ANON_KEY=eyJ...
 | 증상 | 확인 |
 |------|------|
 | Checkout 시작 실패 | Edge Function 로그, `STRIPE_SECRET_KEY`, 사용자 JWT(로그인 여부) |
+| 모달에 “Could not start checkout” | dev 콘솔에 `(reason)` 표시 — `no_publishable_key`면 `.env`에 `VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...` 추가 후 dev 서버 재시작 |
+| Embedded checkout 빈 화면 | `STRIPE_SECRET_KEY`와 `STRIPE_PUBLISHABLE_KEY` 모드(test/live) 일치 여부 |
 | 결제했는데 FREE 유지 | Webhook delivery 로그, `STRIPE_WEBHOOK_SECRET`, `user_entitlements` RLS/grants |
 | 결제 후 404 | `PUBLIC_APP_URL`이 실제 앱 URL과 일치하는지 (`/app` 경로) |
 | `fetchUserEntitlement` 오류 | `20260526160000_data_api_grants.sql` 실행 여부 |

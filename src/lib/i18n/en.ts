@@ -498,6 +498,9 @@ export const MESSAGES_EN: Record<string, string> = {
   "pricing.errStripeKey":
     "Stripe publishable key is not configured. Set STRIPE_PUBLISHABLE_KEY on Supabase or VITE_STRIPE_PUBLISHABLE_KEY in the app build.",
   "pricing.checkoutModalTitle": "Secure checkout",
+  "pricing.checkoutModalUpgradeIntro":
+    "Upgrade to PRO to unlock unlimited password entries on this account — one payment, no subscription.",
+  "pricing.checkoutModalFeaturesTitle": "What's included",
   "pricing.checkoutModalLoading": "Loading checkout…",
   "pricing.checkoutModalClose": "Close",
   "pricing.opsTitle": "Operator checklist (Supabase + Stripe)",

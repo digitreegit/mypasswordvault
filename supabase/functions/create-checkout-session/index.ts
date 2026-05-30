@@ -30,6 +30,34 @@ function resolveAppBaseUrl(raw: string): string {
   }
 }
 
+/** Allow localhost dev returns; otherwise use configured PUBLIC_APP_URL. */
+function resolveCheckoutReturnBase(
+  requested: unknown,
+  fallback: string,
+): string {
+  if (typeof requested !== "string" || !requested.trim()) return fallback;
+  try {
+    const u = new URL(requested.trim().replace(/\/$/, ""));
+    const host = u.hostname;
+    const allowed =
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host === "mypasswordvault.app" ||
+      host.endsWith(".mypasswordvault.app");
+    if (!allowed) return fallback;
+    const path = u.pathname.replace(/\/$/, "") || "";
+    if (path === "" || path === "/") {
+      return `${u.origin}/app`;
+    }
+    if (path === "/app" || path.startsWith("/app/")) {
+      return `${u.origin}/app`;
+    }
+    return fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -79,12 +107,18 @@ Deno.serve(async (req) => {
   const publishableKey = Deno.env.get("STRIPE_PUBLISHABLE_KEY")?.trim() ?? "";
 
   let uiMode: "embedded" | "hosted" = "embedded";
+  let returnBaseUrl: string | undefined;
   try {
     const body = await req.json();
     if (body?.ui_mode === "hosted") uiMode = "hosted";
+    if (typeof body?.return_base_url === "string") {
+      returnBaseUrl = body.return_base_url;
+    }
   } catch {
     /* default embedded */
   }
+
+  const checkoutReturnBase = resolveCheckoutReturnBase(returnBaseUrl, appUrl);
 
   const unitAmount = Number(Deno.env.get("STRIPE_LICENSE_AMOUNT_CENTS") ?? "499");
   if (!Number.isFinite(unitAmount) || unitAmount < 50) {
@@ -120,7 +154,7 @@ Deno.serve(async (req) => {
         ...sessionBase,
         ui_mode: "embedded",
         redirect_on_completion: "if_required",
-        return_url: `${appUrl}/#/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+        return_url: `${checkoutReturnBase}/#/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       });
       if (!session.client_secret) {
         return json({ error: "no_checkout_secret" }, 500);

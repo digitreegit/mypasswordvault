@@ -9,11 +9,15 @@ import {
   markCheckoutPending,
   markCheckoutPopupMode,
 } from "../lib/checkoutReturn";
-import { createEmbeddedCheckoutSession } from "../lib/createEmbeddedCheckoutSession";
+import {
+  createEmbeddedCheckoutSession,
+  resolveStripePublishableKey,
+} from "../lib/createEmbeddedCheckoutSession";
 import type {
   StripeEmbeddedCheckout,
   StripeWithEmbeddedCheckout,
 } from "../lib/stripeEmbeddedCheckout";
+import { CheckoutProFeatures } from "./CheckoutProFeatures";
 
 type TFn = (key: string) => string;
 
@@ -30,7 +34,9 @@ function checkoutErrorMessage(reason: string, t: TFn): string {
     case "no_checkout_secret":
       return t("pricing.errCheckout");
     default:
-      return t("pricing.errCheckout");
+      return import.meta.env.DEV
+        ? `${t("pricing.errCheckout")} (${reason})`
+        : t("pricing.errCheckout");
   }
 }
 
@@ -50,6 +56,7 @@ export function StripeCheckoutModal({
   const mountRef = useRef<HTMLDivElement>(null);
   const checkoutRef = useRef<StripeEmbeddedCheckout | null>(null);
   const sessionIdRef = useRef<string | null>(null);
+  const initIdRef = useRef(0);
   const [phase, setPhase] = useState<Phase>("loading");
   const [error, setError] = useState<string | null>(null);
 
@@ -77,32 +84,35 @@ export function StripeCheckoutModal({
     markCheckoutPending();
     markCheckoutPopupMode();
 
+    const initId = ++initIdRef.current;
     let cancelled = false;
 
     void (async () => {
       setPhase("loading");
       setError(null);
 
-      const created = await createEmbeddedCheckoutSession(sb);
-      if (cancelled) return;
-      if (!created.ok) {
-        clearCheckoutPending();
-        clearCheckoutPopupMode();
-        setPhase("error");
-        setError(checkoutErrorMessage(created.reason, t));
-        return;
+      let publishableKey = resolveStripePublishableKey(null);
+      if (!publishableKey) {
+        const probe = await createEmbeddedCheckoutSession(sb);
+        if (cancelled || initId !== initIdRef.current) return;
+        if (!probe.ok) {
+          clearCheckoutPending();
+          clearCheckoutPopupMode();
+          setPhase("error");
+          setError(checkoutErrorMessage(probe.reason, t));
+          return;
+        }
+        publishableKey = probe.session.publishableKey;
       }
-
-      const { clientSecret, sessionId, publishableKey } = created.session;
-      sessionIdRef.current = sessionId;
 
       let stripe: Stripe | null;
       try {
         stripe = await loadStripe(publishableKey);
-      } catch {
+      } catch (e) {
+        if (import.meta.env.DEV) console.error("loadStripe failed", e);
         stripe = null;
       }
-      if (cancelled) return;
+      if (cancelled || initId !== initIdRef.current) return;
       if (!stripe || !mountRef.current) {
         clearCheckoutPending();
         clearCheckoutPopupMode();
@@ -125,7 +135,14 @@ export function StripeCheckoutModal({
 
       try {
         const checkout = await embeddedStripe.createEmbeddedCheckoutPage({
-          fetchClientSecret: async () => clientSecret,
+          fetchClientSecret: async () => {
+            const created = await createEmbeddedCheckoutSession(sb);
+            if (!created.ok) {
+              throw new Error(created.reason);
+            }
+            sessionIdRef.current = created.session.sessionId;
+            return created.session.clientSecret;
+          },
           onComplete: () => {
             const sid = sessionIdRef.current;
             destroyCheckout();
@@ -133,7 +150,7 @@ export function StripeCheckoutModal({
             if (sid) void Promise.resolve(onComplete(sid));
           },
         });
-        if (cancelled) {
+        if (cancelled || initId !== initIdRef.current) {
           checkout.destroy();
           return;
         }
@@ -141,10 +158,12 @@ export function StripeCheckoutModal({
         checkoutRef.current = checkout;
         setPhase("ready");
       } catch (e) {
+        if (cancelled || initId !== initIdRef.current) return;
         clearCheckoutPending();
         clearCheckoutPopupMode();
         setPhase("error");
-        setError(t("pricing.errCheckout"));
+        const reason = e instanceof Error ? e.message : "checkout_mount_failed";
+        setError(checkoutErrorMessage(reason, t));
         if (import.meta.env.DEV) {
           console.error("Stripe embedded checkout mount failed", e);
         }
@@ -192,7 +211,7 @@ export function StripeCheckoutModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="stripe-checkout-modal-title"
-        className="relative flex w-full max-w-[min(100vw-1.5rem,32rem)] max-h-[min(92dvh,44rem)] flex-col overflow-hidden rounded-xl bg-white shadow-2xl"
+        className="relative flex w-full max-w-[min(100vw-1.5rem,56rem)] max-h-[min(92dvh,44rem)] flex-col overflow-hidden rounded-xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex shrink-0 items-center justify-between gap-3 border-b border-ink-200 px-4 py-3 sm:px-5">
@@ -212,25 +231,32 @@ export function StripeCheckoutModal({
           </button>
         </header>
 
-        <div className="relative flex-1 min-h-0 overflow-y-auto overscroll-contain">
-          <div ref={mountRef} className="relative min-h-[22rem] w-full">
-            {phase === "loading" ? (
-              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white px-6 py-10 text-center">
-                <div
-                  className="h-8 w-8 rounded-full border-2 border-ink-200 border-t-accent-600 animate-spin"
-                  aria-hidden
-                />
-                <p className="text-sm text-ink-600">{t("pricing.checkoutModalLoading")}</p>
-              </div>
-            ) : null}
-            {phase === "error" ? (
-              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-white px-6 py-10 text-center">
-                <p className="text-sm text-red-700">{error ?? t("pricing.errCheckout")}</p>
-                <button type="button" className="btn-secondary" onClick={handleClose}>
-                  {t("pricing.checkoutModalClose")}
-                </button>
-              </div>
-            ) : null}
+        <div className="flex flex-1 min-h-0 flex-col sm:flex-row">
+          <div className="relative flex-1 min-h-0 min-w-0 overflow-y-auto overscroll-contain">
+            <div className="relative min-h-[22rem] w-full">
+              {phase === "loading" ? (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white px-6 py-10 text-center">
+                  <div
+                    className="h-8 w-8 rounded-full border-2 border-ink-200 border-t-accent-600 animate-spin"
+                    aria-hidden
+                  />
+                  <p className="text-sm text-ink-600">{t("pricing.checkoutModalLoading")}</p>
+                </div>
+              ) : null}
+              {phase === "error" ? (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-white px-6 py-10 text-center">
+                  <p className="text-sm text-red-700">{error ?? t("pricing.errCheckout")}</p>
+                  <button type="button" className="btn-secondary" onClick={handleClose}>
+                    {t("pricing.checkoutModalClose")}
+                  </button>
+                </div>
+              ) : null}
+              {/* Stripe requires an empty mount target — no child nodes. */}
+              <div ref={mountRef} className="min-h-[22rem] w-full" />
+            </div>
+          </div>
+          <div className="shrink-0 border-t border-ink-200 bg-ink-50/90 px-5 py-5 sm:w-[17.5rem] sm:border-t-0 sm:border-l lg:w-[20rem] lg:px-6 lg:py-6 overflow-y-auto overscroll-contain">
+            <CheckoutProFeatures t={t} />
           </div>
         </div>
       </div>
