@@ -30,6 +30,8 @@ export interface VaultMeta {
   authVersion?: number;
   // base64 PBKDF2 salt
   salt: string;
+  /** PBKDF2 iteration count used to derive the password key. Omit = legacy (310k). */
+  pbkdf2Iterations?: number;
   /** v2: AES-GCM wrap of random data key, encrypted with password-derived key. */
   passwordWrap?: string;
   /** v2: PRF-wrapped data key for passwordless passkey unlock. */

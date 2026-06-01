@@ -1,9 +1,16 @@
 // Web Crypto API based encryption layer.
-// Master password -> PBKDF2(SHA-256, 310k iterations, 32-byte random salt) -> 256-bit AES-GCM key.
+// Master password -> PBKDF2(SHA-256, configurable iterations, 32-byte random salt) -> 256-bit AES-GCM key.
 // Each secret (entry password, TOTP secret) is encrypted with AES-GCM using a fresh 12-byte IV.
 // Output of encryption is base64(iv ‖ ciphertext+tag).
 
-const PBKDF2_ITERATIONS = 310_000;
+/**
+ * Iteration count baked into vaults created before iterations were stored in meta.
+ * Never change this value — existing vaults can only be decrypted with the count
+ * that was used to derive their key.
+ */
+export const LEGACY_PBKDF2_ITERATIONS = 310_000;
+/** Iteration count for newly created vaults (OWASP 2023 guidance for PBKDF2-HMAC-SHA256). */
+export const DEFAULT_PBKDF2_ITERATIONS = 600_000;
 const KEY_LENGTH_BITS = 256;
 const SALT_LENGTH = 32;
 const IV_LENGTH = 12;
@@ -32,8 +39,13 @@ export function fromBase64(b64: string): Uint8Array {
 
 export async function deriveKey(
   masterPassword: string,
-  salt: Uint8Array
+  salt: Uint8Array,
+  iterations: number = DEFAULT_PBKDF2_ITERATIONS
 ): Promise<CryptoKey> {
+  const rounds =
+    Number.isFinite(iterations) && iterations >= LEGACY_PBKDF2_ITERATIONS
+      ? Math.floor(iterations)
+      : LEGACY_PBKDF2_ITERATIONS;
   const baseKey = await crypto.subtle.importKey(
     "raw",
     enc.encode(masterPassword),
@@ -45,7 +57,7 @@ export async function deriveKey(
     {
       name: "PBKDF2",
       salt: salt as BufferSource,
-      iterations: PBKDF2_ITERATIONS,
+      iterations: rounds,
       hash: "SHA-256",
     },
     baseKey,

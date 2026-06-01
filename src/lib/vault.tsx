@@ -175,6 +175,7 @@ export function VaultProvider({
     dataKey: CryptoKey;
     dataKeyBytes: Uint8Array;
     salt: Uint8Array;
+    pbkdf2Iterations: number;
     passwordWrap: string;
     totpSecret: string;
     autoLockMinutes: number;
@@ -481,13 +482,20 @@ export function VaultProvider({
       if (masterPassword.length < 10) {
         throw new AppError("errors.masterTooShort");
       }
-      const { salt, passwordKey, dataKey, dataKeyBytes, passwordWrap } =
-        await createAuthV2Material(masterPassword);
+      const {
+        salt,
+        passwordKey,
+        dataKey,
+        dataKeyBytes,
+        passwordWrap,
+        iterations,
+      } = await createAuthV2Material(masterPassword);
       pendingSetupRef.current = {
         passwordKey,
         dataKey,
         dataKeyBytes,
         salt,
+        pbkdf2Iterations: iterations,
         passwordWrap,
         totpSecret: "",
         autoLockMinutes,
@@ -579,6 +587,7 @@ export function VaultProvider({
       id: "vault",
       authVersion: 2,
       salt: toBase64(pending.salt),
+      pbkdf2Iterations: pending.pbkdf2Iterations,
       passwordWrap: pending.passwordWrap,
       passkeyDataKeyWrap: pending.passkeyDataKeyWrap,
       prfSalt: pending.prfSalt,

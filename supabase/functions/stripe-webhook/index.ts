@@ -57,12 +57,18 @@ Deno.serve(async (req) => {
     return new Response("bad signature", { status: 400 });
   }
 
-  if (event.type === "checkout.session.completed") {
+  if (
+    event.type === "checkout.session.completed" ||
+    event.type === "checkout.session.async_payment_succeeded"
+  ) {
     const sess = event.data.object as Stripe.Checkout.Session;
     const userId =
       (sess.metadata?.supabase_user_id as string | undefined) ??
       (sess.client_reference_id as string | undefined);
-    if (!userId) {
+    if (sess.payment_status !== "paid") {
+      // Async/delayed payment not yet settled — wait for async_payment_succeeded.
+      console.warn("checkout.session: not paid yet", sess.id, sess.payment_status);
+    } else if (!userId) {
       console.error("checkout.session.completed: no user id", sess.id);
     } else {
       const admin = createClient(supabaseUrl, serviceKey);
