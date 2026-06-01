@@ -8,7 +8,7 @@
 - 한 번의 클릭으로 사용자명·비밀번호 복사, URL 새 탭에서 열기
 - 비밀번호 칸은 행별 / 전체 보기-숨기기 토글
 - 비밀번호 자동 생성 (길이·문자 클래스 옵션, CSPRNG, 모듈로 편향 제거)
-- 마스터 비밀번호로부터 PBKDF2-SHA256(310,000회) + 32B salt로 키 파생
+- 마스터 비밀번호로부터 PBKDF2-SHA256(신규 볼트 600,000회) + 볼트별 32B salt로 키 파생 (기존 볼트는 `meta.pbkdf2Iterations`에 저장된 횟수, 없으면 310,000회)
 - 모든 비밀번호와 TOTP 비밀키는 AES-GCM-256 + 12B 랜덤 IV로 암호화
 - TOTP 2FA (Google Authenticator, 1Password, Authy 등 호환). QR + 수동 키 모두 제공
 - 자동 잠금 (기본 5분 비활성) + 페이지 닫을 때 메모리 키 폐기
@@ -21,7 +21,7 @@
 ```
 masterPassword + salt
         |
-   PBKDF2-SHA256 (310k iters)
+   PBKDF2-SHA256 (600k iters; legacy 310k)
         |
         v
   256-bit AES-GCM key (메모리에만 존재)
@@ -31,7 +31,7 @@ masterPassword + salt
         +-- 각 항목의 password 필드 암호화 (per-entry IV)
 ```
 
-- `meta.vault`: salt, 암호화된 verifier, 암호화된 TOTP 비밀키, 자동잠금 설정
+- `meta.vault`: salt, `pbkdf2Iterations`(선택), 암호화된 verifier, 암호화된 TOTP 비밀키, 자동잠금 설정
 - `entries.*`: 항목별 id, 사이트, URL, 사용자명, **암호화된 비밀번호**, 메모
 - (로그인 시) Supabase `user_vaults`: 위와 **동일한 암호문**을 JSON 텍스트로 사용자별 1행 저장(RLS로 본인만 읽기/쓰기)
 

@@ -106,9 +106,9 @@
       "Cryptography runs in your browser via the Web Crypto API. Data at rest in IndexedDB is encrypted;\n          the key material derived from your master password exists in memory only while unlocked.",
     secDerivTitle: "Key derivation & encryption",
     secDerivLead_html:
-      '<span class="mono">PBKDF2-SHA256</span> with a per-vault salt and\n              <strong>310,000 iterations</strong> stretches your master password into a 256-bit key. Entry\n              passwords and the TOTP secret are sealed with <span class="mono">AES-GCM-256</span> and a\n              random 12-byte IV per encryption — modern AEAD, not home-grown crypto.',
+      '<span class="mono">PBKDF2-SHA256</span> with a per-vault salt and\n              <strong>600,000 iterations</strong> stretches your master password into a 256-bit key. Entry\n              passwords and the TOTP secret are sealed with <span class="mono">AES-GCM-256</span> and a\n              random 12-byte IV per encryption — modern AEAD, not home-grown crypto.',
     secDiagram:
-      "master password + salt\n        │\n  PBKDF2-SHA256 (310k)\n        ▼\n AES-GCM key (memory only)\n   ├── verifier (proves master password)\n   ├── TOTP secret\n   └── each entry password (own IV)",
+      "master password + salt\n        │\n  PBKDF2-SHA256 (600k)\n        ▼\n AES-GCM key (memory only)\n   ├── verifier (proves master password)\n   ├── TOTP secret\n   └── each entry password (own IV)",
     secNeverTitle: "What never gets stored",
     nw1Strong: "Master password",
     nw1Span: "Neither plaintext nor a reusable hash is written to disk or sent to a server.",
@@ -116,10 +116,10 @@
     nw2Span: "Lives in memory for your session; discarded on lock or when you close the tab.",
     nw3Strong: "Server-side knowledge",
     nw3Span_html:
-      "Google sign-in only proves identity. Optional sync uploads the same ciphertext JSON you\n                    could export — never your master password or keys.",
+      "Google or email sign-in only proves identity. Optional sync uploads the same ciphertext JSON you\n                    could export — never your master password or keys.",
     syncTitle: "Optional sync — encrypted blobs, not trust",
     syncDesc:
-      "When signed in, your vault can sync automatically as encrypted data in your database (e.g. Supabase\n          with row-level security). The server stores what your browser already had: ciphertext. Unlocking\n          still requires your master password and 6-digit TOTP on every device.",
+      "When signed in, your vault can sync automatically as encrypted data in your database (e.g. Supabase\n          with row-level security). The server stores what your browser already had: ciphertext. On every\n          device you unlock with your passkey — Touch ID, Face ID, or device PIN — or with your master\n          password and a backup code.",
     syncC1Title: "Conflict handling",
     syncC1Body:
       "Reconciliation uses vault metadata timestamps so the newest snapshot wins when merging local and\n              remote — predictable behavior for a personal vault.",
@@ -132,12 +132,13 @@
     gsTitle: "Getting started",
     gsDesc:
       "First launch walks you through a vault you actually own — no vendor password to forget on top of\n          your own.",
-    gsStep1Strong: "Sign in with Google",
+    gsStep1Strong: "Sign in with Google or email",
     gsStep1Span: "Identity for sync only — it doesn’t unlock your vault.",
     gsStep2Strong: "Create a strong master password",
     gsStep2Span: "10+ characters; strength meter nudges you toward better entropy.",
-    gsStep3Strong: "Scan the TOTP QR",
-    gsStep3Span: "Use Authenticator, 1Password, Authy, etc., then confirm with a 6-digit code.",
+    gsStep3Strong: "Register a passkey",
+    gsStep3Span:
+      "Unlock with Touch ID, Face ID, or device PIN. Add a backup authenticator (TOTP) and save your recovery codes for new devices.",
     gsStep4Strong: "Add rows like a sheet",
     gsStep4Span: "Sites, passwords, categories — save and sync when you’re ready.",
     landingPriceTitle: "Simple limits, one upgrade",
@@ -163,16 +164,16 @@
     landingPaidF4: "Permanent license on this account; unlimited entries with no 25-row pause",
     landingPaidF5: "Syncs and works on every device you sign into",
     landingCtaBuy: "Continue to secure checkout",
-    landingSignInHint: "We use your Google account only to attach the license and encrypted vault.",
+    landingSignInHint: "We use your Google or email account only to attach the license and encrypted vault.",
     faqTitle: "Common questions",
     faqDesc:
-      "Quick answers about trust, day-to-day use, authenticators, backups, pricing, and how to reach us.",
+      "Quick answers about trust, day-to-day use, passkeys, backups, pricing, and how to reach us.",
     faq1_sum: "Can I trust this app? Is my data safe?",
     faq1_html:
-      "Your passwords are encrypted on your device before anything is synced. Servers only ever see\n              ciphertext—your master password and plain-text secrets never leave your control in readable form.\n              Google sign-in is only used to tie the encrypted vault to your account.",
+      "Your passwords are encrypted on your device before anything is synced. Servers only ever see\n              ciphertext—your master password and plain-text secrets never leave your control in readable form.\n              Google or email sign-in is only used to tie the encrypted vault to your account.",
     faq2_sum: "How do I use it? Will it feel simple day to day?",
     faq2_html:
-      "Sign in with Google, set a master password, register a passkey, then save a backup authenticator and recovery codes. Day to day, unlock with Touch ID, Face ID, or device PIN—no typing passwords or OTP codes.",
+      "Sign in with Google or email, set a master password, register a passkey, then save a backup authenticator and recovery codes. Day to day, unlock with Touch ID, Face ID, or device PIN—no typing passwords or OTP codes.",
     faq3_sum: "What is a passkey and how do I sign in?",
     faq3_html:
       "A passkey uses your device’s secure chip to prove it’s you. Only a public key is stored on the server. Unlock by approving with biometrics or PIN—the device signs a challenge. No password or authenticator code on normal sign-in.",
@@ -246,7 +247,7 @@
       "암호화는 브라우저 Web Crypto API에서 동작합니다. IndexedDB 저장 데이터는 암호화되고, 마스터 비밀번호에서 파생한 키 자료는 잠금 해제 중에만 메모리에 존재합니다.",
     secDerivTitle: "키 유도 · 암호화",
     secDerivLead_html:
-      '볼트마다 다른 솔트와 함께 <span class="mono">PBKDF2-SHA256</span>을 <strong>310,000회</strong> 적용해 마스터 비밀번호를 256비트 키로 늘립니다. 항목 비밀번호와 TOTP 비밀은 <span class="mono">AES-GCM-256</span>과 암호화마다 새 12바이트 IV로 봉인합니다. 표준 AEAD를 쓰고, 비공식 암호화는 사용하지 않습니다.',
+      '볼트마다 다른 솔트와 함께 <span class="mono">PBKDF2-SHA256</span>을 <strong>600,000회</strong> 적용해 마스터 비밀번호를 256비트 키로 늘립니다. 항목 비밀번호와 TOTP 비밀은 <span class="mono">AES-GCM-256</span>과 암호화마다 새 12바이트 IV로 봉인합니다. 표준 AEAD를 쓰고, 비공식 암호화는 사용하지 않습니다.',
     secNeverTitle: "저장하지 않는 것",
     nw1Strong: "마스터 비밀번호",
     nw1Span: "평문이나 재사용 가능한 해시를 디스크에 쓰거나 서버로 보내지 않습니다.",
@@ -254,10 +255,10 @@
     nw2Span: "세션 동안 메모리에만 있고, 잠금 또는 탭을 닫으면 폐기됩니다.",
     nw3Strong: "서버가 알 수 있는 정보",
     nw3Span_html:
-      "Google 로그인은 본인 확인용입니다. 동기화는 내보내기와 같은 암호문 JSON만 올리며 마스터 비밀번호나 키는 포함하지 않습니다.",
+      "Google 또는 이메일 로그인은 본인 확인용입니다. 동기화는 내보내기와 같은 암호문 JSON만 올리며 마스터 비밀번호나 키는 포함하지 않습니다.",
     syncTitle: "선택 동기화 — 신뢰가 아니라 암호화 덩어리",
     syncDesc:
-      "로그인하면 데이터베이스(예: Supabase 및 RLS)에 암호화된 상태로 동기화할 수 있습니다. 서버는 브라우저가 이미 가진 암호문만 보관합니다. 기기마다 여전히 마스터 비밀번호와 6자리 TOTP가 필요합니다.",
+      "로그인하면 데이터베이스(예: Supabase 및 RLS)에 암호화된 상태로 동기화할 수 있습니다. 서버는 브라우저가 이미 가진 암호문만 보관합니다. 어느 기기에서든 패스키(Touch ID·Face ID·기기 PIN)로, 또는 마스터 비밀번호와 백업 코드로 잠금을 해제합니다.",
     syncC1Title: "충돌 처리",
     syncC1Body:
       "볼트 메타 타임스탬프를 사용해 새 스냅샷을 우선하므로 로컬·원격 합치기가 예측 가능합니다.",
@@ -270,14 +271,14 @@
     gsTitle: "시작하기",
     gsDesc:
       "첫 실행에서 진짜 당신 소유 금고를 만듭니다. 벤더 비밀번호를 따로 기억할 필요가 없습니다.",
-    gsStep1Strong: "Google로 로그인",
+    gsStep1Strong: "Google 또는 이메일로 로그인",
     gsStep1Span:
       "동기화를 위한 본인 확인일 뿐, 금고 잠금 해제에는 쓰이지 않습니다.",
     gsStep2Strong: "강한 마스터 비밀번호 만들기",
     gsStep2Span: "10자 이상, 강도 표시가 엔트로피 향상을 도와 줍니다.",
-    gsStep3Strong: "TOTP QR 스캔",
+    gsStep3Strong: "패스키 등록",
     gsStep3Span:
-      "Google Authenticator, 1Password, Authy 등으로 스캔 후 6자리 코드로 확인합니다.",
+      "Touch ID·Face ID·기기 PIN으로 잠금을 해제합니다. 새 기기를 위해 백업 인증 앱(TOTP)을 추가하고 복구 코드를 저장하세요.",
     gsStep4Strong: "시트처럼 행 추가",
     gsStep4Span: "사이트·비밀번호·카테고리를 저장하고 준비되면 동기화합니다.",
     landingPriceTitle: "명확한 한도, 한 번의 업그레이드",
@@ -303,22 +304,22 @@
     landingPaidF4: "이 계정에 영구 라이선스 — 항목 수 무제한, 25개 한도 없음",
     landingPaidF5: "로그인하는 모든 기기에서 동기화되고 그대로 사용할 수 있습니다",
     landingCtaBuy: "안전한 결제 페이지로 이동",
-    landingSignInHint: "Google 계정은 라이선스와 암호화 금고를 연결하는 데만 사용됩니다.",
+    landingSignInHint: "Google 또는 이메일 계정은 라이선스와 암호화 금고를 연결하는 데만 사용됩니다.",
     faqTitle: "자주 묻는 질문",
     faqDesc:
-      "신뢰, 일상적인 사용법, 인증 앱, 백업, 가격, 연락처에 대한 짧은 답변입니다.",
+      "신뢰, 일상적인 사용법, 패스키, 백업, 가격, 연락처에 대한 짧은 답변입니다.",
     faq1_sum: "믿어도 되나요? 내 데이터는 안전한가요?",
     faq1_html:
-      "비밀번호는 동기화되기 전에 기기에서 암호화됩니다. 서버에는 암호문만 보입니다. 마스터 비밀번호와 평문 비밀은 읽히는 형태로 통제 범위를 벗어나지 않습니다. Google 로그인은 암호화 금고를 계정과 연결하는 용도입니다.",
+      "비밀번호는 동기화되기 전에 기기에서 암호화됩니다. 서버에는 암호문만 보입니다. 마스터 비밀번호와 평문 비밀은 읽히는 형태로 통제 범위를 벗어나지 않습니다. Google 또는 이메일 로그인은 암호화 금고를 계정과 연결하는 용도입니다.",
     faq2_sum: "어떻게 쓰나요? 매일 쓰기 부담스럽지 않나요?",
     faq2_html:
-      "Google 로그인 → 마스터 비밀번호 → 패스키 등록 → 백업 인증 앱·복구 코드 저장. 평소에는 Face ID·Touch ID·기기 PIN으로 잠금 해제합니다.",
+      "Google 또는 이메일로 로그인 → 마스터 비밀번호 설정 → 패스키 등록 → 백업 인증 앱·복구 코드 저장. 평소에는 Face ID·Touch ID·기기 PIN으로 잠금을 해제하므로 비밀번호나 OTP 코드를 입력할 필요가 없습니다.",
     faq3_sum: "패스키란 무엇이고, 어떻게 로그인하나요?",
     faq3_html:
       "패스키는 기기 보안 칩에 저장된 키로 본인을 확인합니다. 서버에는 공개키만 저장됩니다. 생체 인증이나 PIN으로 챌린지에 서명하며, 평소에는 비밀번호·OTP 입력이 필요 없습니다.",
     faq4_sum: "백업 인증 앱과 복구 코드는 무엇인가요?",
     faq4_html:
-      "패스키 기기를 잃었을 때는 마스터 비밀번호 + 백업 인증 앱(TOTP) 또는 설정 시 저장한 일회용 복구 코드로 잠금 해제할 수 있습니다.",
+      "패스키 기기를 잃었을 때는 마스터 비밀번호 + 백업 인증 앱(TOTP) 또는 설정 시 저장한 일회용 복구 코드로 잠금 해제할 수 있습니다. 필요하면 계정에서 금고를 복원하고 새 패스키를 등록하세요.",
     faq5_sum: "유료인가요, 무료인가요?",
     faq5_html:
       "비밀번호 항목은 최대 25개까지 무료입니다. $4.99를 한 번만 결제하면 이 계정에서 항목 수 제한 없이\n              계속 사용할 수 있습니다(구독 없음). <a href=\"./pricing.html\">요금제·결제</a>에서 결제할 수 있습니다.",

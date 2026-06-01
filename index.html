@@ -161,14 +161,14 @@
             <h3 data-i18n="secDerivTitle">Key derivation &amp; encryption</h3>
             <p style="margin-bottom: 1rem" data-i18n="secDerivLead_html" data-i18n-html>
               <span class="mono">PBKDF2-SHA256</span> with a per-vault salt and
-              <strong>310,000 iterations</strong> stretches your master password into a 256-bit key. Entry
+              <strong>600,000 iterations</strong> stretches your master password into a 256-bit key. Entry
               passwords and the TOTP secret are sealed with <span class="mono">AES-GCM-256</span> and a
               random 12-byte IV per encryption — modern AEAD, not home-grown crypto.
             </p>
             <div class="diagram">
               <pre class="crypto-flow" data-i18n="secDiagram" data-i18n-pre>master password + salt
         │
-  PBKDF2-SHA256 (310k)
+  PBKDF2-SHA256 (600k)
         ▼
  AES-GCM key (memory only)
    ├── verifier (proves master password)
@@ -199,7 +199,7 @@
                 <div>
                   <strong data-i18n="nw3Strong">Server-side knowledge</strong>
                   <span data-i18n="nw3Span_html" data-i18n-html
-                    >Google sign-in only proves identity. Optional sync uploads the same ciphertext JSON you
+                    >Google or email sign-in only proves identity. Optional sync uploads the same ciphertext JSON you
                     could export — never your master password or keys.</span
                   >
                 </div>
@@ -213,8 +213,9 @@
         <h2 data-i18n="syncTitle">Optional sync — encrypted blobs, not trust</h2>
         <p class="section-desc" data-i18n="syncDesc">
           When signed in, your vault can sync automatically as encrypted data in your database (e.g. Supabase
-          with row-level security). The server stores what your browser already had: ciphertext. Unlocking
-          still requires your master password and 6-digit TOTP on every device.
+          with row-level security). The server stores what your browser already had: ciphertext. On every
+          device you unlock with your passkey — Touch ID, Face ID, or device PIN — or with your master
+          password and a backup code.
         </p>
         <div class="cards">
           <article class="card">
@@ -249,7 +250,7 @@
         </p>
         <ol class="steps">
           <li>
-            <strong data-i18n="gsStep1Strong">Sign in with Google</strong>
+            <strong data-i18n="gsStep1Strong">Sign in with Google or email</strong>
             <span data-i18n="gsStep1Span">Identity for sync only — it doesn’t unlock your vault.</span>
           </li>
           <li>
@@ -259,9 +260,10 @@
             >
           </li>
           <li>
-            <strong data-i18n="gsStep3Strong">Scan the TOTP QR</strong>
+            <strong data-i18n="gsStep3Strong">Register a passkey</strong>
             <span data-i18n="gsStep3Span"
-              >Use Authenticator, 1Password, Authy, etc., then confirm with a 6-digit code.</span
+              >Unlock with Touch ID, Face ID, or device PIN. Add a backup authenticator (TOTP) and save your
+              recovery codes for new devices.</span
             >
           </li>
           <li>

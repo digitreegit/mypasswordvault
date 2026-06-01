@@ -34,7 +34,7 @@
 
 ### 옵션 A — 마스터에서만 파생 (가장 단순)
 
-- `K_master = PBKDF2(masterPassword, salt)` (기존과 동일).
+- `K_master = PBKDF2(masterPassword, salt, iterations)` — 신규 볼트 600,000회, 기존 볼트는 `meta.pbkdf2Iterations`(없으면 310,000회).
 - `K_sync = HKDF-SHA256(K_master, salt_sync, info="mypasswordapp/sync/v1")`.
 - `salt_sync`는 `meta` 또는 별도 필드에 저장; **백업 파일에도 포함**되면 다른 기기에서 동일 파생 가능.
 
