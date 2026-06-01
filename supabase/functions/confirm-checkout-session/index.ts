@@ -38,6 +38,11 @@ function getServiceRoleKey(): string | undefined {
   return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim();
 }
 
+function defaultLicenseAmountCents(): number {
+  const n = Number(Deno.env.get("STRIPE_LICENSE_AMOUNT_CENTS") ?? "499");
+  return Number.isFinite(n) && n > 0 ? Math.round(n) : 499;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: cors });
@@ -107,12 +112,24 @@ Deno.serve(async (req) => {
   }
 
   const admin = createClient(supabaseUrl, serviceKey);
+  let accountEmail: string | null =
+    sess.customer_details?.email?.trim() || null;
+  if (!accountEmail) {
+    accountEmail = userData.user.email?.trim() || null;
+  }
   const { error } = await admin.from("user_entitlements").upsert(
     {
       user_id: checkoutUserId,
       licensed: true,
       purchased_at: new Date().toISOString(),
       stripe_checkout_session_id: sess.id,
+      amount_cents:
+        typeof sess.amount_total === "number"
+          ? sess.amount_total
+          : defaultLicenseAmountCents(),
+      currency: sess.currency ?? "usd",
+      account_email: accountEmail,
+      refunded_at: null,
     },
     { onConflict: "user_id" },
   );

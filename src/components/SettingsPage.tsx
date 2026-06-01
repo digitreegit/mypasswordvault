@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useVault } from "../lib/vault";
 import { useAuth } from "../lib/auth";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
@@ -56,9 +57,11 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     importBackup,
     entries,
     licensed,
+    isAdmin,
     licenseKey,
     entitlementLoaded,
     freeEntryLimit,
+    atEntryLimit,
     refreshEntitlements,
     locale,
     setLocale,
@@ -69,6 +72,10 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   const [busy, setBusy] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteAccountModalOpen, setDeleteAccountModalOpen] = useState(false);
+  const [deleteAccountError, setDeleteAccountError] = useState<string | null>(
+    null,
+  );
   const [importDraft, setImportDraft] = useState<string | null>(null);
   const [backupToast, setBackupToast] = useState<string | null>(null);
   const [licenseKeyCopied, setLicenseKeyCopied] = useState(false);
@@ -77,8 +84,9 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
 
   const vaultHref = "/app/#";
   const showAccountSections = Boolean(configured && user);
-  const atEntryLimit = entries.length >= freeEntryLimit;
-  const showHeaderUpgrade = atEntryLimit && !licensed && entitlementLoaded;
+  const showHeaderUpgrade =
+    atEntryLimit && !licensed && !isAdmin && entitlementLoaded;
+  const hasUnlimitedEntries = licensed || isAdmin;
 
   function openPricingDrawer(e?: React.MouseEvent) {
     e?.preventDefault();
@@ -124,6 +132,48 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   useEffect(() => {
     setMins(meta?.autoLockMinutes ?? 5);
   }, [meta]);
+
+  useEffect(() => {
+    if (!deleteAccountModalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !deletingAccount) {
+        setDeleteAccountModalOpen(false);
+        setDeleteAccountError(null);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [deleteAccountModalOpen, deletingAccount]);
+
+  function openDeleteAccountModal() {
+    setDeleteAccountError(null);
+    setDeleteAccountModalOpen(true);
+  }
+
+  function closeDeleteAccountModal() {
+    if (deletingAccount) return;
+    setDeleteAccountModalOpen(false);
+    setDeleteAccountError(null);
+  }
+
+  async function submitDeleteAccount() {
+    setDeletingAccount(true);
+    setDeleteAccountError(null);
+    setBackupToast(null);
+    try {
+      await deleteAccount();
+      window.location.href = "/";
+    } catch (e: unknown) {
+      const code = (e as Error)?.message ?? "";
+      setDeleteAccountError(
+        code === "function_not_deployed"
+          ? t("settings.deleteAccountNotDeployed")
+          : t("settings.deleteAccountFailed"),
+      );
+    } finally {
+      setDeletingAccount(false);
+    }
+  }
 
   async function handleExport() {
     setBackupToast(null);
@@ -263,11 +313,15 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
             <div className="flex items-center gap-2 flex-wrap">
               <PlanBadge
                 label={
-                  licensed ? t("settings.planBadgePro") : t("settings.planBadgeFree")
+                  isAdmin
+                    ? t("settings.planBadgeAdmin")
+                    : licensed
+                      ? t("settings.planBadgePro")
+                      : t("settings.planBadgeFree")
                 }
               />
             </div>
-            {licensed ? (
+            {hasUnlimitedEntries ? (
               <p className="text-sm font-medium text-emerald-800 leading-snug">
                 {t("settings.licenseStatusLicensed")}
               </p>
@@ -315,13 +369,13 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
         <p className="text-sm text-ink-600 leading-relaxed border-t border-ink-100 pt-3">
           {t("settings.licenseFree", { limit: freeEntryLimit })}
         </p>
-        {!licensed ? (
+        {!hasUnlimitedEntries ? (
           <p className="text-sm text-ink-600 leading-relaxed">{t("settings.licensePaid")}</p>
         ) : null}
         <div
-          className={`flex flex-col sm:flex-row gap-2 pt-1 ${licensed ? "sm:justify-end" : ""}`}
+          className={`flex flex-col sm:flex-row gap-2 pt-1 ${hasUnlimitedEntries ? "sm:justify-end" : ""}`}
         >
-          {!licensed ? (
+          {!hasUnlimitedEntries ? (
             <button
               type="button"
               className="btn-primary justify-center flex-1 min-w-0"
@@ -332,7 +386,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
           ) : null}
           <button
             type="button"
-            className={`btn-secondary min-w-0 ${licensed ? "w-full sm:w-auto" : "flex-1 sm:max-w-[11rem] sm:flex-none"}`}
+            className={`btn-secondary min-w-0 ${hasUnlimitedEntries ? "w-full sm:w-auto" : "flex-1 sm:max-w-[11rem] sm:flex-none"}`}
             disabled={!entitlementLoaded}
             onClick={() => void refreshEntitlements()}
           >
@@ -422,7 +476,6 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
 
   function renderAccount() {
     if (!showAccountSections || !user) return null;
-    const email = user.email ?? user.id;
     return (
       <div className="space-y-4">
         <AccountCredentialPanel
@@ -459,28 +512,9 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
             type="button"
             className="btn-danger text-sm w-full sm:w-auto"
             disabled={signingOut || deletingAccount || busy}
-            onClick={async () => {
-              if (!window.confirm(t("settings.deleteAccountConfirm", { email }))) {
-                return;
-              }
-              setDeletingAccount(true);
-              setBackupToast(null);
-              try {
-                await deleteAccount();
-                window.location.href = "/";
-              } catch (e: unknown) {
-                const code = (e as Error)?.message ?? "";
-                setBackupToast(
-                  code === "function_not_deployed"
-                    ? t("settings.deleteAccountNotDeployed")
-                    : t("settings.deleteAccountFailed")
-                );
-              } finally {
-                setDeletingAccount(false);
-              }
-            }}
+            onClick={openDeleteAccountModal}
           >
-            {deletingAccount ? t("app.loading") : t("settings.deleteAccount")}
+            {t("settings.deleteAccount")}
           </button>
           <p className="text-xs text-red-700 leading-snug">{t("settings.deleteAccountHint")}</p>
         </div>
@@ -533,9 +567,11 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
                   {entitlementLoaded ? (
                     <PlanBadge
                       label={
-                        licensed
-                          ? t("vault.licenseBadgePro")
-                          : t("vault.licenseBadgeFree")
+                        isAdmin
+                          ? t("vault.licenseBadgeAdmin")
+                          : licensed
+                            ? t("vault.licenseBadgePro")
+                            : t("vault.licenseBadgeFree")
                       }
                     />
                   ) : (
@@ -646,6 +682,77 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
         open={pricingDrawerOpen}
         onClose={() => setPricingDrawerOpen(false)}
       />
+
+      {deleteAccountModalOpen && user
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40"
+              role="presentation"
+              onClick={closeDeleteAccountModal}
+            >
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="settings-delete-account-title"
+                className="card w-full max-w-md shadow-lg"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="px-5 py-3 border-b border-ink-200">
+                  <div className="flex items-center justify-between gap-2">
+                    <h2
+                      id="settings-delete-account-title"
+                      className="font-sans text-lg font-semibold text-ink-900 tracking-tight leading-tight"
+                    >
+                      {t("settings.deleteAccount")}
+                    </h2>
+                    <button
+                      type="button"
+                      className="shrink-0 rounded-md px-2 py-1 text-sm font-medium text-ink-600 hover:bg-ink-100 hover:text-ink-900"
+                      onClick={closeDeleteAccountModal}
+                      disabled={deletingAccount}
+                    >
+                      {t("common.close")}
+                    </button>
+                  </div>
+                </div>
+                <div className="px-5 py-4 space-y-3">
+                  <p className="text-sm text-ink-700 leading-snug">
+                    {t("settings.deleteAccountModalBody", {
+                      email: user.email ?? user.id,
+                    })}
+                  </p>
+                  <p className="text-sm text-red-700 leading-snug">
+                    {t("settings.deleteAccountModalWarning")}
+                  </p>
+                  {deleteAccountError ? (
+                    <p className="text-sm text-red-800 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                      {deleteAccountError}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+                  <button
+                    type="button"
+                    className="btn-secondary text-sm w-full sm:w-auto"
+                    onClick={closeDeleteAccountModal}
+                    disabled={deletingAccount}
+                  >
+                    {t("common.cancel")}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-danger text-sm w-full sm:w-auto"
+                    disabled={deletingAccount}
+                    onClick={() => void submitDeleteAccount()}
+                  >
+                    {deletingAccount ? t("app.loading") : t("settings.deleteAccount")}
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

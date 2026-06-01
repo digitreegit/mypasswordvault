@@ -77,6 +77,7 @@ import {
 } from "./checkoutReturn";
 import { confirmCheckoutSession } from "./confirmCheckoutSession";
 import { FREE_ENTRY_LIMIT, fetchUserEntitlement } from "./entitlements";
+import { fetchIsAdmin } from "./adminApi";
 import { isSupabaseConfigured } from "./supabaseClient";
 
 export type VaultStatus = "loading" | "fresh" | "locked" | "unlocked";
@@ -140,6 +141,8 @@ interface VaultContextValue {
 
   /** Cloud billing: one-time license removes the free entry cap. */
   licensed: boolean;
+  /** Operator account (ADMIN_EMAILS) — unlimited entries, ADMIN badge. */
+  isAdmin: boolean;
   /** Stripe checkout session id when licensed (for display in Settings). */
   licenseKey: string | null;
   entitlementLoaded: boolean;
@@ -192,18 +195,22 @@ export function VaultProvider({
     () => readStoredLocale() ?? detectBrowserLocale()
   );
   const [licensed, setLicensed] = useState(!isSupabaseConfigured);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [licenseKey, setLicenseKey] = useState<string | null>(null);
   const [entitlementLoaded, setEntitlementLoaded] = useState(
     !isSupabaseConfigured,
   );
   const entitlementRef = useRef({
     licensed: !isSupabaseConfigured,
+    isAdmin: false,
     loaded: !isSupabaseConfigured,
   });
 
   useEffect(() => {
-    entitlementRef.current = { licensed, loaded: entitlementLoaded };
-  }, [licensed, entitlementLoaded]);
+    entitlementRef.current = { licensed, isAdmin, loaded: entitlementLoaded };
+  }, [licensed, isAdmin, entitlementLoaded]);
+
+  const hasUnlimitedEntries = licensed || isAdmin;
 
   const applyLicensedOptimistic = useCallback((sessionId?: string | null) => {
     setLicensed(true);
@@ -216,32 +223,41 @@ export function VaultProvider({
   const refreshEntitlements = useCallback(async (opts?: { keepLoaded?: boolean }): Promise<boolean> => {
     if (!userId || !isSupabaseConfigured) {
       setLicensed(true);
+      setIsAdmin(false);
       setLicenseKey(null);
       setEntitlementLoaded(true);
       return true;
     }
     if (!opts?.keepLoaded) setEntitlementLoaded(false);
     let licensedNow = false;
+    let adminNow = false;
     try {
-      let ent = await fetchUserEntitlement(userId);
+      const [ent, adminFlag] = await Promise.all([
+        fetchUserEntitlement(userId),
+        fetchIsAdmin(),
+      ]);
+      let resolved = ent;
       if (!ent.licensed && isCheckoutPending()) {
         const sid = takeRememberedCheckoutSessionId();
         if (sid && (await confirmCheckoutSession(sid))) {
-          ent = await fetchUserEntitlement(userId);
+          resolved = await fetchUserEntitlement(userId);
           clearCheckoutPending();
         }
       }
-      licensedNow = ent.licensed;
-      setLicensed(ent.licensed);
-      setLicenseKey(ent.stripeCheckoutSessionId);
+      licensedNow = resolved.licensed;
+      adminNow = adminFlag;
+      setLicensed(resolved.licensed);
+      setIsAdmin(adminFlag);
+      setLicenseKey(resolved.stripeCheckoutSessionId);
     } catch (e) {
       console.error("refreshEntitlements", e);
       setLicensed(false);
+      setIsAdmin(false);
       setLicenseKey(null);
     } finally {
       setEntitlementLoaded(true);
     }
-    return licensedNow;
+    return licensedNow || adminNow;
   }, [userId]);
 
   const finalizePaidCheckout = useCallback(
@@ -753,7 +769,7 @@ export function VaultProvider({
         isNew &&
         isSupabaseConfigured &&
         entitlementLoaded &&
-        !licensed &&
+        !hasUnlimitedEntries &&
         entries.length >= FREE_ENTRY_LIMIT
       ) {
         throw new AppError("errors.entryLimitReached");
@@ -794,7 +810,7 @@ export function VaultProvider({
       lastActivityRef.current = Date.now();
       scheduleCloudPush();
     },
-    [entries, scheduleCloudPush, licensed, entitlementLoaded]
+    [entries, scheduleCloudPush, hasUnlimitedEntries, entitlementLoaded]
   );
 
   const removeEntry = useCallback(async (id: string) => {
@@ -860,8 +876,8 @@ export function VaultProvider({
   const importBackup = useCallback(async (jsonText: string) => {
     const { meta, entries: parsedEntries } = parseVaultBackup(jsonText);
     if (isSupabaseConfigured) {
-      const { loaded, licensed: lic } = entitlementRef.current;
-      const treatAsUnlicensed = loaded ? !lic : true;
+      const { loaded, licensed: lic, isAdmin: admin } = entitlementRef.current;
+      const treatAsUnlicensed = loaded ? !(lic || admin) : true;
       if (treatAsUnlicensed && parsedEntries.length > FREE_ENTRY_LIMIT) {
         throw new AppError("errors.importExceedsEntryLimit");
       }
@@ -901,9 +917,9 @@ export function VaultProvider({
     () =>
       isSupabaseConfigured &&
       entitlementLoaded &&
-      !licensed &&
+      !hasUnlimitedEntries &&
       entries.length >= FREE_ENTRY_LIMIT,
-    [entitlementLoaded, licensed, entries.length],
+    [entitlementLoaded, hasUnlimitedEntries, entries.length],
   );
 
   const value = useMemo<VaultContextValue>(
@@ -937,6 +953,7 @@ export function VaultProvider({
       setCategories,
       deleteCategory,
       licensed,
+      isAdmin,
       licenseKey,
       entitlementLoaded,
       atEntryLimit,
@@ -950,6 +967,7 @@ export function VaultProvider({
       entries,
       locale,
       licensed,
+      isAdmin,
       licenseKey,
       entitlementLoaded,
       atEntryLimit,

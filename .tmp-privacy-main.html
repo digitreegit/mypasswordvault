@@ -20,19 +20,30 @@
         <h2>1. Data we touch (and purpose)</h2>
         <ul>
           <li>
-            <strong>Account &amp; sign‑in:</strong> If you use Google (or similar) through our auth provider,
-            identifiers such as provider user IDs and typically your email/name may be processed to create and secure your account.
+            <strong>Account &amp; sign‑in:</strong> When you create an account (email and password and/or Google sign‑in through
+            our auth provider), we process identifiers such as your user ID, email address, and sign‑in method metadata needed to
+            authenticate you and operate your account.
           </li>
           <li>
-            <strong>Encrypted vault payloads:</strong> When you enable sync (e.g., via Supabase), we store encrypted JSON blobs
-            and coarse metadata needed to reconcile versions (timestamps/counts)—not plaintext credentials.
+            <strong>Encrypted vault payloads:</strong> When you use cloud sync, we store encrypted vault blobs and coarse metadata
+            needed to reconcile versions (for example timestamps and entry counts)—not plaintext passwords or TOTP secrets.
+          </li>
+          <li>
+            <strong>License &amp; purchase records:</strong> If you buy the permanent PRO upgrade, our systems store license status,
+            purchase date, Stripe Checkout session reference, and purchase amount tied to your account email. <strong>Stripe</strong>
+            processes card payments; we do not receive or store full payment card numbers.
+          </li>
+          <li>
+            <strong>Transactional email:</strong> If you use email sign‑in or password reset, our email provider delivers messages
+            to the address you supply (for example verification or reset links).
           </li>
           <li>
             <strong>Operational &amp; support:</strong> If you email us at
             <a href="mailto:contact@skyface.com">contact@skyface.com</a>, we process the contents of messages to reply and improve the Product.
           </li>
           <li>
-            <strong>Technical logs:</strong> Hosts/CDNs/services may retain standard telemetry (IPs, timestamps, error logs) typical of web apps.
+            <strong>Technical logs:</strong> Hosting, database, and payment partners may retain standard telemetry (IPs, timestamps,
+            error logs) typical of web applications.
           </li>
         </ul>
 
@@ -42,21 +53,30 @@
           master password in plaintext.</strong> We also do not receive decryption keys usable to read vault entries stored on-device.
         </p>
         <p>
-          Protected fields—including entry passwords and TOTP secrets — are encrypted on your hardware using protocols such as
-          <strong>AES‑G‑CM‑256</strong> with PBKDF2‑SHA‑256‑based derivation on the client. If you configure sync,
+          Protected fields—including entry passwords and TOTP secrets—are encrypted on your hardware using protocols such as
+          <strong>AES‑GCM‑256</strong> with PBKDF2‑SHA‑256‑based derivation on the client. When you use sync,
           <strong>the server mirrors ciphertext</strong>; without your secrets, it cannot meaningfully decrypt your vault.
         </p>
 
         <h2>3. Third‑party services</h2>
         <ul>
           <li>
-            <strong>Authentication &amp; database:</strong> We use Supabase (or equivalent services you configure via environment) for OAuth and storage of encrypted vault records.
+            <strong>Authentication &amp; database (Supabase):</strong> Account sign‑in and storage of encrypted vault records and
+            license metadata.
           </li>
           <li>
-            <strong>Identity providers:</strong> Google OAuth is subject to Google’s privacy terms when you authenticate.
+            <strong>Google:</strong> If you choose Google sign‑in, Google’s privacy terms apply to that authentication flow.
           </li>
           <li>
-            <strong>Infrastructure/hosting/CDN:</strong> Delivery may flow through vendors you select (for example hosting on Vercel or another edge network).
+            <strong>Payments (Stripe):</strong> Checkout and payment processing for the one‑time PRO purchase; Stripe’s privacy
+            policy and terms apply to payment data they handle.
+          </li>
+          <li>
+            <strong>Email (Resend):</strong> Delivery of transactional messages such as sign‑in and password‑reset email.
+          </li>
+          <li>
+            <strong>Infrastructure/hosting/CDN:</strong> The Product may be delivered through hosting and edge networks (for example
+            Vercel or similar providers).
           </li>
         </ul>
         <p>These vendors process limited data as processors or sub‑processors to operate the Product; their terms also apply.</p>
@@ -73,17 +93,30 @@
           you choose that risk profile; we cannot secure copies you voluntarily copy elsewhere.
         </p>
 
-        <h2>6. Retention</h2>
+        <h2>6. Retention &amp; account deletion</h2>
         <p>
-          We retain account and ciphertext records while your account stays active unless we must keep limited records where law requires (e.g., fraud prevention).
-          You may stop using sync or request account closure workflows provided by Supabase/Google as applicable—we will assist through
-          support where we reasonably can under provider constraints.
+          We retain account, ciphertext, and license records while your account stays active, unless we must keep limited records
+          where law requires (for example fraud prevention). Payment partners may retain billing records under their own policies.
+        </p>
+        <p>
+          You can permanently delete your account from <strong>Settings → Account → Delete account</strong> in the Product. That
+          removes your encrypted cloud backup, license record on our systems, and your sign‑in account. Local vault data on your
+          device is cleared as part of that flow on the device where you confirm deletion. If you cannot complete in‑app deletion,
+          contact <a href="mailto:contact@skyface.com">contact@skyface.com</a> and we will assist where reasonably possible.
         </p>
 
-        <h2>7. Children’s privacy</h2>
+        <h2>7. Your privacy rights</h2>
+        <p>
+          Depending on where you live, you may have rights to access, correct, delete, or restrict certain processing of personal
+          information. Because we cannot decrypt your vault, we can only help with account‑level data we actually hold (for example
+          email, license status, encrypted blobs). Submit requests to
+          <a href="mailto:contact@skyface.com">contact@skyface.com</a>; we may need to verify your identity.
+        </p>
+
+        <h2>8. Children’s privacy</h2>
         <p>The Product is <strong>not directed to children under 13</strong> (or minors under locally applicable thresholds). We do not knowingly collect children's personal information.</p>
 
-        <h2>8. Security &amp; your responsibilities</h2>
+        <h2>9. Security &amp; your responsibilities</h2>
         <p>
           Security is layered: cryptography in the browser, TLS in transit (when you use HTTPS), and access controls enforced by databases.
           <strong>No system is perfect.</strong>
@@ -94,7 +127,7 @@
           or <strong>using HTTP sites</strong> can defeat good designs—those risks lie outside our control once data leaves protections we provide by default.
         </p>
 
-        <h2>9. What Skyface warrants &amp; what we disclaim (short form)</h2>
+        <h2>10. What Skyface warrants &amp; what we disclaim (short form)</h2>
         <p><strong>We commit to honesty and industry‑standard safeguards</strong>, including designing the Product around client‑side encryption and minimal server knowledge.</p>
         <ul>
           <li>
@@ -107,23 +140,24 @@
             <strong>Jurisdiction carve‑outs:</strong> Some regions do not allow certain disclaimers; where prohibited, limits apply only to extent allowed.
           </li>
         </ul>
-        <p>See your applicable terms of use (if separately published in app stores or marketing sites) for detailed caps/time limits.</p>
+        <p>See our <a href="./terms.html">Terms of Use</a> for additional warranty and liability limits.</p>
 
-        <h2>10. International users</h2>
+        <h2>11. International users</h2>
         <p>
           Servers and processors may reside in the United States or other jurisdictions. By using cloud features you acknowledge cross‑border transfer where necessary to operate the Product under standard contractual safeguards offered by processors.
         </p>
 
-        <h2>11. Changes</h2>
+        <h2>12. Changes</h2>
         <p>
           We may update this Privacy Policy materially; we post updates here with a revised “Last updated” date.
           Continuing to use the Product after changes means acceptance of the revised policy where allowed by law.
         </p>
 
-        <h2>12. Contact</h2>
+        <h2>13. Contact</h2>
         <p>
           Questions about privacy or exercising rights:<br />
           Email <a href="mailto:contact@skyface.com">contact@skyface.com</a><br />
           Website <a href="https://skyface.com/">https://skyface.com/</a>
         </p>
       </article>
+      <p class="landing-legal-updated"><em>Last updated: June 1, 2026</em></p>

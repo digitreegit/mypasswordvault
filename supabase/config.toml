@@ -24,3 +24,7 @@ verify_jwt = true
 # Stripe → grant license (raw body + signature; no JWT).
 [functions.stripe-webhook]
 verify_jwt = false
+
+# Admin dashboard: stats, customer list, refunds (JWT + ADMIN_EMAILS allowlist).
+[functions.admin-api]
+verify_jwt = true

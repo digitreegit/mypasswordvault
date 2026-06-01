@@ -14,6 +14,7 @@ import {
 } from "./components/SettingsPage";
 import { CheckoutCancelRelay } from "./components/CheckoutCancelRelay";
 import { CheckoutPopupRelay } from "./components/CheckoutPopupRelay";
+import { AdminDashboard } from "./components/AdminDashboard";
 import {
   isCheckoutPopupCancelReturn,
   isCheckoutPopupReturn,
@@ -106,6 +107,13 @@ function AuthenticatedApp() {
 
   if (hashPath === "pricing") {
     return <PricingPage />;
+  }
+
+  if (hashPath === "admin") {
+    if (passwordRecoveryPending || !session?.user?.id) {
+      return <AuthScreen />;
+    }
+    return <AdminDashboard />;
   }
 
   if (configured && (loading || (checkoutSuccessReturn && !session))) {

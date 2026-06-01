@@ -26,6 +26,11 @@ function getServiceRoleKey(): string | undefined {
   return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim();
 }
 
+function defaultLicenseAmountCents(): number {
+  const n = Number(Deno.env.get("STRIPE_LICENSE_AMOUNT_CENTS") ?? "499");
+  return Number.isFinite(n) && n > 0 ? Math.round(n) : 499;
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("method not allowed", { status: 405 });
@@ -72,18 +77,66 @@ Deno.serve(async (req) => {
       console.error("checkout.session.completed: no user id", sess.id);
     } else {
       const admin = createClient(supabaseUrl, serviceKey);
+      let accountEmail: string | null =
+        sess.customer_details?.email?.trim() || null;
+      if (!accountEmail) {
+        const { data: authUser } = await admin.auth.admin.getUserById(userId);
+        accountEmail = authUser?.user?.email?.trim() || null;
+      }
       const { error } = await admin.from("user_entitlements").upsert(
         {
           user_id: userId,
           licensed: true,
           purchased_at: new Date().toISOString(),
           stripe_checkout_session_id: sess.id,
+          amount_cents:
+            typeof sess.amount_total === "number"
+              ? sess.amount_total
+              : defaultLicenseAmountCents(),
+          currency: sess.currency ?? "usd",
+          account_email: accountEmail,
+          refunded_at: null,
         },
         { onConflict: "user_id" },
       );
       if (error) {
         console.error("user_entitlements upsert failed", error);
         return new Response("db error", { status: 500 });
+      }
+    }
+  }
+
+  if (event.type === "charge.refunded") {
+    const charge = event.data.object as Stripe.Charge;
+    const pi =
+      typeof charge.payment_intent === "string"
+        ? charge.payment_intent
+        : charge.payment_intent?.id;
+    if (pi) {
+      const admin = createClient(supabaseUrl, serviceKey);
+      const sessions = await stripe.checkout.sessions.list({
+        payment_intent: pi,
+        limit: 1,
+      });
+      const sid = sessions.data[0]?.id;
+      if (sid) {
+        const { data: ent } = await admin
+          .from("user_entitlements")
+          .select("amount_cents")
+          .eq("stripe_checkout_session_id", sid)
+          .maybeSingle();
+        const { error } = await admin
+          .from("user_entitlements")
+          .update({
+            licensed: false,
+            refunded_at: new Date().toISOString(),
+            amount_cents: ent?.amount_cents ?? defaultLicenseAmountCents(),
+            currency: "usd",
+          })
+          .eq("stripe_checkout_session_id", sid);
+        if (error) {
+          console.error("charge.refunded: entitlements update", error);
+        }
       }
     }
   }

@@ -3,6 +3,7 @@
  * Requires a valid user JWT (verify_jwt = true on deploy).
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.8";
+import { permanentlyDeleteUserAccount } from "../_shared/deleteUserAccount.ts";
 
 const cors: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -73,29 +74,8 @@ Deno.serve(async (req) => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const { error: vaultErr } = await admin
-    .from("user_vaults")
-    .delete()
-    .eq("user_id", userId);
-  if (vaultErr) {
-    console.error("delete-account: user_vaults", vaultErr);
-    return json({ error: "delete_failed" }, 500);
-  }
-
-  const { error: entErr } = await admin
-    .from("user_entitlements")
-    .delete()
-    .eq("user_id", userId);
-  if (entErr) {
-    console.error("delete-account: user_entitlements", entErr);
-    return json({ error: "delete_failed" }, 500);
-  }
-
-  const { error: delErr } = await admin.auth.admin.deleteUser(userId);
-  if (delErr) {
-    console.error("delete-account: deleteUser", delErr);
-    return json({ error: "delete_failed" }, 500);
-  }
+  const result = await permanentlyDeleteUserAccount(admin, userId);
+  if ("error" in result) return json({ error: result.error }, 500);
 
   return json({ ok: true });
 });

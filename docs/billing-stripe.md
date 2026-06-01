@@ -42,6 +42,7 @@ SQL Editor에서 **순서대로** 실행:
 1. `20260513120000_user_vaults.sql`
 2. `20260515180000_user_entitlements.sql`
 3. `20260526160000_data_api_grants.sql` (Data API `GRANT` — 2026년 이후 프로젝트에 필요)
+4. `20260602120000_admin_billing.sql` (관리자 대시보드: 구매 금액, 환불, 컴플레인)
 
 신규 가입 사용자는 `user_entitlements` 행이 트리거로 자동 생성됩니다.
 
@@ -59,6 +60,7 @@ npm run stripe:deploy
 ```bash
 supabase functions deploy create-checkout-session
 supabase functions deploy stripe-webhook
+supabase functions deploy admin-api
 ```
 
 ### Secrets (필수)
@@ -77,6 +79,7 @@ supabase secrets set PUBLIC_APP_URL=https://mypasswordvault.app/app
 | `STRIPE_WEBHOOK_SECRET` | Webhook signing secret (`whsec_…`) |
 | `PUBLIC_APP_URL` | 결제 후 돌아올 앱 URL. **프로덕션은 `/app` 포함** (예: `https://mypasswordvault.app/app`) |
 | `STRIPE_LICENSE_AMOUNT_CENTS` | (선택) 기본 `499` = $4.99 USD |
+| `ADMIN_EMAILS` | (선택) 관리자 대시보드 허용 이메일, 쉼표 구분 (예: `you@skyface.com`) |
 
 `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` 는 Supabase가 함수 배포 시 주입하는 경우가 많습니다. 웹훅은 **service role**로 `user_entitlements`를 upsert합니다.
 
@@ -84,7 +87,7 @@ supabase secrets set PUBLIC_APP_URL=https://mypasswordvault.app/app
 
 1. **Developers → Webhooks → Add endpoint**
 2. URL: `https://YOUR_PROJECT_REF.supabase.co/functions/v1/stripe-webhook`
-3. 이벤트: **`checkout.session.completed`**
+3. 이벤트: **`checkout.session.completed`**, **`checkout.session.async_payment_succeeded`**, **`charge.refunded`** (환불 시 PRO 해제)
 4. Signing secret을 복사해 `STRIPE_WEBHOOK_SECRET`에 설정
 
 ### 로컬 테스트 (선택)
@@ -144,3 +147,14 @@ VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...   # Stripe Dashboard → Developers → 
 | `fetchUserEntitlement` 오류 | `20260526160000_data_api_grants.sql` 실행 여부 |
 
 관련: [new-supabase-project.md](./new-supabase-project.md) §6
+
+## 9. 관리자 대시보드 (`/app/#/admin`)
+
+라이선스 키(`cs_…` Checkout Session ID)로 **문의 대응·환불**을 처리하는 내부 페이지입니다.
+
+1. SQL Editor에서 `20260602120000_admin_billing.sql` 실행
+2. `supabase functions deploy admin-api`
+3. Secret: `ADMIN_EMAILS=your@email.com` (Google/이메일 로그인과 동일 주소)
+4. 로그인 후 **`http://localhost:5173/app/#/admin`** (프로덕션: `https://…/app/#/admin`)
+
+기능: 오늘 판매·가입·PRO 회원·열린 컴플레인 통계, 이메일/라이선스 키 검색, Stripe 환불(라이선스 해제), 컴플레인 등록/해결.

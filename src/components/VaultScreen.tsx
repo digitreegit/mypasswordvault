@@ -58,6 +58,25 @@ function emptyDraftEntry(id: string): DecryptedEntry {
   };
 }
 
+/** Treat legacy/default placeholder text as empty so hint styling applies. */
+function cellDisplayValue(value: string, placeholder?: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (placeholder && trimmed.toLowerCase() === placeholder.trim().toLowerCase()) {
+    return "";
+  }
+  return value;
+}
+
+function cellCommitValue(value: string, placeholder?: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (placeholder && trimmed.toLowerCase() === placeholder.trim().toLowerCase()) {
+    return "";
+  }
+  return value;
+}
+
 /** After editing ends and the pointer leaves the row, wait before re-sorting. */
 const ROW_UNPIN_DELAY_MS = 1000;
 
@@ -452,6 +471,7 @@ export function VaultScreen() {
     atEntryLimit,
     freeEntryLimit,
     licensed,
+    isAdmin,
     entitlementLoaded,
     finalizePaidCheckout,
     locale,
@@ -833,15 +853,18 @@ export function VaultScreen() {
   const awaitingLicenseAfterPay =
     (checkoutFlash === "success" || isCheckoutPending() || checkoutPolling) &&
     !licensed &&
+    !isAdmin &&
     entitlementLoaded;
-  const showProBadge = licensed || awaitingLicenseAfterPay;
+  const showProBadge = (licensed && !isAdmin) || awaitingLicenseAfterPay;
+  const showAdminBadge = isAdmin && entitlementLoaded;
   const showEntryLimitBanner =
     atEntryLimit &&
+    !isAdmin &&
     !licensed &&
     !entryLimitBannerDismissed &&
     !awaitingLicenseAfterPay;
   const showHeaderUpgrade =
-    atEntryLimit && !licensed && entitlementLoaded && !awaitingLicenseAfterPay;
+    atEntryLimit && !licensed && !isAdmin && entitlementLoaded && !awaitingLicenseAfterPay;
 
   useEffect(() => {
     if (!showEntryLimitBanner) {
@@ -1029,9 +1052,11 @@ export function VaultScreen() {
                     {entitlementLoaded ? (
                       <PlanBadge
                         label={
-                          showProBadge
-                            ? t("vault.licenseBadgePro")
-                            : t("vault.licenseBadgeFree")
+                          showAdminBadge
+                            ? t("vault.licenseBadgeAdmin")
+                            : showProBadge
+                              ? t("vault.licenseBadgePro")
+                              : t("vault.licenseBadgeFree")
                         }
                       />
                     ) : (
@@ -1277,7 +1302,7 @@ export function VaultScreen() {
 
         <div className="overflow-hidden rounded-lg border border-ink-200 bg-white shadow-sm hidden md:block">
           <div className="overflow-x-auto overscroll-x-contain">
-            <table className="w-full text-sm min-w-[48rem]">
+            <table className="w-full min-w-[48rem]">
               <colgroup>
                 <col style={{ width: "10%" }} />
                 <col style={{ width: "20%" }} />
@@ -1308,16 +1333,16 @@ export function VaultScreen() {
                   >
                     {t("vault.colUser")}
                   </Th>
-                  <th className="px-3 py-1 sm:px-4 font-medium">
+                  <th className="px-3 py-1 sm:px-4 text-xs font-medium">
                     {t("vault.colPass")}
                   </th>
-                  <th className="pl-3 pr-4 sm:pr-5 py-1 font-medium text-right">
+                  <th className="pl-3 pr-4 sm:pr-5 py-1 text-xs font-medium text-right">
                     {t("vault.colAction")}
                   </th>
                 </tr>
               </thead>
               {filtered.length === 0 ? (
-                <tbody>
+                <tbody className="text-sm">
                   <tr>
                     <td
                       colSpan={5}
@@ -1661,10 +1686,12 @@ function MobileEntryDetail({
           </span>
           <BlurInput
             id={`m-site-${entry.id}`}
-            className="input w-full min-w-0 font-medium"
-            value={entry.site}
+            className="input w-full min-w-0"
+            value={cellDisplayValue(entry.site, t("vault.newEntry"))}
             placeholder={t("vault.newEntry")}
-            onCommit={(site) => onChange({ site })}
+            onCommit={(site) =>
+              onChange({ site: cellCommitValue(site, t("vault.newEntry")) })
+            }
             onEditFocus={onEditFocus}
             onEditBlur={onEditBlur}
           />
@@ -1895,7 +1922,7 @@ function Th({
 }) {
   return (
     <th
-      className="px-3 py-1 sm:px-4 font-medium cursor-pointer select-none hover:text-ink-600"
+      className="px-3 py-1 sm:px-4 text-xs font-medium cursor-pointer select-none hover:text-ink-600"
       onClick={onClick}
       aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : undefined}
     >
@@ -1951,7 +1978,7 @@ function Row({
     <tbody
       ref={rowRef}
       data-vault-entry-id={entry.id}
-      className="group"
+      className="group text-sm"
       onMouseEnter={onRowMouseEnter}
       onMouseLeave={onRowMouseLeave}
     >
@@ -2307,9 +2334,9 @@ function Cell({
   return (
     <td className="px-0 py-1 align-middle">
       <BlurCellInput
-        className="cell-input placeholder:text-ink-400 placeholder:font-normal"
-        value={value}
-        onCommit={onChange}
+        className="cell-input"
+        value={cellDisplayValue(value, placeholder)}
+        onCommit={(v) => onChange(cellCommitValue(v, placeholder))}
         placeholder={placeholder}
         aria-label={ariaLabel}
         onEditFocus={onEditFocus}

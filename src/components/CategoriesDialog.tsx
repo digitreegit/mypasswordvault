@@ -139,15 +139,19 @@ export function CategoriesDialog({
         role="dialog"
         aria-labelledby="cat-dialog-title"
       >
-        <div className="px-5 py-4 border-b border-ink-200">
-          <div className="flex items-start justify-between gap-2">
+        <div className="px-5 py-3 border-b border-ink-200">
+          <div className="flex items-center justify-between gap-2">
             <h1
               id="cat-dialog-title"
-              className="font-sans text-xl font-semibold text-ink-900 tracking-tight"
+              className="font-sans text-xl font-semibold text-ink-900 tracking-tight leading-tight"
             >
               {t("vault.categoriesTitle")}
             </h1>
-            <button type="button" className="btn-ghost text-sm shrink-0" onClick={onClose}>
+            <button
+              type="button"
+              className="shrink-0 rounded-md px-2 py-1 text-sm font-medium text-ink-600 hover:bg-ink-100 hover:text-ink-900"
+              onClick={onClose}
+            >
               {t("common.close")}
             </button>
           </div>
@@ -255,7 +259,7 @@ export function CategoriesDialog({
                 </span>
                 <input
                   id={`category-name-${c.id}`}
-                  className="input flex-1 min-w-0 text-sm placeholder:text-ink-400 placeholder:font-normal"
+                  className="input flex-1 min-w-0 text-sm placeholder:text-ink-300 placeholder:font-normal"
                   value={c.name}
                   placeholder={t("vault.newCategory")}
                   onChange={(e) => {

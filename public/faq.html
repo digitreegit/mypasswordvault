@@ -86,7 +86,7 @@
       <main class="landing-inner-main">
       <section id="faq">
         <h2 data-i18n="faqTitle">Common questions</h2>
-        <p class="section-desc" data-i18n="faqDesc">Quick answers about trust, day-to-day use, passkeys, backups, pricing, and how to reach us.</p>
+        <p class="section-desc" data-i18n="faqDesc">Quick answers about trust, day-to-day use, authenticators, backups, pricing, and how to reach us.</p>
         <div class="faq-list">
           <details class="faq-item">
             <summary>
@@ -106,7 +106,7 @@
             <p class="faq-a" data-i18n="faq1_html" data-i18n-html>
               Your passwords are encrypted on your device before anything is synced. Servers only ever see
               ciphertext—your master password and plain-text secrets never leave your control in readable form.
-              Google or email sign-in is only used to tie the encrypted vault to your account.
+              Google sign-in is only used to tie the encrypted vault to your account.
             </p>
           </details>
           <details class="faq-item">
@@ -125,15 +125,15 @@
               </span>
             </summary>
             <p class="faq-a" data-i18n="faq2_html" data-i18n-html>
-              Sign in with Google or email, set a master password, register a passkey, then save a backup
-              authenticator and recovery codes. Day to day, unlock with Touch ID, Face ID, or device PIN—no
-              typing passwords or OTP codes.
+              Sign in with Google, choose a strong master password, scan one QR code for two-factor
+              authentication, then unlock to add or search entries. Auto-lock keeps the vault closed when you
+              step away; sync picks up changes when you sign in on another browser or phone.
             </p>
           </details>
           <details class="faq-item">
             <summary>
               <span class="faq-sum-text" data-i18n="faq3_sum">
-                What is a passkey and how do I sign in?
+                What is an authenticator app, what does it do, and which one should I use?
               </span>
               <span class="faq-chevron" aria-hidden="true">
                 <svg class="faq-chevron-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -148,15 +148,18 @@
               </span>
             </summary>
             <p class="faq-a" data-i18n="faq3_html" data-i18n-html>
-              A passkey uses your device’s secure chip to prove it’s you. Only a public key is stored on the
-              server. Unlock by approving with biometrics or PIN—the device signs a challenge. No password or
-              authenticator code on normal sign-in.
+              An authenticator app is an app on your phone or computer that generates short-lived numeric codes—usually
+              six digits—for two-factor authentication. After set-up it shares a secret with your vault via the QR scan;
+              unlocking requires your master password plus a fresh code so a stolen password alone isn’t enough. Use any
+              reputable time-based OTP (TOTP) app compatible with Authenticator/Google-style setups, such as Google
+              Authenticator, Microsoft Authenticator, Authy, FreeOTP, 1Password’s OTP field, Bitwarden, or compatible
+              built-in Authenticator modes—pick one from a publisher you trust and keep it updated.
             </p>
           </details>
           <details class="faq-item">
             <summary>
               <span class="faq-sum-text" data-i18n="faq4_sum">
-                What are backup authenticator and recovery codes?
+                What if my authenticator app breaks, I lose my phone, or codes stop working?
               </span>
               <span class="faq-chevron" aria-hidden="true">
                 <svg class="faq-chevron-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -171,9 +174,11 @@
               </span>
             </summary>
             <p class="faq-a" data-i18n="faq4_html" data-i18n-html>
-              If you lose your passkey device, use your master password plus a backup authenticator app (TOTP)
-              or a one-time recovery code from setup. Restore from your account and register a new passkey when
-              needed.
+              Your encrypted vault remains in your account. On a new or reset device: sign in, download the
+              latest vault from Devices &amp; backup, enter your master password, then follow the prompts to
+              scan a new QR code and link a replacement authenticator. After you confirm, old time-based codes
+              stop working—that is expected—but your encrypted data was not erased. If you still have access to
+              your previous authenticator, you can often unlock normally without resetting it.
             </p>
           </details>
           <details class="faq-item">
