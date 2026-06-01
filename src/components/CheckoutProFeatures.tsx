@@ -1,11 +1,21 @@
 import { Check } from "./Icons";
 
-const PAID_FEATURE_KEYS = [
-  "pricing.paidF1",
+export const CHECKOUT_PAID_FEATURE_KEYS = [
+  "pricing.paidF3",
+  "pricing.paidTierUnlimited",
+  "pricing.paidF4",
+  "pricing.freeF2",
+  "pricing.freeF3",
+  "pricing.freeF4",
+  "pricing.paidF5",
+] as const;
+
+/** Pricing page / drawer PRO tier — short bullet list. */
+export const PRICING_PAID_FEATURE_KEYS = [
   "pricing.paidF2",
+  "pricing.paidTierUnlimited",
   "pricing.paidF3",
   "pricing.paidF4",
-  "pricing.paidF5",
 ] as const;
 
 type TFn = (key: string) => string;
@@ -26,7 +36,7 @@ export function CheckoutProFeatures({ t }: { t: TFn }) {
           {t("pricing.checkoutModalFeaturesTitle")}
         </h3>
         <ul className="mt-3 space-y-2.5">
-          {PAID_FEATURE_KEYS.map((key) => (
+          {CHECKOUT_PAID_FEATURE_KEYS.map((key) => (
             <li key={key} className="flex gap-2 text-[0.8125rem] leading-snug text-ink-700">
               <Check
                 className="mt-0.5 h-4 w-4 shrink-0 text-accent-600"

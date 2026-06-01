@@ -62,7 +62,6 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     entitlementLoaded,
     freeEntryLimit,
     atEntryLimit,
-    refreshEntitlements,
     locale,
     setLocale,
     t,
@@ -366,33 +365,20 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
             ) : null}
           </>
         )}
-        <p className="text-sm text-ink-600 leading-relaxed border-t border-ink-100 pt-3">
-          {t("settings.licenseFree", { limit: freeEntryLimit })}
-        </p>
         {!hasUnlimitedEntries ? (
-          <p className="text-sm text-ink-600 leading-relaxed">{t("settings.licensePaid")}</p>
-        ) : null}
-        <div
-          className={`flex flex-col sm:flex-row gap-2 pt-1 ${hasUnlimitedEntries ? "sm:justify-end" : ""}`}
-        >
-          {!hasUnlimitedEntries ? (
+          <>
+            <p className="text-sm text-ink-600 leading-relaxed border-t border-ink-100 pt-3">
+              {t("settings.licensePaid")}
+            </p>
             <button
               type="button"
-              className="btn-primary justify-center flex-1 min-w-0"
+              className="btn-primary justify-center w-full sm:w-auto"
               onClick={openPricingDrawer}
             >
               {t("settings.licenseLink")}
             </button>
-          ) : null}
-          <button
-            type="button"
-            className={`btn-secondary min-w-0 ${hasUnlimitedEntries ? "w-full sm:w-auto" : "flex-1 sm:max-w-[11rem] sm:flex-none"}`}
-            disabled={!entitlementLoaded}
-            onClick={() => void refreshEntitlements()}
-          >
-            {t("settings.licenseRefresh")}
-          </button>
-        </div>
+          </>
+        ) : null}
       </div>
     );
   }

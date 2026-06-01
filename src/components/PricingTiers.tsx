@@ -2,6 +2,7 @@ import React from "react";
 import type { Session } from "@supabase/supabase-js";
 import { FREE_ENTRY_LIMIT } from "../lib/entitlements";
 import { Check } from "./Icons";
+import { PRICING_PAID_FEATURE_KEYS } from "./CheckoutProFeatures";
 
 export type PricingTiersProps = {
   t: (key: string, vars?: Record<string, string | number>) => string;
@@ -131,15 +132,7 @@ export function PricingTiers({
             {t("pricing.paidDesc")}
           </p>
           <ul className={listClass}>
-            {(
-              [
-                "pricing.paidF1",
-                "pricing.paidF2",
-                "pricing.paidF3",
-                "pricing.paidF4",
-                "pricing.paidF5",
-              ] as const
-            ).map((k) => (
+            {PRICING_PAID_FEATURE_KEYS.map((k) => (
               <li key={k} className="flex gap-1.5">
                 <Check className={checkClass} aria-hidden />
                 <span>{t(k)}</span>
@@ -149,7 +142,7 @@ export function PricingTiers({
 
           {licensed !== true ? (
             <div
-              className={`${isDrawer ? "mt-4 pt-2" : "mt-6 pt-3"} border-t border-ink-100 space-y-2`}
+              className={`${isDrawer ? "mt-4 pt-2" : "mt-6 pt-3"} space-y-2`}
             >
               {!session ? (
                 <button
