@@ -116,14 +116,14 @@ const navLegal = `          <a class="btn btn-ghost landing-nav-link" href="./in
 `;
 
 const TERMS_HTML = `
-        <p class="eyebrow">Legal</p>
-        <h1>Terms of Use</h1>
-        <p class="sub">
+        <p class="eyebrow" data-i18n="legalTermsEyebrow">Legal</p>
+        <h1 data-i18n="legalTermsTitle">Terms of Use</h1>
+        <p class="sub" data-i18n="legalTermsIntro_html" data-i18n-html>
           These Terms of Use (“Terms”) govern your access to <strong>My Password Vault</strong> (the “Product”), including this
           website, the web application, cloud sync, and purchases, and your relationship with <strong>Skyface, LLC</strong>
           (“we,” “us,” “our”). App store or other distribution channels may impose additional terms where applicable.
         </p>
-        <article class="landing-legal-article">
+        <article class="landing-legal-article" data-i18n="legalTermsBody_html" data-i18n-html>
           <h2>1. Agreement &amp; privacy</h2>
           <p>
             By creating an account, signing in, or using the Product, you agree to these Terms and our
@@ -133,8 +133,11 @@ const TERMS_HTML = `
           <h2>2. Not professional advice</h2>
           <p>
             Materials about the Product describe security concepts in general terms. They are <strong>not legal, financial, or
-            compliance advice</strong>. You are responsible for your own security posture, regulatory obligations, and agreements
-            with third‑party providers (including Supabase, Google, Stripe, and hosting vendors).
+            compliance advice</strong>. <strong>You</strong> are responsible for how you use the Product—including keeping your
+            master password, passkey, and recovery materials secure—and for deciding whether the Product meets your personal or
+            organizational needs and any regulatory obligations that apply to you. <strong>We</strong> (Skyface, LLC) select,
+            contract with, and remain responsible for the third‑party infrastructure we use to operate the Product (including
+            authentication, cloud sync, payments, and hosting), subject to the limitations in these Terms.
           </p>
           <h2>3. Eligibility &amp; accounts</h2>
           <p>
@@ -206,7 +209,7 @@ const TERMS_HTML = `
             Website <a href="https://skyface.com/">https://skyface.com/</a>
           </p>
         </article>
-        <p class="landing-legal-updated"><em>Last updated: June 1, 2026</em></p>
+        <p class="landing-legal-updated" data-i18n="legalTermsUpdated" data-i18n-html><em>Last updated: June 1, 2026</em></p>
 `;
 
 const footer = `      </main>
@@ -228,6 +231,7 @@ const footer = `      </main>
     <script src="./landing-config.js"></script>
     <script src="./landing-overlays.js"></script>
     <script src="./landing-nav.js"></script>
+    <script src="./landing-legal-i18n.js"></script>
     <script src="./landing-lang.js"></script>
     <script src="./landing-auth.js"></script>
   </body>
@@ -259,10 +263,7 @@ writeFileSync(
   "utf8",
 );
 
-const privacyInner = readFileSync(join(root, ".tmp-privacy-main.html"), "utf8").replace(
-  "<article>",
-  '<article class="landing-legal-article">',
-);
+const privacyInner = readFileSync(join(root, ".tmp-privacy-main.html"), "utf8");
 
 writeFileSync(
   join(pub, "privacy.html"),

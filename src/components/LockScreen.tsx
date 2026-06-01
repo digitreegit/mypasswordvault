@@ -32,6 +32,8 @@ export function LockScreen() {
     resetVault,
     finalizePaidCheckout,
     licensed,
+    locale,
+    setLocale,
     t,
   } = useVault();
 
@@ -113,7 +115,9 @@ export function LockScreen() {
         <ScreenHeader
           brandName={t("app.brandName")}
           pageTitle={t("lock.title")}
-          showLanguageMenu={false}
+          locale={locale}
+          onLocaleChange={(l) => void setLocale(l)}
+          languageAriaLabel={t("settings.language")}
           brandHomeHref={brandHomeHref}
           brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
         />

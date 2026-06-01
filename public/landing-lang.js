@@ -350,6 +350,12 @@
     locale = normalizeLocale(locale);
     var o = Object.assign({}, EN);
     if (OVERLAYS[locale]) Object.assign(o, OVERLAYS[locale]);
+    var legal =
+      typeof globalThis.MPV_LANDING_LEGAL === "object" && globalThis.MPV_LANDING_LEGAL !== null
+        ? globalThis.MPV_LANDING_LEGAL
+        : {};
+    if (legal.en) Object.assign(o, legal.en);
+    if (locale !== "en" && legal[locale]) Object.assign(o, legal[locale]);
     return o;
   }
 
