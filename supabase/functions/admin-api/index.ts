@@ -6,6 +6,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.8";
 import Stripe from "npm:stripe@17.4.0";
 import { permanentlyDeleteUserAccount } from "../_shared/deleteUserAccount.ts";
+import { normalizePurchaseCountry } from "../_shared/purchaseMetadata.ts";
 
 const cors: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -124,7 +125,19 @@ type EntRow = {
   account_email: string | null;
   created_at: string | null;
   complimentary_grant: boolean | null;
+  purchase_platform: string | null;
 };
+
+type PurchasePlatform = "web" | "ios" | "android";
+
+function resolvePurchasePlatform(r: EntRow): PurchasePlatform | null {
+  const p = r.purchase_platform?.trim().toLowerCase();
+  if (p === "ios" || p === "android") return p;
+  if (p === "web") return "web";
+  if (r.stripe_checkout_session_id) return "web";
+  if (r.purchased_at || r.refunded_at) return "web";
+  return null;
+}
 
 function normalizeEmail(raw: string): string | null {
   const email = raw.trim().toLowerCase();
@@ -254,6 +267,7 @@ function formatRow(r: EntRow) {
     amountCents: resolveAmountCents(r),
     currency: r.currency ?? "usd",
     licenseKey: r.stripe_checkout_session_id,
+    purchasePlatform: resolvePurchasePlatform(r),
     createdAt: r.created_at,
   };
 }
@@ -317,6 +331,74 @@ async function countEntitlements(
     }
   }
   return 0;
+}
+
+type PurchaseBreakdownRow = {
+  purchase_platform: string | null;
+  purchase_country: string | null;
+  stripe_checkout_session_id: string | null;
+};
+
+function resolvePlatformForStats(row: PurchaseBreakdownRow): PurchasePlatform {
+  const p = row.purchase_platform?.trim().toLowerCase();
+  if (p === "ios") return "ios";
+  if (p === "android") return "android";
+  return "web";
+}
+
+async function fetchPaidPurchaseRows(
+  admin: ReturnType<typeof createClient>,
+): Promise<PurchaseBreakdownRow[]> {
+  const selectAttempts = [
+    "purchase_platform, purchase_country, stripe_checkout_session_id",
+    "purchase_platform, stripe_checkout_session_id",
+    "stripe_checkout_session_id",
+  ];
+
+  for (const useRefundFilter of [true, false]) {
+    for (const columns of selectAttempts) {
+      let q = admin
+        .from("user_entitlements")
+        .select(columns)
+        .eq("licensed", true)
+        .not("purchased_at", "is", null);
+      if (useRefundFilter) q = q.is("refunded_at", null);
+      const { data, error } = await q;
+      if (!error) return (data ?? []) as PurchaseBreakdownRow[];
+      if (!isSchemaGap(error)) {
+        console.error("admin stats purchase breakdown", error);
+        return [];
+      }
+    }
+  }
+  return [];
+}
+
+async function fetchPurchaseBreakdownStats(
+  admin: ReturnType<typeof createClient>,
+): Promise<{
+  sales_by_platform: { web: number; ios: number; android: number };
+  sales_by_country: { country: string; count: number }[];
+}> {
+  const rows = await fetchPaidPurchaseRows(admin);
+
+  const platform = { web: 0, ios: 0, android: 0 };
+  const countryMap = new Map<string, number>();
+
+  for (const row of rows) {
+    const plat = resolvePlatformForStats(row);
+    platform[plat] += 1;
+
+    const country = normalizePurchaseCountry(row.purchase_country) ?? "unknown";
+    countryMap.set(country, (countryMap.get(country) ?? 0) + 1);
+  }
+
+  const sales_by_country = Array.from(countryMap.entries())
+    .map(([country, count]) => ({ country, count }))
+    .sort((a, b) => b.count - a.count || a.country.localeCompare(b.country))
+    .slice(0, 16);
+
+  return { sales_by_platform: platform, sales_by_country };
 }
 
 async function fetchDashboardStats(admin: ReturnType<typeof createClient>) {
@@ -412,6 +494,8 @@ async function fetchDashboardStats(admin: ReturnType<typeof createClient>) {
     else if (!isSchemaGap(error)) console.error("admin stats complaints", error);
   }
 
+  const breakdown = await fetchPurchaseBreakdownStats(admin);
+
   return {
     stats: {
       sales_today,
@@ -422,6 +506,8 @@ async function fetchDashboardStats(admin: ReturnType<typeof createClient>) {
       paid_members,
       free_members,
       open_complaints,
+      sales_by_platform: breakdown.sales_by_platform,
+      sales_by_country: breakdown.sales_by_country,
     },
   };
 }
@@ -478,7 +564,7 @@ Deno.serve(async (req) => {
     let query = admin
       .from("user_entitlements")
       .select(
-        "user_id, licensed, purchased_at, stripe_checkout_session_id, amount_cents, currency, refunded_at, account_email, created_at, complimentary_grant",
+        "user_id, licensed, purchased_at, stripe_checkout_session_id, amount_cents, currency, refunded_at, account_email, created_at, complimentary_grant, purchase_platform",
         { count: "exact" },
       )
       .order("purchased_at", { ascending: false, nullsFirst: false })

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowPathIcon,
@@ -15,6 +15,7 @@ import {
   normalizeLocale,
   persistStoredLocale,
   readStoredLocale,
+  localeToHtmlLang,
   type Locale,
 } from "../lib/i18n/locale";
 import { notifyLocaleChanged } from "../lib/appLocale";
@@ -35,6 +36,7 @@ import {
   type AdminCustomerRow,
   type AdminStats,
 } from "../lib/adminApi";
+import { AdminRegionBarChart, AdminSalesBarChart } from "./AdminSalesBarChart";
 
 const EMPTY_STATS: AdminStats = {
   sales_today: 0,
@@ -45,9 +47,33 @@ const EMPTY_STATS: AdminStats = {
   paid_members: 0,
   free_members: 0,
   open_complaints: 0,
+  sales_by_platform: { web: 0, ios: 0, android: 0 },
+  sales_by_country: [],
 };
 
+function normalizeAdminStats(raw: Partial<AdminStats>): AdminStats {
+  return {
+    ...EMPTY_STATS,
+    ...raw,
+    sales_by_platform: {
+      ...EMPTY_STATS.sales_by_platform,
+      ...(raw.sales_by_platform ?? {}),
+    },
+    sales_by_country: raw.sales_by_country ?? [],
+  };
+}
+
+function regionStatsForDisplay(
+  stats: AdminStats,
+): { country: string; count: number }[] {
+  if (stats.sales_by_country.length > 0) return stats.sales_by_country;
+  const paid = stats.sales_total ?? 0;
+  if (paid <= 0) return [];
+  return [{ country: "unknown", count: paid }];
+}
+
 const LICENSE_AMOUNT_CENTS = 499;
+const CUSTOMERS_PAGE_SIZE = 100;
 
 const ADMIN_HEADER_ICON_BTN =
   "inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-600 hover:bg-ink-50 transition-colors shrink-0";
@@ -86,6 +112,35 @@ function rowAmount(row: AdminCustomerRow): number | null {
 function formatDate(iso: string | null) {
   if (!iso) return "—";
   return new Date(iso).toLocaleString();
+}
+
+function platformLabel(
+  platform: AdminCustomerRow["purchasePlatform"],
+  t: (key: string) => string,
+): string | null {
+  if (!platform) return null;
+  switch (platform) {
+    case "web":
+      return t("admin.platformWeb");
+    case "ios":
+      return t("admin.platformIos");
+    case "android":
+      return t("admin.platformAndroid");
+    default:
+      return null;
+  }
+}
+
+function countryStatLabel(country: string, locale: Locale, t: (key: string) => string): string {
+  if (country === "unknown") return t("admin.statsCountryUnknown");
+  try {
+    const name = new Intl.DisplayNames([localeToHtmlLang(locale)], {
+      type: "region",
+    }).of(country);
+    return name ? `${name} (${country})` : country;
+  } catch {
+    return country;
+  }
 }
 
 function AdminEmptyMark() {
@@ -224,6 +279,7 @@ export function AdminDashboard() {
   );
 
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [rows, setRows] = useState<AdminCustomerRow[]>([]);
@@ -256,11 +312,18 @@ export function AdminDashboard() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadingMore(false);
     setError(null);
 
     const [statsR, listR, compR, grantsR] = await Promise.all([
       fetchAdminStats(),
-      fetchAdminCustomers({ q, plan, refunded, limit: 100 }),
+      fetchAdminCustomers({
+        q,
+        plan,
+        refunded,
+        limit: CUSTOMERS_PAGE_SIZE,
+        offset: 0,
+      }),
       fetchAdminComplaints(),
       fetchComplimentaryGrants(),
     ]);
@@ -287,7 +350,7 @@ export function AdminDashboard() {
 
     const errors: string[] = [];
 
-    if (statsR.ok) setStats(statsR.data.stats);
+    if (statsR.ok) setStats(normalizeAdminStats(statsR.data.stats));
     else if (listR.ok) setStats(EMPTY_STATS);
     else errors.push(adminErrorLabel(statsR.error, t));
 
@@ -303,6 +366,50 @@ export function AdminDashboard() {
     setLoading(false);
   }, [q, plan, refunded, t]);
 
+  const loadMore = useCallback(async () => {
+    if (loading || loadingMore) return;
+    setLoadingMore(true);
+    setError(null);
+
+    const listR = await fetchAdminCustomers({
+      q,
+      plan,
+      refunded,
+      limit: CUSTOMERS_PAGE_SIZE,
+      offset: rows.length,
+    });
+
+    if (!listR.ok) {
+      setError(adminErrorLabel(listR.error, t));
+      setLoadingMore(false);
+      return;
+    }
+
+    setRows((prev) => [...prev, ...listR.data.rows]);
+    setTotal(listR.data.total);
+    setLoadingMore(false);
+  }, [loading, loadingMore, q, plan, refunded, rows.length, t]);
+
+  const hasMore = rows.length < total;
+  const listSentinelRef = useRef<HTMLTableRowElement>(null);
+  const loadMoreRef = useRef(loadMore);
+  loadMoreRef.current = loadMore;
+
+  useEffect(() => {
+    if (!hasMore || loading || loadingMore) return;
+    const el = listSentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) void loadMoreRef.current();
+      },
+      { root: null, rootMargin: "240px", threshold: 0 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadingMore, rows.length]);
+
   useEffect(() => {
     void load();
   }, [load]);
@@ -313,6 +420,11 @@ export function AdminDashboard() {
       free: t("settings.planBadgeFree"),
     }),
     [t],
+  );
+
+  const regionStats = useMemo(
+    () => (stats ? regionStatsForDisplay(stats) : []),
+    [stats],
   );
 
   async function handleRefund(row: AdminCustomerRow) {
@@ -546,21 +658,32 @@ export function AdminDashboard() {
         ) : null}
 
         {stats ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            <StatBox
-              label={t("admin.statsSalesProToday")}
-              value={stats.sales_today}
-              amount={formatMoney(stats.sales_amount_cents_today, "usd")}
-            />
-            <StatBox
-              label={t("admin.statsSalesProTotal")}
-              value={stats.sales_total ?? 0}
-              amount={formatMoney(stats.sales_amount_cents_total ?? 0, "usd")}
-            />
-            <StatBox
-              label={t("admin.statsFreeSignupsToday")}
-              value={stats.free_signups_today}
-            />
+          <div className="space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <StatBox
+                label={t("admin.statsSalesProToday")}
+                value={stats.sales_today}
+                amount={formatMoney(stats.sales_amount_cents_today, "usd")}
+              />
+              <StatBox
+                label={t("admin.statsSalesProTotal")}
+                value={stats.sales_total ?? 0}
+                amount={formatMoney(stats.sales_amount_cents_total ?? 0, "usd")}
+              />
+              <StatBox
+                label={t("admin.statsFreeSignupsToday")}
+                value={stats.free_signups_today}
+              />
+            </div>
+            <AdminSalesBarChart stats={stats} t={t} formatMoney={formatMoney} />
+            {regionStats.length > 0 ? (
+              <AdminRegionBarChart
+                title={t("admin.statsByRegion")}
+                items={regionStats}
+                labelForCountry={(country) => countryStatLabel(country, locale, t)}
+                t={t}
+              />
+            ) : null}
           </div>
         ) : null}
 
@@ -742,7 +865,7 @@ export function AdminDashboard() {
             <p className="text-xs text-ink-500">
               {loading
                 ? t("admin.loading")
-                : t("admin.totalCount", { total })}
+                : t("admin.totalCount", { total, shown: rows.length })}
             </p>
           </div>
 
@@ -752,6 +875,7 @@ export function AdminDashboard() {
                 <tr>
                   <th className="px-4 py-2 font-medium text-xs text-ink-500">{t("admin.colEmail")}</th>
                   <th className="px-4 py-2 font-medium text-xs text-ink-500">{t("admin.colPlan")}</th>
+                  <th className="px-4 py-2 font-medium text-xs text-ink-500">{t("admin.colPlatform")}</th>
                   <th className="px-4 py-2 font-medium text-xs text-ink-500">
                     {t("admin.colPurchased")}
                   </th>
@@ -767,7 +891,7 @@ export function AdminDashboard() {
               <tbody className="divide-y divide-ink-100 text-sm">
                 {rows.length === 0 && !loading ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-ink-500">
+                    <td colSpan={7} className="px-4 py-8 text-center text-ink-500">
                       {t("admin.noResults")}
                     </td>
                   </tr>
@@ -804,6 +928,9 @@ export function AdminDashboard() {
                           {planBadge.free}
                         </span>
                       )}
+                    </td>
+                    <td className="px-4 py-3 align-middle whitespace-nowrap text-ink-700">
+                      {platformLabel(row.purchasePlatform, t) ?? <AdminEmptyMark />}
                     </td>
                     <td className="px-4 py-3 align-middle whitespace-nowrap text-ink-700">
                       {row.purchasedAt ? (
@@ -867,6 +994,13 @@ export function AdminDashboard() {
                     </td>
                   </tr>
                 ))}
+                {hasMore ? (
+                  <tr ref={listSentinelRef}>
+                    <td colSpan={7} className="px-4 py-4 text-center text-xs text-ink-500">
+                      {loadingMore ? t("admin.loadingMore") : t("admin.scrollForMore")}
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>

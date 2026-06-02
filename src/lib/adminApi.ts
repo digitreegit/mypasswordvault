@@ -9,7 +9,11 @@ export type AdminStats = {
   paid_members: number;
   free_members: number;
   open_complaints: number;
+  sales_by_platform: { web: number; ios: number; android: number };
+  sales_by_country: { country: string; count: number }[];
 };
+
+export type PurchasePlatform = "web" | "ios" | "android";
 
 export type AdminCustomerRow = {
   userId: string;
@@ -22,6 +26,7 @@ export type AdminCustomerRow = {
   amountCents: number | null;
   currency: string;
   licenseKey: string | null;
+  purchasePlatform: PurchasePlatform | null;
   createdAt: string | null;
 };
 

@@ -5,6 +5,7 @@
  */
 import { createClient } from "npm:@supabase/supabase-js@2.49.8";
 import Stripe from "npm:stripe@17.4.0";
+import { purchaseCountryFromCheckoutSession } from "../_shared/purchaseMetadata.ts";
 
 function getServiceRoleKey(): string | undefined {
   const raw = Deno.env.get("SUPABASE_SECRET_KEYS");
@@ -89,6 +90,8 @@ Deno.serve(async (req) => {
           licensed: true,
           purchased_at: new Date().toISOString(),
           stripe_checkout_session_id: sess.id,
+          purchase_platform: "web",
+          purchase_country: purchaseCountryFromCheckoutSession(sess),
           amount_cents:
             typeof sess.amount_total === "number"
               ? sess.amount_total

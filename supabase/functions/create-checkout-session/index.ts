@@ -146,6 +146,7 @@ Deno.serve(async (req) => {
     client_reference_id: user.id,
     metadata: { supabase_user_id: user.id },
     line_items: lineItems,
+    billing_address_collection: "auto" as const,
   };
 
   try {
