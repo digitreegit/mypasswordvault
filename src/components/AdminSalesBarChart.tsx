@@ -140,7 +140,7 @@ export function AdminSalesBarChart({
             amount: "",
           }).replace(/\s*·\s*$/, "")}
           {" · "}
-          <span className="font-medium text-indigo-600">
+          <span className="font-medium text-emerald-600">
             {formatMoney(stats.sales_amount_cents_total ?? 0, "usd")}
           </span>
         </p>

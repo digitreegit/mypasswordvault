@@ -90,6 +90,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "common.close": "닫기",
   "common.confirm": "확인",
   "common.save": "저장",
+  "common.optional": "(선택)",
   "autoLock.m1": "1분",
   "autoLock.m5": "5분",
   "autoLock.m15": "15분",
@@ -228,10 +229,17 @@ export const MESSAGES_KR: Record<string, string> = {
   "errors.passkeySetupUv":
     "Touch ID / Face ID 확인이 끝나지 않았습니다. 시스템 안내를 끝까지 완료한 뒤 다시 시도하세요.",
   "errors.passkeyInvalidState":
-    "이 사이트용 패스키가 이미 비밀번호 관리자에 있습니다. 시스템 설정 → 비밀번호에서 127.0.0.1 관련 패스키를 삭제하고, 사이트 데이터를 지운 뒤 다시 시도하세요.",
+    "이 사이트용 패스키가 비밀번호 관리자에 이미 있습니다. Mac: 시스템 설정 → 일반 → 자동 완성 및 비밀번호에서 {{host}}를 검색해 중복 휴대폰 패스키를 삭제한 뒤 다시 시도하세요.",
+  "errors.passkeyHybridPrfPending":
+    "휴대폰 패스키는 저장되었습니다. 아래 「설정 완료」를 누르고 휴대폰의 로그인 안내를 끝까지 완료하세요(Mac Touch ID가 아닙니다).",
+  "settings.passkeyFinishPrf": "설정 완료",
+  "settings.passkeyFinishPrfHint":
+    "기기에는 패스키가 있지만 아직 금고와 연결되지 않았습니다. 이어지는 안내를 끝까지 완료하세요.",
+  "settings.passkeyFinishPrfBusy": "연결 중…",
   "errors.passkeyNoPasswordless":
     "이 기기에서는 패스키만으로 잠금 해제할 수 없습니다. 마스터 비밀번호 백업 로그인을 사용하세요.",
   "errors.passkeyRequired": "계속하려면 패스키를 등록하세요.",
+  "errors.passkeyRemoveLast": "마지막 패스키를 제거하려면 먼저 다른 패스키를 추가하세요.",
   "errors.passkeyNeedsSignIn": "패스키 등록 전에 Google로 로그인하세요.",
   "errors.noPendingTotp": "인증 앱 설정을 다시 시작하세요.",
   "errors.backupTotpAlreadySet": "인증 앱이 이미 설정되어 있습니다.",
@@ -266,6 +274,11 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.securityPasskeysTitle": "패스키",
   "settings.securityPasskeysHint":
     "설정 시 등록한 생체 인증, 기기 PIN 또는 보안 키로 비밀번호 없이 잠금 해제합니다.",
+  "settings.securityPasskeyLegacyHint":
+    "macOS·브라우저는 패스키를 등록할 때 저장한 이름을 계속 표시합니다. user-xxxxxxxx가 보이면 아래에서 새 패스키를 추가하세요(이메일이 표시됩니다). 여기서 이전 패스키를 제거한 뒤 시스템 설정 → 비밀번호에서 localhost 항목도 삭제하세요.",
+  "settings.passkeysRemoveLabel": "제거",
+  "settings.passkeysRemoveLastHint":
+    "패스키는 최소 하나가 있어야 합니다. 먼저 다른 패스키를 추가하세요.",
   "settings.securityTotpTitle": "인증 앱",
   "settings.securityTotpHint":
     "패스키를 쓸 수 없을 때 사용하는 6자리 백업 코드입니다. Google Authenticator, 1Password, Authy 등을 사용하세요.",

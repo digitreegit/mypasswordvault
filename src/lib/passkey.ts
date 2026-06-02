@@ -7,6 +7,7 @@ import type {
 } from "@passwordless-id/webauthn";
 import { AppError } from "./errors";
 import { decodeBase64Flexible, fromBase64, randomBytes, toBase64 } from "./crypto";
+import { resolvePasskeyKind } from "./passkeyMethods";
 import type { PasskeyKind, StoredPasskey, VaultMeta } from "./storage";
 import {
   canonicalSiteHostname,
@@ -144,6 +145,22 @@ export function resolvePasskeyUserIdentity(opts: {
   return { name: "vault-user", displayName: display || "vault-user" };
 }
 
+const LEGACY_PASSKEY_WEBAUTHN_NAME = /^user-[0-9a-f]{8}$/i;
+
+export function isLegacyPasskeyWebAuthnName(name: string | undefined): boolean {
+  if (!name?.trim()) return true;
+  return LEGACY_PASSKEY_WEBAUTHN_NAME.test(name.trim());
+}
+
+/** True when OS prompts may still show `user-xxxxxxxx` until passkeys are re-registered. */
+export function passkeysNeedWebAuthnLabelRefresh(
+  passkeys: { webAuthnName?: string }[] | undefined,
+  email: string | null | undefined,
+): boolean {
+  if (!email?.trim() || !passkeys?.length) return false;
+  return passkeys.some((p) => isLegacyPasskeyWebAuthnName(p.webAuthnName));
+}
+
 export function kindFromHints(
   hints?: ("client-device" | "security-key" | "hybrid")[],
 ): PasskeyKind {
@@ -170,7 +187,16 @@ type RegisterStrategy = {
   attestation: boolean;
 };
 
-function registerStrategies(): RegisterStrategy[] {
+function registerStrategies(
+  hints?: ("client-device" | "security-key" | "hybrid")[],
+): RegisterStrategy[] {
+  // Phone / security-key: one create attempt — retries cause InvalidStateError after QR success.
+  if (hints?.includes("hybrid") || hints?.includes("security-key")) {
+    return [
+      { enablePrf: false, attestation: false },
+      { enablePrf: false, attestation: true },
+    ];
+  }
   if (isLocalDev()) {
     return [
       { enablePrf: false, attestation: false },
@@ -185,6 +211,28 @@ function registerStrategies(): RegisterStrategy[] {
     { enablePrf: false, attestation: true },
     { enablePrf: false, attestation: false },
   ];
+}
+
+function authHintsForPasskeys(
+  passkeys: StoredPasskey[],
+): ("client-device" | "security-key" | "hybrid")[] | undefined {
+  const kinds = new Set(passkeys.map((p) => resolvePasskeyKind(p)));
+  if (kinds.size !== 1) return undefined;
+  const kind = [...kinds][0];
+  if (kind === "hybrid") return ["hybrid"];
+  if (kind === "security-key") return ["security-key"];
+  return ["client-device"];
+}
+
+function allowCredentialsDescriptors(passkeys: StoredPasskey[]) {
+  return passkeys.map((p) => ({
+    id: decodeBase64Flexible(p.id),
+    type: "public-key" as const,
+    transports:
+      (p.transports?.length ?? 0) > 0
+        ? (p.transports as AuthenticatorTransport[])
+        : undefined,
+  }));
 }
 
 async function createRegistration(
@@ -243,12 +291,15 @@ export async function registerVaultPasskey(opts: {
   let registration: RegistrationJSON | null = null;
   let lastErr: unknown;
 
-  for (const strategy of registerStrategies()) {
+  for (const strategy of registerStrategies(opts.hints)) {
     try {
       registration = await createRegistration(opts, strategy, challenge);
       break;
     } catch (err) {
       lastErr = err;
+      if (err instanceof DOMException && err.name === "InvalidStateError") {
+        throw mapPasskeyClientError(err, "setup");
+      }
       if (
         err instanceof DOMException &&
         (err.name === "SecurityError" || err.name === "NotSupportedError")
@@ -297,6 +348,7 @@ export async function registerVaultPasskey(opts: {
     createdAt: Date.now(),
     label: opts.label,
     kind: opts.kind ?? kindFromHints(opts.hints),
+    webAuthnName: opts.userName,
   };
   const prfBytes = readPrfFirst(
     registration.clientExtensionResults as Record<string, unknown>,
@@ -305,6 +357,7 @@ export async function registerVaultPasskey(opts: {
 }
 
 const PRF_RETRY_MS = [0, 400, 1200];
+const PRF_RETRY_MS_HYBRID = [0, 800, 2000, 4000];
 
 /** After registration, derive PRF output (second Touch ID). Retries help right after create on Chrome/macOS. */
 export async function derivePrfAfterRegistration(
@@ -312,7 +365,9 @@ export async function derivePrfAfterRegistration(
   prfSaltB64: string,
 ): Promise<Uint8Array | null> {
   let lastErr: unknown;
-  for (const delayMs of PRF_RETRY_MS) {
+  const delays =
+    resolvePasskeyKind(passkey) === "hybrid" ? PRF_RETRY_MS_HYBRID : PRF_RETRY_MS;
+  for (const delayMs of delays) {
     if (delayMs > 0) {
       await new Promise((r) => setTimeout(r, delayMs));
     }
@@ -358,14 +413,17 @@ export async function authenticateVaultPasskey(
   if (!isPasskeySupported()) throw new AppError("errors.passkeyNotSupported");
   const challenge = server.randomChallenge();
   let authentication: AuthenticationJSON;
+  const hints = authHintsForPasskeys(passkeys);
   try {
     authentication = await client.authenticate({
       challenge,
       domain: rpId(),
       allowCredentials: passkeys.map((p) => p.id),
       userVerification: "required",
+      hints,
       customProperties: {
         extensions: prfEvalExtension(prfSaltB64),
+        allowCredentials: allowCredentialsDescriptors(passkeys),
       },
     });
   } catch (err) {

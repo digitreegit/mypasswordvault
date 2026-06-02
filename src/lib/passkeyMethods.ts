@@ -198,19 +198,21 @@ export async function getSettingsPasskeyAddOptions(
     });
   }
 
-  options.push({
-    id: "security-key",
-    labelKey: "setup.passkeyMethodSecurityKey",
-    subtitleKey: "settings.passkeysAddSecurityKeyHint",
-    hints: ["security-key"],
-  });
-
   if (!hasPasskeyKind(existing, "hybrid")) {
     options.push({
       id: "hybrid",
       labelKey: "setup.passkeyMethodPhone",
       subtitleKey: "settings.passkeysAddPhoneHint",
       hints: ["hybrid"],
+    });
+  }
+
+  if (!hasPasskeyKind(existing, "security-key")) {
+    options.push({
+      id: "security-key",
+      labelKey: "setup.passkeyMethodSecurityKey",
+      subtitleKey: "settings.passkeysAddSecurityKeyHint",
+      hints: ["security-key"],
     });
   }
 

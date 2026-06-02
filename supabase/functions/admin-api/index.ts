@@ -132,10 +132,14 @@ type PurchasePlatform = "web" | "ios" | "android";
 
 function resolvePurchasePlatform(r: EntRow): PurchasePlatform | null {
   const p = r.purchase_platform?.trim().toLowerCase();
-  if (p === "ios" || p === "android") return p;
+  if (p === "ios") return "ios";
+  if (p === "android") return "android";
   if (p === "web") return "web";
-  if (r.stripe_checkout_session_id) return "web";
-  if (r.purchased_at || r.refunded_at) return "web";
+  if (r.stripe_checkout_session_id || r.purchased_at || r.refunded_at) {
+    return "web";
+  }
+  // Complimentary PRO, ADMIN_EMAILS operators, legacy licensed rows (web-only product).
+  if (r.licensed && !r.refunded_at) return "web";
   return null;
 }
 
@@ -182,6 +186,7 @@ async function applyComplimentaryToUser(
       account_email: email,
       licensed: true,
       complimentary_grant: true,
+      purchase_platform: "web",
     });
     if (insErr) {
       console.error("complimentary insert entitlement", insErr);
@@ -196,6 +201,7 @@ async function applyComplimentaryToUser(
       account_email: email,
       licensed: true,
       complimentary_grant: true,
+      purchase_platform: "web",
     },
     { onConflict: "user_id" },
   );
@@ -267,7 +273,7 @@ function formatRow(r: EntRow, isAdmin: boolean) {
       amountCents: null,
       currency: r.currency ?? "usd",
       licenseKey: r.stripe_checkout_session_id,
-      purchasePlatform: null,
+      purchasePlatform: resolvePurchasePlatform(r),
       createdAt: r.created_at,
     };
   }

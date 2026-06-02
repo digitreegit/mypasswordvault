@@ -26,6 +26,10 @@ export interface StoredPasskey {
   label?: string;
   /** Registration method — used to hide duplicate add options in Settings. */
   kind?: PasskeyKind;
+  /** WebAuthn `user.name` saved on the device (shown in OS passkey prompts). */
+  webAuthnName?: string;
+  /** False when registered on device but PRF verification against the vault failed. */
+  prfVerified?: boolean;
 }
 
 export interface VaultMeta {

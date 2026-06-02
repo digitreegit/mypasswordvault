@@ -1,8 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { CheckIcon } from "@heroicons/react/24/outline";
+import {
+  CheckIcon,
+  ExclamationTriangleIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import { isAuthV2 } from "../lib/authV2";
 import { isAppError } from "../lib/errors";
-import { passkeyRegisteredForCurrentSite } from "../lib/passkey";
+import {
+  isLegacyPasskeyWebAuthnName,
+  passkeyRegisteredForCurrentSite,
+} from "../lib/passkey";
+import {
+  getSettingsPasskeyAddOptions,
+  type SettingsPasskeyAddOption,
+} from "../lib/passkeyMethods";
+import type { PasskeyKind } from "../lib/storage";
 import { isIpLiteralHost } from "../lib/siteOrigin";
 import {
   copyTextForClipboard,
@@ -17,13 +30,22 @@ type TFn = (key: string, vars?: Record<string, string | number>) => string;
 
 function formatError(e: unknown, t: TFn): string {
   if (isAppError(e)) {
-    const msg = t(e.code);
+    const vars =
+      e.code === "errors.passkeyInvalidState" &&
+      typeof window !== "undefined"
+        ? { host: window.location.hostname }
+        : undefined;
+    const msg = t(e.code, vars);
     if (import.meta.env.DEV && e.detail) {
       return `${msg} (${e.detail})`;
     }
     return msg;
   }
   return (e as Error)?.message ?? t("setup.errGeneric");
+}
+
+function isPasskeyLinked(pk: { prfVerified?: boolean }): boolean {
+  return pk.prfVerified !== false;
 }
 
 function formatPasskeyDate(ts: number, locale: string): string {
@@ -36,12 +58,87 @@ function formatPasskeyDate(ts: number, locale: string): string {
   }
 }
 
-function ConfiguredBadge({ label }: { label: string }) {
+function ConfiguredBadge({
+  label,
+  variant = "ok",
+}: {
+  label: string;
+  variant?: "ok" | "alert";
+}) {
+  const isAlert = variant === "alert";
   return (
-    <div className="flex items-center gap-2.5 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5">
-      <CheckIcon className="h-4 w-4 shrink-0 text-sky-600" aria-hidden />
-      <span className="text-sm font-medium text-sky-900">{label}</span>
+    <div
+      className={`flex items-center gap-2.5 rounded-lg border px-3 py-2.5 ${
+        isAlert
+          ? "border-red-200 bg-red-50"
+          : "border-sky-200 bg-sky-50"
+      }`}
+    >
+      {isAlert ? (
+        <ExclamationTriangleIcon
+          className="h-4 w-4 shrink-0 text-red-600"
+          aria-hidden
+        />
+      ) : (
+        <CheckIcon className="h-4 w-4 shrink-0 text-sky-600" aria-hidden />
+      )}
+      <span
+        className={`text-sm font-medium ${
+          isAlert ? "text-red-900" : "text-sky-900"
+        }`}
+      >
+        {label}
+      </span>
     </div>
+  );
+}
+
+const PASSKEY_ROW_ICON_SLOT =
+  "flex h-8 w-8 shrink-0 items-center justify-center";
+
+function passkeyAddOptionTitle(
+  option: SettingsPasskeyAddOption,
+  t: TFn,
+): string {
+  const base = t(option.labelKey);
+  if (option.id === "platform") return base;
+  return `${base} ${t("common.optional")}`;
+}
+
+function passkeyKindFromAddOption(id: SettingsPasskeyAddOption["id"]): PasskeyKind {
+  if (id === "hybrid") return "hybrid";
+  if (id === "security-key") return "security-key";
+  return "platform";
+}
+
+function PasskeyAddOptionBox({
+  title,
+  subtitle,
+  busy,
+  onClick,
+}: {
+  title: string;
+  subtitle?: string;
+  busy: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="w-full rounded-lg border border-ink-200 bg-white px-4 py-3.5 flex items-start justify-start gap-3 text-left transition-colors hover:bg-ink-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      disabled={busy}
+      onClick={onClick}
+    >
+      <span className={`${PASSKEY_ROW_ICON_SLOT} text-ink-500`} aria-hidden>
+        <PlusIcon className="h-5 w-5" strokeWidth={2} />
+      </span>
+      <div className="min-w-0 flex-1 text-left">
+        <p className="text-sm font-semibold text-ink-900">{title}</p>
+        {subtitle ? (
+          <p className="mt-0.5 text-xs text-ink-600 leading-snug">{subtitle}</p>
+        ) : null}
+      </div>
+    </button>
   );
 }
 
@@ -67,6 +164,11 @@ export function SecuritySettingsPanel() {
   const {
     meta,
     isPasskeySupported,
+    addPasskey,
+    removePasskey,
+    completePasskeyPrf,
+    passkeyWebAuthnLabelNeedsRefresh,
+    passkeyIdentityEmail,
     locale,
     t,
     backupTotpEnabled,
@@ -92,7 +194,15 @@ export function SecuritySettingsPanel() {
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const [recoveryCopyDone, setRecoveryCopyDone] = useState(false);
 
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
+  const [passkeyError, setPasskeyError] = useState<string | null>(null);
+  const [passkeySuccess, setPasskeySuccess] = useState<string | null>(null);
+  const [passkeyAddOptions, setPasskeyAddOptions] = useState<
+    SettingsPasskeyAddOption[]
+  >([]);
+
   const passkeys = meta?.passkeys ?? [];
+  const isLastPasskey = passkeys.length === 1;
   const showPasskeys =
     meta && isAuthV2(meta) && isPasskeySupported && passkeys.length > 0;
   const wrongDomain =
@@ -106,6 +216,73 @@ export function SecuritySettingsPanel() {
     typeof window !== "undefined"
       ? `http://localhost:${window.location.port || "5173"}/app/`
       : "http://localhost:5173/app/";
+
+  useEffect(() => {
+    if (!showPasskeys || devIpBlocked) return;
+    let cancelled = false;
+    void getSettingsPasskeyAddOptions(passkeys).then((opts) => {
+      if (!cancelled) setPasskeyAddOptions(opts);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [showPasskeys, devIpBlocked, passkeys]);
+
+  async function handleAddPasskey(option: SettingsPasskeyAddOption) {
+    setPasskeyError(null);
+    setPasskeySuccess(null);
+    setPasskeyBusy(true);
+    try {
+      await addPasskey({
+        hints: option.hints,
+        label: t(option.labelKey),
+        kind: passkeyKindFromAddOption(option.id),
+      });
+      setPasskeySuccess(t("settings.passkeysAdded"));
+      window.setTimeout(() => setPasskeySuccess(null), 3000);
+    } catch (e: unknown) {
+      if (isAppError(e) && e.code === "errors.passkeyHybridPrfPending") {
+        setPasskeyError(null);
+        setPasskeySuccess(t(e.code));
+      } else {
+        setPasskeyError(formatError(e, t));
+      }
+    } finally {
+      setPasskeyBusy(false);
+    }
+  }
+
+  async function handleCompletePasskeyPrf(credentialId: string) {
+    setPasskeyError(null);
+    setPasskeySuccess(null);
+    setPasskeyBusy(true);
+    try {
+      await completePasskeyPrf(credentialId);
+      setPasskeySuccess(t("settings.passkeysAdded"));
+      window.setTimeout(() => setPasskeySuccess(null), 3000);
+    } catch (e: unknown) {
+      if (isAppError(e) && e.code === "errors.passkeyHybridPrfPending") {
+        setPasskeyError(t(e.code));
+      } else {
+        setPasskeyError(formatError(e, t));
+      }
+    } finally {
+      setPasskeyBusy(false);
+    }
+  }
+
+  async function handleRemovePasskey(credentialId: string) {
+    setPasskeyError(null);
+    setPasskeySuccess(null);
+    setPasskeyBusy(true);
+    try {
+      await removePasskey(credentialId);
+    } catch (e: unknown) {
+      setPasskeyError(formatError(e, t));
+    } finally {
+      setPasskeyBusy(false);
+    }
+  }
 
   useEffect(() => {
     if (!totpEnrolling || !totpSecret) {
@@ -201,24 +378,128 @@ export function SecuritySettingsPanel() {
               {t("errors.passkeyWrongDomain")}
             </p>
           ) : null}
-          <ul className="space-y-2" aria-label={t("settings.passkeysListAria")}>
-            {passkeys.map((pk) => (
-              <li
-                key={pk.id}
-                className="flex items-center gap-2.5 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5"
-              >
-                <CheckIcon
-                  className="h-4 w-4 shrink-0 text-sky-600"
-                  aria-hidden
-                />
-                <span className="text-sm font-medium text-sky-900 truncate flex-1 min-w-0">
-                  {pk.label ?? t("settings.passkeysUnnamed")}
+          {passkeyWebAuthnLabelNeedsRefresh ? (
+            <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-3 leading-snug">
+              {t("settings.securityPasskeyLegacyHint")}
+              {passkeyIdentityEmail ? (
+                <span className="mt-1 block font-medium text-amber-900">
+                  {passkeyIdentityEmail}
                 </span>
-                <span className="text-xs text-sky-700 shrink-0">
-                  {formatPasskeyDate(pk.createdAt, locale)}
-                </span>
-              </li>
-            ))}
+              ) : null}
+            </p>
+          ) : null}
+          {passkeyError ? (
+            <p className="text-sm text-red-800 bg-red-50 border border-red-200 rounded-md p-2.5">
+              {passkeyError}
+            </p>
+          ) : null}
+          {passkeySuccess ? (
+            <p className="text-sm text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-md p-2.5">
+              {passkeySuccess}
+            </p>
+          ) : null}
+          <ul
+            className="space-y-2 list-none p-0 m-0"
+            aria-label={t("settings.passkeysListAria")}
+          >
+            {passkeys.map((pk) => {
+              const linked = isPasskeyLinked(pk);
+              return (
+                <li
+                  key={pk.id}
+                  className={`flex flex-wrap items-start gap-3 rounded-lg border px-4 py-2.5 text-left ${
+                    linked
+                      ? "border-sky-200 bg-sky-50"
+                      : "border-amber-200 bg-amber-50"
+                  }`}
+                >
+                  <span className={PASSKEY_ROW_ICON_SLOT} aria-hidden>
+                    {linked ? (
+                      <CheckIcon className="h-4 w-4 text-sky-600" />
+                    ) : (
+                      <ExclamationTriangleIcon className="h-4 w-4 text-amber-600" />
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1 text-left">
+                    <p
+                      className={`text-sm font-medium truncate ${
+                        linked ? "text-sky-900" : "text-amber-900"
+                      }`}
+                    >
+                      {pk.label ?? t("settings.passkeysUnnamed")}
+                    </p>
+                    {!linked ? (
+                      <p className="text-xs text-amber-800 leading-snug">
+                        {t("settings.passkeyFinishPrfHint")}
+                      </p>
+                    ) : pk.webAuthnName &&
+                      isLegacyPasskeyWebAuthnName(pk.webAuthnName) ? (
+                      <p className="text-xs text-amber-800 truncate">
+                        {pk.webAuthnName}
+                      </p>
+                    ) : pk.webAuthnName ? (
+                      <p className="text-xs text-sky-700 truncate">
+                        {pk.webAuthnName}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 self-center">
+                    <span
+                      className={`text-xs ${
+                        linked ? "text-sky-700" : "text-amber-700"
+                      }`}
+                    >
+                      {formatPasskeyDate(pk.createdAt, locale)}
+                    </span>
+                    {!linked ? (
+                      <button
+                        type="button"
+                        className="btn-secondary text-xs shrink-0 px-2 min-h-0 py-1"
+                        disabled={passkeyBusy}
+                        onClick={() => void handleCompletePasskeyPrf(pk.id)}
+                      >
+                        {passkeyBusy
+                          ? t("settings.passkeyFinishPrfBusy")
+                          : t("settings.passkeyFinishPrf")}
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="btn-ghost p-2 text-ink-400 hover:text-red-600 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-ink-400"
+                      disabled={passkeyBusy || isLastPasskey}
+                      aria-disabled={passkeyBusy || isLastPasskey}
+                      title={
+                        isLastPasskey
+                          ? t("settings.passkeysRemoveLastHint")
+                          : undefined
+                      }
+                      aria-label={
+                        isLastPasskey
+                          ? t("settings.passkeysRemoveLastHint")
+                          : t("settings.passkeysRemoveLabel")
+                      }
+                      onClick={() => void handleRemovePasskey(pk.id)}
+                    >
+                      <TrashIcon className="h-4 w-4" aria-hidden />
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+            {!devIpBlocked && !wrongDomain
+              ? passkeyAddOptions.map((option) => (
+                  <li key={option.id} className="list-none">
+                    <PasskeyAddOptionBox
+                      title={passkeyAddOptionTitle(option, t)}
+                      subtitle={
+                        option.subtitleKey ? t(option.subtitleKey) : undefined
+                      }
+                      busy={passkeyBusy}
+                      onClick={() => void handleAddPasskey(option)}
+                    />
+                  </li>
+                ))
+              : null}
           </ul>
         </SecuritySection>
       ) : null}
@@ -342,6 +623,7 @@ export function SecuritySettingsPanel() {
         hint={t("settings.securityRecoveryHint")}
       >
         <ConfiguredBadge
+          variant={recoveryCodesRemaining === 0 ? "alert" : "ok"}
           label={t("settings.securityRecoveryRemaining", {
             count: recoveryCodesRemaining,
           })}
@@ -413,7 +695,7 @@ export function SecuritySettingsPanel() {
           </div>
         ) : recoveryConfirm ? (
           <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-3.5">
-            <p className="text-sm text-amber-900 leading-snug">
+            <p className="text-xs text-amber-900/90 leading-snug">
               {t("settings.securityRecoveryRegenerateWarn")}
             </p>
             <div className="flex flex-col gap-2 sm:flex-row">

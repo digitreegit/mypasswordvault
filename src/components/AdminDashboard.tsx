@@ -113,9 +113,9 @@ function rowAmount(row: AdminCustomerRow): number | null {
 function displayPlatform(
   row: AdminCustomerRow,
 ): AdminCustomerRow["purchasePlatform"] {
-  if (row.isAdmin) return null;
   if (row.purchasePlatform) return row.purchasePlatform;
-  if (row.licenseKey || row.purchasedAt) return "web";
+  if (row.licenseKey || row.purchasedAt || row.complimentary) return "web";
+  if (row.isAdmin || row.plan === "pro") return "web";
   return null;
 }
 
@@ -172,7 +172,7 @@ function StatBox({
   label,
   value,
   amount,
-  amountClassName = "text-ink-500",
+  amountClassName = "text-emerald-600",
 }: {
   label: string;
   value: string | number;
@@ -687,7 +687,6 @@ export function AdminDashboard() {
                 label={t("admin.statsSalesProTotal")}
                 value={stats.sales_total ?? 0}
                 amount={formatMoney(stats.sales_amount_cents_total ?? 0, "usd")}
-                amountClassName="text-indigo-600"
               />
             </div>
             <AdminSalesBarChart stats={stats} t={t} formatMoney={formatMoney} />
@@ -960,7 +959,11 @@ export function AdminDashboard() {
                     </td>
                     <td
                       className={`px-4 py-3 align-middle whitespace-nowrap tabular-nums ${
-                        row.refunded && !row.isAdmin ? "text-red-700 font-medium" : ""
+                        row.refunded && !row.isAdmin
+                          ? "text-red-700 font-medium"
+                          : rowAmount(row) != null
+                            ? "text-emerald-600 font-medium"
+                            : ""
                       }`}
                     >
                       {rowAmount(row) != null ? (

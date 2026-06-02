@@ -30,8 +30,11 @@ import {
   derivePrfAfterRegistration,
   readPrfFirst,
   registerVaultPasskey,
+  passkeysNeedWebAuthnLabelRefresh,
   resolvePasskeyUserIdentity,
 } from "./passkey";
+import { getAuthLastEmail } from "./authLastUsed";
+import { resolvePasskeyKind } from "./passkeyMethods";
 import {
   generateRecoveryCodes,
   hashRecoveryCodes,
@@ -53,7 +56,7 @@ import {
   wipeAll,
 } from "./storage";
 import { generateTotpSecretBase32, verifyTotp } from "./totp";
-import { AppError } from "./errors";
+import { AppError, isAppError } from "./errors";
 import { notifyLocaleChanged } from "./appLocale";
 import { translate } from "./i18n/bundles";
 import {
@@ -117,6 +120,12 @@ interface VaultContextValue {
     label: string;
     kind?: PasskeyKind;
   }) => Promise<void>;
+  removePasskey: (credentialId: string) => Promise<void>;
+  /** Complete PRF linking for a passkey saved after registration but before PRF succeeded. */
+  completePasskeyPrf: (credentialId: string) => Promise<void>;
+  /** OS may show `user-xxxxxxxx` until legacy passkeys are removed and re-added. */
+  passkeyWebAuthnLabelNeedsRefresh: boolean;
+  passkeyIdentityEmail: string | null;
   beginBackupTotpEnrollment: () => Promise<{ totpSecretBase32: string }>;
   confirmBackupTotpEnrollment: (code: string) => Promise<{ recoveryCodes: string[] }>;
   /** Skip backup TOTP; still issues one-time recovery codes. */
@@ -177,6 +186,19 @@ const VaultContext = createContext<VaultContextValue | null>(null);
 interface Session {
   key: CryptoKey;
   totpSecret: string;
+}
+
+function resolvePasskeyIdentityForVault(
+  userId: string | null,
+  userEmail?: string | null,
+  userDisplayName?: string | null,
+) {
+  const email = userEmail?.trim() || getAuthLastEmail();
+  return resolvePasskeyUserIdentity({
+    userId,
+    email,
+    displayName: userDisplayName,
+  });
 }
 
 export function VaultProvider({
@@ -558,11 +580,11 @@ export function VaultProvider({
     const pending = pendingSetupRef.current;
     if (!pending) throw new AppError("errors.noPendingSetup");
     if (!userId) throw new AppError("errors.passkeyNeedsSignIn");
-    const webAuthnUser = resolvePasskeyUserIdentity({
+    const webAuthnUser = resolvePasskeyIdentityForVault(
       userId,
-      email: userEmail,
-      displayName: userDisplayName,
-    });
+      userEmail,
+      userDisplayName,
+    );
     const { passkey, prfBytes: regPrf } = await registerVaultPasskey({
       userId,
       userName: webAuthnUser.name,
@@ -591,6 +613,55 @@ export function VaultProvider({
     [userId, userEmail, userDisplayName]
   );
 
+  const completePasskeyPrf = useCallback(
+    async (credentialId: string) => {
+      if (status !== "unlocked") throw new AppError("errors.locked");
+      const m = meta ?? (await getMeta());
+      if (!m || !isAuthV2(m)) throw new AppError("errors.passkeyNoPasswordless");
+      if (!m.prfSalt || !m.passkeyDataKeyWrap) {
+        throw new AppError("errors.passkeyNoPasswordless");
+      }
+      const existing = m.passkeys ?? [];
+      const passkey = existing.find((p) => p.id === credentialId);
+      if (!passkey || passkey.prfVerified !== false) {
+        throw new AppError("errors.passkeyFailed");
+      }
+
+      let prfBytes = await derivePrfAfterRegistration(passkey, m.prfSalt);
+      if (!prfBytes) {
+        throw new AppError(
+          resolvePasskeyKind(passkey) === "hybrid"
+            ? "errors.passkeyHybridPrfPending"
+            : "errors.passkeySetupPrf",
+        );
+      }
+
+      const dataKey = await dataKeyFromPrfWrap(prfBytes, m.passkeyDataKeyWrap);
+      let verified: string;
+      try {
+        verified = await decryptString(dataKey, m.verifier);
+      } catch {
+        throw new AppError("errors.passkeyFailed");
+      }
+      if (verified !== VERIFIER_PLAINTEXT) {
+        throw new AppError(
+          resolvePasskeyKind(passkey) === "hybrid"
+            ? "errors.passkeyHybridPrfPending"
+            : "errors.passkeySetupPrf",
+        );
+      }
+
+      const linked = existing.map((p) =>
+        p.id === credentialId ? { ...p, prfVerified: true } : p,
+      );
+      const updated: VaultMeta = { ...m, passkeys: linked, updatedAt: Date.now() };
+      await putMeta(updated);
+      setMeta(updated);
+      await flushCloudPush();
+    },
+    [status, meta, flushCloudPush],
+  );
+
   const addPasskey = useCallback(
     async (opts: {
       hints?: ("client-device" | "security-key" | "hybrid")[];
@@ -609,12 +680,24 @@ export function VaultProvider({
       if (!userId) throw new AppError("errors.passkeyNeedsSignIn");
 
       const existing = m.passkeys ?? [];
-      const webAuthnUser = resolvePasskeyUserIdentity({
+      const pendingHybrid = existing.find(
+        (p) =>
+          resolvePasskeyKind(p) === "hybrid" && p.prfVerified === false,
+      );
+      if (opts.kind === "hybrid" && pendingHybrid) {
+        await completePasskeyPrf(pendingHybrid.id);
+        return;
+      }
+
+      const webAuthnUser = resolvePasskeyIdentityForVault(
         userId,
-        email: userEmail,
-        displayName: userDisplayName,
-      });
-      const { passkey, prfBytes: regPrf } = await registerVaultPasskey({
+        userEmail,
+        userDisplayName,
+      );
+      let passkey: StoredPasskey;
+      let regPrf: Uint8Array | null;
+      try {
+        const registered = await registerVaultPasskey({
         userId,
         userName: webAuthnUser.name,
         userDisplayName: webAuthnUser.displayName,
@@ -623,14 +706,48 @@ export function VaultProvider({
         hints: opts.hints,
         label: opts.label,
         kind: opts.kind,
-      });
+        });
+        passkey = registered.passkey;
+        regPrf = registered.prfBytes;
+      } catch (err) {
+        if (
+          isAppError(err) &&
+          err.code === "errors.passkeyInvalidState" &&
+          opts.hints?.includes("hybrid")
+        ) {
+          const fresh = meta ?? (await getMeta());
+          const orphan = fresh?.passkeys?.find(
+            (p) =>
+              resolvePasskeyKind(p) === "hybrid" && p.prfVerified === false,
+          );
+          if (orphan) {
+            await completePasskeyPrf(orphan.id);
+            return;
+          }
+        }
+        throw err;
+      }
+
+      const pendingEntry: StoredPasskey = { ...passkey, prfVerified: false };
+      const withPending: VaultMeta = {
+        ...m,
+        passkeys: [...existing, pendingEntry],
+        passkeyRpId: currentPasskeyRpId(),
+        updatedAt: Date.now(),
+      };
+      await putMeta(withPending);
+      setMeta(withPending);
 
       let prfBytes = regPrf;
       if (!prfBytes) {
         prfBytes = await derivePrfAfterRegistration(passkey, m.prfSalt);
       }
       if (!prfBytes) {
-        throw new AppError("errors.passkeySetupPrf");
+        throw new AppError(
+          opts.kind === "hybrid"
+            ? "errors.passkeyHybridPrfPending"
+            : "errors.passkeySetupPrf",
+        );
       }
 
       const dataKey = await dataKeyFromPrfWrap(prfBytes, m.passkeyDataKeyWrap);
@@ -641,20 +758,51 @@ export function VaultProvider({
         throw new AppError("errors.passkeyFailed");
       }
       if (verified !== VERIFIER_PLAINTEXT) {
-        throw new AppError("errors.passkeySetupPrf");
+        throw new AppError(
+          opts.kind === "hybrid"
+            ? "errors.passkeyHybridPrfPending"
+            : "errors.passkeySetupPrf",
+        );
       }
 
+      const linked = (withPending.passkeys ?? []).map((p) =>
+        p.id === passkey.id ? { ...p, prfVerified: true } : p,
+      );
       const updated: VaultMeta = {
-        ...m,
-        passkeys: [...existing, passkey],
-        passkeyRpId: currentPasskeyRpId(),
+        ...withPending,
+        passkeys: linked,
         updatedAt: Date.now(),
       };
       await putMeta(updated);
       setMeta(updated);
       await flushCloudPush();
     },
-    [status, meta, userId, userEmail, userDisplayName, flushCloudPush]
+    [status, meta, userId, userEmail, userDisplayName, flushCloudPush, completePasskeyPrf]
+  );
+
+  const removePasskey = useCallback(
+    async (credentialId: string) => {
+      if (status !== "unlocked") throw new AppError("errors.locked");
+      const m = meta ?? (await getMeta());
+      if (!m || !isAuthV2(m)) throw new AppError("errors.passkeyNoPasswordless");
+      const existing = m.passkeys ?? [];
+      if (existing.length <= 1) {
+        throw new AppError("errors.passkeyRemoveLast");
+      }
+      const next = existing.filter((p) => p.id !== credentialId);
+      if (next.length === existing.length) {
+        throw new AppError("errors.passkeyFailed");
+      }
+      const updated: VaultMeta = {
+        ...m,
+        passkeys: next,
+        updatedAt: Date.now(),
+      };
+      await putMeta(updated);
+      setMeta(updated);
+      await flushCloudPush();
+    },
+    [status, meta, flushCloudPush],
   );
 
   const beginBackupTotpSettings = useCallback(async () => {
@@ -1086,6 +1234,16 @@ export function VaultProvider({
 
   const recoveryCodesRemaining = meta?.recoveryCodeHashes?.length ?? 0;
 
+  const passkeyIdentityEmail = useMemo(
+    () => userEmail?.trim() || getAuthLastEmail() || null,
+    [userEmail],
+  );
+
+  const passkeyWebAuthnLabelNeedsRefresh = useMemo(
+    () => passkeysNeedWebAuthnLabelRefresh(meta?.passkeys, passkeyIdentityEmail),
+    [meta?.passkeys, passkeyIdentityEmail],
+  );
+
   const value = useMemo<VaultContextValue>(
     () => ({
       status,
@@ -1095,6 +1253,10 @@ export function VaultProvider({
       setup,
       registerPasskeyInSetup,
       addPasskey,
+      removePasskey,
+      completePasskeyPrf,
+      passkeyWebAuthnLabelNeedsRefresh,
+      passkeyIdentityEmail,
       beginBackupTotpEnrollment,
       confirmBackupTotpEnrollment,
       skipBackupTotpEnrollment,
@@ -1145,6 +1307,10 @@ export function VaultProvider({
       setup,
       registerPasskeyInSetup,
       addPasskey,
+      removePasskey,
+      completePasskeyPrf,
+      passkeyWebAuthnLabelNeedsRefresh,
+      passkeyIdentityEmail,
       beginBackupTotpEnrollment,
       confirmBackupTotpEnrollment,
       skipBackupTotpEnrollment,

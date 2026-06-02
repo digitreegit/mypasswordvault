@@ -90,6 +90,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "common.close": "Close",
   "common.confirm": "Confirm",
   "common.save": "Save",
+  "common.optional": "(optional)",
 
   "autoLock.m1": "1 min",
   "autoLock.m5": "5 min",
@@ -235,10 +236,17 @@ export const MESSAGES_EN: Record<string, string> = {
   "errors.passkeySetupUv":
     "Touch ID / Face ID did not complete verification. Try again and finish the system prompt.",
   "errors.passkeyInvalidState":
-    "A passkey for this site already exists in your password manager. Remove old passkeys for 127.0.0.1 in System Settings → Passwords, clear site data, then try again.",
+    "A passkey for this site already exists in your password manager (often from a previous attempt). On Mac: System Settings → General → AutoFill & Passwords, search {{host}}, and remove duplicate Phone passkey entries, then try again.",
+  "errors.passkeyHybridPrfPending":
+    "Phone passkey was saved. Tap Finish setup below and complete the sign-in prompt on your phone (not Touch ID on this Mac).",
+  "settings.passkeyFinishPrf": "Finish setup",
+  "settings.passkeyFinishPrfHint":
+    "This passkey is on your device but is not linked to the vault yet. Complete the follow-up prompt.",
+  "settings.passkeyFinishPrfBusy": "Linking…",
   "errors.passkeyNoPasswordless":
     "Passkey unlock is not available on this device. Use backup sign-in with your master password.",
   "errors.passkeyRequired": "Register a passkey before continuing.",
+  "errors.passkeyRemoveLast": "Add another passkey before removing the last one.",
   "errors.passkeyNeedsSignIn": "Sign in with Google before registering a passkey.",
   "errors.noPendingTotp": "Start authenticator setup again.",
   "errors.backupTotpAlreadySet": "Authenticator app is already configured.",
@@ -274,6 +282,11 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.securityPasskeysTitle": "Passkeys",
   "settings.securityPasskeysHint":
     "Passwordless unlock with biometrics, device PIN, or a security key registered during setup.",
+  "settings.securityPasskeyLegacyHint":
+    "macOS and browsers remember the sign-in label from when each passkey was created. If you still see user-xxxxxxxx, add a new passkey below (your email will be used), remove the old one here, then delete the old localhost entry in System Settings → Passwords.",
+  "settings.passkeysRemoveLabel": "Remove",
+  "settings.passkeysRemoveLastHint":
+    "At least one passkey must remain. Add another passkey first.",
   "settings.securityTotpTitle": "Authenticator app",
   "settings.securityTotpHint":
     "Backup 6-digit codes when passkeys are unavailable. Use Google Authenticator, 1Password, Authy, or similar.",
