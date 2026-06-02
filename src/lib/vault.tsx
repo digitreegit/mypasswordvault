@@ -30,6 +30,7 @@ import {
   derivePrfAfterRegistration,
   readPrfFirst,
   registerVaultPasskey,
+  resolvePasskeyUserIdentity,
 } from "./passkey";
 import {
   generateRecoveryCodes,
@@ -47,6 +48,7 @@ import {
   type VaultCategory,
   type VaultEntry,
   type StoredPasskey,
+  type PasskeyKind,
   type VaultMeta,
   wipeAll,
 } from "./storage";
@@ -107,6 +109,13 @@ interface VaultContextValue {
   registerPasskeyInSetup: (opts: {
     hints?: ("client-device" | "security-key" | "hybrid")[];
     label: string;
+    kind?: PasskeyKind;
+  }) => Promise<void>;
+  /** Add another passkey while unlocked (Settings). Verifies PRF against existing wrap. */
+  addPasskey: (opts: {
+    hints?: ("client-device" | "security-key" | "hybrid")[];
+    label: string;
+    kind?: PasskeyKind;
   }) => Promise<void>;
   beginBackupTotpEnrollment: () => Promise<{ totpSecretBase32: string }>;
   confirmBackupTotpEnrollment: (code: string) => Promise<{ recoveryCodes: string[] }>;
@@ -151,6 +160,15 @@ interface VaultContextValue {
   refreshEntitlements: (opts?: { keepLoaded?: boolean }) => Promise<boolean>;
   /** After Stripe payment — confirms session, applies PRO immediately, refreshes entitlements. */
   finalizePaidCheckout: (sessionId?: string | null) => Promise<boolean>;
+
+  /** Backup TOTP configured (empty when skipped during setup). */
+  backupTotpEnabled: boolean;
+  /** Unused recovery code count. */
+  recoveryCodesRemaining: number;
+  beginBackupTotpSettings: () => Promise<{ totpSecretBase32: string }>;
+  confirmBackupTotpSettings: (code: string) => Promise<void>;
+  cancelBackupTotpSettings: () => void;
+  regenerateRecoveryCodes: () => Promise<{ recoveryCodes: string[] }>;
 }
 
 const VaultContext = createContext<VaultContextValue | null>(null);
@@ -163,15 +181,20 @@ interface Session {
 
 export function VaultProvider({
   userId,
+  userEmail,
+  userDisplayName,
   children,
 }: {
   userId: string | null;
+  userEmail?: string | null;
+  userDisplayName?: string | null;
   children: React.ReactNode;
 }) {
   const [status, setStatus] = useState<VaultStatus>("loading");
   const [meta, setMeta] = useState<VaultMeta | null>(null);
   const [entries, setEntries] = useState<DecryptedEntry[]>([]);
   const sessionRef = useRef<Session | null>(null);
+  const settingsTotpPendingRef = useRef<string | null>(null);
   // During setup we may have a derived key but no committed meta yet.
   const pendingSetupRef = useRef<{
     passwordKey: CryptoKey;
@@ -200,6 +223,7 @@ export function VaultProvider({
   const [entitlementLoaded, setEntitlementLoaded] = useState(
     !isSupabaseConfigured,
   );
+  const [backupTotpEnabled, setBackupTotpEnabled] = useState(false);
   const entitlementRef = useRef({
     licensed: !isSupabaseConfigured,
     isAdmin: false,
@@ -340,6 +364,8 @@ export function VaultProvider({
 
   const lockInternal = useCallback(() => {
     sessionRef.current = null;
+    settingsTotpPendingRef.current = null;
+    setBackupTotpEnabled(false);
     setEntries([]);
     setStatus("locked");
   }, []);
@@ -527,19 +553,25 @@ export function VaultProvider({
     async (opts: {
       hints?: ("client-device" | "security-key" | "hybrid")[];
       label: string;
+      kind?: PasskeyKind;
     }) => {
     const pending = pendingSetupRef.current;
     if (!pending) throw new AppError("errors.noPendingSetup");
     if (!userId) throw new AppError("errors.passkeyNeedsSignIn");
-    const label =
-      userId.length > 0 ? `user-${userId.slice(0, 8)}` : "vault-user";
+    const webAuthnUser = resolvePasskeyUserIdentity({
+      userId,
+      email: userEmail,
+      displayName: userDisplayName,
+    });
     const { passkey, prfBytes: regPrf } = await registerVaultPasskey({
       userId,
-      userName: label,
+      userName: webAuthnUser.name,
+      userDisplayName: webAuthnUser.displayName,
       excludeCredentialIds: pending.passkeys.map((p) => p.id),
       prfSaltB64: pending.prfSalt,
       hints: opts.hints,
       label: opts.label,
+      kind: opts.kind,
     });
     pending.passkeys.push(passkey);
     let prfBytes = regPrf;
@@ -556,8 +588,137 @@ export function VaultProvider({
       throw new AppError("errors.passkeySetupPrf");
     }
   },
-    [userId]
+    [userId, userEmail, userDisplayName]
   );
+
+  const addPasskey = useCallback(
+    async (opts: {
+      hints?: ("client-device" | "security-key" | "hybrid")[];
+      label: string;
+      kind?: PasskeyKind;
+    }) => {
+      if (status !== "unlocked") throw new AppError("errors.locked");
+      const m = meta ?? (await getMeta());
+      if (!m || !isAuthV2(m)) throw new AppError("errors.passkeyNoPasswordless");
+      if (!m.prfSalt || !m.passkeyDataKeyWrap) {
+        throw new AppError("errors.passkeyNoPasswordless");
+      }
+      if (!passkeyRegisteredForCurrentSite(m)) {
+        throw new AppError("errors.passkeyWrongDomain");
+      }
+      if (!userId) throw new AppError("errors.passkeyNeedsSignIn");
+
+      const existing = m.passkeys ?? [];
+      const webAuthnUser = resolvePasskeyUserIdentity({
+        userId,
+        email: userEmail,
+        displayName: userDisplayName,
+      });
+      const { passkey, prfBytes: regPrf } = await registerVaultPasskey({
+        userId,
+        userName: webAuthnUser.name,
+        userDisplayName: webAuthnUser.displayName,
+        excludeCredentialIds: existing.map((p) => p.id),
+        prfSaltB64: m.prfSalt,
+        hints: opts.hints,
+        label: opts.label,
+        kind: opts.kind,
+      });
+
+      let prfBytes = regPrf;
+      if (!prfBytes) {
+        prfBytes = await derivePrfAfterRegistration(passkey, m.prfSalt);
+      }
+      if (!prfBytes) {
+        throw new AppError("errors.passkeySetupPrf");
+      }
+
+      const dataKey = await dataKeyFromPrfWrap(prfBytes, m.passkeyDataKeyWrap);
+      let verified: string;
+      try {
+        verified = await decryptString(dataKey, m.verifier);
+      } catch {
+        throw new AppError("errors.passkeyFailed");
+      }
+      if (verified !== VERIFIER_PLAINTEXT) {
+        throw new AppError("errors.passkeySetupPrf");
+      }
+
+      const updated: VaultMeta = {
+        ...m,
+        passkeys: [...existing, passkey],
+        passkeyRpId: currentPasskeyRpId(),
+        updatedAt: Date.now(),
+      };
+      await putMeta(updated);
+      setMeta(updated);
+      await flushCloudPush();
+    },
+    [status, meta, userId, userEmail, userDisplayName, flushCloudPush]
+  );
+
+  const beginBackupTotpSettings = useCallback(async () => {
+    if (status !== "unlocked" || !sessionRef.current) {
+      throw new AppError("errors.locked");
+    }
+    if (sessionRef.current.totpSecret) {
+      throw new AppError("errors.backupTotpAlreadySet");
+    }
+    const totpSecret = generateTotpSecretBase32();
+    settingsTotpPendingRef.current = totpSecret;
+    return { totpSecretBase32: totpSecret };
+  }, [status]);
+
+  const cancelBackupTotpSettings = useCallback(() => {
+    settingsTotpPendingRef.current = null;
+  }, []);
+
+  const confirmBackupTotpSettings = useCallback(
+    async (code: string) => {
+      if (status !== "unlocked" || !sessionRef.current) {
+        throw new AppError("errors.locked");
+      }
+      const pending = settingsTotpPendingRef.current;
+      if (!pending) throw new AppError("errors.noPendingTotp");
+      if (!verifyTotp(pending, code)) {
+        throw new AppError("errors.invalidOtp");
+      }
+      const m = meta ?? (await getMeta());
+      if (!m) throw new AppError("errors.notInitialized");
+      const totpEnc = await encryptString(sessionRef.current.key, pending);
+      const updated: VaultMeta = {
+        ...m,
+        totpSecret: totpEnc,
+        updatedAt: Date.now(),
+      };
+      await putMeta(updated);
+      sessionRef.current.totpSecret = pending;
+      settingsTotpPendingRef.current = null;
+      setBackupTotpEnabled(true);
+      setMeta(updated);
+      await flushCloudPush();
+    },
+    [status, meta, flushCloudPush]
+  );
+
+  const regenerateRecoveryCodes = useCallback(async () => {
+    if (status !== "unlocked" || !sessionRef.current) {
+      throw new AppError("errors.locked");
+    }
+    const m = meta ?? (await getMeta());
+    if (!m) throw new AppError("errors.notInitialized");
+    const recoveryCodes = generateRecoveryCodes();
+    const recoveryCodeHashes = await hashRecoveryCodes(recoveryCodes);
+    const updated: VaultMeta = {
+      ...m,
+      recoveryCodeHashes,
+      updatedAt: Date.now(),
+    };
+    await putMeta(updated);
+    setMeta(updated);
+    await flushCloudPush();
+    return { recoveryCodes };
+  }, [status, meta, flushCloudPush]);
 
   const beginBackupTotpEnrollment = useCallback(async () => {
     const pending = pendingSetupRef.current;
@@ -640,6 +801,7 @@ export function VaultProvider({
   const finishUnlock = useCallback(
     async (m: VaultMeta, dataKey: CryptoKey, totpSecret: string) => {
       sessionRef.current = { key: dataKey, totpSecret };
+      setBackupTotpEnabled(totpSecret.length > 0);
       setMeta(m);
       lastActivityRef.current = Date.now();
       await loadEntries(dataKey);
@@ -922,6 +1084,8 @@ export function VaultProvider({
     [entitlementLoaded, hasUnlimitedEntries, entries.length],
   );
 
+  const recoveryCodesRemaining = meta?.recoveryCodeHashes?.length ?? 0;
+
   const value = useMemo<VaultContextValue>(
     () => ({
       status,
@@ -930,6 +1094,7 @@ export function VaultProvider({
       autoLockMinutes: meta?.autoLockMinutes ?? 5,
       setup,
       registerPasskeyInSetup,
+      addPasskey,
       beginBackupTotpEnrollment,
       confirmBackupTotpEnrollment,
       skipBackupTotpEnrollment,
@@ -960,6 +1125,12 @@ export function VaultProvider({
       freeEntryLimit: FREE_ENTRY_LIMIT,
       refreshEntitlements,
       finalizePaidCheckout,
+      backupTotpEnabled,
+      recoveryCodesRemaining,
+      beginBackupTotpSettings,
+      confirmBackupTotpSettings,
+      cancelBackupTotpSettings,
+      regenerateRecoveryCodes,
     }),
     [
       status,
@@ -973,6 +1144,7 @@ export function VaultProvider({
       atEntryLimit,
       setup,
       registerPasskeyInSetup,
+      addPasskey,
       beginBackupTotpEnrollment,
       confirmBackupTotpEnrollment,
       skipBackupTotpEnrollment,
@@ -994,6 +1166,12 @@ export function VaultProvider({
       deleteCategory,
       refreshEntitlements,
       finalizePaidCheckout,
+      backupTotpEnabled,
+      recoveryCodesRemaining,
+      beginBackupTotpSettings,
+      confirmBackupTotpSettings,
+      cancelBackupTotpSettings,
+      regenerateRecoveryCodes,
     ]
   );
 

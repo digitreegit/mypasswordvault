@@ -17,7 +17,6 @@ import { ScreenHeader } from "./ScreenHeader";
 import { downloadTextFile } from "../lib/downloadTextFile";
 import { isAppError } from "../lib/errors";
 import { isNativeApp } from "../lib/platform";
-import { isLocalDevHost } from "../lib/siteOrigin";
 import { PasskeySetupPicker } from "./PasskeySetupPicker";
 import type { PasskeyMethodId, PasskeyMethodOption } from "../lib/passkeyMethods";
 
@@ -486,11 +485,6 @@ export function SetupScreen() {
             error={error}
             registeredIds={registeredPasskeyIds}
             unsupported={!isPasskeySupported}
-            showLocalDevHint={
-              import.meta.env.DEV &&
-              typeof window !== "undefined" &&
-              isLocalDevHost(window.location.hostname)
-            }
             onContinue={handlePasskeyContinue}
             onBack={async () => {
               await abortSetup();
@@ -517,26 +511,40 @@ export function SetupScreen() {
               )}
               <div className="w-full">
                 <label className="label">{t("setup.secretKey")}</label>
-                <input
-                  className="input font-mono text-xs select-all"
-                  readOnly
-                  value={totpSecret}
-                  onFocus={(e) => e.currentTarget.select()}
-                />
-                <button
-                  type="button"
-                  className="text-xs text-accent-600 hover:underline mt-1 font-medium"
-                  onClick={() => {
-                    void copyTextForClipboard(totpSecret).then(() => {
-                      setTotpCopyDone(true);
-                      window.setTimeout(() => setTotpCopyDone(false), 2500);
-                    });
-                  }}
-                >
-                  {totpCopyDone
-                    ? t("setup.copyTotpSecretDone")
-                    : t("setup.copyTotpSecret")}
-                </button>
+                <div className="flex min-h-[2.375rem] items-center rounded-md border border-ink-200 bg-white pr-1">
+                  <input
+                    className="input min-w-0 flex-1 border-0 bg-transparent py-2 pl-3 pr-2 font-mono text-xs shadow-none select-all focus:ring-0"
+                    readOnly
+                    value={totpSecret}
+                    onFocus={(e) => e.currentTarget.select()}
+                  />
+                  <button
+                    type="button"
+                    className="inline-flex shrink-0 items-center justify-center rounded-md p-1.5 text-ink-500 transition-colors hover:bg-ink-100 hover:text-ink-800"
+                    aria-label={
+                      totpCopyDone
+                        ? t("setup.copyTotpSecretDone")
+                        : t("setup.copyTotpSecret")
+                    }
+                    title={
+                      totpCopyDone
+                        ? t("setup.copyTotpSecretDone")
+                        : t("setup.copyTotpSecret")
+                    }
+                    onClick={() => {
+                      void copyTextForClipboard(totpSecret).then(() => {
+                        setTotpCopyDone(true);
+                        window.setTimeout(() => setTotpCopyDone(false), 2500);
+                      });
+                    }}
+                  >
+                    {totpCopyDone ? (
+                      <Check className="h-4 w-4 text-accent-600" aria-hidden />
+                    ) : (
+                      <Copy className="h-4 w-4" aria-hidden />
+                    )}
+                  </button>
+                </div>
                 <p className="text-xs text-ink-500 mt-2 leading-snug">
                   {t("setup.totpAuthenticatorHint")}
                 </p>
@@ -564,7 +572,7 @@ export function SetupScreen() {
             >
               {t("setup.nextRecovery")}
             </button>
-            <div className="border-t border-ink-200 pt-4 space-y-3">
+            <div className="space-y-3">
               <button
                 type="button"
                 className="btn-secondary w-full text-sm"
@@ -573,7 +581,7 @@ export function SetupScreen() {
               >
                 {t("setup.skipBackupTotp")}
               </button>
-              <CautionNotice>{t("setup.backupTotpRecommend")}</CautionNotice>
+              <CautionNotice showIcon>{t("setup.backupTotpRecommend")}</CautionNotice>
             </div>
           </div>
         )}

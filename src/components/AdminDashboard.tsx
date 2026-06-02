@@ -103,10 +103,20 @@ function formatMoney(cents: number | null, currency: string) {
 }
 
 function rowAmount(row: AdminCustomerRow): number | null {
+  if (row.isAdmin) return null;
   if (row.amountCents != null) return row.amountCents;
   if (!row.licenseKey && !row.purchasedAt && !row.refunded) return null;
   const base = LICENSE_AMOUNT_CENTS;
   return row.refunded ? -base : base;
+}
+
+function displayPlatform(
+  row: AdminCustomerRow,
+): AdminCustomerRow["purchasePlatform"] {
+  if (row.isAdmin) return null;
+  if (row.purchasePlatform) return row.purchasePlatform;
+  if (row.licenseKey || row.purchasedAt) return "web";
+  return null;
 }
 
 function formatDate(iso: string | null) {
@@ -633,7 +643,7 @@ export function AdminDashboard() {
             >
               <ArrowPathIcon className="h-5 w-5" aria-hidden />
             </button>
-            <a href="#/" className="btn-secondary text-sm">
+            <a href="#/" className="btn-primary text-sm">
               {t("admin.app")}
             </a>
             <button
@@ -913,7 +923,11 @@ export function AdminDashboard() {
                       )}
                     </td>
                     <td className="px-4 py-3 align-middle whitespace-nowrap">
-                      {row.refunded ? (
+                      {row.isAdmin ? (
+                        <span className="inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800">
+                          {t("admin.badgeAdmin")}
+                        </span>
+                      ) : row.refunded ? (
                         <span className="inline-flex rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
                           {t("admin.badgeRefunded")}
                         </span>
@@ -935,7 +949,7 @@ export function AdminDashboard() {
                       )}
                     </td>
                     <td className="px-4 py-3 align-middle whitespace-nowrap text-ink-700">
-                      {platformLabel(row.purchasePlatform, t) ?? <AdminEmptyMark />}
+                      {platformLabel(displayPlatform(row), t) ?? <AdminEmptyMark />}
                     </td>
                     <td className="px-4 py-3 align-middle whitespace-nowrap text-ink-700">
                       {row.purchasedAt ? (
@@ -946,7 +960,7 @@ export function AdminDashboard() {
                     </td>
                     <td
                       className={`px-4 py-3 align-middle whitespace-nowrap tabular-nums ${
-                        row.refunded ? "text-red-700 font-medium" : ""
+                        row.refunded && !row.isAdmin ? "text-red-700 font-medium" : ""
                       }`}
                     >
                       {rowAmount(row) != null ? (
@@ -964,15 +978,20 @@ export function AdminDashboard() {
                     </td>
                     <td className="px-4 py-3 align-middle text-right whitespace-nowrap">
                       <div className="flex flex-row flex-wrap gap-1 justify-end items-center">
-                        <button
-                          type="button"
-                          className={ADMIN_BTN_SECONDARY}
-                          disabled={busyId === `complaint-${row.userId}`}
-                          onClick={() => openComplaintModal(row)}
-                        >
-                          {t("admin.complaint")}
-                        </button>
-                        {row.licenseKey && !row.refunded && row.plan === "pro" ? (
+                        {!row.isAdmin ? (
+                          <button
+                            type="button"
+                            className={ADMIN_BTN_SECONDARY}
+                            disabled={busyId === `complaint-${row.userId}`}
+                            onClick={() => openComplaintModal(row)}
+                          >
+                            {t("admin.complaint")}
+                          </button>
+                        ) : null}
+                        {row.licenseKey &&
+                        !row.refunded &&
+                        !row.isAdmin &&
+                        row.plan === "pro" ? (
                           <button
                             type="button"
                             className={ADMIN_BTN_SECONDARY_DANGER}

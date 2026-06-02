@@ -13,6 +13,8 @@ export interface VaultCategory {
 }
 
 /** WebAuthn credential stored in vault meta (public key only). */
+export type PasskeyKind = "platform" | "security-key" | "hybrid";
+
 export interface StoredPasskey {
   id: string;
   publicKey: string;
@@ -22,6 +24,8 @@ export interface StoredPasskey {
   createdAt: number;
   /** User-facing label chosen during setup (e.g. "Touch ID", "Security key"). */
   label?: string;
+  /** Registration method — used to hide duplicate add options in Settings. */
+  kind?: PasskeyKind;
 }
 
 export interface VaultMeta {

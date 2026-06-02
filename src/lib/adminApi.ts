@@ -21,6 +21,8 @@ export type AdminCustomerRow = {
   plan: "pro" | "free";
   licensed: boolean;
   refunded: boolean;
+  /** ADMIN_EMAILS operator — no purchase/refund amounts in admin UI. */
+  isAdmin?: boolean;
   complimentary?: boolean;
   purchasedAt: string | null;
   amountCents: number | null;

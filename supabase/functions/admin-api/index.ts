@@ -253,7 +253,25 @@ function resolveAmountCents(r: EntRow): number | null {
   return r.refunded_at ? -Math.abs(raw) : Math.abs(raw);
 }
 
-function formatRow(r: EntRow) {
+function formatRow(r: EntRow, isAdmin: boolean) {
+  if (isAdmin) {
+    return {
+      userId: r.user_id,
+      email: r.account_email ?? "",
+      plan: "pro" as const,
+      licensed: true,
+      refunded: false,
+      isAdmin: true,
+      complimentary: Boolean(r.complimentary_grant),
+      purchasedAt: r.purchased_at,
+      amountCents: null,
+      currency: r.currency ?? "usd",
+      licenseKey: r.stripe_checkout_session_id,
+      purchasePlatform: null,
+      createdAt: r.created_at,
+    };
+  }
+
   const refunded = Boolean(r.refunded_at);
   const pro = r.licensed && !refunded;
   return {
@@ -262,6 +280,7 @@ function formatRow(r: EntRow) {
     plan: pro ? "pro" : "free",
     licensed: r.licensed,
     refunded,
+    isAdmin: false,
     complimentary: Boolean(r.complimentary_grant),
     purchasedAt: r.purchased_at,
     amountCents: resolveAmountCents(r),
@@ -619,7 +638,11 @@ Deno.serve(async (req) => {
       return json({ error: "db_error" }, 500);
     }
 
-    const rows = ((data ?? []) as EntRow[]).map(formatRow);
+    const rows: ReturnType<typeof formatRow>[] = [];
+    for (const r of (data ?? []) as EntRow[]) {
+      const isAdmin = await isProtectedAdminUser(admin, r.user_id);
+      rows.push(formatRow(r, isAdmin));
+    }
     return json({ rows, total: count ?? rows.length, limit, offset });
   }
 
@@ -644,6 +667,9 @@ Deno.serve(async (req) => {
     }
     if (!ent) {
       return json({ error: "session_not_found" }, 404);
+    }
+    if (await isProtectedAdminUser(admin, ent.user_id)) {
+      return json({ error: "protected_admin" }, 403);
     }
     if (ent.refunded_at) {
       return json({ error: "already_refunded" }, 409);

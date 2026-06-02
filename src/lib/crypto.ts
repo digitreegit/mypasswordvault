@@ -37,6 +37,13 @@ export function fromBase64(b64: string): Uint8Array {
   return out;
 }
 
+/** WebAuthn credential IDs use base64url; vault salts use standard base64. Accepts both. */
+export function decodeBase64Flexible(encoded: string): Uint8Array {
+  const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = (4 - (normalized.length % 4)) % 4;
+  return fromBase64(normalized + "=".repeat(pad));
+}
+
 export async function deriveKey(
   masterPassword: string,
   salt: Uint8Array,

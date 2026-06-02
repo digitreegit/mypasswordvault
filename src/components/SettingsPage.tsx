@@ -23,11 +23,13 @@ import { PricingDrawer } from "./PricingDrawer";
 import { StripeCheckoutModal } from "./StripeCheckoutModal";
 import { downloadJsonFile } from "../lib/vaultBackup";
 import { isAppError } from "../lib/errors";
+import { SecuritySettingsPanel } from "./SecuritySettingsPanel";
 
-export type SettingsSection = "general" | "plan" | "backup" | "account";
+export type SettingsSection = "general" | "plan" | "security" | "backup" | "account";
 
 export function settingsSectionFromPath(hashPath: string): SettingsSection {
   if (hashPath === "settings/plan") return "plan";
+  if (hashPath === "settings/security") return "security";
   if (hashPath === "settings/backup") return "backup";
   if (hashPath === "settings/account") return "account";
   return "general";
@@ -151,6 +153,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     if (showAccountSections) {
       items.push({ id: "plan", label: t("settings.navPlan") });
     }
+    items.push({ id: "security", label: t("settings.navSecurity") });
     items.push({ id: "backup", label: t("settings.navBackup") });
     if (showAccountSections) {
       items.push({ id: "account", label: t("settings.accountTitle") });
@@ -167,18 +170,22 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
       ? t("settings.navGeneral")
       : activeSection === "plan"
         ? t("settings.licenseTitle")
-        : activeSection === "backup"
-          ? t("settings.syncTitle")
-          : t("settings.accountTitle");
+        : activeSection === "security"
+          ? t("settings.navSecurity")
+          : activeSection === "backup"
+            ? t("settings.syncTitle")
+            : t("settings.accountTitle");
 
   const pageSubtitle =
     activeSection === "general"
       ? t("settings.generalSubtitle")
       : activeSection === "plan"
         ? t("settings.planSubtitle")
-        : activeSection === "backup"
-          ? t("settings.backupSubtitle")
-          : t("settings.accountSubtitle");
+        : activeSection === "security"
+          ? t("settings.securitySubtitle")
+          : activeSection === "backup"
+            ? t("settings.backupSubtitle")
+            : t("settings.accountSubtitle");
 
   useEffect(() => {
     setMins(meta?.autoLockMinutes ?? 5);
@@ -270,14 +277,21 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
 
   function renderGeneral() {
     return (
-      <div className="card p-5 sm:p-6 space-y-6">
-        <div>
-          <label className="label" htmlFor="settings-autolock">
+      <div className="space-y-4">
+        <div className="card p-5 sm:p-6 space-y-3">
+          <h3
+            id="settings-autolock-title"
+            className="text-sm font-semibold text-ink-800"
+          >
             {t("settings.autoLock")}
-          </label>
+          </h3>
+          <p className="text-xs text-ink-600 leading-snug">
+            {t("settings.autoLockHint")}
+          </p>
           <div className="relative">
             <select
               id="settings-autolock"
+              aria-labelledby="settings-autolock-title"
               className="input w-full appearance-none bg-white pr-11 disabled:opacity-60"
               value={mins}
               disabled={busy}
@@ -314,18 +328,22 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
               <ChevronDown />
             </span>
           </div>
-          <p className="text-xs text-ink-500 mt-2 leading-snug">
-            {t("settings.autoLockHint")}
-          </p>
         </div>
 
-        <div className="border-t border-ink-100 pt-6">
-          <label className="label" htmlFor="settings-language">
+        <div className="card p-5 sm:p-6 space-y-3">
+          <h3
+            id="settings-language-title"
+            className="text-sm font-semibold text-ink-800"
+          >
             {t("settings.language")}
-          </label>
+          </h3>
+          <p className="text-xs text-ink-600 leading-snug">
+            {t("settings.languageHint")}
+          </p>
           <div className="relative">
             <select
               id="settings-language"
+              aria-labelledby="settings-language-title"
               className="input w-full appearance-none bg-white pr-11"
               value={locale}
               onChange={(e) => {
@@ -345,9 +363,6 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
               <ChevronDown />
             </span>
           </div>
-          <p className="text-xs text-ink-500 mt-2 leading-snug">
-            {t("settings.languageHint")}
-          </p>
         </div>
       </div>
     );
@@ -457,8 +472,8 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   function renderBackup() {
     return (
       <div className="space-y-4">
-        <div className="rounded-lg border border-sky-200 bg-sky-50 p-5 sm:p-6">
-          <p className="text-sm text-sky-900 leading-snug">{t("settings.syncHint")}</p>
+        <div className="rounded-lg border border-orange-200 bg-orange-50 p-5 sm:p-6">
+          <p className="text-sm text-orange-900 leading-snug">{t("settings.syncHint")}</p>
         </div>
         <div className="card p-5 sm:p-6 space-y-3">
           <h3 className="text-sm font-semibold text-ink-800">
@@ -580,10 +595,16 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     );
   }
 
+  function renderSecurity() {
+    return <SecuritySettingsPanel />;
+  }
+
   function renderSectionContent() {
     switch (activeSection) {
       case "plan":
         return renderPlan();
+      case "security":
+        return renderSecurity();
       case "backup":
         return renderBackup();
       case "account":

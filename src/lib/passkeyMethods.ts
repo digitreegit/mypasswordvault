@@ -1,3 +1,5 @@
+import type { PasskeyKind, StoredPasskey } from "./storage";
+
 /** WebAuthn registration hint groups — one credential per group per setup pass. */
 export type PasskeyRegistrationGroup = "platform";
 
@@ -77,21 +79,14 @@ export async function getPasskeyMethodOptions(): Promise<PasskeyMethodOption[]> 
       registrationGroup: "platform",
     });
   } else {
-    options.push({
-      id: "fingerprint",
-      hints: ["client-device"],
-      labelKey: "setup.passkeyMethodBiometric",
-      rowKind: "selectable",
-      registrationGroup: "platform",
-    });
-  }
-
   options.push({
-    id: "device-pin",
-    labelKey: "setup.passkeyMethodPin",
-    subtitleKey: "setup.passkeyPinIncluded",
-    rowKind: "included",
+    id: "fingerprint",
+    hints: ["client-device"],
+    labelKey: "setup.passkeyMethodBiometric",
+    rowKind: "selectable",
+    registrationGroup: "platform",
   });
+  }
 
   return options;
 }
@@ -126,4 +121,98 @@ export function isPasskeyMethodRegistered(
   registeredIds: ReadonlySet<PasskeyMethodId>
 ): boolean {
   return method.rowKind === "selectable" && registeredIds.has(method.id);
+}
+
+export type SettingsPasskeyAddId = "platform" | "security-key" | "hybrid";
+
+export interface SettingsPasskeyAddOption {
+  id: SettingsPasskeyAddId;
+  labelKey: string;
+  subtitleKey?: string;
+  hints: ("client-device" | "security-key" | "hybrid")[];
+}
+
+async function isPlatformAuthenticatorAvailable(): Promise<boolean> {
+  return (
+    typeof PublicKeyCredential !== "undefined" &&
+    typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable ===
+      "function" &&
+    (await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
+  );
+}
+
+/** Platform passkey (Touch ID, Windows Hello, etc.) — not a security key or phone. */
+export function resolvePasskeyKind(passkey: StoredPasskey): PasskeyKind {
+  if (passkey.kind) return passkey.kind;
+  const tr = passkey.transports ?? [];
+  if (tr.includes("usb") || tr.includes("nfc") || tr.includes("ble")) {
+    return "security-key";
+  }
+  if (tr.includes("hybrid") && !tr.includes("internal")) {
+    return "hybrid";
+  }
+  const label = passkey.label?.trim() ?? "";
+  if (
+    /phone|휴대폰|手机|スマホ|téléphone|telefon|teléfono|telefono|ponsel/i.test(
+      label,
+    )
+  ) {
+    return "hybrid";
+  }
+  if (/security key|보안 키|security-key|yubikey|llave de seguridad|clé de sécurité|sicherheitsschlüssel/i.test(label)) {
+    return "security-key";
+  }
+  return "platform";
+}
+
+export function isPlatformPasskey(passkey: StoredPasskey): boolean {
+  return resolvePasskeyKind(passkey) === "platform";
+}
+
+export function isHybridPasskey(passkey: StoredPasskey): boolean {
+  return resolvePasskeyKind(passkey) === "hybrid";
+}
+
+function hasPasskeyKind(
+  passkeys: StoredPasskey[],
+  kind: PasskeyKind,
+): boolean {
+  return passkeys.some((pk) => resolvePasskeyKind(pk) === kind);
+}
+
+/** Options for adding passkeys from Settings (platform, security key, phone). */
+export async function getSettingsPasskeyAddOptions(
+  existing: StoredPasskey[] = [],
+): Promise<SettingsPasskeyAddOption[]> {
+  const options: SettingsPasskeyAddOption[] = [];
+
+  if (
+    (await isPlatformAuthenticatorAvailable()) &&
+    !hasPasskeyKind(existing, "platform")
+  ) {
+    options.push({
+      id: "platform",
+      labelKey: "setup.passkeyDeviceTitle",
+      subtitleKey: "settings.passkeysAddPlatformHint",
+      hints: ["client-device"],
+    });
+  }
+
+  options.push({
+    id: "security-key",
+    labelKey: "setup.passkeyMethodSecurityKey",
+    subtitleKey: "settings.passkeysAddSecurityKeyHint",
+    hints: ["security-key"],
+  });
+
+  if (!hasPasskeyKind(existing, "hybrid")) {
+    options.push({
+      id: "hybrid",
+      labelKey: "setup.passkeyMethodPhone",
+      subtitleKey: "settings.passkeysAddPhoneHint",
+      hints: ["hybrid"],
+    });
+  }
+
+  return options;
 }

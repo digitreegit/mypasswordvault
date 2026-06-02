@@ -39,7 +39,10 @@ export const SETUP_ES: Record<string, string> = {
   "setup.nextPasskey": "Siguiente — registrar passkey",
   "setup.nextRecovery": "Siguiente — guardar códigos de recuperación",
   "setup.passkeyIntro":
-    "Activa la passkey de este dispositivo y continúa. Se usará Touch ID o Face ID cuando esté disponible; el PIN del dispositivo sirve de respaldo.",
+    "Pulsa Continuar y aprueba la solicitud del navegador o dispositivo.",
+  "setup.passkeyDeviceTitle": "Este dispositivo",
+  "setup.passkeyDeviceBody":
+    "El navegador puede usar biometría, PIN del dispositivo u otro método de desbloqueo que ya uses.",
   "setup.passkeyContinue": "Continuar",
   "setup.passkeyRegistering": "Registrando…",
   "setup.passkeyMethodsLoading": "Comprobando opciones disponibles…",
@@ -119,7 +122,10 @@ export const SETUP_DE: Record<string, string> = {
   "setup.nextPasskey": "Weiter — Passkey registrieren",
   "setup.nextRecovery": "Weiter — Wiederherstellungscodes speichern",
   "setup.passkeyIntro":
-    "Aktiviere den Passkey dieses Geräts und fahre fort. Touch ID oder Face ID wird bevorzugt; die Geräte-PIN ist der Fallback.",
+    "Tippe auf Weiter und bestätige die Aufforderung von Browser oder Gerät.",
+  "setup.passkeyDeviceTitle": "Dieses Gerät",
+  "setup.passkeyDeviceBody":
+    "Der Browser kann Biometrie, Geräte-PIN oder eine andere Entsperrmethode verwenden, die du bereits nutzt.",
   "setup.passkeyContinue": "Weiter",
   "setup.passkeyRegistering": "Wird registriert…",
   "setup.passkeyMethodsLoading": "Verfügbare Optionen werden geprüft…",
@@ -199,7 +205,10 @@ export const SETUP_FR: Record<string, string> = {
   "setup.nextPasskey": "Suivant — enregistrer la passkey",
   "setup.nextRecovery": "Suivant — enregistrer les codes de récupération",
   "setup.passkeyIntro":
-    "Activez la passkey de cet appareil, puis continuez. Touch ID ou Face ID est utilisé si disponible ; le code PIN de l’appareil sert de secours.",
+    "Appuyez sur Continuer et validez l’invite du navigateur ou de l’appareil.",
+  "setup.passkeyDeviceTitle": "Cet appareil",
+  "setup.passkeyDeviceBody":
+    "Le navigateur peut utiliser la biométrie, le code PIN de l’appareil ou une autre méthode de déverrouillage déjà en place.",
   "setup.passkeyContinue": "Continuer",
   "setup.passkeyRegistering": "Enregistrement…",
   "setup.passkeyMethodsLoading": "Vérification des options disponibles…",
@@ -279,7 +288,10 @@ export const SETUP_IT: Record<string, string> = {
   "setup.nextPasskey": "Avanti — registra passkey",
   "setup.nextRecovery": "Avanti — salva codici di recupero",
   "setup.passkeyIntro":
-    "Attiva la passkey di questo dispositivo e continua. Si usa Touch ID o Face ID quando disponibile; il PIN del dispositivo è il fallback.",
+    "Tocca Continua e approva la richiesta del browser o del dispositivo.",
+  "setup.passkeyDeviceTitle": "Questo dispositivo",
+  "setup.passkeyDeviceBody":
+    "Il browser può usare biometria, PIN del dispositivo o un altro metodo di sblocco che usi già.",
   "setup.passkeyContinue": "Continua",
   "setup.passkeyRegistering": "Registrazione…",
   "setup.passkeyMethodsLoading": "Verifica opzioni disponibili…",
@@ -355,8 +367,10 @@ export const SETUP_CN: Record<string, string> = {
   "setup.autoLock": "自动锁定（分钟）",
   "setup.nextPasskey": "下一步 — 注册通行密钥",
   "setup.nextRecovery": "下一步 — 保存恢复代码",
-  "setup.passkeyIntro":
-    "开启本设备的通行密钥后继续。优先使用 Touch ID 或 Face ID；不可用时使用设备 PIN。",
+  "setup.passkeyIntro": "点击继续，并在浏览器或设备提示时确认。",
+  "setup.passkeyDeviceTitle": "本设备",
+  "setup.passkeyDeviceBody":
+    "浏览器可能会使用生物识别、设备 PIN 或您已在该设备上使用的其他解锁方式。",
   "setup.passkeyContinue": "继续",
   "setup.passkeyRegistering": "正在注册…",
   "setup.passkeyMethodsLoading": "正在检查可用选项…",
@@ -431,7 +445,10 @@ export const SETUP_JP: Record<string, string> = {
   "setup.nextPasskey": "次へ — パスキーを登録",
   "setup.nextRecovery": "次へ — リカバリーコードを保存",
   "setup.passkeyIntro":
-    "このデバイスのパスキーをオンにして続行します。Touch ID / Face ID を優先し、利用できない場合はデバイス PIN を使用します。",
+    "続行を押し、ブラウザまたはデバイスの案内を承認してください。",
+  "setup.passkeyDeviceTitle": "このデバイス",
+  "setup.passkeyDeviceBody":
+    "ブラウザは、生体認証、デバイス PIN、またはすでにお使いのロック解除方法を使用する場合があります。",
   "setup.passkeyContinue": "続行",
   "setup.passkeyRegistering": "登録中…",
   "setup.passkeyMethodsLoading": "利用可能なオプションを確認中…",
@@ -510,7 +527,10 @@ export const SETUP_ID: Record<string, string> = {
   "setup.nextPasskey": "Berikutnya — daftarkan passkey",
   "setup.nextRecovery": "Berikutnya — simpan kode pemulihan",
   "setup.passkeyIntro":
-    "Aktifkan passkey perangkat ini lalu lanjutkan. Touch ID atau Face ID digunakan jika tersedia; PIN perangkat sebagai cadangan.",
+    "Ketuk Lanjutkan dan setujui permintaan dari browser atau perangkat.",
+  "setup.passkeyDeviceTitle": "Perangkat ini",
+  "setup.passkeyDeviceBody":
+    "Browser dapat menggunakan biometrik, PIN perangkat, atau metode buka kunci lain yang sudah Anda gunakan.",
   "setup.passkeyContinue": "Lanjutkan",
   "setup.passkeyRegistering": "Mendaftarkan…",
   "setup.passkeyMethodsLoading": "Memeriksa opsi yang tersedia…",

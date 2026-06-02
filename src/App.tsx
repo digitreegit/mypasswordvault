@@ -81,6 +81,7 @@ function AuthenticatedVaultRoutes({ hashPath }: { hashPath: string }) {
   const isSettingsRoute =
     route === "settings" ||
     route === "settings/plan" ||
+    route === "settings/security" ||
     route === "settings/backup" ||
     route === "settings/account";
 
@@ -128,8 +129,20 @@ function AuthenticatedApp() {
     return <AuthScreen />;
   }
 
+  const passkeyDisplayName =
+    (typeof session.user.user_metadata?.full_name === "string"
+      ? session.user.user_metadata.full_name
+      : null) ??
+    (typeof session.user.user_metadata?.name === "string"
+      ? session.user.user_metadata.name
+      : null);
+
   return (
-    <VaultProvider userId={session.user.id}>
+    <VaultProvider
+      userId={session.user.id}
+      userEmail={session.user.email}
+      userDisplayName={passkeyDisplayName}
+    >
       <HtmlLang />
       <AuthenticatedVaultRoutes hashPath={hashPath} />
     </VaultProvider>

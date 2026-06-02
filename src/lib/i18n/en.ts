@@ -128,15 +128,18 @@ export const MESSAGES_EN: Record<string, string> = {
   "setup.next2fa": "Next — set up two-factor authentication",
   "setup.nextRecovery": "Next — save recovery codes",
   "setup.passkeyIntro":
-    "Turn on this device’s passkey, then continue. Touch ID or Face ID is used when available; your device PIN works as a fallback.",
+    "Tap Continue and approve the prompt from your browser or device when asked.",
   "setup.registerPasskey": "Register passkey",
+  "setup.passkeyDeviceTitle": "This device",
+  "setup.passkeyDeviceBody":
+    "Your browser may use biometrics, a device PIN, or another unlock method you already use on this device.",
   "setup.passkeyContinue": "Continue",
   "setup.passkeyRegistering": "Registering…",
   "setup.passkeyMethodsLoading": "Checking available options…",
   "setup.passkeyMethodsHint":
     "This creates one passkey on this device. Security keys and other devices can be added later from Settings.",
   "setup.passkeyPrfHint":
-    "Some browsers ask for Touch ID or Face ID twice: once to register the passkey, and once to enable passwordless unlock.",
+    "Some browsers show two prompts: one to create the passkey, and one to enable passwordless unlock.",
   "setup.passkeyMethodAdded": "Added",
   "setup.passkeyPinIncluded":
     "Included automatically — used when biometrics aren’t available on this device.",
@@ -237,6 +240,8 @@ export const MESSAGES_EN: Record<string, string> = {
     "Passkey unlock is not available on this device. Use backup sign-in with your master password.",
   "errors.passkeyRequired": "Register a passkey before continuing.",
   "errors.passkeyNeedsSignIn": "Sign in with Google before registering a passkey.",
+  "errors.noPendingTotp": "Start authenticator setup again.",
+  "errors.backupTotpAlreadySet": "Authenticator app is already configured.",
   "errors.invalidRecoveryCode": "Invalid or already used recovery code.",
   "errors.noPasskeyRegistered": "No passkey is registered for this vault.",
   "errors.locked": "Vault is locked.",
@@ -261,8 +266,36 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.navAria": "Settings sections",
   "settings.navGeneral": "General",
   "settings.navPlan": "Plan",
+  "settings.navSecurity": "Security",
   "settings.navBackup": "Backup",
   "settings.generalSubtitle": "Auto-lock and other vault preferences on this device.",
+  "settings.securitySubtitle":
+    "Passkeys, authenticator app, and recovery codes for unlocking your vault.",
+  "settings.securityPasskeysTitle": "Passkeys",
+  "settings.securityPasskeysHint":
+    "Passwordless unlock with biometrics, device PIN, or a security key registered during setup.",
+  "settings.securityTotpTitle": "Authenticator app",
+  "settings.securityTotpHint":
+    "Backup 6-digit codes when passkeys are unavailable. Use Google Authenticator, 1Password, Authy, or similar.",
+  "settings.securityTotpConfigured": "Authenticator app configured",
+  "settings.securityTotpNotConfigured":
+    "Not configured — you skipped this during setup. Add it here for backup unlock.",
+  "settings.securityTotpSetup": "Set up authenticator app",
+  "settings.securityTotpConfirm": "Confirm and save",
+  "settings.securityTotpConfirming": "Saving…",
+  "settings.securityTotpAdded": "Authenticator app saved.",
+  "settings.securityRecoveryTitle": "Recovery codes",
+  "settings.securityRecoveryHint":
+    "One-time codes if passkeys and the authenticator app are unavailable.",
+  "settings.securityRecoveryRemaining": "{{count}} unused codes",
+  "settings.securityRecoveryOnceHint":
+    "Codes are shown once when created. Generate new codes to copy or download them again (this replaces all previous codes).",
+  "settings.securityRecoveryRegenerate": "Generate new recovery codes",
+  "settings.securityRecoveryRegenerateWarn":
+    "This replaces all existing recovery codes. Any codes you saved before will stop working.",
+  "settings.securityRecoveryRegenerateConfirm": "Generate new codes",
+  "settings.securityRecoveryRegenerating": "Generating…",
+  "settings.securityRecoveryDismiss": "Done",
   "settings.planSubtitle": "Entry limits and your license status.",
   "settings.backupSubtitle": "Cloud sync and optional offline backup files.",
   "settings.accountSubtitle": "Profile, sign-in, and account actions.",
@@ -271,6 +304,22 @@ export const MESSAGES_EN: Record<string, string> = {
     "Locks automatically when there is no mouse or keyboard activity.",
   "settings.language": "Language",
   "settings.languageHint": "Applies to the app interface on this device.",
+  "settings.passkeysTitle": "Passkeys & unlock methods",
+  "settings.passkeysHint":
+    "Add security keys, another device, or biometrics so you can unlock without your master password.",
+  "settings.passkeysListAria": "Registered passkeys",
+  "settings.passkeysRegisteredLabel": "Registered",
+  "settings.passkeysUnnamed": "Passkey",
+  "settings.passkeysEmpty": "No passkeys registered yet.",
+  "settings.passkeysAddLabel": "Add another",
+  "settings.passkeysAdding": "Registering…",
+  "settings.passkeysAdded": "Passkey added.",
+  "settings.passkeysAddPlatformHint":
+    "Uses biometrics, device PIN, or another unlock method on this device.",
+  "settings.passkeysAddSecurityKeyHint":
+    "USB, NFC, or Bluetooth security key (YubiKey, etc.).",
+  "settings.passkeysAddPhoneHint":
+    "Scan a QR code to register a passkey on your phone or tablet.",
   "settings.danger": "Danger zone",
   "settings.resetVault": "Reset vault (delete all data)",
   "settings.resetDesc":
@@ -576,6 +625,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "admin.colActions": "Actions",
   "admin.noResults": "No results",
   "admin.badgeRefunded": "Refunded",
+  "admin.badgeAdmin": "ADMIN",
   "admin.complaint": "Complaint",
   "admin.deleteUser": "Delete account",
   "admin.deleteUserModalBody":

@@ -48,7 +48,7 @@ body {
 
   /** Inline caution copy (setup warnings, etc.) — change color/size here only. */
   .caution-notice {
-    @apply text-xs text-amber-600 leading-snug;
+    @apply text-xs text-orange-600 leading-snug;
   }
   .caution-notice--with-icon {
     @apply flex gap-2;

@@ -126,15 +126,18 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.next2fa": "다음 — 2단계 인증 설정",
   "setup.nextRecovery": "다음 — 복구 코드 저장",
   "setup.passkeyIntro":
-    "이 기기의 패스키를 켠 뒤 계속하세요. Touch ID·Face ID를 우선 사용하고, 생체 인식을 쓸 수 없을 때는 기기 PIN으로 대체됩니다.",
+    "계속을 누른 뒤 브라우저나 기기에서 표시되는 안내를 승인하세요.",
   "setup.registerPasskey": "패스키 등록",
+  "setup.passkeyDeviceTitle": "이 기기",
+  "setup.passkeyDeviceBody":
+    "브라우저가 이 기기에서 이미 쓰는 생체 인식, 기기 PIN, 또는 다른 잠금 해제 방법을 사용할 수 있습니다.",
   "setup.passkeyContinue": "계속",
   "setup.passkeyRegistering": "등록 중…",
   "setup.passkeyMethodsLoading": "사용 가능한 옵션 확인 중…",
   "setup.passkeyMethodsHint":
     "이 기기에 패스키 하나를 등록합니다. 보안 키 등 다른 기기는 나중에 설정에서 추가할 수 있습니다.",
   "setup.passkeyPrfHint":
-    "일부 브라우저에서는 Touch ID·Face ID를 두 번 요청합니다. 패스키 등록 1회, 비밀번호 없이 잠금 해제 설정 1회입니다.",
+    "일부 브라우저는 안내를 두 번 표시합니다. 패스키 생성 1회, 비밀번호 없이 잠금 해제 설정 1회입니다.",
   "setup.passkeyMethodAdded": "등록됨",
   "setup.passkeyPinIncluded":
     "자동 포함 — 생체 인식을 사용할 수 없을 때 이 기기 PIN으로 잠금 해제합니다.",
@@ -230,6 +233,8 @@ export const MESSAGES_KR: Record<string, string> = {
     "이 기기에서는 패스키만으로 잠금 해제할 수 없습니다. 마스터 비밀번호 백업 로그인을 사용하세요.",
   "errors.passkeyRequired": "계속하려면 패스키를 등록하세요.",
   "errors.passkeyNeedsSignIn": "패스키 등록 전에 Google로 로그인하세요.",
+  "errors.noPendingTotp": "인증 앱 설정을 다시 시작하세요.",
+  "errors.backupTotpAlreadySet": "인증 앱이 이미 설정되어 있습니다.",
   "errors.invalidRecoveryCode": "복구 코드가 올바르지 않거나 이미 사용되었습니다.",
   "errors.noPasskeyRegistered": "등록된 패스키가 없습니다.",
   "errors.locked": "잠금 상태입니다.",
@@ -253,8 +258,36 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.navAria": "설정 메뉴",
   "settings.navGeneral": "일반",
   "settings.navPlan": "요금제",
+  "settings.navSecurity": "보안",
   "settings.navBackup": "백업",
   "settings.generalSubtitle": "이 기기의 자동 잠금 등 금고 환경설정입니다.",
+  "settings.securitySubtitle":
+    "금고 잠금 해제를 위한 패스키, 인증 앱, 복구 코드입니다.",
+  "settings.securityPasskeysTitle": "패스키",
+  "settings.securityPasskeysHint":
+    "설정 시 등록한 생체 인증, 기기 PIN 또는 보안 키로 비밀번호 없이 잠금 해제합니다.",
+  "settings.securityTotpTitle": "인증 앱",
+  "settings.securityTotpHint":
+    "패스키를 쓸 수 없을 때 사용하는 6자리 백업 코드입니다. Google Authenticator, 1Password, Authy 등을 사용하세요.",
+  "settings.securityTotpConfigured": "인증 앱 설정됨",
+  "settings.securityTotpNotConfigured":
+    "설정되지 않음 — 초기 설정에서 건너뛰었습니다. 여기서 백업 잠금 해제용으로 추가할 수 있습니다.",
+  "settings.securityTotpSetup": "인증 앱 설정",
+  "settings.securityTotpConfirm": "확인 후 저장",
+  "settings.securityTotpConfirming": "저장 중…",
+  "settings.securityTotpAdded": "인증 앱이 저장되었습니다.",
+  "settings.securityRecoveryTitle": "복구 코드",
+  "settings.securityRecoveryHint":
+    "패스키와 인증 앱을 모두 사용할 수 없을 때 쓰는 일회용 코드입니다.",
+  "settings.securityRecoveryRemaining": "미사용 코드 {{count}}개",
+  "settings.securityRecoveryOnceHint":
+    "코드는 생성 시 한 번만 표시됩니다. 다시 복사하거나 다운로드하려면 새 코드를 생성하세요(기존 코드는 모두 무효화됩니다).",
+  "settings.securityRecoveryRegenerate": "새 복구 코드 생성",
+  "settings.securityRecoveryRegenerateWarn":
+    "기존 복구 코드가 모두 교체됩니다. 저장해 두었던 코드는 더 이상 사용할 수 없습니다.",
+  "settings.securityRecoveryRegenerateConfirm": "새 코드 생성",
+  "settings.securityRecoveryRegenerating": "생성 중…",
+  "settings.securityRecoveryDismiss": "완료",
   "settings.planSubtitle": "항목 제한과 라이선스 상태입니다.",
   "settings.backupSubtitle": "클라우드 동기화와 오프라인 백업 파일입니다.",
   "settings.accountSubtitle": "프로필, 로그인, 계정 작업입니다.",
@@ -262,6 +295,22 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.autoLockHint": "마우스/키보드 입력이 없으면 자동으로 잠깁니다.",
   "settings.language": "언어",
   "settings.languageHint": "이 기기에서 앱 화면에 표시되는 언어입니다.",
+  "settings.passkeysTitle": "패스키 및 잠금 해제",
+  "settings.passkeysHint":
+    "보안 키, 다른 기기, 지문·얼굴 등 생체 인증을 추가하면 마스터 비밀번호 없이 잠금을 해제할 수 있습니다.",
+  "settings.passkeysListAria": "등록된 패스키",
+  "settings.passkeysRegisteredLabel": "등록됨",
+  "settings.passkeysUnnamed": "패스키",
+  "settings.passkeysEmpty": "등록된 패스키가 없습니다.",
+  "settings.passkeysAddLabel": "추가",
+  "settings.passkeysAdding": "등록 중…",
+  "settings.passkeysAdded": "패스키가 추가되었습니다.",
+  "settings.passkeysAddPlatformHint":
+    "이 기기의 생체 인증, 기기 PIN 또는 기존 잠금 해제 방식을 사용합니다.",
+  "settings.passkeysAddSecurityKeyHint":
+    "USB, NFC 또는 Bluetooth 보안 키(YubiKey 등).",
+  "settings.passkeysAddPhoneHint":
+    "QR 코드를 스캔하여 휴대폰이나 태블릿에 패스키를 등록합니다.",
   "settings.danger": "위험 구역",
   "settings.resetVault": "Vault 초기화 (모든 데이터 삭제)",
   "settings.resetDesc":
@@ -563,6 +612,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "admin.colActions": "작업",
   "admin.noResults": "결과 없음",
   "admin.badgeRefunded": "환불됨",
+  "admin.badgeAdmin": "ADMIN",
   "admin.complaint": "컴플레인",
   "admin.deleteUser": "계정 삭제",
   "admin.deleteUserModalBody":

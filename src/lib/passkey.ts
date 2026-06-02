@@ -6,8 +6,8 @@ import type {
   RegistrationJSON,
 } from "@passwordless-id/webauthn";
 import { AppError } from "./errors";
-import type { StoredPasskey, VaultMeta } from "./storage";
-import { fromBase64, randomBytes, toBase64 } from "./crypto";
+import { decodeBase64Flexible, fromBase64, randomBytes, toBase64 } from "./crypto";
+import type { PasskeyKind, StoredPasskey, VaultMeta } from "./storage";
 import {
   canonicalSiteHostname,
   isLocalDevHost,
@@ -122,6 +122,36 @@ export function newPrfSalt(): string {
   return toBase64(randomBytes(32));
 }
 
+/** WebAuthn `user.name` / `user.displayName` shown in OS passkey prompts (e.g. macOS Passwords). */
+export function resolvePasskeyUserIdentity(opts: {
+  userId?: string | null;
+  email?: string | null;
+  displayName?: string | null;
+}): { name: string; displayName: string } {
+  const email = opts.email?.trim();
+  const display = opts.displayName?.trim();
+  if (email) {
+    return {
+      name: email,
+      displayName: display || email,
+    };
+  }
+  const id = opts.userId?.trim();
+  if (id) {
+    const fallback = `user-${id.slice(0, 8)}`;
+    return { name: fallback, displayName: display || fallback };
+  }
+  return { name: "vault-user", displayName: display || "vault-user" };
+}
+
+export function kindFromHints(
+  hints?: ("client-device" | "security-key" | "hybrid")[],
+): PasskeyKind {
+  if (hints?.includes("security-key")) return "security-key";
+  if (hints?.includes("hybrid")) return "hybrid";
+  return "platform";
+}
+
 /** Enable PRF on the credential at registration (do not pass `eval` here — Chrome rejects it). */
 function prfEnableExtension() {
   return { prf: {} };
@@ -161,6 +191,7 @@ async function createRegistration(
   opts: {
     userId: string;
     userName: string;
+    userDisplayName: string;
     excludeCredentialIds: string[];
     hints?: ("client-device" | "security-key" | "hybrid")[];
   },
@@ -169,7 +200,7 @@ async function createRegistration(
 ): Promise<RegistrationJSON> {
   const customProperties: Record<string, unknown> = {
     excludeCredentials: opts.excludeCredentialIds.map((id) => ({
-      id,
+      id: decodeBase64Flexible(id),
       type: "public-key",
     })),
   };
@@ -180,7 +211,7 @@ async function createRegistration(
     user: {
       id: opts.userId,
       name: opts.userName,
-      displayName: opts.userName,
+      displayName: opts.userDisplayName,
     },
     challenge,
     domain: rpId(),
@@ -195,10 +226,12 @@ async function createRegistration(
 export async function registerVaultPasskey(opts: {
   userId: string;
   userName: string;
+  userDisplayName: string;
   excludeCredentialIds: string[];
   prfSaltB64: string;
   hints?: ("client-device" | "security-key" | "hybrid")[];
   label?: string;
+  kind?: PasskeyKind;
 }): Promise<{
   registration: RegistrationJSON;
   passkey: StoredPasskey;
@@ -263,6 +296,7 @@ export async function registerVaultPasskey(opts: {
     transports: info.credential.transports ?? [],
     createdAt: Date.now(),
     label: opts.label,
+    kind: opts.kind ?? kindFromHints(opts.hints),
   };
   const prfBytes = readPrfFirst(
     registration.clientExtensionResults as Record<string, unknown>,
