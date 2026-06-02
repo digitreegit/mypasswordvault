@@ -226,7 +226,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "errors.passkeyTimeout":
     "Passkey sign-in timed out. Try again, or use backup sign-in below.",
   "errors.passkeyWrongDomain":
-    "This passkey does not apply on this site (passkeys are tied to where you registered them). Use backup sign-in below.",
+    "This passkey does not apply on this site (passkeys are tied to where you registered them).",
   "errors.passkeySetupSecurity":
     "Could not register a passkey on this site. Use Safari or Chrome, complete the Touch ID / Face ID prompt, and always use the same address (127.0.0.1 vs localhost — pick one and stick to it).",
   "errors.passkeySetupOrigin":

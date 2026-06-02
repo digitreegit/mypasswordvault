@@ -219,7 +219,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "errors.passkeyTimeout":
     "패스키 로그인 시간이 초과되었습니다. 다시 시도하거나 백업 로그인을 사용하세요.",
   "errors.passkeyWrongDomain":
-    "이 사이트에서는 등록한 패스키를 사용할 수 없습니다(패스키는 등록한 도메인에 묶입니다). 아래 백업 로그인을 사용하세요.",
+    "이 사이트에서는 등록한 패스키를 사용할 수 없습니다(패스키는 등록한 도메인에 묶입니다).",
   "errors.passkeySetupSecurity":
     "이 환경에서 패스키를 등록하지 못했습니다. Safari 또는 Chrome을 쓰고, Touch ID / Face ID 안내를 끝까지 완료하세요. 주소도 항상 같게 쓰세요(127.0.0.1 vs localhost — 하나만 고르고 계속 쓰세요).",
   "errors.passkeySetupOrigin":
