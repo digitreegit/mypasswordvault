@@ -1058,6 +1058,8 @@ export function VaultScreen() {
                               ? t("vault.licenseBadgePro")
                               : t("vault.licenseBadgeFree")
                         }
+                        href={showAdminBadge ? "#/admin" : undefined}
+                        ariaLabel={showAdminBadge ? t("admin.title") : undefined}
                       />
                     ) : (
                       <span

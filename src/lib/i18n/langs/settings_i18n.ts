@@ -55,11 +55,12 @@ export const SETTINGS_CN: Record<string, string> = {
   "settings.licenseFree":
     "免费：此账户最多 {{limit}} 个密码条目。服务器无法读取密码内容。",
   "settings.licensePaid":
-    "永久许可证：$4.99 一次性付款 — 条目数量不限。绑定到已登录账户。",
+    "永久许可证：$4.99 一次性付款。绑定到已登录账户。",
   "settings.licenseStatusLicensed": "您的账户拥有永久许可证（条目不限）。",
   "settings.licenseStatusFree": "您使用的是免费套餐（已用 {{count}} / {{limit}} 个条目）。",
   "settings.licenseLoading": "正在检查许可证…",
   "settings.licenseLink": "打开套餐与定价",
+  "settings.upgradeToPro": "升级到 Pro",
   "settings.licenseRefresh": "刷新状态",
   "settings.planBadgeFree": "FREE",
   "settings.planBadgePro": "PRO",
@@ -128,11 +129,12 @@ export const SETTINGS_JP: Record<string, string> = {
   "settings.licenseFree":
     "無料: このアカウントはパスワードエントリー最大 {{limit}} 件。サーバーはパスワード内容を知りません。",
   "settings.licensePaid":
-    "永久ライセンス: $4.99 一括 — エントリー数無制限。サインイン中のアカウントに紐づきます。",
+    "永久ライセンス: $4.99 一括。サインイン中のアカウントに紐づきます。",
   "settings.licenseStatusLicensed": "このアカウントには永久ライセンスがあります（エントリー無制限）。",
   "settings.licenseStatusFree": "無料プランです（{{count}} / {{limit}} 件使用中）。",
   "settings.licenseLoading": "ライセンスを確認中…",
   "settings.licenseLink": "プランと料金を開く",
+  "settings.upgradeToPro": "Pro にアップグレード",
   "settings.licenseRefresh": "状態を更新",
   "settings.planBadgeFree": "FREE",
   "settings.planBadgePro": "PRO",
@@ -202,11 +204,12 @@ export const SETTINGS_ID: Record<string, string> = {
   "settings.licenseFree":
     "Gratis: maksimal {{limit}} entri kata sandi untuk akun ini. Server tidak dapat membaca isi kata sandi.",
   "settings.licensePaid":
-    "Lisensi permanen: $4,99 sekali bayar — entri tanpa batas. Terikat ke akun yang masuk.",
+    "Lisensi permanen: $4,99 sekali bayar. Terikat ke akun yang masuk.",
   "settings.licenseStatusLicensed": "Akun Anda memiliki lisensi permanen (entri tanpa batas).",
   "settings.licenseStatusFree": "Anda menggunakan paket gratis ({{count}} / {{limit}} entri digunakan).",
   "settings.licenseLoading": "Memeriksa lisensi…",
   "settings.licenseLink": "Buka paket & harga",
+  "settings.upgradeToPro": "Upgrade ke Pro",
   "settings.licenseRefresh": "Segarkan status",
   "settings.planBadgeFree": "FREE",
   "settings.planBadgePro": "PRO",
@@ -276,11 +279,12 @@ export const SETTINGS_ES: Record<string, string> = {
   "settings.licenseFree":
     "Gratis: hasta {{limit}} entradas de contraseña en esta cuenta. El servidor no puede leer el contenido.",
   "settings.licensePaid":
-    "Licencia permanente: $4,99 pago único — entradas ilimitadas. Vinculada a la cuenta con sesión iniciada.",
+    "Licencia permanente: $4,99 pago único. Vinculada a la cuenta con sesión iniciada.",
   "settings.licenseStatusLicensed": "Tu cuenta tiene una licencia permanente (entradas ilimitadas).",
   "settings.licenseStatusFree": "Estás en el plan gratuito ({{count}} / {{limit}} entradas usadas).",
   "settings.licenseLoading": "Comprobando licencia…",
   "settings.licenseLink": "Abrir planes y precios",
+  "settings.upgradeToPro": "Actualizar a Pro",
   "settings.licenseRefresh": "Actualizar estado",
   "settings.planBadgeFree": "FREE",
   "settings.planBadgePro": "PRO",
@@ -350,11 +354,12 @@ export const SETTINGS_DE: Record<string, string> = {
   "settings.licenseFree":
     "Kostenlos: bis zu {{limit}} Passworteinträge für dieses Konto. Der Server kann Passwortinhalte nicht lesen.",
   "settings.licensePaid":
-    "Dauerlizenz: $4,99 einmalig — unbegrenzte Einträge. An das angemeldete Konto gebunden.",
+    "Dauerlizenz: $4,99 einmalig. An das angemeldete Konto gebunden.",
   "settings.licenseStatusLicensed": "Ihr Konto hat eine Dauerlizenz (unbegrenzte Einträge).",
   "settings.licenseStatusFree": "Sie nutzen den kostenlosen Tarif ({{count}} / {{limit}} Einträge verwendet).",
   "settings.licenseLoading": "Lizenz wird geprüft…",
   "settings.licenseLink": "Tarife & Preise öffnen",
+  "settings.upgradeToPro": "Auf Pro upgraden",
   "settings.licenseRefresh": "Status aktualisieren",
   "settings.planBadgeFree": "FREE",
   "settings.planBadgePro": "PRO",
@@ -424,11 +429,12 @@ export const SETTINGS_FR: Record<string, string> = {
   "settings.licenseFree":
     "Gratuit : jusqu'à {{limit}} entrées de mot de passe pour ce compte. Le serveur ne peut pas lire le contenu.",
   "settings.licensePaid":
-    "Licence permanente : 4,99 $ en une fois — entrées illimitées. Liée au compte connecté.",
+    "Licence permanente : 4,99 $ en une fois. Liée au compte connecté.",
   "settings.licenseStatusLicensed": "Votre compte dispose d'une licence permanente (entrées illimitées).",
   "settings.licenseStatusFree": "Vous êtes sur le forfait gratuit ({{count}} / {{limit}} entrées utilisées).",
   "settings.licenseLoading": "Vérification de la licence…",
   "settings.licenseLink": "Ouvrir forfaits et tarifs",
+  "settings.upgradeToPro": "Passer à Pro",
   "settings.licenseRefresh": "Actualiser le statut",
   "settings.planBadgeFree": "FREE",
   "settings.planBadgePro": "PRO",
@@ -498,11 +504,12 @@ export const SETTINGS_IT: Record<string, string> = {
   "settings.licenseFree":
     "Gratuito: fino a {{limit}} voci password per questo account. Il server non può leggere il contenuto.",
   "settings.licensePaid":
-    "Licenza permanente: $4,99 una tantum — voci illimitate. Collegata all'account con accesso effettuato.",
+    "Licenza permanente: $4,99 una tantum. Collegata all'account con accesso effettuato.",
   "settings.licenseStatusLicensed": "Il tuo account ha una licenza permanente (voci illimitate).",
   "settings.licenseStatusFree": "Sei sul piano gratuito ({{count}} / {{limit}} voci usate).",
   "settings.licenseLoading": "Verifica licenza…",
   "settings.licenseLink": "Apri piani e prezzi",
+  "settings.upgradeToPro": "Passa a Pro",
   "settings.licenseRefresh": "Aggiorna stato",
   "settings.planBadgeFree": "FREE",
   "settings.planBadgePro": "PRO",

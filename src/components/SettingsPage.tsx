@@ -1,15 +1,26 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useVault } from "../lib/vault";
 import { useAuth } from "../lib/auth";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { getSupabase } from "../lib/supabaseClient";
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  ClipboardDocumentIcon,
+} from "@heroicons/react/24/outline";
 import { ChevronDown, Shield } from "./Icons";
 import { LOCALES, LOCALE_LABELS, type Locale } from "../lib/i18n/locale";
 import { AccountCredentialPanel } from "./AccountCredentialPanel";
 import { PlanBadge } from "./PlanBadge";
 import { UserMenuDropdown } from "./UserMenuDropdown";
 import { LanguageMenu } from "./LanguageMenu";
+import {
+  SettingsFreeFeatures,
+  SettingsFreePlanUpgrade,
+  SettingsProFeatures,
+} from "./CheckoutProFeatures";
 import { PricingDrawer } from "./PricingDrawer";
+import { StripeCheckoutModal } from "./StripeCheckoutModal";
 import { downloadJsonFile } from "../lib/vaultBackup";
 import { isAppError } from "../lib/errors";
 
@@ -65,8 +76,10 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     locale,
     setLocale,
     t,
+    refreshEntitlements,
+    finalizePaidCheckout,
   } = useVault();
-  const { configured, user, signOut, deleteAccount } = useAuth();
+  const { configured, user, session, loading: authLoading, signOut, deleteAccount } = useAuth();
   const [mins, setMins] = useState<number>(meta?.autoLockMinutes ?? 5);
   const [busy, setBusy] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -79,7 +92,11 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   const [backupToast, setBackupToast] = useState<string | null>(null);
   const [licenseKeyCopied, setLicenseKeyCopied] = useState(false);
   const [pricingDrawerOpen, setPricingDrawerOpen] = useState(false);
+  const [pricingBusy, setPricingBusy] = useState(false);
+  const [pricingErr, setPricingErr] = useState<string | null>(null);
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const sb = getSupabase();
 
   const vaultHref = "/app/#";
   const showAccountSections = Boolean(configured && user);
@@ -91,6 +108,41 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     e?.preventDefault();
     setPricingDrawerOpen(true);
   }
+
+  useEffect(() => {
+    if (section === "plan" && showAccountSections) {
+      void refreshEntitlements();
+    }
+  }, [section, showAccountSections, refreshEntitlements]);
+
+  const startCheckout = useCallback(() => {
+    setPricingErr(null);
+    if (!session) {
+      setPricingErr(t("pricing.errSignIn"));
+      return;
+    }
+    setPricingBusy(true);
+    setCheckoutModalOpen(true);
+  }, [session, t]);
+
+  const handleCheckoutClose = useCallback(() => {
+    setCheckoutModalOpen(false);
+    setPricingBusy(false);
+  }, []);
+
+  const handleCheckoutComplete = useCallback(
+    async (sessionId: string) => {
+      setCheckoutModalOpen(false);
+      setPricingBusy(false);
+      await finalizePaidCheckout(sessionId);
+    },
+    [finalizePaidCheckout],
+  );
+
+  const showPlanComparison =
+    showAccountSections && entitlementLoaded && !hasUnlimitedEntries && !isAdmin;
+  const showProFeaturesOnPlan =
+    showAccountSections && entitlementLoaded && hasUnlimitedEntries;
 
   const navItems = useMemo(() => {
     const items: { id: SettingsSection; label: string }[] = [
@@ -304,81 +356,100 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   function renderPlan() {
     if (!showAccountSections) return null;
     return (
-      <div className="card p-5 sm:p-6 space-y-3">
-        {!entitlementLoaded ? (
-          <p className="text-sm text-ink-500">{t("settings.licenseLoading")}</p>
-        ) : (
-          <>
-            <div className="flex items-center gap-2 flex-wrap">
-              <PlanBadge
-                label={
-                  isAdmin
-                    ? t("settings.planBadgeAdmin")
-                    : licensed
-                      ? t("settings.planBadgePro")
-                      : t("settings.planBadgeFree")
-                }
-              />
-            </div>
-            {hasUnlimitedEntries ? (
-              <p className="text-sm font-medium text-emerald-800 leading-snug">
-                {t("settings.licenseStatusLicensed")}
-              </p>
-            ) : (
-              <p className="text-sm text-ink-700 leading-snug">
-                {t("settings.licenseStatusFree", {
-                  count: entries.length,
-                  limit: freeEntryLimit,
-                })}
-              </p>
-            )}
-            {licensed && licenseKey ? (
-              <div className="space-y-2 pt-1">
-                <label className="label text-xs" htmlFor="settings-license-key">
-                  {t("settings.licenseKeyLabel")}
-                </label>
-                <div className="flex gap-2 items-stretch">
-                  <div
-                    id="settings-license-key"
-                    role="textbox"
-                    aria-readonly="true"
-                    className="flex-1 min-w-0 rounded-md border border-ink-200 bg-ink-100 px-3 py-2 font-mono text-xs text-ink-600 leading-snug break-all select-text cursor-default"
-                  >
-                    {licenseKey}
-                  </div>
-                  <button
-                    type="button"
-                    className="btn-secondary shrink-0 self-stretch px-3"
-                    onClick={() => void copyLicenseKey()}
-                  >
-                    {licenseKeyCopied
-                      ? t("settings.licenseKeyCopied")
-                      : t("settings.licenseCopyKey")}
-                  </button>
-                </div>
-                <p className="text-xs text-ink-500 leading-snug">
-                  {t("settings.licenseKeyHint")}
-                </p>
+      <div className="space-y-5 sm:space-y-6">
+        <div className="card p-5 sm:p-6 space-y-3">
+          {!entitlementLoaded ? (
+            <p className="text-sm text-ink-500">{t("settings.licenseLoading")}</p>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 flex-wrap">
+                <PlanBadge
+                  label={
+                    isAdmin
+                      ? t("settings.planBadgeAdmin")
+                      : licensed
+                        ? t("settings.planBadgePro")
+                        : t("settings.planBadgeFree")
+                  }
+                />
               </div>
-            ) : licensed ? (
-              <p className="text-xs text-ink-500 leading-snug">{t("settings.licenseNoSessionId")}</p>
-            ) : null}
-          </>
-        )}
-        {!hasUnlimitedEntries ? (
-          <>
-            <p className="text-sm text-ink-600 leading-relaxed border-t border-ink-100 pt-3">
-              {t("settings.licensePaid")}
-            </p>
-            <button
-              type="button"
-              className="btn-primary justify-center w-full sm:w-auto"
-              onClick={openPricingDrawer}
-            >
-              {t("settings.licenseLink")}
-            </button>
-          </>
-        ) : null}
+              {hasUnlimitedEntries ? (
+                <p className="text-sm font-medium text-emerald-600 leading-snug">
+                  {t("settings.licenseStatusLicensed")}
+                </p>
+              ) : (
+                <p className="text-sm text-ink-700 leading-snug">
+                  {t("settings.licenseStatusFree", {
+                    count: entries.length,
+                    limit: freeEntryLimit,
+                  })}
+                </p>
+              )}
+              {showProFeaturesOnPlan ? (
+                <SettingsProFeatures t={t} />
+              ) : null}
+              {showPlanComparison ? (
+                <>
+                  <SettingsFreeFeatures t={t} />
+                  <SettingsFreePlanUpgrade
+                    t={t}
+                    busy={pricingBusy}
+                    err={pricingErr}
+                    checkoutDisabled={
+                      !configured || pricingBusy || authLoading || !session
+                    }
+                    onCheckout={startCheckout}
+                  />
+                </>
+              ) : null}
+              {licensed && licenseKey ? (
+                <div className="space-y-2 pt-1">
+                  <label className="label text-xs" htmlFor="settings-license-key">
+                    {t("settings.licenseKeyLabel")}
+                  </label>
+                  <div className="flex min-h-[2.375rem] items-center rounded-md border border-ink-200 bg-ink-100 pr-1.5">
+                    <div
+                      id="settings-license-key"
+                      role="textbox"
+                      aria-readonly="true"
+                      className="min-w-0 flex-1 px-3 py-2 text-sm text-ink-500 break-all select-text cursor-default"
+                    >
+                      {licenseKey}
+                    </div>
+                    <button
+                      type="button"
+                      className="inline-flex shrink-0 items-center justify-center rounded-md p-1.5 text-ink-500 transition-colors hover:bg-ink-200/80 hover:text-ink-800"
+                      aria-label={
+                        licenseKeyCopied
+                          ? t("settings.licenseKeyCopied")
+                          : t("settings.licenseCopyKey")
+                      }
+                      title={
+                        licenseKeyCopied
+                          ? t("settings.licenseKeyCopied")
+                          : t("settings.licenseCopyKey")
+                      }
+                      onClick={() => void copyLicenseKey()}
+                    >
+                      {licenseKeyCopied ? (
+                        <CheckIcon className="h-4 w-4 text-emerald-600" aria-hidden />
+                      ) : (
+                        <ClipboardDocumentIcon className="h-4 w-4" aria-hidden />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-ink-500 leading-snug">
+                    {t("settings.licenseKeyHint")}
+                  </p>
+                </div>
+              ) : licensed ? (
+                <p className="text-xs text-ink-500 leading-snug">
+                  {t("settings.licenseNoSessionId")}
+                </p>
+              ) : null}
+            </>
+          )}
+        </div>
       </div>
     );
   }
@@ -559,6 +630,8 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
                             ? t("vault.licenseBadgePro")
                             : t("vault.licenseBadgeFree")
                       }
+                      href={isAdmin ? "#/admin" : undefined}
+                      ariaLabel={isAdmin ? t("admin.title") : undefined}
                     />
                   ) : (
                     <span
@@ -668,6 +741,15 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
         open={pricingDrawerOpen}
         onClose={() => setPricingDrawerOpen(false)}
       />
+      {sb && checkoutModalOpen ? (
+        <StripeCheckoutModal
+          open={checkoutModalOpen}
+          sb={sb}
+          t={t}
+          onClose={handleCheckoutClose}
+          onComplete={handleCheckoutComplete}
+        />
+      ) : null}
 
       {deleteAccountModalOpen && user
         ? createPortal(

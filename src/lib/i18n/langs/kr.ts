@@ -336,11 +336,12 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.licenseFree":
     "무료: 이 계정에 비밀번호 항목 최대 {{limit}}개. 서버는 비밀번호 내용을 알 수 없습니다.",
   "settings.licensePaid":
-    "영구 라이선스: $4.99 일회 결제 — 항목 수 무제한. 로그인한 계정에 연결됩니다.",
+    "영구 라이선스: $4.99 일회 결제. 로그인한 계정에 연결됩니다.",
   "settings.licenseStatusLicensed": "이 계정은 영구 라이선스가 적용되어 있습니다(항목 무제한).",
   "settings.licenseStatusFree": "무료 플랜입니다 ({{count}} / {{limit}}개 사용 중).",
   "settings.licenseLoading": "라이선스 확인 중…",
   "settings.licenseLink": "요금제·결제 페이지 열기",
+  "settings.upgradeToPro": "PRO로 업그레이드",
   "settings.licenseRefresh": "상태 새로고침",
   "settings.planBadgeFree": "FREE",
   "settings.planBadgePro": "PRO",

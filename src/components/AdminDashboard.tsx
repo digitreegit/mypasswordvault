@@ -162,10 +162,12 @@ function StatBox({
   label,
   value,
   amount,
+  amountClassName = "text-ink-500",
 }: {
   label: string;
   value: string | number;
   amount?: string;
+  amountClassName?: string;
 }) {
   return (
     <div className="rounded-xl border border-ink-200 bg-white p-4 shadow-sm">
@@ -175,7 +177,9 @@ function StatBox({
       <div className="mt-2 flex items-baseline justify-between gap-3">
         <p className="text-2xl font-semibold text-ink-900 tabular-nums">{value}</p>
         {amount ? (
-          <p className="text-base font-medium text-ink-500 tabular-nums shrink-0">
+          <p
+            className={`text-base font-medium tabular-nums shrink-0 ${amountClassName}`}
+          >
             {amount}
           </p>
         ) : null}
@@ -661,6 +665,10 @@ export function AdminDashboard() {
           <div className="space-y-3 sm:space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               <StatBox
+                label={t("admin.statsFreeSignupsToday")}
+                value={stats.free_signups_today}
+              />
+              <StatBox
                 label={t("admin.statsSalesProToday")}
                 value={stats.sales_today}
                 amount={formatMoney(stats.sales_amount_cents_today, "usd")}
@@ -669,10 +677,7 @@ export function AdminDashboard() {
                 label={t("admin.statsSalesProTotal")}
                 value={stats.sales_total ?? 0}
                 amount={formatMoney(stats.sales_amount_cents_total ?? 0, "usd")}
-              />
-              <StatBox
-                label={t("admin.statsFreeSignupsToday")}
-                value={stats.free_signups_today}
+                amountClassName="text-indigo-600"
               />
             </div>
             <AdminSalesBarChart stats={stats} t={t} formatMoney={formatMoney} />

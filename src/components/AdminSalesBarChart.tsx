@@ -5,7 +5,7 @@ type TFn = (key: string, vars?: Record<string, string | number>) => string;
 
 const PLATFORM_SEGMENTS = [
   { key: "web", labelKey: "admin.platformWeb", colorClass: "bg-sky-500" },
-  { key: "ios", labelKey: "admin.platformIos", colorClass: "bg-violet-500" },
+  { key: "ios", labelKey: "admin.platformIos", colorClass: "bg-red-500" },
   {
     key: "android",
     labelKey: "admin.platformAndroid",
@@ -137,8 +137,12 @@ export function AdminSalesBarChart({
         <p className="text-sm text-ink-600 tabular-nums">
           {t("admin.chartSalesSummary", {
             total,
-            amount: formatMoney(stats.sales_amount_cents_total ?? 0, "usd"),
-          })}
+            amount: "",
+          }).replace(/\s*·\s*$/, "")}
+          {" · "}
+          <span className="font-medium text-indigo-600">
+            {formatMoney(stats.sales_amount_cents_total ?? 0, "usd")}
+          </span>
         </p>
       </div>
 

@@ -346,11 +346,12 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.licenseFree":
     "Free: up to {{limit}} password entries on this account. The server never sees your passwords.",
   "settings.licensePaid":
-    "Permanent license: one-time $4.99 — unlimited entries. Tied to your signed-in account.",
+    "Permanent license: one-time $4.99. Tied to your signed-in account.",
   "settings.licenseStatusLicensed": "Your account has a permanent license (unlimited entries).",
   "settings.licenseStatusFree": "You are on the free plan ({{count}} / {{limit}} entries used).",
   "settings.licenseLoading": "Checking license…",
   "settings.licenseLink": "Open plans & pricing",
+  "settings.upgradeToPro": "Upgrade to Pro",
   "settings.licenseRefresh": "Refresh status",
   "settings.planBadgeFree": "FREE",
   "settings.planBadgePro": "PRO",
