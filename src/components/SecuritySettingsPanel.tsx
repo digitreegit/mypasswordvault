@@ -301,9 +301,11 @@ export function SecuritySettingsPanel() {
   async function startTotpEnrollment() {
     setTotpError(null);
     setTotpSuccess(null);
+    if (backupTotpEnabled) return;
     setTotpBusy(true);
     try {
       const { totpSecretBase32 } = await beginBackupTotpSettings();
+      if (!totpSecretBase32) return;
       setTotpSecret(totpSecretBase32);
       setTotpCode("");
       setTotpEnrolling(true);

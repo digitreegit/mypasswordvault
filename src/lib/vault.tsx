@@ -174,7 +174,7 @@ interface VaultContextValue {
   backupTotpEnabled: boolean;
   /** Unused recovery code count. */
   recoveryCodesRemaining: number;
-  beginBackupTotpSettings: () => Promise<{ totpSecretBase32: string }>;
+  beginBackupTotpSettings: () => Promise<{ totpSecretBase32: string | null }>;
   confirmBackupTotpSettings: (code: string) => Promise<void>;
   cancelBackupTotpSettings: () => void;
   regenerateRecoveryCodes: () => Promise<{ recoveryCodes: string[] }>;
@@ -383,6 +383,14 @@ export function VaultProvider({
       cancelled = true;
     };
   }, [userId]);
+
+  // Keep UI in sync with the in-memory session (e.g. right after setup before re-lock).
+  useEffect(() => {
+    if (status !== "unlocked") return;
+    const s = sessionRef.current;
+    if (!s) return;
+    setBackupTotpEnabled(s.totpSecret.length > 0);
+  }, [status, meta]);
 
   const lockInternal = useCallback(() => {
     sessionRef.current = null;
@@ -810,7 +818,8 @@ export function VaultProvider({
       throw new AppError("errors.locked");
     }
     if (sessionRef.current.totpSecret) {
-      throw new AppError("errors.backupTotpAlreadySet");
+      setBackupTotpEnabled(true);
+      return { totpSecretBase32: null };
     }
     const totpSecret = generateTotpSecretBase32();
     settingsTotpPendingRef.current = totpSecret;
@@ -934,6 +943,7 @@ export function VaultProvider({
       totpSecret: pending.totpSecret,
     };
     pendingSetupRef.current = null;
+    setBackupTotpEnabled(pending.totpSecret.length > 0);
     setMeta(m);
     setEntries([]);
     lastActivityRef.current = Date.now();
