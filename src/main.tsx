@@ -24,6 +24,11 @@ import { initNativeViewportLock } from "./lib/nativeViewportLock";
 if (isNativeApp()) {
   document.documentElement.classList.add("native-app");
   initNativeViewportLock();
+  void import("./lib/initNativeStoreBridge").then((m) =>
+    m.initNativeStoreBridge().catch((e) => {
+      console.error("initNativeStoreBridge", e);
+    }),
+  );
 }
 
 setupNativeAuthListener();

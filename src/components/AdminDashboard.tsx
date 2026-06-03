@@ -37,6 +37,11 @@ import {
   type AdminStats,
 } from "../lib/adminApi";
 import { AdminRegionBarChart, AdminSalesBarChart } from "./AdminSalesBarChart";
+import {
+  nativeFixedHeaderClass,
+  nativeMainScrollClass,
+  nativeScreenRootClass,
+} from "../lib/nativeLayout";
 
 const EMPTY_STATS: AdminStats = {
   sales_today: 0,
@@ -624,9 +629,11 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-ink-50 text-ink-900 w-full min-w-0 overflow-x-hidden">
-      <header className="border-b border-ink-200 bg-white">
-        <div className="max-w-7xl mx-auto w-full min-w-0 box-border px-3 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+    <div className={nativeScreenRootClass("bg-ink-50 text-ink-900")}>
+      <header
+        className={`${nativeFixedHeaderClass()} border-b border-ink-200 bg-white`}
+      >
+        <div className="admin-page max-w-7xl mx-auto w-full min-w-0 box-border py-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-lg font-semibold">{t("admin.title")}</h1>
             <p className="text-xs text-ink-500 mt-0.5">
@@ -664,7 +671,11 @@ export function AdminDashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <main
+        className={nativeMainScrollClass(
+          "admin-page max-w-7xl mx-auto w-full min-w-0 box-border py-6 space-y-6"
+        )}
+      >
         {error ? (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {t("admin.errorPrefix")}: {error}

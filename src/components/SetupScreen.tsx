@@ -357,10 +357,11 @@ export function SetupScreen() {
 
   return (
     <AppShell wide>
-      <div>
+      <div className="setup-shell-header">
         <ScreenHeader
           brandName={t("app.brandName")}
           pageTitle={pageTitle}
+          hideTitle
           locale={locale}
           onLocaleChange={(l) => void setLocale(l)}
           languageAriaLabel={t("settings.language")}
@@ -377,10 +378,16 @@ export function SetupScreen() {
               </div>
             </div>
           }
-          className="mb-1"
+          className="mb-0"
         />
+      </div>
 
-        <p className="text-sm text-ink-500 mb-5 leading-snug">{stageIntro}</p>
+      <div className="setup-shell-intro mb-5 space-y-1">
+        <h1 className="font-sans text-xl font-semibold text-ink-900 tracking-tight">
+          {pageTitle}
+        </h1>
+        <p className="text-sm text-ink-500 leading-snug">{stageIntro}</p>
+      </div>
 
         {stage === "password" && (
           <div className="space-y-4">
@@ -677,7 +684,6 @@ export function SetupScreen() {
             </button>
           </div>
         )}
-      </div>
 
       {passkeyHelpOpen && (
         <PasskeyHelpModal t={t} onClose={() => setPasskeyHelpOpen(false)} />

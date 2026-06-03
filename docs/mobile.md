@@ -43,7 +43,7 @@ Production build: set `.env` with `VITE_SUPABASE_*`, then `npm run cap:sync` bef
 | Client `src/lib/storePurchase.ts` | Bridge + invoke |
 | Pricing UI (App Store / Play buttons, Restore) | `PricingTiers`, `useProPurchase` |
 | Apple / Google real verification | TODO in edge function |
-| Native billing plugin | Wire `window.__mpwStoreBridge` (below) |
+| Native billing plugin | `capacitor-plugin-cdv-purchase` → `initNativeStoreBridge.ts` |
 
 ### Product ID (both stores)
 
@@ -70,37 +70,13 @@ Secrets (production):
 
 **Dev only** (never in production): `STORE_VERIFY_DEV_BYPASS=1` — client sends `verification_data: "dev_ok"` from `devGrantStoreLicense()` when the native bridge is missing.
 
-### Native bridge (plugin wiring)
+### Native bridge
 
-Before React boots (or in `main.tsx`), assign:
+`src/lib/initNativeStoreBridge.ts` registers `window.__mpwStoreBridge` on startup (`main.tsx`) using **capacitor-plugin-cdv-purchase** (StoreKit 2 / Play Billing). After `npm install`, run `npm run cap:sync` so Xcode picks up the plugin.
 
-```ts
-import type { StorePurchasePayload } from "./lib/storePurchase";
+In Xcode, add the **In-App Purchase** capability. Create product `com.skyface.mypasswordvault.pro_lifetime` (non-consumable) in App Store Connect.
 
-window.__mpwStoreBridge = {
-  async purchase(productId) {
-    // Call StoreKit 2 / Play Billing; return receipt/token
-    return {
-      platform: "ios", // or "android"
-      productId,
-      verificationData: "<jws or purchase token>",
-      transactionId: "<optional>",
-    };
-  },
-  async restore() {
-    // Return latest owned transaction or null
-    return null;
-  },
-};
-```
-
-Recommended plugins (pick one path):
-
-- **RevenueCat** — `@revenuecat/purchases-capacitor` (fastest cross-store)
-- **cordova-plugin-purchase** — works with Capacitor
-- Custom thin native module
-
-Until the bridge exists, the app shows **storeBridgePending** and allows **dev grant** in `import.meta.env.DEV` only.
+Until `store.initialize` succeeds, pricing UI shows **storeBridgePending** and allows **dev grant** in `import.meta.env.DEV` only.
 
 ## Phase 3 — Mobile UX
 

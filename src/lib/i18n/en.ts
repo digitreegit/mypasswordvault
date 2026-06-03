@@ -271,6 +271,7 @@ export const MESSAGES_EN: Record<string, string> = {
     "Native billing is not connected. See docs/mobile.md or purchase on the web with the same email.",
   "errors.storeVerifyFailed": "Could not verify your store purchase. Try Restore purchases or contact support.",
   "errors.storeDevOnly": "Dev store grant is only available in development builds.",
+  "errors.storePurchaseCancelled": "Purchase was cancelled.",
   "errors.entryLimitReached":
     "The free plan allows up to {{limit}} password entries. Upgrade to add more.",
   "errors.importExceedsEntryLimit":

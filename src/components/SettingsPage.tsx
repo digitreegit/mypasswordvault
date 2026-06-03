@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom";
 import { useVault } from "../lib/vault";
 import { useAuth } from "../lib/auth";
-import { getSupabase } from "../lib/supabaseClient";
 import {
   ArrowLeftIcon,
   CheckIcon,
@@ -20,7 +19,6 @@ import {
   SettingsProFeatures,
 } from "./CheckoutProFeatures";
 import { PricingDrawer } from "./PricingDrawer";
-import { StripeCheckoutModal } from "./StripeCheckoutModal";
 import { downloadJsonFile } from "../lib/vaultBackup";
 import { isAppError } from "../lib/errors";
 import { SecuritySettingsPanel } from "./SecuritySettingsPanel";
@@ -85,7 +83,6 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     setLocale,
     t,
     refreshEntitlements,
-    finalizePaidCheckout,
   } = useVault();
   const { configured, user, session, loading: authLoading, signOut, deleteAccount } = useAuth();
   const [mins, setMins] = useState<number>(meta?.autoLockMinutes ?? 5);
@@ -100,11 +97,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   const [backupToast, setBackupToast] = useState<string | null>(null);
   const [licenseKeyCopied, setLicenseKeyCopied] = useState(false);
   const [pricingDrawerOpen, setPricingDrawerOpen] = useState(false);
-  const [pricingBusy, setPricingBusy] = useState(false);
-  const [pricingErr, setPricingErr] = useState<string | null>(null);
-  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const sb = getSupabase();
 
   const vaultHref = "/app/#";
   const showAccountSections = Boolean(configured && user);
@@ -122,30 +115,6 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
       void refreshEntitlements();
     }
   }, [section, showAccountSections, refreshEntitlements]);
-
-  const startCheckout = useCallback(() => {
-    setPricingErr(null);
-    if (!session) {
-      setPricingErr(t("pricing.errSignIn"));
-      return;
-    }
-    setPricingBusy(true);
-    setCheckoutModalOpen(true);
-  }, [session, t]);
-
-  const handleCheckoutClose = useCallback(() => {
-    setCheckoutModalOpen(false);
-    setPricingBusy(false);
-  }, []);
-
-  const handleCheckoutComplete = useCallback(
-    async (sessionId: string) => {
-      setCheckoutModalOpen(false);
-      setPricingBusy(false);
-      await finalizePaidCheckout(sessionId);
-    },
-    [finalizePaidCheckout],
-  );
 
   const showPlanComparison =
     showAccountSections && entitlementLoaded && !hasUnlimitedEntries && !isAdmin;
@@ -414,12 +383,10 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
                   <SettingsFreeFeatures t={t} />
                   <SettingsFreePlanUpgrade
                     t={t}
-                    busy={pricingBusy}
-                    err={pricingErr}
-                    checkoutDisabled={
-                      !configured || pricingBusy || authLoading || !session
-                    }
-                    onCheckout={startCheckout}
+                    busy={false}
+                    err={null}
+                    checkoutDisabled={!configured || authLoading || !session}
+                    onCheckout={openPricingDrawer}
                   />
                 </>
               ) : null}
@@ -768,15 +735,6 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
         open={pricingDrawerOpen}
         onClose={() => setPricingDrawerOpen(false)}
       />
-      {sb && checkoutModalOpen ? (
-        <StripeCheckoutModal
-          open={checkoutModalOpen}
-          sb={sb}
-          t={t}
-          onClose={handleCheckoutClose}
-          onComplete={handleCheckoutComplete}
-        />
-      ) : null}
 
       {deleteAccountModalOpen && user
         ? createPortal(

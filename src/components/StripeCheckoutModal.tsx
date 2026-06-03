@@ -17,6 +17,7 @@ import type {
   StripeEmbeddedCheckout,
   StripeWithEmbeddedCheckout,
 } from "../lib/stripeEmbeddedCheckout";
+import { usesStoreBilling } from "../lib/platform";
 import { CheckoutProFeatures } from "./CheckoutProFeatures";
 
 type TFn = (key: string) => string;
@@ -78,6 +79,10 @@ export function StripeCheckoutModal({
       setPhase("loading");
       setError(null);
       sessionIdRef.current = null;
+      return;
+    }
+
+    if (usesStoreBilling()) {
       return;
     }
 
@@ -186,6 +191,12 @@ export function StripeCheckoutModal({
   }, [open, handleClose]);
 
   useEffect(() => {
+    if (open && usesStoreBilling()) {
+      onClose();
+    }
+  }, [open, onClose]);
+
+  useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -194,7 +205,7 @@ export function StripeCheckoutModal({
     };
   }, [open]);
 
-  if (!open) return null;
+  if (!open || usesStoreBilling()) return null;
 
   return createPortal(
     <div

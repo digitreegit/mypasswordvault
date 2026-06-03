@@ -12,6 +12,8 @@ export type StorePurchasePayload = {
   productId: string;
   verificationData: string;
   transactionId?: string;
+  /** Call after server verification so the store can finalize the transaction. */
+  completePurchase?: () => void | Promise<void>;
 };
 
 /**
@@ -49,7 +51,11 @@ export async function purchaseProViaStore(): Promise<void> {
   }
 
   const payload = await bridge.purchase(STORE_PRO_PRODUCT_ID);
-  await verifyStorePurchaseOnServer({ ...payload, restore: false });
+  try {
+    await verifyStorePurchaseOnServer({ ...payload, restore: false });
+  } finally {
+    await payload.completePurchase?.();
+  }
 }
 
 export async function restoreStorePurchases(): Promise<boolean> {
@@ -60,7 +66,11 @@ export async function restoreStorePurchases(): Promise<boolean> {
   }
   const payload = await bridge.restore();
   if (!payload) return false;
-  await verifyStorePurchaseOnServer({ ...payload, restore: true });
+  try {
+    await verifyStorePurchaseOnServer({ ...payload, restore: true });
+  } finally {
+    await payload.completePurchase?.();
+  }
   return true;
 }
 

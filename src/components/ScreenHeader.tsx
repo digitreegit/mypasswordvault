@@ -25,6 +25,8 @@ interface ScreenHeaderProps {
   titleClassName?: string;
   /** When false, hides the top-right language menu. Defaults to true. */
   showLanguageMenu?: boolean;
+  /** Hide the page title block (brand + beforeTitle still render). Used when title scrolls below a sticky chrome. */
+  hideTitle?: boolean;
 }
 
 export function ScreenHeader({
@@ -43,6 +45,7 @@ export function ScreenHeader({
   subtitle,
   titleClassName = "text-xl font-semibold text-ink-900 tracking-tight",
   showLanguageMenu = true,
+  hideTitle = false,
 }: ScreenHeaderProps) {
   return (
     <header
@@ -88,6 +91,7 @@ export function ScreenHeader({
         ) : null}
       </div>
       {beforeTitle}
+      {!hideTitle ? (
       <div className="space-y-1">
         <div className="flex items-start justify-between gap-2">
           <h1 id={titleId} className={["font-sans", titleClassName].join(" ")}>
@@ -101,6 +105,7 @@ export function ScreenHeader({
           <p className="text-sm text-ink-500 leading-snug">{subtitle}</p>
         ) : null}
       </div>
+      ) : null}
     </header>
   );
 }

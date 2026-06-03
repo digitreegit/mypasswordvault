@@ -35,6 +35,9 @@ export function useProPurchase(t: TFn) {
       await purchaseProViaStore();
       return { ok: true as const, via: "store" as const };
     } catch (e: unknown) {
+      if (isAppError(e) && e.code === "errors.storePurchaseCancelled") {
+        return { ok: false as const };
+      }
       setErr(formatErr(e));
       return { ok: false as const };
     } finally {
@@ -53,6 +56,9 @@ export function useProPurchase(t: TFn) {
       }
       return { ok: true as const };
     } catch (e: unknown) {
+      if (isAppError(e) && e.code === "errors.storePurchaseCancelled") {
+        return { ok: false as const };
+      }
       setErr(formatErr(e));
       return { ok: false as const };
     } finally {

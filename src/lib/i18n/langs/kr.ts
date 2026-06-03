@@ -264,6 +264,7 @@ export const MESSAGES_KR: Record<string, string> = {
     "네이티브 결제가 연결되지 않았습니다. docs/mobile.md를 참고하거나 웹에서 같은 이메일로 구매하세요.",
   "errors.storeVerifyFailed": "스토어 구매를 확인하지 못했습니다. 구매 복원을 시도하거나 문의하세요.",
   "errors.storeDevOnly": "개발용 스토어 부여는 개발 빌드에서만 사용할 수 있습니다.",
+  "errors.storePurchaseCancelled": "구매가 취소되었습니다.",
   "errors.entryLimitReached":
     "무료 플랜에서는 비밀번호 항목을 최대 {{limit}}개까지 저장할 수 있습니다. 더 추가하려면 유료 라이선스로 업그레이드하세요.",
   "errors.importExceedsEntryLimit":
