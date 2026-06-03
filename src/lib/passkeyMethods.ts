@@ -1,4 +1,6 @@
 import type { PasskeyKind, StoredPasskey } from "./storage";
+import { Capacitor } from "@capacitor/core";
+import { isNativeApp } from "./platform";
 
 /** WebAuthn registration hint groups — one credential per group per setup pass. */
 export type PasskeyRegistrationGroup = "platform";
@@ -27,6 +29,36 @@ function detectAppleMobileFaceId(): boolean {
   return false;
 }
 
+const PLATFORM_AUTH_PROBE_MS = 2500;
+
+/**
+ * WKWebView (Capacitor iOS) often never resolves
+ * `isUserVerifyingPlatformAuthenticatorAvailable()` — treat iOS native as available.
+ */
+export async function isPlatformAuthenticatorAvailable(): Promise<boolean> {
+  if (typeof PublicKeyCredential === "undefined") return false;
+
+  if (isNativeApp() && Capacitor.getPlatform() === "ios") {
+    return true;
+  }
+
+  const probe = PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable;
+  if (typeof probe !== "function") {
+    return isNativeApp() && Capacitor.getPlatform() === "android";
+  }
+
+  try {
+    return await Promise.race([
+      probe.call(PublicKeyCredential),
+      new Promise<boolean>((resolve) => {
+        setTimeout(() => resolve(isNativeApp()), PLATFORM_AUTH_PROBE_MS);
+      }),
+    ]);
+  } catch {
+    return isNativeApp();
+  }
+}
+
 /**
  * Setup offers one platform passkey (Touch ID / Face ID / etc.).
  * Device PIN is not a separate credential — the OS uses it as fallback UV.
@@ -38,11 +70,7 @@ export async function getPasskeyMethodOptions(): Promise<PasskeyMethodOption[]> 
   const isWindows = /Win/.test(ua);
   const isAndroid = /Android/.test(ua);
 
-  const platformAvailable =
-    typeof PublicKeyCredential !== "undefined" &&
-    typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable ===
-      "function" &&
-    (await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable());
+  const platformAvailable = await isPlatformAuthenticatorAvailable();
 
   if (!platformAvailable) return options;
 
@@ -130,15 +158,6 @@ export interface SettingsPasskeyAddOption {
   labelKey: string;
   subtitleKey?: string;
   hints: ("client-device" | "security-key" | "hybrid")[];
-}
-
-async function isPlatformAuthenticatorAvailable(): Promise<boolean> {
-  return (
-    typeof PublicKeyCredential !== "undefined" &&
-    typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable ===
-      "function" &&
-    (await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
-  );
 }
 
 /** Platform passkey (Touch ID, Windows Hello, etc.) — not a security key or phone. */

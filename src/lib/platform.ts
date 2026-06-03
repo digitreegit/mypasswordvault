@@ -12,6 +12,9 @@ export const NATIVE_AUTH_REDIRECT = `${NATIVE_AUTH_SCHEME}://auth/callback`;
 /** App Store / Play non-consumable SKU — must match store consoles. */
 export const STORE_PRO_PRODUCT_ID = "com.skyface.mypasswordvault.pro_lifetime";
 
+/** Capacitor bundled WebView hostname — must match `server.hostname` and Apple Associated Domains. */
+export const NATIVE_PASSKEY_HOSTNAME = "mypasswordvault.app";
+
 export type NativePlatform = "ios" | "android";
 export type ClientPlatform = NativePlatform | "web";
 

@@ -18,6 +18,13 @@ import {
   redirectVercelPreviewToCanonical,
 } from "./lib/siteOrigin";
 import { ensureOAuthSessionFromUrl } from "./lib/supabaseAuthRedirect";
+import { isNativeApp } from "./lib/platform";
+import { initNativeViewportLock } from "./lib/nativeViewportLock";
+
+if (isNativeApp()) {
+  document.documentElement.classList.add("native-app");
+  initNativeViewportLock();
+}
 
 setupNativeAuthListener();
 captureCheckoutReturnFromUrl();

@@ -8,6 +8,7 @@ import {
 import { useVault } from "../lib/vault";
 import { LockOpen, Eye, EyeOff } from "./Icons";
 import { ScreenHeader } from "./ScreenHeader";
+import { AppShell } from "./AppShell";
 import { isAppError } from "../lib/errors";
 import { passkeyRegisteredForCurrentSite } from "../lib/passkey";
 import { isNativeApp } from "../lib/platform";
@@ -110,8 +111,8 @@ export function LockScreen() {
   }, [canPasskey]);
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-ink-50 to-ink-100">
-      <div className="card w-full max-w-md p-5 sm:p-8 space-y-4">
+    <AppShell>
+      <div className="space-y-4">
         <ScreenHeader
           brandName={t("app.brandName")}
           pageTitle={t("lock.title")}
@@ -322,6 +323,6 @@ export function LockScreen() {
           </>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }

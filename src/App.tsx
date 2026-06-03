@@ -20,6 +20,7 @@ import {
   isCheckoutPopupReturn,
   parseCheckoutReturn,
 } from "./lib/checkoutReturn";
+import { nativeScreenRootClass } from "./lib/nativeLayout";
 
 function parseHashPath(): string {
   if (typeof window === "undefined") return "";
@@ -49,7 +50,7 @@ function Router() {
   const { status, t } = useVault();
   if (status === "loading") {
     return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center text-ink-500 px-4">
+      <div className={nativeScreenRootClass("items-center justify-center text-ink-500 px-4")}>
         {t("app.loading")}
       </div>
     );
@@ -119,7 +120,7 @@ function AuthenticatedApp() {
 
   if (configured && (loading || (checkoutSuccessReturn && !session))) {
     return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center text-ink-500 px-4">
+      <div className={nativeScreenRootClass("items-center justify-center text-ink-500 px-4")}>
         {translate(bootLocale, "app.authLoading")}
       </div>
     );

@@ -127,7 +127,7 @@ export function PasswordGenerator({ initial, onUse, onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="card w-full max-w-md max-h-[min(90dvh,90vh)] overflow-y-auto p-4 sm:p-6 space-y-4"
+        className="modal-panel card w-full max-w-md max-h-[min(90dvh,90vh)] overflow-y-auto overflow-x-hidden p-4 sm:p-6 space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-2 pb-1">

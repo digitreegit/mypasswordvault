@@ -23,12 +23,18 @@ const config: CapacitorConfig = {
   webDir: "dist-capacitor",
   server: {
     androidScheme: "https",
+    /** WebAuthn requires https:// origin — default `capacitor://` is rejected on iOS. */
+    iosScheme: "https",
+    /** Must match rpId + Associated Domains + AASA on the live site. */
+    hostname: "mypasswordvault.app",
     ...(devServer
       ? { url: resolveCapacitorDevServerUrl(devServer), cleartext: true }
       : {}),
   },
   ios: {
+    backgroundColor: "#ffffff",
     contentInset: "automatic",
+    scrollEnabled: false,
     scheme: "My Password Vault",
   },
 };

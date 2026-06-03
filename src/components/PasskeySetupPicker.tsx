@@ -32,17 +32,22 @@ export function PasskeySetupPicker({
 }: PasskeySetupPickerProps) {
   const [methods, setMethods] = useState<PasskeyMethodOption[]>([]);
   const [selected, setSelected] = useState<Set<PasskeyMethodId>>(new Set());
+  const [loadingMethods, setLoadingMethods] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    void getPasskeyMethodOptions().then((opts) => {
-      if (cancelled) return;
-      setMethods(opts);
-      const selectable = getSelectableMethods(opts);
-      if (selectable.length > 0) {
-        setSelected(new Set([selectable[0].id]));
-      }
-    });
+    void getPasskeyMethodOptions()
+      .then((opts) => {
+        if (cancelled) return;
+        setMethods(opts);
+        const selectable = getSelectableMethods(opts);
+        if (selectable.length > 0) {
+          setSelected(new Set([selectable[0].id]));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingMethods(false);
+      });
     return () => {
       cancelled = true;
     };
@@ -84,9 +89,13 @@ export function PasskeySetupPicker({
       ) : null}
 
       <div className="rounded-xl border border-ink-200 bg-white px-4 py-4 sm:px-5 sm:py-5">
-        {methods.length === 0 ? (
+        {loadingMethods ? (
           <p className="text-sm text-ink-500 text-center py-2">
             {t("setup.passkeyMethodsLoading")}
+          </p>
+        ) : methods.length === 0 ? (
+          <p className="text-sm text-ink-500 text-center py-2">
+            {t("setup.passkeyUnsupported")}
           </p>
         ) : (
           <div className="flex items-start gap-3">

@@ -26,6 +26,7 @@ import {
   isDefaultSupabaseProjectHost,
 } from "../lib/supabaseClient";
 import { ScreenHeader } from "./ScreenHeader";
+import { AppShell } from "./AppShell";
 import { privacyPolicyUrl, termsOfUseUrl } from "../lib/privacyPolicyUrl";
 import { Eye, EyeOff } from "./Icons";
 
@@ -288,8 +289,8 @@ export function AuthScreen() {
 
   if (!configured) {
     return (
-      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-ink-50 to-ink-100">
-        <div className="card w-full max-w-md p-6 sm:p-8 space-y-4">
+      <AppShell>
+        <div className="space-y-4">
           <ScreenHeader
             brandName={t("app.brandName")}
             pageTitle={t("auth.notConfiguredTitle")}
@@ -303,15 +304,15 @@ export function AuthScreen() {
             {t("auth.notConfiguredBody")}
           </p>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   const showSignInSignUp = view === "signin" || view === "signup";
 
   return (
-    <div className="min-h-[100dvh] flex justify-center px-4 py-10 sm:px-6 sm:py-12 bg-gradient-to-br from-ink-50 to-ink-100">
-      <div className="card w-full max-w-md p-6 sm:p-8 space-y-5 my-auto">
+    <AppShell>
+      <div className="space-y-5">
         <ScreenHeader
           brandName={t("app.brandName")}
           pageTitle={pageTitle}
@@ -536,7 +537,7 @@ export function AuthScreen() {
           </p>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }
 

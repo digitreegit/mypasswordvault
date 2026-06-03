@@ -223,12 +223,18 @@ export const MESSAGES_EN: Record<string, string> = {
   "errors.passkeyFailed": "Passkey verification failed.",
   "errors.passkeyCancelled":
     "Passkey sign-in was cancelled or timed out. Try again, or use backup sign-in below.",
+  "errors.passkeyCancelledSetup":
+    "Passkey registration was cancelled or timed out. Tap Continue and complete the Face ID or device passcode prompt.",
   "errors.passkeyTimeout":
     "Passkey sign-in timed out. Try again, or use backup sign-in below.",
+  "errors.passkeyTimeoutSetup":
+    "Passkey registration timed out. Tap Continue and complete the Face ID or device passcode prompt.",
   "errors.passkeyWrongDomain":
     "This passkey does not apply on this site (passkeys are tied to where you registered them).",
   "errors.passkeySetupSecurity":
     "Could not register a passkey on this site. Use Safari or Chrome, complete the Touch ID / Face ID prompt, and always use the same address (127.0.0.1 vs localhost — pick one and stick to it).",
+  "errors.passkeySetupSecurityNative":
+    "Could not register a passkey in the app. Tap Continue, then approve the Face ID or device passcode prompt when it appears.",
   "errors.passkeySetupOrigin":
     "The browser address does not match where this app is running. Open the vault at the same URL you started setup with (including 127.0.0.1 vs localhost).",
   "errors.passkeySetupPrf":

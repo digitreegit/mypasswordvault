@@ -14,6 +14,7 @@ import {
 import { passwordStrengthScore } from "../lib/passwordGenerator";
 import { Check, Copy, Download, Eye, EyeOff, ChevronDown } from "./Icons";
 import { ScreenHeader } from "./ScreenHeader";
+import { AppShell } from "./AppShell";
 import { downloadTextFile } from "../lib/downloadTextFile";
 import { isAppError } from "../lib/errors";
 import { isNativeApp } from "../lib/platform";
@@ -355,8 +356,8 @@ export function SetupScreen() {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-ink-50 to-ink-100">
-      <div className="card w-full max-w-lg px-5 pt-3 pb-5 sm:px-8 sm:pt-4 sm:pb-8">
+    <AppShell wide>
+      <div>
         <ScreenHeader
           brandName={t("app.brandName")}
           pageTitle={pageTitle}
@@ -681,6 +682,6 @@ export function SetupScreen() {
       {passkeyHelpOpen && (
         <PasskeyHelpModal t={t} onClose={() => setPasskeyHelpOpen(false)} />
       )}
-    </div>
+    </AppShell>
   );
 }

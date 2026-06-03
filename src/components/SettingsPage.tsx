@@ -24,6 +24,11 @@ import { StripeCheckoutModal } from "./StripeCheckoutModal";
 import { downloadJsonFile } from "../lib/vaultBackup";
 import { isAppError } from "../lib/errors";
 import { SecuritySettingsPanel } from "./SecuritySettingsPanel";
+import {
+  nativeFixedHeaderClass,
+  nativeMainScrollClass,
+  nativeScreenRootClass,
+} from "../lib/nativeLayout";
 
 export type SettingsSection = "general" | "plan" | "security" | "backup" | "account";
 
@@ -57,7 +62,8 @@ function sidebarNavClass(active: boolean): string {
   ].join(" ");
 }
 
-const SETTINGS_PAGE = "max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8";
+const SETTINGS_PAGE =
+  "settings-page max-w-6xl mx-auto w-full min-w-0 box-border px-4 sm:px-6 lg:px-8";
 
 const SETTINGS_HEADER_ICON_BTN =
   "inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-600 hover:bg-ink-50 transition-colors shrink-0";
@@ -615,8 +621,8 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-white">
-      <header className="w-full bg-white pt-[max(0.375rem,env(safe-area-inset-top))]">
+    <div className={nativeScreenRootClass("bg-white")}>
+      <header className={`${nativeFixedHeaderClass()} bg-white`}>
         <div className="w-full border-b border-ink-200">
           <div
             className={`${SETTINGS_PAGE} flex items-center justify-between gap-3 py-1 sm:py-1.5`}
@@ -675,7 +681,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
         </div>
       </header>
 
-      <div className="flex flex-1 flex-col min-h-0 w-full">
+      <div className={nativeMainScrollClass("flex flex-col w-full")}>
         <div
           className={`flex flex-1 flex-col md:flex-row min-h-0 ${SETTINGS_PAGE}`}
         >
@@ -705,7 +711,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
             </nav>
           </aside>
 
-          <main className="flex-1 min-w-0 overflow-y-auto py-6 sm:py-10 md:pl-6 md:pr-2 pb-6 sm:pb-10">
+          <main className="settings-main flex-1 min-w-0 overflow-y-auto py-6 sm:py-10 md:pl-6 md:pr-2 pb-6 sm:pb-10">
             <div className="md:hidden space-y-4">
               <a
                 href={vaultHref}

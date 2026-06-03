@@ -211,7 +211,7 @@ export function StripeCheckoutModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="stripe-checkout-modal-title"
-        className="relative flex w-full max-w-[min(100vw-1.5rem,56rem)] max-h-[min(92dvh,44rem)] flex-col overflow-hidden rounded-xl bg-white shadow-2xl"
+        className="relative flex w-full max-w-[min(calc(100%-1.5rem),56rem)] max-h-[min(92dvh,44rem)] flex-col overflow-hidden rounded-xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex shrink-0 items-center justify-between gap-3 border-b border-ink-200 px-4 py-3 sm:px-5">

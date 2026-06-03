@@ -1,4 +1,5 @@
 import { client, server } from "@passwordless-id/webauthn";
+import { Capacitor } from "@capacitor/core";
 import type {
   AuthenticationJSON,
   ExtendedAuthenticatorTransport,
@@ -16,15 +17,25 @@ import {
   isVercelPreviewHost,
   publicSiteOrigin,
 } from "./siteOrigin";
+import { isNativeApp, NATIVE_PASSKEY_HOSTNAME } from "./platform";
 
 export function isPasskeySupported(): boolean {
   if (typeof window === "undefined") return false;
   if (!window.PublicKeyCredential || !client.isAvailable()) return false;
+  if (isNativeApp()) return true;
   return isPasskeyOriginHost(window.location.hostname);
 }
 
 export function currentPasskeyRpId(): string {
   if (typeof window === "undefined") return canonicalSiteHostname();
+  if (isNativeApp()) {
+    const host = window.location.hostname;
+    if (host === NATIVE_PASSKEY_HOSTNAME || host === canonicalSiteHostname()) {
+      return canonicalSiteHostname();
+    }
+    if (isLocalDevHost(host)) return host;
+    return canonicalSiteHostname();
+  }
   const host = window.location.hostname;
   if (isLocalDevHost(host)) return host;
   return canonicalSiteHostname();
@@ -48,6 +59,18 @@ export function passkeyRegisteredForCurrentSite(meta: VaultMeta): boolean {
   return meta.passkeyRpId === currentPasskeyRpId();
 }
 
+function passkeyCancelledKey(context: "setup" | "unlock"): string {
+  return context === "setup"
+    ? "errors.passkeyCancelledSetup"
+    : "errors.passkeyCancelled";
+}
+
+function passkeyTimeoutKey(context: "setup" | "unlock"): string {
+  return context === "setup"
+    ? "errors.passkeyTimeoutSetup"
+    : "errors.passkeyTimeout";
+}
+
 export function mapPasskeyClientError(
   err: unknown,
   context: "setup" | "unlock" = "unlock",
@@ -57,12 +80,15 @@ export function mapPasskeyClientError(
     err instanceof Error ? err.message : err != null ? String(err) : undefined;
   if (err instanceof DOMException) {
     if (err.name === "NotAllowedError") {
-      return new AppError("errors.passkeyCancelled", detail);
+      return new AppError(passkeyCancelledKey(context), detail);
     }
     if (err.name === "SecurityError") {
       const onIp =
         typeof window !== "undefined" &&
         !isPasskeyOriginHost(window.location.hostname);
+      if (isNativeApp() && context === "setup") {
+        return new AppError("errors.passkeySetupSecurityNative", detail);
+      }
       return new AppError(
         onIp
           ? "errors.passkeyUseLocalhost"
@@ -73,7 +99,7 @@ export function mapPasskeyClientError(
       );
     }
     if (err.name === "AbortError" || err.name === "TimeoutError") {
-      return new AppError("errors.passkeyTimeout", detail);
+      return new AppError(passkeyTimeoutKey(context), detail);
     }
     if (err.name === "InvalidStateError") {
       return new AppError("errors.passkeyInvalidState", detail);
@@ -84,7 +110,7 @@ export function mapPasskeyClientError(
     return new AppError("errors.passkeyUseLocalhost", detail);
   }
   if (/timed out|not allowed/i.test(msg)) {
-    return new AppError("errors.passkeyCancelled", detail);
+    return new AppError(passkeyCancelledKey(context), detail);
   }
   if (/unexpected clientdata origin|origin:/i.test(msg)) {
     return new AppError(
@@ -113,6 +139,7 @@ export function mapPasskeyClientError(
 
 function expectedOrigin(): string {
   if (typeof window === "undefined") return publicSiteOrigin();
+  if (isNativeApp()) return window.location.origin;
   const host = window.location.hostname;
   if (isLocalDevHost(host)) return window.location.origin;
   if (isVercelPreviewHost(host)) return publicSiteOrigin();
@@ -195,6 +222,14 @@ function registerStrategies(
     return [
       { enablePrf: false, attestation: false },
       { enablePrf: false, attestation: true },
+    ];
+  }
+  if (isNativeApp() && Capacitor.getPlatform() === "ios") {
+    return [
+      { enablePrf: false, attestation: false },
+      { enablePrf: false, attestation: true },
+      { enablePrf: true, attestation: false },
+      { enablePrf: true, attestation: true },
     ];
   }
   if (isLocalDev()) {

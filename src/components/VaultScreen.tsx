@@ -41,6 +41,11 @@ import { PlanBadge } from "./PlanBadge";
 import { UserMenuDropdown } from "./UserMenuDropdown";
 import { isAppError } from "../lib/errors";
 import { useAuth } from "../lib/auth";
+import {
+  nativeFixedHeaderClass,
+  nativeMainScrollClass,
+  nativeScreenRootClass,
+} from "../lib/nativeLayout";
 
 type SortKey = "category" | "site" | "username" | "updatedAt";
 
@@ -448,7 +453,8 @@ function CategorySelect({
 const heroChevronSort =
   "pointer-events-none absolute right-2 top-1/2 h-4 w-4 shrink-0 -translate-y-1/2 text-ink-400";
 
-const VAULT_PAGE = "max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8";
+const VAULT_PAGE =
+  "vault-page max-w-6xl mx-auto w-full min-w-0 box-border pl-[max(0.75rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] sm:pl-[max(1rem,env(safe-area-inset-left,0px))] sm:pr-[max(1rem,env(safe-area-inset-right,0px))] md:pl-[max(1.5rem,env(safe-area-inset-left,0px))] md:pr-[max(1.5rem,env(safe-area-inset-right,0px))] lg:pl-[max(2rem,env(safe-area-inset-left,0px))] lg:pr-[max(2rem,env(safe-area-inset-right,0px))]";
 /** Figma toolbar: white pill buttons with light border */
 const VAULT_TOOLBAR_BTN_PRIMARY =
   "inline-flex items-center justify-center gap-1.5 rounded-lg border border-accent-600 bg-accent-600 px-3 py-2 min-h-[2.5rem] text-sm font-medium text-white shadow-sm hover:bg-accent-700 transition-colors disabled:opacity-50 disabled:pointer-events-none shrink-0";
@@ -928,12 +934,12 @@ export function VaultScreen() {
 
   return (
     <div
-      className="min-h-screen min-h-[100dvh] flex flex-col bg-white"
+      className={nativeScreenRootClass("bg-white")}
       onMouseMove={touchActivity}
       onTouchStart={touchActivity}
       onKeyDown={touchActivity}
     >
-      <div className="sticky top-0 z-10 w-full">
+      <div className={nativeFixedHeaderClass()}>
         {awaitingLicenseAfterPay ? (
           <div
             role="status"
@@ -1018,7 +1024,7 @@ export function VaultScreen() {
           </div>
         )}
         <header
-          className={`w-full bg-white ${
+          className={`vault-top-header w-full bg-white ${
             showEntryLimitBanner
               ? ""
               : "pt-[max(0.375rem,env(safe-area-inset-top))]"
@@ -1083,7 +1089,7 @@ export function VaultScreen() {
         </header>
       </div>
 
-      <main className="flex-1 min-w-0 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <main className={nativeMainScrollClass("pb-3 sm:pb-6")}>
         <div className={`${VAULT_PAGE} pt-3 pb-5 sm:pt-4 sm:pb-6`}>
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4 mb-1">
           <div className="relative w-full md:hidden">
@@ -1114,9 +1120,9 @@ export function VaultScreen() {
               enterKeyHint="search"
             />
           </div>
-          <div className="md:hidden flex w-full flex-col gap-0 mb-1.5">
-            <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] gap-x-2 items-center">
-            <div className="col-start-1 flex items-center gap-2 min-w-0">
+          <div className="md:hidden flex w-full min-w-0 flex-col gap-2 mb-1.5">
+            <div className="flex w-full min-w-0 flex-col gap-2 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-x-2">
+            <div className="flex min-w-0 items-center gap-2">
               <label
                 className="text-xs font-medium text-ink-600 shrink-0"
                 htmlFor="vault-mobile-sort"
@@ -1155,7 +1161,7 @@ export function VaultScreen() {
                 <ChevronUpDownIcon className="h-3.5 w-3.5" />
               </button>
             </div>
-            <div className="col-start-2 flex items-center gap-2 shrink-0">
+            <div className="flex min-w-0 items-center justify-end gap-2 shrink-0 flex-wrap">
               <button
                 type="button"
                 className={VAULT_TOOLBAR_BTN_ICON}
@@ -1390,7 +1396,7 @@ export function VaultScreen() {
           </div>
         </div>
 
-        <p className="w-full text-left text-xs text-ink-400 leading-normal mt-2 sm:mt-4">
+        <p className="w-full min-w-0 break-words text-left text-xs text-ink-400 leading-normal mt-2 sm:mt-4">
           {t("vault.footer")}
         </p>
         </div>
@@ -1631,7 +1637,7 @@ function MobileEntryDetail({
     <div
       ref={rowRef}
       data-vault-entry-id={entry.id}
-      className="fixed inset-0 z-50 flex flex-col bg-white md:hidden"
+      className="fixed inset-0 z-50 flex flex-col bg-white w-full min-w-0 overflow-x-hidden md:hidden"
       onMouseEnter={onRowMouseEnter}
       onMouseLeave={onRowMouseLeave}
     >

@@ -624,9 +624,9 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-ink-50 text-ink-900">
+    <div className="min-h-screen min-h-[100dvh] bg-ink-50 text-ink-900 w-full min-w-0 overflow-x-hidden">
       <header className="border-b border-ink-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto w-full min-w-0 box-border px-3 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-lg font-semibold">{t("admin.title")}</h1>
             <p className="text-xs text-ink-500 mt-0.5">
@@ -894,7 +894,7 @@ export function AdminDashboard() {
                     {t("admin.colPurchased")}
                   </th>
                   <th className="px-4 py-2 font-medium text-xs text-ink-500">{t("admin.colAmount")}</th>
-                  <th className="px-4 py-2 font-medium text-xs text-ink-500 min-w-[14rem]">
+                  <th className="px-4 py-2 font-medium text-xs text-ink-500 min-w-0 sm:min-w-[14rem]">
                     {t("admin.colLicenseKey")}
                   </th>
                   <th className="px-4 py-2 font-medium text-xs text-ink-500 text-right">

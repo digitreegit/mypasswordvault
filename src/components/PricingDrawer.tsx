@@ -141,7 +141,7 @@ export function PricingDrawer({
           role="dialog"
           aria-modal="true"
           aria-labelledby="pricing-drawer-title"
-          className={`absolute inset-y-0 right-0 flex w-full max-w-[min(100vw,56rem)] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out ${
+          className={`absolute inset-y-0 right-0 flex w-full max-w-[min(100%,56rem)] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out ${
             entered ? "translate-x-0" : "translate-x-full"
           }`}
           onClick={(e) => e.stopPropagation()}
