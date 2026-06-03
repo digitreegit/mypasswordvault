@@ -1,7 +1,7 @@
 import { isNativeApp } from "./platform";
 
 const SCROLL_SELECTOR =
-  ".app-shell__panel, .native-screen__scroll, .native-scroll";
+  ".app-shell__panel, .native-screen__scroll, .native-scroll, .pricing-drawer-body, .setup-shell-scroll";
 
 function isScrollable(el: Element): boolean {
   const node = el as HTMLElement;

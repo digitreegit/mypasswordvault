@@ -357,39 +357,40 @@ export function SetupScreen() {
 
   return (
     <AppShell wide>
-      <div className="setup-shell-header">
-        <ScreenHeader
-          brandName={t("app.brandName")}
-          pageTitle={pageTitle}
-          hideTitle
-          locale={locale}
-          onLocaleChange={(l) => void setLocale(l)}
-          languageAriaLabel={t("settings.language")}
-          brandHomeHref={brandHomeHref}
-          brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
-          beforeTitle={
-            <div>
-              <div
-                className="-mx-5 sm:-mx-8 h-px bg-ink-200"
-                role="presentation"
-              />
-              <div className="pt-4">
-                <SetupStepper stage={stage} t={t} />
+      <div className="setup-shell flex min-h-0 flex-1 flex-col">
+        <div className="setup-shell-header shrink-0">
+          <ScreenHeader
+            brandName={t("app.brandName")}
+            pageTitle={pageTitle}
+            hideTitle
+            locale={locale}
+            onLocaleChange={(l) => void setLocale(l)}
+            languageAriaLabel={t("settings.language")}
+            brandHomeHref={brandHomeHref}
+            brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
+            beforeTitle={
+              <div>
+                <div
+                  className="-mx-5 sm:-mx-8 h-px bg-ink-200"
+                  role="presentation"
+                />
+                <div className="pt-4">
+                  <SetupStepper stage={stage} t={t} />
+                </div>
               </div>
-            </div>
-          }
-          className="mb-0"
-        />
-      </div>
+            }
+            className="mb-0"
+          />
+        </div>
 
-      <div className="setup-shell-intro mb-5 space-y-1">
-        <h1 className="font-sans text-xl font-semibold text-ink-900 tracking-tight">
-          {pageTitle}
-        </h1>
-        <p className="text-sm text-ink-500 leading-snug">{stageIntro}</p>
-      </div>
-
-        {stage === "password" && (
+        <div className="setup-shell-scroll native-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain">
+          <div className="setup-shell-intro mb-5 space-y-1">
+            <h1 className="font-sans text-xl font-semibold text-ink-900 tracking-tight">
+              {pageTitle}
+            </h1>
+            <p className="text-sm text-ink-500 leading-snug">{stageIntro}</p>
+          </div>
+          {stage === "password" && (
           <div className="space-y-4">
             <div>
               <label className="label">{t("setup.masterPw")}</label>
@@ -684,6 +685,9 @@ export function SetupScreen() {
             </button>
           </div>
         )}
+
+        </div>
+      </div>
 
       {passkeyHelpOpen && (
         <PasskeyHelpModal t={t} onClose={() => setPasskeyHelpOpen(false)} />

@@ -268,7 +268,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "errors.storeWebOnly": "Store purchase is only available in the mobile app.",
   "errors.storeUnsupported": "In-app purchase is not supported on this device.",
   "errors.storeBridgeMissing":
-    "Native billing is not connected. See docs/mobile.md or purchase on the web with the same email.",
+    "App Store billing is not ready on this device. Sync PRO from your account first if you paid on the web, or finish App Store setup in Xcode.",
   "errors.storeVerifyFailed": "Could not verify your store purchase. Try Restore purchases or contact support.",
   "errors.storeDevOnly": "Dev store grant is only available in development builds.",
   "errors.storePurchaseCancelled": "Purchase was cancelled.",
@@ -583,6 +583,24 @@ export const MESSAGES_EN: Record<string, string> = {
   "pricing.ctaBuyPlay": "Get PRO on Google Play",
   "pricing.storeNote":
     "One-time in-app purchase. The same email account unlocks PRO on web and other devices after sync.",
+  "pricing.signedInAs": "Signed in as {{email}}",
+  "pricing.licenseChecking": "Checking your account license…",
+  "pricing.accountLicenseHint":
+    "PRO purchased on the web is tied to this account. No App Store receipt is needed — sync from your account first.",
+  "pricing.syncAccountLicense": "Sync PRO from my account",
+  "pricing.syncAccountNotLicensed":
+    "This account does not have PRO yet. If you paid on the web, sign in with the same Google email or wait a minute and try again.",
+  "pricing.buyOnDeviceTitle": "Buy on this device",
+  "pricing.buyOnDeviceHint":
+    "Only use App Store purchase if you have not already paid on the web with this account.",
+  "pricing.storeRestoreAppStore": "Already paid on the App Store?",
+  "pricing.storeRestoreAppStoreHint":
+    "Restore is for App Store purchases only. Web purchases sync automatically when you sign in with the same email.",
+  "pricing.storeBridgeLoading":
+    "Connecting to the App Store…",
+  "pricing.storeBridgeFailed":
+    "App Store billing is unavailable. In Xcode, add the In-App Purchase capability, create product com.skyface.mypasswordvault.pro_lifetime in App Store Connect, then rebuild.",
+  "pricing.planTabsAria": "Compare plans",
   "pricing.storeBridgePending":
     "In-app purchase is not wired in this build yet. Install the native billing plugin (see docs/mobile.md) or buy on the web with the same account.",
   "pricing.storeRestore": "Restore purchases",

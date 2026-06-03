@@ -5,7 +5,8 @@ import { useAuth } from "../lib/auth";
 import { getSupabase } from "../lib/supabaseClient";
 import { useVault } from "../lib/vault";
 import { useProPurchase } from "../hooks/useProPurchase";
-import { usesStoreBilling } from "../lib/platform";
+import { usesStoreBilling, isNativeApp } from "../lib/platform";
+import { initNativeStoreBridge } from "../lib/initNativeStoreBridge";
 import { PricingTiers } from "./PricingTiers";
 import { StripeCheckoutModal } from "./StripeCheckoutModal";
 
@@ -16,10 +17,16 @@ export function PricingDrawer({
   open: boolean;
   onClose: () => void;
 }) {
-  const { configured, loading, session, signInWithGoogle } = useAuth();
-  const { t, licensed, entitlementLoaded, refreshEntitlements, finalizePaidCheckout } =
-    useVault();
+  const { configured, loading, session, user, signInWithGoogle } = useAuth();
+  const {
+    t,
+    licensed,
+    entitlementLoaded,
+    refreshEntitlements,
+    finalizePaidCheckout,
+  } = useVault();
   const [stripeBusy, setStripeBusy] = useState(false);
+  const [syncBusy, setSyncBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [entered, setEntered] = useState(false);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
@@ -29,10 +36,11 @@ export function PricingDrawer({
     err: storeErr,
     setErr: setStoreErr,
     storeReady,
+    bridgeStatus,
     purchaseStore,
     restoreStore,
   } = useProPurchase(t);
-  const busy = storeBilling ? storeBusy : stripeBusy;
+  const busy = storeBilling ? storeBusy || syncBusy : stripeBusy;
 
   useEffect(() => {
     if (!open) {
@@ -40,10 +48,14 @@ export function PricingDrawer({
       return;
     }
     setErr(null);
-    void refreshEntitlements();
+    void (async () => {
+      const lic = await refreshEntitlements({ keepLoaded: true });
+      if (lic) onClose();
+    })();
+    if (storeBilling) void initNativeStoreBridge();
     const id = requestAnimationFrame(() => setEntered(true));
     return () => cancelAnimationFrame(id);
-  }, [open, refreshEntitlements]);
+  }, [open, refreshEntitlements, onClose, storeBilling]);
 
   useEffect(() => {
     if (!open) return;
@@ -78,6 +90,23 @@ export function PricingDrawer({
     [finalizePaidCheckout, onClose],
   );
 
+  const syncAccountLicense = useCallback(async (): Promise<boolean> => {
+    setErr(null);
+    setStoreErr(null);
+    setSyncBusy(true);
+    try {
+      const lic = await refreshEntitlements({ keepLoaded: true });
+      if (lic) {
+        onClose();
+        return true;
+      }
+      setErr(t("pricing.syncAccountNotLicensed"));
+      return false;
+    } finally {
+      setSyncBusy(false);
+    }
+  }, [refreshEntitlements, onClose, setStoreErr, t]);
+
   const startCheckout = useCallback(() => {
     setErr(null);
     setStoreErr(null);
@@ -87,6 +116,10 @@ export function PricingDrawer({
     }
     if (storeBilling) {
       void (async () => {
+        if (await refreshEntitlements({ keepLoaded: true })) {
+          onClose();
+          return;
+        }
         const r = await purchaseStore();
         if (r.ok) {
           await refreshEntitlements();
@@ -111,6 +144,10 @@ export function PricingDrawer({
     setErr(null);
     setStoreErr(null);
     void (async () => {
+      if (await refreshEntitlements({ keepLoaded: true })) {
+        onClose();
+        return;
+      }
       const r = await restoreStore();
       if (r.ok) {
         await refreshEntitlements();
@@ -124,6 +161,8 @@ export function PricingDrawer({
   if (!open) return null;
 
   const licensedKnown = entitlementLoaded ? licensed : null;
+  const native = isNativeApp();
+  const userEmail = user?.email ?? session?.user?.email ?? "";
 
   return createPortal(
     <>
@@ -141,12 +180,18 @@ export function PricingDrawer({
           role="dialog"
           aria-modal="true"
           aria-labelledby="pricing-drawer-title"
-          className={`absolute inset-y-0 right-0 flex w-full max-w-[min(100%,56rem)] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out ${
-            entered ? "translate-x-0" : "translate-x-full"
-          }`}
+          className={
+            native
+              ? `pricing-drawer-native absolute inset-0 flex flex-col bg-white transition-opacity duration-300 ${
+                  entered ? "opacity-100" : "opacity-0"
+                }`
+              : `absolute inset-y-0 right-0 flex w-full max-w-[min(100%,56rem)] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out ${
+                  entered ? "translate-x-0" : "translate-x-full"
+                }`
+          }
           onClick={(e) => e.stopPropagation()}
         >
-          <header className="shrink-0 flex items-start justify-between gap-3 border-b border-ink-200 px-4 py-4 sm:px-6">
+          <header className="pricing-drawer-header shrink-0 flex items-start justify-between gap-3 border-b border-ink-200 px-4 py-4 sm:px-6">
             <div className="min-w-0 pr-2">
               <h2
                 id="pricing-drawer-title"
@@ -167,20 +212,24 @@ export function PricingDrawer({
             </button>
           </header>
 
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6 sm:py-6 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <div className="pricing-drawer-body native-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6 sm:py-6 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
             <PricingTiers
               t={t}
               configured={configured}
               loading={loading}
               session={session}
+              userEmail={userEmail}
               licensed={licensedKnown}
+              entitlementLoaded={entitlementLoaded}
               busy={busy}
               err={err ?? storeErr}
               onCheckout={startCheckout}
               onSignIn={() => void signInWithGoogle()}
               storeBilling={storeBilling}
               storeReady={storeReady}
+              storeBridgeStatus={bridgeStatus}
               onStorePurchase={startCheckout}
+              onSyncAccountLicense={() => void syncAccountLicense()}
               onStoreRestore={handleStoreRestore}
               layout="drawer"
             />

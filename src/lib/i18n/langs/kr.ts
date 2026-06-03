@@ -261,7 +261,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "errors.storeWebOnly": "스토어 결제는 모바일 앱에서만 가능합니다.",
   "errors.storeUnsupported": "이 기기에서는 인앱 결제를 지원하지 않습니다.",
   "errors.storeBridgeMissing":
-    "네이티브 결제가 연결되지 않았습니다. docs/mobile.md를 참고하거나 웹에서 같은 이메일로 구매하세요.",
+    "App Store 결제를 이 기기에서 사용할 수 없습니다. 웹에서 결제하셨다면 먼저 계정에서 PRO를 동기화하세요.",
   "errors.storeVerifyFailed": "스토어 구매를 확인하지 못했습니다. 구매 복원을 시도하거나 문의하세요.",
   "errors.storeDevOnly": "개발용 스토어 부여는 개발 빌드에서만 사용할 수 있습니다.",
   "errors.storePurchaseCancelled": "구매가 취소되었습니다.",
@@ -570,6 +570,23 @@ export const MESSAGES_KR: Record<string, string> = {
   "pricing.ctaBuyPlay": "Google Play에서 PRO 구매",
   "pricing.storeNote":
     "앱 내 일회 구매입니다. 같은 이메일 계정이면 웹·다른 기기에서도 동기화 후 PRO가 적용됩니다.",
+  "pricing.signedInAs": "{{email}}(으)로 로그인됨",
+  "pricing.licenseChecking": "계정 라이선스 확인 중…",
+  "pricing.accountLicenseHint":
+    "웹에서 구매한 PRO는 이 계정에 연결됩니다. App Store 영수증 없이 계정에서 동기화하면 됩니다.",
+  "pricing.syncAccountLicense": "내 계정에서 PRO 동기화",
+  "pricing.syncAccountNotLicensed":
+    "이 계정에는 아직 PRO가 없습니다. 웹에서 결제하셨다면 같은 Google 이메일로 로그인했는지 확인하거나 잠시 후 다시 시도하세요.",
+  "pricing.buyOnDeviceTitle": "이 기기에서 구매",
+  "pricing.buyOnDeviceHint":
+    "웹에서 이미 이 계정으로 결제하셨다면 App Store 구매는 필요 없습니다.",
+  "pricing.storeRestoreAppStore": "App Store에서 결제하셨나요?",
+  "pricing.storeRestoreAppStoreHint":
+    "복원은 App Store 구매 전용입니다. 웹 구매는 같은 이메일로 로그인하면 자동으로 적용됩니다.",
+  "pricing.storeBridgeLoading": "App Store에 연결하는 중…",
+  "pricing.storeBridgeFailed":
+    "App Store 결제를 사용할 수 없습니다. Xcode에서 In-App Purchase capability를 추가하고, App Store Connect에 com.skyface.mypasswordvault.pro_lifetime 상품을 만든 뒤 다시 빌드하세요.",
+  "pricing.planTabsAria": "요금제 비교",
   "pricing.storeBridgePending":
     "이 빌드에는 인앱 결제 플러그인이 아직 연결되지 않았습니다. docs/mobile.md를 참고하거나 웹에서 같은 계정으로 구매하세요.",
   "pricing.storeRestore": "구매 복원",

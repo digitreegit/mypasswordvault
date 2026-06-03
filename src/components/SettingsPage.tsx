@@ -26,6 +26,7 @@ import {
   nativeFixedHeaderClass,
   nativeMainScrollClass,
   nativeScreenRootClass,
+  vaultHomeHref,
 } from "../lib/nativeLayout";
 
 export type SettingsSection = "general" | "plan" | "security" | "backup" | "account";
@@ -99,7 +100,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   const [pricingDrawerOpen, setPricingDrawerOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const vaultHref = "/app/#";
+  const vaultHref = vaultHomeHref();
   const showAccountSections = Boolean(configured && user);
   const showHeaderUpgrade =
     atEntryLimit && !licensed && !isAdmin && entitlementLoaded;
@@ -107,7 +108,10 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
 
   function openPricingDrawer(e?: React.MouseEvent) {
     e?.preventDefault();
-    setPricingDrawerOpen(true);
+    void refreshEntitlements({ keepLoaded: true }).then((lic) => {
+      if (lic) return;
+      setPricingDrawerOpen(true);
+    });
   }
 
   useEffect(() => {
@@ -648,14 +652,20 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
         </div>
       </header>
 
-      <div className={nativeMainScrollClass("flex flex-col w-full")}>
-        <div
-          className={`flex flex-1 flex-col md:flex-row min-h-0 ${SETTINGS_PAGE}`}
-        >
-          <aside className="hidden md:block shrink-0 md:w-56 lg:w-60 md:py-8 md:pr-4">
+      <div
+        className={nativeMainScrollClass(
+          `${SETTINGS_PAGE} py-6 sm:py-10 pb-6 sm:pb-10 w-full`,
+        )}
+      >
+        <div className="flex flex-col md:flex-row md:gap-6 min-w-0">
+          <aside className="hidden md:block shrink-0 md:w-56 lg:w-60 md:pr-4">
             <a
               href={vaultHref}
               className="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink-600 hover:text-ink-900 transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                window.location.hash = vaultHref.replace(/^#/, "");
+              }}
             >
               <ArrowLeftIcon className="h-4 w-4 shrink-0" aria-hidden />
               {t("account.backToVault")}
@@ -678,11 +688,15 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
             </nav>
           </aside>
 
-          <main className="settings-main flex-1 min-w-0 overflow-y-auto py-6 sm:py-10 md:pl-6 md:pr-2 pb-6 sm:pb-10">
+          <div className="flex-1 min-w-0">
             <div className="md:hidden space-y-4">
               <a
                 href={vaultHref}
                 className="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink-600 hover:text-ink-900 transition-colors"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.hash = vaultHref.replace(/^#/, "");
+                }}
               >
                 <ArrowLeftIcon className="h-4 w-4 shrink-0" aria-hidden />
                 {t("account.backToVault")}
@@ -728,7 +742,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
 
               {renderSectionContent()}
             </div>
-          </main>
+          </div>
         </div>
       </div>
       <PricingDrawer

@@ -84,6 +84,7 @@ import { confirmCheckoutSession } from "./confirmCheckoutSession";
 import { FREE_ENTRY_LIMIT, fetchUserEntitlement } from "./entitlements";
 import { fetchIsAdmin } from "./adminApi";
 import { isSupabaseConfigured } from "./supabaseClient";
+import { isNativeApp } from "./platform";
 
 export type VaultStatus = "loading" | "fresh" | "locked" | "unlocked";
 
@@ -320,6 +321,20 @@ export function VaultProvider({
   useEffect(() => {
     void refreshEntitlements();
   }, [refreshEntitlements]);
+
+  // Native: re-sync PRO license from the signed-in account when returning to the app.
+  useEffect(() => {
+    if (!userId || !isNativeApp()) return;
+    let remove: (() => void) | undefined;
+    void import("@capacitor/app").then(({ App }) => {
+      void App.addListener("appStateChange", ({ isActive }) => {
+        if (isActive) void refreshEntitlements({ keepLoaded: true });
+      }).then((h) => {
+        remove = () => void h.remove();
+      });
+    });
+    return () => remove?.();
+  }, [userId, refreshEntitlements]);
 
   useEffect(() => {
     localeRef.current = locale;

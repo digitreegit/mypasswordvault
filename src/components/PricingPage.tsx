@@ -45,6 +45,7 @@ export function PricingPage() {
     err: storeErr,
     setErr: setStoreErr,
     storeReady,
+    bridgeStatus,
     purchaseStore,
     restoreStore,
   } = useProPurchase(t);
@@ -186,6 +187,7 @@ export function PricingPage() {
           onSignIn={() => void signInWithGoogle()}
           storeBilling={storeBilling}
           storeReady={storeReady}
+          storeBridgeStatus={bridgeStatus}
           onStorePurchase={startCheckout}
           onStoreRestore={handleStoreRestore}
           layout="page"

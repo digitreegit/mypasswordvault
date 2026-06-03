@@ -479,6 +479,7 @@ export function VaultScreen() {
     licensed,
     isAdmin,
     entitlementLoaded,
+    refreshEntitlements,
     finalizePaidCheckout,
     locale,
     setLocale,
@@ -883,7 +884,10 @@ export function VaultScreen() {
 
   function openPricingDrawer(e?: React.MouseEvent) {
     e?.preventDefault();
-    setPricingDrawerOpen(true);
+    void refreshEntitlements({ keepLoaded: true }).then((lic) => {
+      if (lic) return;
+      setPricingDrawerOpen(true);
+    });
   }
 
   function dismissEntryLimitBanner() {
@@ -1454,7 +1458,7 @@ export function VaultScreen() {
                 className="btn-primary text-sm w-full sm:w-auto"
                 onClick={() => {
                   setEntryLimitModalOpen(false);
-                  setPricingDrawerOpen(true);
+                  openPricingDrawer();
                 }}
               >
                 {t("vault.entryLimitModalCta")}

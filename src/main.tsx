@@ -20,15 +20,14 @@ import {
 import { ensureOAuthSessionFromUrl } from "./lib/supabaseAuthRedirect";
 import { isNativeApp } from "./lib/platform";
 import { initNativeViewportLock } from "./lib/nativeViewportLock";
+import { initNativeStoreBridge } from "./lib/initNativeStoreBridge";
 
 if (isNativeApp()) {
   document.documentElement.classList.add("native-app");
   initNativeViewportLock();
-  void import("./lib/initNativeStoreBridge").then((m) =>
-    m.initNativeStoreBridge().catch((e) => {
-      console.error("initNativeStoreBridge", e);
-    }),
-  );
+  void initNativeStoreBridge().catch((e) => {
+    console.error("initNativeStoreBridge", e);
+  });
 }
 
 setupNativeAuthListener();

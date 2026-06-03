@@ -1,5 +1,7 @@
+import { Capacitor } from "@capacitor/core";
 import {
   ErrorCode,
+  LogLevel,
   Platform,
   ProductType,
   store,
@@ -15,6 +17,28 @@ import type { StorePurchasePayload } from "./storePurchase";
 
 let initPromise: Promise<void> | null = null;
 
+export type StoreBridgeStatus = "idle" | "loading" | "ready" | "failed";
+
+let bridgeStatus: StoreBridgeStatus = "idle";
+const statusListeners = new Set<(status: StoreBridgeStatus) => void>();
+
+function setBridgeStatus(status: StoreBridgeStatus) {
+  bridgeStatus = status;
+  statusListeners.forEach((fn) => fn(status));
+}
+
+export function getStoreBridgeStatus(): StoreBridgeStatus {
+  return bridgeStatus;
+}
+
+export function subscribeStoreBridgeStatus(
+  fn: (status: StoreBridgeStatus) => void,
+): () => void {
+  statusListeners.add(fn);
+  fn(bridgeStatus);
+  return () => statusListeners.delete(fn);
+}
+
 type PendingPurchase = {
   productId: string;
   resolve: (payload: StorePurchasePayload) => void;
@@ -28,6 +52,15 @@ function storePlatform() {
   if (native === "ios") return Platform.APPLE_APPSTORE;
   if (native === "android") return Platform.GOOGLE_PLAY;
   return null;
+}
+
+function attachBridge() {
+  if (window.__mpwStoreBridge) return;
+  window.__mpwStoreBridge = {
+    purchase: (productId: string) => orderProduct(productId),
+    restore: () => restoreProduct(STORE_PRO_PRODUCT_ID),
+  };
+  setBridgeStatus("ready");
 }
 
 function payloadFromTransaction(
@@ -119,18 +152,41 @@ async function restoreProduct(
   return payloadFromTransaction(transaction, productId);
 }
 
+async function waitForCapacitorBridge(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  if (document.readyState === "complete") return;
+  await new Promise<void>((resolve) => {
+    window.addEventListener("load", () => resolve(), { once: true });
+  });
+}
+
 /**
  * Registers `window.__mpwStoreBridge` for StoreKit / Play Billing via cdv-purchase.
- * Call once on native startup before React mounts pricing UI.
+ * Call on native startup and again when opening pricing if the first attempt failed.
  */
 export async function initNativeStoreBridge(): Promise<void> {
   if (!isNativeApp() || typeof window === "undefined") return;
-  if (window.__mpwStoreBridge) return;
+  if (bridgeStatus === "ready" && window.__mpwStoreBridge) return;
+  if (bridgeStatus === "failed") initPromise = null;
   if (initPromise) return initPromise;
 
   initPromise = (async () => {
+    setBridgeStatus("loading");
+    await waitForCapacitorBridge();
+
     const platform = storePlatform();
-    if (!platform) return;
+    if (!platform) {
+      setBridgeStatus("failed");
+      return;
+    }
+
+    if (import.meta.env.DEV) {
+      store.verbosity = LogLevel.DEBUG;
+    }
+
+    store.error((error) => {
+      console.error("store.error", error.code, error.message);
+    });
 
     store.register([
       {
@@ -142,7 +198,10 @@ export async function initNativeStoreBridge(): Promise<void> {
 
     store.when().approved((transaction) => {
       const pending = pendingPurchase;
-      if (!pending || !transactionMatchesProduct(transaction, pending.productId)) {
+      if (
+        !pending ||
+        !transactionMatchesProduct(transaction, pending.productId)
+      ) {
         return;
       }
       pendingPurchase = null;
@@ -153,17 +212,27 @@ export async function initNativeStoreBridge(): Promise<void> {
       }
     });
 
+    store.ready(() => {
+      attachBridge();
+    });
+
     const initError = await store.initialize([platform]);
     if (initError) {
       console.error("store.initialize failed", initError);
+      setBridgeStatus("failed");
+      initPromise = null;
       return;
     }
 
-    window.__mpwStoreBridge = {
-      purchase: (productId: string) => orderProduct(productId),
-      restore: () => restoreProduct(STORE_PRO_PRODUCT_ID),
-    };
-  })();
+    if (window.__mpwStoreBridge) return;
+
+    // ready() may have already fired; attach if products are loaded.
+    attachBridge();
+  })().catch((e) => {
+    console.error("initNativeStoreBridge", e);
+    setBridgeStatus("failed");
+    initPromise = null;
+  });
 
   return initPromise;
 }

@@ -1,5 +1,11 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { isAppError } from "../lib/errors";
+import {
+  getStoreBridgeStatus,
+  initNativeStoreBridge,
+  subscribeStoreBridgeStatus,
+  type StoreBridgeStatus,
+} from "../lib/initNativeStoreBridge";
 import { usesStoreBilling } from "../lib/platform";
 import {
   devGrantStoreLicense,
@@ -14,7 +20,19 @@ export function useProPurchase(t: TFn) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const storeBilling = usesStoreBilling();
-  const storeReady = storeBilling && isStoreBridgeAvailable();
+  const [bridgeStatus, setBridgeStatus] = useState<StoreBridgeStatus>(() =>
+    getStoreBridgeStatus(),
+  );
+
+  useEffect(() => {
+    if (!storeBilling) return;
+    void initNativeStoreBridge();
+    return subscribeStoreBridgeStatus(setBridgeStatus);
+  }, [storeBilling]);
+
+  const storeReady =
+    storeBilling &&
+    (bridgeStatus === "ready" || isStoreBridgeAvailable());
 
   const formatErr = useCallback(
     (e: unknown) => {
@@ -69,6 +87,7 @@ export function useProPurchase(t: TFn) {
   return {
     storeBilling,
     storeReady,
+    bridgeStatus,
     busy,
     err,
     setErr,
