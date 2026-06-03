@@ -251,6 +251,13 @@ export const MESSAGES_KR: Record<string, string> = {
     "Supabase에 user_vaults 테이블이 없습니다. 대시보드 → SQL Editor에서 이 저장소의 supabase/migrations/20260513120000_user_vaults.sql 내용을 붙여넣어 실행한 뒤 다시 시도하세요.",
   "errors.noCloudBackup":
     "이 계정에 저장된 암호화 금고가 아직 없습니다. 이미 금고가 있는 기기에서 사용하거나, 아래 고급 메뉴의 오프라인 파일을 사용하세요.",
+  "errors.supabaseNotConfigured": "이 빌드에 Supabase가 설정되어 있지 않습니다.",
+  "errors.storeWebOnly": "스토어 결제는 모바일 앱에서만 가능합니다.",
+  "errors.storeUnsupported": "이 기기에서는 인앱 결제를 지원하지 않습니다.",
+  "errors.storeBridgeMissing":
+    "네이티브 결제가 연결되지 않았습니다. docs/mobile.md를 참고하거나 웹에서 같은 이메일로 구매하세요.",
+  "errors.storeVerifyFailed": "스토어 구매를 확인하지 못했습니다. 구매 복원을 시도하거나 문의하세요.",
+  "errors.storeDevOnly": "개발용 스토어 부여는 개발 빌드에서만 사용할 수 있습니다.",
   "errors.entryLimitReached":
     "무료 플랜에서는 비밀번호 항목을 최대 {{limit}}개까지 저장할 수 있습니다. 더 추가하려면 유료 라이선스로 업그레이드하세요.",
   "errors.importExceedsEntryLimit":
@@ -552,6 +559,15 @@ export const MESSAGES_KR: Record<string, string> = {
   "pricing.alreadyLicensed": "라이선스 적용됨 — 감사합니다",
   "pricing.ctaBuy": "안전한 결제 페이지로 이동",
   "pricing.stripeNote": "결제는 Stripe 보안 모달에서 처리됩니다.",
+  "pricing.ctaBuyAppStore": "App Store에서 PRO 구매",
+  "pricing.ctaBuyPlay": "Google Play에서 PRO 구매",
+  "pricing.storeNote":
+    "앱 내 일회 구매입니다. 같은 이메일 계정이면 웹·다른 기기에서도 동기화 후 PRO가 적용됩니다.",
+  "pricing.storeBridgePending":
+    "이 빌드에는 인앱 결제 플러그인이 아직 연결되지 않았습니다. docs/mobile.md를 참고하거나 웹에서 같은 계정으로 구매하세요.",
+  "pricing.storeRestore": "구매 복원",
+  "pricing.storeRestoreEmpty": "이 계정에 연결된 스토어 구매 내역이 없습니다.",
+  "pricing.purchasedOnWeb": "웹에서 이미 구매하셨나요? 같은 이메일로 로그인하면 라이선스가 자동으로 적용됩니다.",
   "pricing.errSignIn": "먼저 로그인하세요.",
   "pricing.errCheckout": "결제를 시작할 수 없습니다. 다시 시도하거나 문의하세요.",
   "pricing.errStripeKey":

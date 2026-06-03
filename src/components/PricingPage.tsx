@@ -19,6 +19,8 @@ import {
   type CheckoutReturn,
 } from "../lib/checkoutReturn";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { useProPurchase } from "../hooks/useProPurchase";
+import { usesStoreBilling } from "../lib/platform";
 import { PricingTiers } from "./PricingTiers";
 import { StripeCheckoutModal } from "./StripeCheckoutModal";
 
@@ -27,7 +29,7 @@ export function PricingPage() {
   const [locale, setLocale] = useState<Locale>(
     () => readStoredLocale() ?? normalizeLocale(detectBrowserLocale())
   );
-  const [busy, setBusy] = useState(false);
+  const [stripeBusy, setStripeBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [licensed, setLicensed] = useState<boolean | null>(null);
   const [checkoutFlash, setCheckoutFlash] = useState<string | null>(null);
@@ -37,6 +39,16 @@ export function PricingPage() {
     (k: string, v?: Record<string, string | number>) => translate(locale, k, v),
     [locale],
   );
+  const storeBilling = usesStoreBilling();
+  const {
+    busy: storeBusy,
+    err: storeErr,
+    setErr: setStoreErr,
+    storeReady,
+    purchaseStore,
+    restoreStore,
+  } = useProPurchase(t);
+  const busy = storeBilling ? storeBusy : stripeBusy;
   const uid = session?.user?.id;
 
   const reloadLicense = useCallback(async () => {
@@ -83,13 +95,13 @@ export function PricingPage() {
 
   const handleCheckoutClose = useCallback(() => {
     setCheckoutModalOpen(false);
-    setBusy(false);
+    setStripeBusy(false);
   }, []);
 
   const handleCheckoutComplete = useCallback(
     async (sessionId: string) => {
       setCheckoutModalOpen(false);
-      setBusy(false);
+      setStripeBusy(false);
       if (!uid) return;
       await finalizeCheckoutAfterPayment(
         async () => {
@@ -106,13 +118,30 @@ export function PricingPage() {
     [t, uid],
   );
 
+  const handleStoreRestore = useCallback(() => {
+    setErr(null);
+    setStoreErr(null);
+    void (async () => {
+      const r = await restoreStore();
+      if (r.ok) await reloadLicense();
+    })();
+  }, [restoreStore, reloadLicense, setStoreErr]);
+
   function startCheckout() {
     setErr(null);
+    setStoreErr(null);
     if (!session) {
       setErr(t("pricing.errSignIn"));
       return;
     }
-    setBusy(true);
+    if (storeBilling) {
+      void (async () => {
+        const r = await purchaseStore();
+        if (r.ok) await reloadLicense();
+      })();
+      return;
+    }
+    setStripeBusy(true);
     setCheckoutModalOpen(true);
   }
 
@@ -151,10 +180,14 @@ export function PricingPage() {
           session={session}
           licensed={licensed}
           busy={busy}
-          err={err}
+          err={err ?? storeErr}
           checkoutFlash={checkoutFlash}
           onCheckout={startCheckout}
           onSignIn={() => void signInWithGoogle()}
+          storeBilling={storeBilling}
+          storeReady={storeReady}
+          onStorePurchase={startCheckout}
+          onStoreRestore={handleStoreRestore}
           layout="page"
         />
 
@@ -168,7 +201,7 @@ export function PricingPage() {
           </ol>
         </section>
       </main>
-      {sb && checkoutModalOpen ? (
+      {sb && checkoutModalOpen && !storeBilling ? (
         <StripeCheckoutModal
           open={checkoutModalOpen}
           sb={sb}

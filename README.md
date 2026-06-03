@@ -75,13 +75,16 @@ npm run build      # dist/ 정적 빌드
 npm run preview    # 빌드 결과 미리보기
 ```
 
-### iOS 앱 (App Store)
+### 모바일 앱 (iOS · Android, Capacitor)
 
-네이티브 빌드는 **랜딩 없이** 바로 React 앱(`Auth` → 보관함)을 로드합니다. `npm run dev`에 붙인 **라이브 리로드**만 Vite가 루트에 마케팅 페이지를 두기 때문에 `capacitor.config.ts`가 개발 서버 URL에 자동으로 `/app/`을 붙입니다.
+네이티브 빌드는 **랜딩 없이** 바로 React 앱(`Auth` → 보관함)을 로드합니다. 계정·금고·PRO 라이선스는 **웹과 동일한 Supabase 이메일 계정**을 사용합니다. 결제는 **웹=Stripe**, **앱=App Store / Google Play IAP** (`docs/mobile.md` Phase 1–4).
 
 ```bash
-npm run cap:ios    # 빌드 → ios 동기화 → Xcode 열기
+npm run cap:ios       # Xcode
+npm run cap:android   # Android Studio
 ```
+
+`npm run dev` 라이브 리로드 시 `capacitor.config.ts`가 dev 서버 URL에 `/app/`을 붙입니다.
 
 `index.html`을 Finder에서 더블클릭해 `file://`로 열면 `/app/`(Sign in)이 브라우저에서 열리지 않습니다. 위처럼 `npm run dev` 또는 `npm run preview`로 접속하세요.
 

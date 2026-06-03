@@ -1,6 +1,7 @@
 import React from "react";
 import type { Session } from "@supabase/supabase-js";
 import { FREE_ENTRY_LIMIT } from "../lib/entitlements";
+import { getNativePlatform } from "../lib/platform";
 import { Check } from "./Icons";
 import { PRICING_PAID_FEATURE_KEYS } from "./CheckoutProFeatures";
 
@@ -15,6 +16,11 @@ export type PricingTiersProps = {
   checkoutFlash?: string | null;
   onCheckout: () => void;
   onSignIn: () => void;
+  /** Native app: in-app store purchase instead of Stripe. */
+  storeBilling?: boolean;
+  storeReady?: boolean;
+  onStorePurchase?: () => void;
+  onStoreRestore?: () => void;
   /** `drawer` uses a side-by-side two-column grid (compact cards). */
   layout?: "page" | "drawer";
 };
@@ -33,9 +39,18 @@ export function PricingTiers({
   checkoutFlash,
   onCheckout,
   onSignIn,
+  storeBilling = false,
+  storeReady = false,
+  onStorePurchase,
+  onStoreRestore,
   layout = "page",
 }: PricingTiersProps) {
   const isDrawer = layout === "drawer";
+  const nativePlatform = getNativePlatform();
+  const storeCtaKey =
+    nativePlatform === "android"
+      ? "pricing.ctaBuyPlay"
+      : "pricing.ctaBuyAppStore";
   const gridClass = isDrawer
     ? "grid gap-4 grid-cols-2 items-stretch min-w-0"
     : "grid gap-6 md:grid-cols-2 md:gap-8 items-stretch";
@@ -153,6 +168,47 @@ export function PricingTiers({
                 >
                   {t("pricing.signInToBuy")}
                 </button>
+              ) : storeBilling ? (
+                <>
+                  <button
+                    type="button"
+                    className="btn-primary w-full justify-center"
+                    disabled={
+                      !configured ||
+                      busy ||
+                      loading ||
+                      licensed === null ||
+                      (!storeReady && !import.meta.env.DEV)
+                    }
+                    onClick={() =>
+                      void (onStorePurchase ? onStorePurchase() : onCheckout())
+                    }
+                  >
+                    {busy ? t("app.loading") : t(storeCtaKey)}
+                  </button>
+                  {!storeReady ? (
+                    <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-2 leading-snug">
+                      {t("pricing.storeBridgePending")}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-ink-500 leading-snug">
+                      {t("pricing.storeNote")}
+                    </p>
+                  )}
+                  {onStoreRestore ? (
+                    <button
+                      type="button"
+                      className="btn-secondary w-full justify-center text-sm"
+                      disabled={!configured || busy || loading || !storeReady}
+                      onClick={() => void onStoreRestore()}
+                    >
+                      {t("pricing.storeRestore")}
+                    </button>
+                  ) : null}
+                  <p className="text-xs text-ink-500 leading-snug">
+                    {t("pricing.purchasedOnWeb")}
+                  </p>
+                </>
               ) : (
                 <button
                   type="button"
@@ -165,7 +221,9 @@ export function PricingTiers({
                   {busy ? t("app.loading") : t("pricing.ctaBuy")}
                 </button>
               )}
-              <p className="text-xs text-ink-500 leading-snug">{t("pricing.signInHint")}</p>
+              {!storeBilling ? (
+                <p className="text-xs text-ink-500 leading-snug">{t("pricing.signInHint")}</p>
+              ) : null}
             </div>
           ) : null}
         </section>

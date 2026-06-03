@@ -4,6 +4,8 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../lib/auth";
 import { getSupabase } from "../lib/supabaseClient";
 import { useVault } from "../lib/vault";
+import { useProPurchase } from "../hooks/useProPurchase";
+import { usesStoreBilling } from "../lib/platform";
 import { PricingTiers } from "./PricingTiers";
 import { StripeCheckoutModal } from "./StripeCheckoutModal";
 
@@ -17,10 +19,20 @@ export function PricingDrawer({
   const { configured, loading, session, signInWithGoogle } = useAuth();
   const { t, licensed, entitlementLoaded, refreshEntitlements, finalizePaidCheckout } =
     useVault();
-  const [busy, setBusy] = useState(false);
+  const [stripeBusy, setStripeBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [entered, setEntered] = useState(false);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const storeBilling = usesStoreBilling();
+  const {
+    busy: storeBusy,
+    err: storeErr,
+    setErr: setStoreErr,
+    storeReady,
+    purchaseStore,
+    restoreStore,
+  } = useProPurchase(t);
+  const busy = storeBilling ? storeBusy : stripeBusy;
 
   useEffect(() => {
     if (!open) {
@@ -53,13 +65,13 @@ export function PricingDrawer({
 
   const handleCheckoutClose = useCallback(() => {
     setCheckoutModalOpen(false);
-    setBusy(false);
+    setStripeBusy(false);
   }, []);
 
   const handleCheckoutComplete = useCallback(
     async (sessionId: string) => {
       setCheckoutModalOpen(false);
-      setBusy(false);
+      setStripeBusy(false);
       await finalizePaidCheckout(sessionId);
       onClose();
     },
@@ -68,13 +80,44 @@ export function PricingDrawer({
 
   const startCheckout = useCallback(() => {
     setErr(null);
+    setStoreErr(null);
     if (!session) {
       setErr(t("pricing.errSignIn"));
       return;
     }
-    setBusy(true);
+    if (storeBilling) {
+      void (async () => {
+        const r = await purchaseStore();
+        if (r.ok) {
+          await refreshEntitlements();
+          onClose();
+        }
+      })();
+      return;
+    }
+    setStripeBusy(true);
     setCheckoutModalOpen(true);
-  }, [session, t]);
+  }, [
+    session,
+    storeBilling,
+    purchaseStore,
+    refreshEntitlements,
+    onClose,
+    setStoreErr,
+    t,
+  ]);
+
+  const handleStoreRestore = useCallback(() => {
+    setErr(null);
+    setStoreErr(null);
+    void (async () => {
+      const r = await restoreStore();
+      if (r.ok) {
+        await refreshEntitlements();
+        onClose();
+      }
+    })();
+  }, [restoreStore, refreshEntitlements, onClose, setStoreErr]);
 
   const sb = getSupabase();
 
@@ -132,15 +175,19 @@ export function PricingDrawer({
               session={session}
               licensed={licensedKnown}
               busy={busy}
-              err={err}
+              err={err ?? storeErr}
               onCheckout={startCheckout}
               onSignIn={() => void signInWithGoogle()}
+              storeBilling={storeBilling}
+              storeReady={storeReady}
+              onStorePurchase={startCheckout}
+              onStoreRestore={handleStoreRestore}
               layout="drawer"
             />
           </div>
         </div>
       </div>
-      {sb && checkoutModalOpen ? (
+      {sb && checkoutModalOpen && !storeBilling ? (
         <StripeCheckoutModal
           open={checkoutModalOpen}
           sb={sb}

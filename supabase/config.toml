@@ -28,3 +28,7 @@ verify_jwt = false
 # Admin dashboard: stats, customer list, refunds (JWT + ADMIN_EMAILS allowlist).
 [functions.admin-api]
 verify_jwt = true
+
+# App Store / Play purchase verification → user_entitlements (JWT).
+[functions.verify-store-purchase]
+verify_jwt = true

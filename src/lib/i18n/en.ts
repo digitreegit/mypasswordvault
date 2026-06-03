@@ -258,6 +258,13 @@ export const MESSAGES_EN: Record<string, string> = {
     "The Supabase project is missing the user_vaults table. In the Supabase dashboard open SQL Editor, paste and run the contents of supabase/migrations/20260513120000_user_vaults.sql in this repo, then try again.",
   "errors.noCloudBackup":
     "No encrypted vault found for this account yet. Use a device that already has the vault, or an offline file under Advanced below.",
+  "errors.supabaseNotConfigured": "Supabase is not configured in this build.",
+  "errors.storeWebOnly": "Store purchase is only available in the mobile app.",
+  "errors.storeUnsupported": "In-app purchase is not supported on this device.",
+  "errors.storeBridgeMissing":
+    "Native billing is not connected. See docs/mobile.md or purchase on the web with the same email.",
+  "errors.storeVerifyFailed": "Could not verify your store purchase. Try Restore purchases or contact support.",
+  "errors.storeDevOnly": "Dev store grant is only available in development builds.",
   "errors.entryLimitReached":
     "The free plan allows up to {{limit}} password entries. Upgrade to add more.",
   "errors.importExceedsEntryLimit":
@@ -565,6 +572,15 @@ export const MESSAGES_EN: Record<string, string> = {
   "pricing.alreadyLicensed": "Licensed — thank you",
   "pricing.ctaBuy": "Continue to secure checkout",
   "pricing.stripeNote": "Payments are processed by Stripe in a secure checkout modal.",
+  "pricing.ctaBuyAppStore": "Get PRO on the App Store",
+  "pricing.ctaBuyPlay": "Get PRO on Google Play",
+  "pricing.storeNote":
+    "One-time in-app purchase. The same email account unlocks PRO on web and other devices after sync.",
+  "pricing.storeBridgePending":
+    "In-app purchase is not wired in this build yet. Install the native billing plugin (see docs/mobile.md) or buy on the web with the same account.",
+  "pricing.storeRestore": "Restore purchases",
+  "pricing.storeRestoreEmpty": "No previous store purchase was found for this account.",
+  "pricing.purchasedOnWeb": "Already bought on the web? Sign in with the same email — your license syncs automatically.",
   "pricing.errSignIn": "Please sign in first.",
   "pricing.errCheckout": "Could not start checkout. Try again or contact support.",
   "pricing.errStripeKey":

@@ -74,6 +74,10 @@ CAPACITOR_DEV_SERVER=http://YOUR_LAN_IP:5173 npm run cap:sync
 
 The config rewrites that to `http://YOUR_LAN_IP:5173/app/` so the WebView loads the React app, not the root marketing page. You can also set `CAPACITOR_DEV_SERVER` to the full `/app/` URL yourself. If your dev server serves the SPA at `/` only, set `CAPACITOR_DEV_SERVER_USE_ROOT=1`. Use your machine’s LAN IP so the simulator/device can reach Vite. Unset `CAPACITOR_DEV_SERVER` for production archives.
 
-## Android (next)
+## Android
 
-The same Capacitor project supports Android (`npx cap add android`). See Capacitor docs when you are ready for Play Console.
+```bash
+npm run cap:android
+```
+
+Play Console, signing, and IAP: see [mobile.md](./mobile.md).
