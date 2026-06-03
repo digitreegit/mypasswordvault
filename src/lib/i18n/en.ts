@@ -354,6 +354,7 @@ export const MESSAGES_EN: Record<string, string> = {
 
   "settings.accountTitle": "Account",
   "settings.signedInAs": "Signed in as {{email}}",
+  "settings.signedInAsLabel": "Signed in as",
   "settings.changePasswordTitle": "Change your password",
   "settings.changePasswordSubtitle":
     "Welcome back! Choose a new strong password and save it to proceed.",
@@ -456,6 +457,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "vault.deleteCategory": "Remove category",
   "vault.deleteCategoryConfirm":
     "Remove this category? Entries using it become uncategorized.",
+  "vault.deleteCategoryConfirmAction": "Remove category",
   "vault.categoryName": "Category name",
   "vault.dragToReorder": "Drag to reorder categories",
   "vault.newCategory": "New category",

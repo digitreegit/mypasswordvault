@@ -75,6 +75,7 @@ export function CategoriesDialog({
   const { categories, setCategories, deleteCategory, t } = useVault();
   const [draft, setDraft] = useState<VaultCategory[]>(categories);
   const [busy, setBusy] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropIndicator, setDropIndicator] = useState<{
     id: string;
@@ -91,8 +92,18 @@ export function CategoriesDialog({
       setDraft([...categories, { id, name: "" }]);
       return;
     }
-    setDraft(categories);
+    if (!startWithNewCategory) {
+      seededNewRef.current = false;
+      setDraft(categories);
+    }
   }, [categories, startWithNewCategory]);
+
+  useEffect(
+    () => () => {
+      seededNewRef.current = false;
+    },
+    [],
+  );
 
   useLayoutEffect(() => {
     const id = pendingFocusIdRef.current;
@@ -108,6 +119,35 @@ export function CategoriesDialog({
     [draft, categories]
   );
 
+  const deleteTarget = useMemo(
+    () => (deleteTargetId ? draft.find((c) => c.id === deleteTargetId) : undefined),
+    [deleteTargetId, draft],
+  );
+
+  useEffect(() => {
+    if (!deleteTargetId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !busy) setDeleteTargetId(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [deleteTargetId, busy]);
+
+  async function confirmDelete() {
+    if (!deleteTargetId) return;
+    const id = deleteTargetId;
+    setBusy(true);
+    try {
+      if (categories.some((c) => c.id === id)) {
+        await deleteCategory(id);
+      }
+      setDraft((prev) => prev.filter((c) => c.id !== id));
+      setDeleteTargetId(null);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function save() {
     setBusy(true);
     try {
@@ -122,17 +162,8 @@ export function CategoriesDialog({
     }
   }
 
-  async function onDelete(id: string) {
-    if (!window.confirm(t("vault.deleteCategoryConfirm"))) return;
-    setBusy(true);
-    try {
-      await deleteCategory(id);
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return createPortal(
+    <>
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/40">
       <div
         className="card w-full max-w-md max-h-[85vh] overflow-hidden flex flex-col shadow-lg"
@@ -274,7 +305,7 @@ export function CategoriesDialog({
                 <button
                   type="button"
                   className="btn-ghost p-2 text-ink-400 hover:text-red-600 shrink-0"
-                  onClick={() => void onDelete(c.id)}
+                  onClick={() => setDeleteTargetId(c.id)}
                   disabled={busy}
                   title={t("vault.deleteCategory")}
                 >
@@ -313,7 +344,63 @@ export function CategoriesDialog({
           </div>
         </div>
       </div>
-    </div>,
+    </div>
+
+    {deleteTarget ? (
+      <div
+        className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-black/40"
+        role="presentation"
+        onClick={() => {
+          if (!busy) setDeleteTargetId(null);
+        }}
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cat-delete-title"
+          className="card w-full max-w-md shadow-lg"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="px-5 py-3 border-b border-ink-200">
+            <h2
+              id="cat-delete-title"
+              className="font-sans text-lg font-semibold text-ink-900 tracking-tight leading-tight"
+            >
+              {t("vault.deleteCategory")}
+            </h2>
+          </div>
+          <div className="px-5 py-4 space-y-3">
+            <p className="text-sm text-ink-700 leading-snug">
+              {t("vault.deleteCategoryConfirm")}
+            </p>
+            {deleteTarget.name.trim() ? (
+              <p className="text-sm font-medium text-ink-900 leading-snug">
+                {deleteTarget.name.trim()}
+              </p>
+            ) : null}
+          </div>
+          <div className="px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+            <button
+              type="button"
+              className="btn-secondary text-sm w-full sm:w-auto"
+              onClick={() => setDeleteTargetId(null)}
+              disabled={busy}
+            >
+              {t("common.cancel")}
+            </button>
+            <button
+              type="button"
+              className="btn-danger text-sm w-full sm:w-auto"
+              disabled={busy}
+              onClick={() => void confirmDelete()}
+            >
+              {t("vault.deleteCategoryConfirmAction")}
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null}
+    </>,
     document.body
   );
 }

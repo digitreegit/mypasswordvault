@@ -60,12 +60,14 @@ export function UserMenuDropdown({ className = "" }: { className?: string }) {
           role="menu"
           className="absolute right-0 top-[calc(100%+0.35rem)] z-50 min-w-[13.75rem] rounded-lg border border-ink-200 bg-white py-1.5 shadow-[0_8px_24px_rgba(18,18,22,0.12)]"
         >
-          <p
-            className="m-0 px-3 pt-2 pb-1.5 text-[13px] text-ink-500 leading-snug break-all"
-            role="presentation"
-          >
-            {email}
-          </p>
+          <div className="px-3 pt-2 pb-1.5" role="presentation">
+            <p className="m-0 text-xs text-ink-400 leading-snug">
+              {t("settings.signedInAsLabel")}
+            </p>
+            <p className="m-0 mt-0.5 text-[13px] text-ink-700 leading-snug break-all">
+              {email}
+            </p>
+          </div>
           <div className={MENU_DIVIDER} role="separator" />
           <a
             role="menuitem"

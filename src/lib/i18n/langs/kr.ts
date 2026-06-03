@@ -345,6 +345,7 @@ export const MESSAGES_KR: Record<string, string> = {
 
   "settings.accountTitle": "계정",
   "settings.signedInAs": "로그인: {{email}}",
+  "settings.signedInAsLabel": "로그인 계정",
   "settings.changePasswordTitle": "비밀번호 변경",
   "settings.changePasswordSubtitle":
     "다시 오신 것을 환영합니다! 새로운 강력한 비밀번호를 입력하고 저장하세요.",
@@ -446,6 +447,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "vault.deleteCategory": "카테고리 삭제",
   "vault.deleteCategoryConfirm":
     "이 카테고리를 삭제할까요? 사용 중인 항목은 분류 없음으로 바뀝니다.",
+  "vault.deleteCategoryConfirmAction": "카테고리 삭제",
   "vault.categoryName": "카테고리 이름",
   "vault.dragToReorder": "끌어서 순서 변경",
   "vault.newCategory": "새 카테고리",

@@ -431,7 +431,7 @@ function CategorySelect({
             <div className="shrink-0 border-t border-ink-200 bg-white">
             <button
               type="button"
-              className="block w-full whitespace-nowrap px-3 py-2.5 text-left text-sm font-medium text-ink-800 hover:bg-ink-50"
+              className="block w-full whitespace-nowrap px-3 py-2 text-left text-xs font-medium text-ink-600 hover:bg-ink-50"
               onPointerDown={handleAdd}
             >
               {t("vault.addCategoryMenu")}
@@ -1459,6 +1459,7 @@ export function VaultScreen() {
       )}
       {showCategories && (
         <CategoriesDialog
+          key={categoriesStartWithNew ? "categories-add" : "categories-manage"}
           onClose={closeCategoriesDialog}
           startWithNewCategory={categoriesStartWithNew}
         />
