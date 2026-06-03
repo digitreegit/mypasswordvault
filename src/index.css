@@ -186,15 +186,27 @@ html.native-app .pricing-drawer-body {
   padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
 }
 
-html.native-app .app-shell__panel:has(.setup-shell) {
-  overflow: hidden;
+html.native-app .app-shell__panel--split,
+.app-shell__panel--split {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden !important;
   padding-bottom: 0;
 }
 
-html.native-app .setup-shell {
+html.native-app .app-shell__panel--split {
+  flex: 1 1 auto;
+  height: 100%;
+}
+
+.app-shell__panel--split .setup-shell-scroll {
   flex: 1 1 auto;
   min-height: 0;
-  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 html.native-app .setup-shell-header {

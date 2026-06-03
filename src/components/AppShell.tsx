@@ -8,9 +8,12 @@ import React from "react";
 export function AppShell({
   children,
   wide = false,
+  splitScroll = false,
 }: {
   children: React.ReactNode;
   wide?: boolean;
+  /** Pin first child blocks; scroll the rest (setup wizard). */
+  splitScroll?: boolean;
 }) {
   return (
     <div className="app-shell">
@@ -18,6 +21,7 @@ export function AppShell({
         className={[
           "app-shell__panel",
           wide ? "app-shell__panel--wide" : "",
+          splitScroll ? "app-shell__panel--split" : "",
         ]
           .filter(Boolean)
           .join(" ")}

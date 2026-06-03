@@ -15,6 +15,11 @@ import { passwordStrengthScore } from "../lib/passwordGenerator";
 import { Check, Copy, Download, Eye, EyeOff, ChevronDown } from "./Icons";
 import { ScreenHeader } from "./ScreenHeader";
 import { AppShell } from "./AppShell";
+import {
+  nativeFixedHeaderClass,
+  nativeMainScrollClass,
+  nativeScreenRootClass,
+} from "../lib/nativeLayout";
 import { downloadTextFile } from "../lib/downloadTextFile";
 import { isAppError } from "../lib/errors";
 import { isNativeApp } from "../lib/platform";
@@ -355,41 +360,39 @@ export function SetupScreen() {
     }
   }
 
-  return (
-    <AppShell wide>
-      <div className="setup-shell flex min-h-0 flex-1 flex-col">
-        <div className="setup-shell-header shrink-0">
-          <ScreenHeader
-            brandName={t("app.brandName")}
-            pageTitle={pageTitle}
-            hideTitle
-            locale={locale}
-            onLocaleChange={(l) => void setLocale(l)}
-            languageAriaLabel={t("settings.language")}
-            brandHomeHref={brandHomeHref}
-            brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
-            beforeTitle={
-              <div>
-                <div
-                  className="-mx-5 sm:-mx-8 h-px bg-ink-200"
-                  role="presentation"
-                />
-                <div className="pt-4">
-                  <SetupStepper stage={stage} t={t} />
-                </div>
-              </div>
-            }
-            className="mb-0"
+  const setupHeader = (
+    <ScreenHeader
+      brandName={t("app.brandName")}
+      pageTitle={pageTitle}
+      hideTitle
+      locale={locale}
+      onLocaleChange={(l) => void setLocale(l)}
+      languageAriaLabel={t("settings.language")}
+      brandHomeHref={brandHomeHref}
+      brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
+      beforeTitle={
+        <div>
+          <div
+            className="-mx-5 sm:-mx-8 h-px bg-ink-200"
+            role="presentation"
           />
-        </div>
-
-        <div className="setup-shell-scroll native-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain">
-          <div className="setup-shell-intro mb-5 space-y-1">
-            <h1 className="font-sans text-xl font-semibold text-ink-900 tracking-tight">
-              {pageTitle}
-            </h1>
-            <p className="text-sm text-ink-500 leading-snug">{stageIntro}</p>
+          <div className="pt-4">
+            <SetupStepper stage={stage} t={t} />
           </div>
+        </div>
+      }
+      className="mb-0"
+    />
+  );
+
+  const setupBody = (
+    <>
+      <div className="setup-shell-intro mb-5 space-y-1">
+        <h1 className="font-sans text-xl font-semibold text-ink-900 tracking-tight">
+          {pageTitle}
+        </h1>
+        <p className="text-sm text-ink-500 leading-snug">{stageIntro}</p>
+      </div>
           {stage === "password" && (
           <div className="space-y-4">
             <div>
@@ -686,12 +689,38 @@ export function SetupScreen() {
           </div>
         )}
 
-        </div>
-      </div>
+    </>
+  );
 
-      {passkeyHelpOpen && (
-        <PasskeyHelpModal t={t} onClose={() => setPasskeyHelpOpen(false)} />
-      )}
-    </AppShell>
+  const passkeyHelp = passkeyHelpOpen ? (
+    <PasskeyHelpModal t={t} onClose={() => setPasskeyHelpOpen(false)} />
+  ) : null;
+
+  if (isNativeApp()) {
+    return (
+      <>
+        <div className={nativeScreenRootClass("bg-white")}>
+          <header
+            className={`${nativeFixedHeaderClass()} border-b border-ink-200 bg-white px-5 pt-1 shrink-0`}
+          >
+            {setupHeader}
+          </header>
+          <main className={nativeMainScrollClass("px-5 py-5")}>{setupBody}</main>
+        </div>
+        {passkeyHelp}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <AppShell wide splitScroll>
+        <div className="setup-shell-header shrink-0">{setupHeader}</div>
+        <div className="setup-shell-scroll native-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain">
+          {setupBody}
+        </div>
+      </AppShell>
+      {passkeyHelp}
+    </>
   );
 }
