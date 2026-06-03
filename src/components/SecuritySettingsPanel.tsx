@@ -58,6 +58,28 @@ function formatPasskeyDate(ts: number, locale: string): string {
   }
 }
 
+function CircleStatusIcon({
+  variant = "ok",
+}: {
+  variant?: "ok" | "alert";
+}) {
+  const isAlert = variant === "alert";
+  return (
+    <span
+      className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+        isAlert ? "border-red-500 text-red-600" : "border-sky-600 text-sky-600"
+      }`}
+      aria-hidden
+    >
+      {isAlert ? (
+        <ExclamationTriangleIcon className="h-3 w-3" />
+      ) : (
+        <CheckIcon className="h-3 w-3" strokeWidth={2.5} />
+      )}
+    </span>
+  );
+}
+
 function ConfiguredBadge({
   label,
   variant = "ok",
@@ -67,24 +89,11 @@ function ConfiguredBadge({
 }) {
   const isAlert = variant === "alert";
   return (
-    <div
-      className={`flex items-center gap-2.5 rounded-lg border px-3 py-2.5 ${
-        isAlert
-          ? "border-red-200 bg-red-50"
-          : "border-sky-200 bg-sky-50"
-      }`}
-    >
-      {isAlert ? (
-        <ExclamationTriangleIcon
-          className="h-4 w-4 shrink-0 text-red-600"
-          aria-hidden
-        />
-      ) : (
-        <CheckIcon className="h-4 w-4 shrink-0 text-sky-600" aria-hidden />
-      )}
+    <div className="flex items-center gap-2.5">
+      <CircleStatusIcon variant={variant} />
       <span
         className={`text-sm font-medium ${
-          isAlert ? "text-red-900" : "text-sky-900"
+          isAlert ? "text-red-700" : "text-sky-600"
         }`}
       >
         {label}
@@ -409,15 +418,15 @@ export function SecuritySettingsPanel() {
               return (
                 <li
                   key={pk.id}
-                  className={`flex flex-wrap items-start gap-3 rounded-lg border px-4 py-2.5 text-left ${
+                  className={`flex flex-wrap items-start gap-3 text-left ${
                     linked
-                      ? "border-sky-200 bg-sky-50"
-                      : "border-amber-200 bg-amber-50"
+                      ? "py-1"
+                      : "rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5"
                   }`}
                 >
                   <span className={PASSKEY_ROW_ICON_SLOT} aria-hidden>
                     {linked ? (
-                      <CheckIcon className="h-4 w-4 text-sky-600" />
+                      <CircleStatusIcon />
                     ) : (
                       <ExclamationTriangleIcon className="h-4 w-4 text-amber-600" />
                     )}
@@ -425,7 +434,7 @@ export function SecuritySettingsPanel() {
                   <div className="min-w-0 flex-1 text-left">
                     <p
                       className={`text-sm font-medium truncate ${
-                        linked ? "text-sky-900" : "text-amber-900"
+                        linked ? "text-sky-600" : "text-amber-900"
                       }`}
                     >
                       {pk.label ?? t("settings.passkeysUnnamed")}
@@ -440,7 +449,7 @@ export function SecuritySettingsPanel() {
                         {pk.webAuthnName}
                       </p>
                     ) : pk.webAuthnName ? (
-                      <p className="text-xs text-sky-700 truncate">
+                      <p className="text-xs text-sky-600 truncate">
                         {pk.webAuthnName}
                       </p>
                     ) : null}
@@ -448,7 +457,7 @@ export function SecuritySettingsPanel() {
                   <div className="flex items-center gap-2 shrink-0 self-center">
                     <span
                       className={`text-xs ${
-                        linked ? "text-sky-700" : "text-amber-700"
+                        linked ? "text-sky-600" : "text-amber-700"
                       }`}
                     >
                       {formatPasskeyDate(pk.createdAt, locale)}
@@ -488,7 +497,7 @@ export function SecuritySettingsPanel() {
                 </li>
               );
             })}
-            {!devIpBlocked && !wrongDomain
+            {!devIpBlocked
               ? passkeyAddOptions.map((option) => (
                   <li key={option.id} className="list-none">
                     <PasskeyAddOptionBox
