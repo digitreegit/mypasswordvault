@@ -33,9 +33,15 @@ const config: CapacitorConfig = {
   },
   ios: {
     backgroundColor: "#ffffff",
-    contentInset: "automatic",
+    /** "automatic" pans the whole WebView when the keyboard opens — breaks pinned setup headers. */
+    contentInset: "never",
     scrollEnabled: false,
     scheme: "My Password Vault",
+  },
+  plugins: {
+    Keyboard: {
+      resize: "none",
+    },
   },
 };
 

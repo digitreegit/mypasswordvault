@@ -21,10 +21,14 @@ import { ensureOAuthSessionFromUrl } from "./lib/supabaseAuthRedirect";
 import { isNativeApp } from "./lib/platform";
 import { initNativeViewportLock } from "./lib/nativeViewportLock";
 import { initNativeStoreBridge } from "./lib/initNativeStoreBridge";
+import { initNativeKeyboard } from "./lib/initNativeKeyboard";
 
 if (isNativeApp()) {
   document.documentElement.classList.add("native-app");
   initNativeViewportLock();
+  void initNativeKeyboard().catch((e) => {
+    console.error("initNativeKeyboard", e);
+  });
   void initNativeStoreBridge().catch((e) => {
     console.error("initNativeStoreBridge", e);
   });

@@ -21,6 +21,7 @@ import {
   parseCheckoutReturn,
 } from "./lib/checkoutReturn";
 import { nativeScreenRootClass } from "./lib/nativeLayout";
+import { isNativeApp } from "./lib/platform";
 
 function parseHashPath(): string {
   if (typeof window === "undefined") return "";
@@ -151,9 +152,13 @@ function AuthenticatedApp() {
 }
 
 export default function App() {
-  return (
+  const tree = (
     <AuthProvider>
       <AuthenticatedApp />
     </AuthProvider>
   );
+  if (isNativeApp()) {
+    return <div className="native-app-root">{tree}</div>;
+  }
+  return tree;
 }

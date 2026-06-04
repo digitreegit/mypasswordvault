@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   QuestionMarkCircleIcon,
   ShieldCheckIcon,
@@ -214,6 +214,39 @@ export function SetupScreen() {
   const [totpCopyDone, setTotpCopyDone] = useState(false);
   const [recoveryCopyDone, setRecoveryCopyDone] = useState(false);
   const [recoveryDownloadDone, setRecoveryDownloadDone] = useState(false);
+  const setupHeaderRef = useRef<HTMLElement>(null);
+  const setupScrollRef = useRef<HTMLElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    if (!isNativeApp()) return;
+    const header = setupHeaderRef.current;
+    if (!header) return;
+
+    const measure = () => {
+      setHeaderHeight(header.getBoundingClientRect().height);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(header);
+    return () => ro.disconnect();
+  }, [stage]);
+
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    const scrollRoot = setupScrollRef.current;
+    if (!scrollRoot) return;
+    const onFocusIn = (e: FocusEvent) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (!scrollRoot.contains(target)) return;
+      window.setTimeout(() => {
+        target.scrollIntoView({ block: "center", behavior: "auto" });
+      }, 360);
+    };
+    scrollRoot.addEventListener("focusin", onFocusIn);
+    return () => scrollRoot.removeEventListener("focusin", onFocusIn);
+  }, [stage, headerHeight]);
 
   const brandHomeHref = isNativeApp() ? undefined : "/";
 
@@ -699,13 +732,28 @@ export function SetupScreen() {
   if (isNativeApp()) {
     return (
       <>
-        <div className={nativeScreenRootClass("bg-white")}>
+        <div
+          className={nativeScreenRootClass("bg-white setup-screen setup-screen--fixed")}
+          style={
+            headerHeight > 0
+              ? ({ ["--setup-header-height" as string]: `${headerHeight}px` } as React.CSSProperties)
+              : undefined
+          }
+        >
           <header
-            className={`${nativeFixedHeaderClass()} border-b border-ink-200 bg-white px-5 pt-1 shrink-0`}
+            ref={setupHeaderRef}
+            className={`${nativeFixedHeaderClass()} setup-screen__header setup-screen__header--fixed border-b border-ink-200 bg-white px-5 pt-1`}
           >
             {setupHeader}
           </header>
-          <main className={nativeMainScrollClass("px-5 py-5")}>{setupBody}</main>
+          <main
+            ref={setupScrollRef}
+            className={nativeMainScrollClass(
+              "setup-screen__body setup-screen__body--fixed px-5 py-5",
+            )}
+          >
+            {setupBody}
+          </main>
         </div>
         {passkeyHelp}
       </>
