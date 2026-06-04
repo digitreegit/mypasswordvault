@@ -46,8 +46,8 @@ export function PricingPage() {
     setErr: setStoreErr,
     storeReady,
     bridgeStatus,
+    storeProPrice,
     purchaseStore,
-    restoreStore,
   } = useProPurchase(t);
   const busy = storeBilling ? storeBusy : stripeBusy;
   const uid = session?.user?.id;
@@ -119,15 +119,6 @@ export function PricingPage() {
     [t, uid],
   );
 
-  const handleStoreRestore = useCallback(() => {
-    setErr(null);
-    setStoreErr(null);
-    void (async () => {
-      const r = await restoreStore();
-      if (r.ok) await reloadLicense();
-    })();
-  }, [restoreStore, reloadLicense, setStoreErr]);
-
   function startCheckout() {
     setErr(null);
     setStoreErr(null);
@@ -188,8 +179,8 @@ export function PricingPage() {
           storeBilling={storeBilling}
           storeReady={storeReady}
           storeBridgeStatus={bridgeStatus}
+          storeProPrice={storeProPrice}
           onStorePurchase={startCheckout}
-          onStoreRestore={handleStoreRestore}
           layout="page"
         />
 

@@ -268,8 +268,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "errors.storeWebOnly": "Store purchase is only available in the mobile app.",
   "errors.storeUnsupported": "In-app purchase is not supported on this device.",
   "errors.storeBridgeMissing":
-    "App Store billing is not ready on this device. Sync PRO from your account first if you paid on the web, or finish App Store setup in Xcode.",
-  "errors.storeVerifyFailed": "Could not verify your store purchase. Try Restore purchases or contact support.",
+    "App Store billing is not ready. Check that the PRO product exists in App Store Connect, then rebuild the app.",
+  "errors.storeVerifyFailed": "Could not verify your store purchase. Try again or contact support.",
   "errors.storeDevOnly": "Dev store grant is only available in development builds.",
   "errors.storePurchaseCancelled": "Purchase was cancelled.",
   "errors.entryLimitReached":
@@ -580,6 +580,10 @@ export const MESSAGES_EN: Record<string, string> = {
   "pricing.ctaBuy": "Continue to secure checkout",
   "pricing.stripeNote": "Payments are processed by Stripe in a secure checkout modal.",
   "pricing.ctaBuyAppStore": "Get PRO on the App Store",
+  "pricing.upgradeToPro": "Upgrade to Pro",
+  "pricing.ctaPay": "Pay {{price}}",
+  "pricing.ctaPayGeneric": "Purchase",
+  "pricing.paidOnceStore": "One-time purchase — no subscription",
   "pricing.ctaBuyPlay": "Get PRO on Google Play",
   "pricing.storeNote":
     "One-time in-app purchase. The same email account unlocks PRO on web and other devices after sync.",
@@ -599,7 +603,9 @@ export const MESSAGES_EN: Record<string, string> = {
   "pricing.storeBridgeLoading":
     "Connecting to the App Store…",
   "pricing.storeBridgeFailed":
-    "App Store billing is unavailable. In Xcode, add the In-App Purchase capability, create product com.skyface.mypasswordvault.pro_lifetime in App Store Connect, then rebuild.",
+    "Could not connect to the App Store for in-app purchase.",
+  "pricing.storeBridgeFailedHint":
+    "Set up product com.skyface.mypasswordvault.pro_lifetime in App Store Connect (non-consumable), use a Sandbox Apple ID on device, or in Xcode assign Products.storekit under Run → Options → StoreKit Configuration.",
   "pricing.planTabsAria": "Compare plans",
   "pricing.storeBridgePending":
     "In-app purchase is not wired in this build yet. Install the native billing plugin (see docs/mobile.md) or buy on the web with the same account.",

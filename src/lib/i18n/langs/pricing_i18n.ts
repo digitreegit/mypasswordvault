@@ -45,6 +45,17 @@ export const PRICING_ES: Record<string, string> = {
   "pricing.ctaBuy": "Continuar al pago seguro",
   "pricing.stripeNote":
     "Los pagos los procesa Stripe. Saldrás de esta app para completar la compra.",
+  "pricing.ctaPay": "Pagar {{price}}",
+  "pricing.ctaPayGeneric": "Comprar",
+  "pricing.paidOnceStore": "Compra única — sin suscripción",
+  "pricing.storeNote":
+    "Compra única en la app. La misma cuenta de correo desbloquea PRO en la web y otros dispositivos tras sincronizar.",
+  "pricing.signedInAs": "Sesión iniciada como {{email}}",
+  "pricing.licenseChecking": "Comprobando la licencia de tu cuenta…",
+  "pricing.storeBridgeLoading": "Conectando con la App Store…",
+  "pricing.storeBridgeFailedHint":
+    "Configura el producto com.skyface.mypasswordvault.pro_lifetime en App Store Connect (no consumible), usa un Apple ID de Sandbox en el dispositivo o en Xcode asigna Products.storekit en Run → Options → StoreKit Configuration.",
+  "pricing.planTabsAria": "Comparar planes",
   "pricing.errSignIn": "Primero inicia sesión.",
   "pricing.errCheckout":
     "No se pudo iniciar el pago. Inténtalo de nuevo o contacta con soporte.",
@@ -101,6 +112,17 @@ export const PRICING_DE: Record<string, string> = {
   "pricing.ctaBuy": "Weiter zum sicheren Checkout",
   "pricing.stripeNote":
     "Zahlungen werden von Stripe verarbeitet. Du verlässt die App, um den Kauf abzuschließen.",
+  "pricing.ctaPay": "{{price}} bezahlen",
+  "pricing.ctaPayGeneric": "Kaufen",
+  "pricing.paidOnceStore": "Einmalkauf — kein Abo",
+  "pricing.storeNote":
+    "Einmaliger In-App-Kauf. Dieselbe E-Mail-Adresse schaltet PRO nach der Synchronisierung im Web und auf anderen Geräten frei.",
+  "pricing.signedInAs": "Angemeldet als {{email}}",
+  "pricing.licenseChecking": "Kontolizenz wird geprüft…",
+  "pricing.storeBridgeLoading": "Verbindung mit dem App Store…",
+  "pricing.storeBridgeFailedHint":
+    "Richte das Produkt com.skyface.mypasswordvault.pro_lifetime in App Store Connect ein (nicht verbrauchbar), teste mit einer Sandbox-Apple-ID auf dem Gerät oder weise in Xcode unter Run → Options Products.storekit zu.",
+  "pricing.planTabsAria": "Tarife vergleichen",
   "pricing.errSignIn": "Bitte zuerst anmelden.",
   "pricing.errCheckout":
     "Checkout konnte nicht gestartet werden. Erneut versuchen oder Support kontaktieren.",
@@ -157,6 +179,17 @@ export const PRICING_FR: Record<string, string> = {
   "pricing.ctaBuy": "Continuer vers le paiement sécurisé",
   "pricing.stripeNote":
     "Les paiements sont traités par Stripe. Vous quitterez cette app pour finaliser l’achat.",
+  "pricing.ctaPay": "Payer {{price}}",
+  "pricing.ctaPayGeneric": "Acheter",
+  "pricing.paidOnceStore": "Achat unique — sans abonnement",
+  "pricing.storeNote":
+    "Achat unique dans l’app. Le même compte e-mail débloque PRO sur le web et les autres appareils après synchronisation.",
+  "pricing.signedInAs": "Connecté en tant que {{email}}",
+  "pricing.licenseChecking": "Vérification de la licence du compte…",
+  "pricing.storeBridgeLoading": "Connexion à l’App Store…",
+  "pricing.storeBridgeFailedHint":
+    "Configurez le produit com.skyface.mypasswordvault.pro_lifetime dans App Store Connect (non consommable), utilisez un Apple ID Sandbox sur l’appareil ou assignez Products.storekit dans Xcode sous Run → Options → StoreKit Configuration.",
+  "pricing.planTabsAria": "Comparer les offres",
   "pricing.errSignIn": "Veuillez d’abord vous connecter.",
   "pricing.errCheckout":
     "Impossible de démarrer le paiement. Réessayez ou contactez le support.",
@@ -213,6 +246,17 @@ export const PRICING_IT: Record<string, string> = {
   "pricing.ctaBuy": "Continua al checkout sicuro",
   "pricing.stripeNote":
     "I pagamenti sono gestiti da Stripe. Uscirai dall’app per completare l’acquisto.",
+  "pricing.ctaPay": "Paga {{price}}",
+  "pricing.ctaPayGeneric": "Acquista",
+  "pricing.paidOnceStore": "Acquisto una tantum — nessun abbonamento",
+  "pricing.storeNote":
+    "Acquisto in-app una tantum. Lo stesso account e-mail sblocca PRO sul web e altri dispositivi dopo la sincronizzazione.",
+  "pricing.signedInAs": "Accesso come {{email}}",
+  "pricing.licenseChecking": "Verifica della licenza dell’account…",
+  "pricing.storeBridgeLoading": "Connessione all’App Store…",
+  "pricing.storeBridgeFailedHint":
+    "Configura il prodotto com.skyface.mypasswordvault.pro_lifetime in App Store Connect (non consumabile), usa un Apple ID Sandbox sul dispositivo o in Xcode assegna Products.storekit in Run → Options → StoreKit Configuration.",
+  "pricing.planTabsAria": "Confronta i piani",
   "pricing.errSignIn": "Accedi prima.",
   "pricing.errCheckout":
     "Impossibile avviare il checkout. Riprova o contatta il supporto.",
@@ -266,6 +310,17 @@ export const PRICING_CN: Record<string, string> = {
   "pricing.alreadyLicensed": "已许可 — 谢谢",
   "pricing.ctaBuy": "前往安全结账",
   "pricing.stripeNote": "付款由 Stripe 处理。完成购买时将离开本应用。",
+  "pricing.ctaPay": "支付 {{price}}",
+  "pricing.ctaPayGeneric": "购买",
+  "pricing.paidOnceStore": "一次性购买 — 无订阅",
+  "pricing.storeNote":
+    "应用内一次性购买。同步后，同一邮箱账户可在网页及其他设备上解锁 PRO。",
+  "pricing.signedInAs": "已登录为 {{email}}",
+  "pricing.licenseChecking": "正在检查账户许可…",
+  "pricing.storeBridgeLoading": "正在连接 App Store…",
+  "pricing.storeBridgeFailedHint":
+    "请在 App Store Connect 中配置产品 com.skyface.mypasswordvault.pro_lifetime（非消耗型），在设备上使用 Sandbox Apple ID 测试，或在 Xcode 的 Run → Options 中指定 Products.storekit。",
+  "pricing.planTabsAria": "比较方案",
   "pricing.errSignIn": "请先登录。",
   "pricing.errCheckout": "无法开始结账。请重试或联系支持。",
   "pricing.opsTitle": "运维清单（Supabase + Stripe）",
@@ -321,6 +376,17 @@ export const PRICING_JP: Record<string, string> = {
   "pricing.ctaBuy": "安全なチェックアウトへ進む",
   "pricing.stripeNote":
     "決済は Stripe が処理します。購入完了のため一時的にアプリ外へ移動します。",
+  "pricing.ctaPay": "{{price}} を支払う",
+  "pricing.ctaPayGeneric": "購入",
+  "pricing.paidOnceStore": "一回限りの購入 — サブスクなし",
+  "pricing.storeNote":
+    "アプリ内の一回限りの購入です。同期後、同じメールアカウントで Web や他のデバイスでも PRO が有効になります。",
+  "pricing.signedInAs": "{{email}} でログイン中",
+  "pricing.licenseChecking": "アカウントのライセンスを確認しています…",
+  "pricing.storeBridgeLoading": "App Store に接続しています…",
+  "pricing.storeBridgeFailedHint":
+    "App Store Connect で com.skyface.mypasswordvault.pro_lifetime（非消耗型）を設定し、デバイスで Sandbox Apple ID を使うか、Xcode の Run → Options で Products.storekit を指定してください。",
+  "pricing.planTabsAria": "プランを比較",
   "pricing.errSignIn": "先にログインしてください。",
   "pricing.errCheckout":
     "チェックアウトを開始できませんでした。再試行するかサポートへ連絡してください。",
@@ -377,6 +443,17 @@ export const PRICING_ID: Record<string, string> = {
   "pricing.ctaBuy": "Lanjut ke checkout aman",
   "pricing.stripeNote":
     "Pembayaran diproses oleh Stripe. Anda akan meninggalkan aplikasi untuk menyelesaikan pembelian.",
+  "pricing.ctaPay": "Bayar {{price}}",
+  "pricing.ctaPayGeneric": "Beli",
+  "pricing.paidOnceStore": "Pembelian sekali — tanpa langganan",
+  "pricing.storeNote":
+    "Pembelian dalam aplikasi sekali bayar. Akun email yang sama membuka PRO di web dan perangkat lain setelah sinkron.",
+  "pricing.signedInAs": "Masuk sebagai {{email}}",
+  "pricing.licenseChecking": "Memeriksa lisensi akun Anda…",
+  "pricing.storeBridgeLoading": "Menghubungkan ke App Store…",
+  "pricing.storeBridgeFailedHint":
+    "Siapkan produk com.skyface.mypasswordvault.pro_lifetime di App Store Connect (non-konsumsi), gunakan Apple ID Sandbox di perangkat, atau di Xcode tetapkan Products.storekit di Run → Options → StoreKit Configuration.",
+  "pricing.planTabsAria": "Bandingkan paket",
   "pricing.errSignIn": "Silakan masuk terlebih dahulu.",
   "pricing.errCheckout":
     "Tidak dapat memulai checkout. Coba lagi atau hubungi dukungan.",

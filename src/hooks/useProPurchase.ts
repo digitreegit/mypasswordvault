@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { isAppError } from "../lib/errors";
 import {
+  getStoreBridgeFailureDetail,
   getStoreBridgeStatus,
   initNativeStoreBridge,
   subscribeStoreBridgeStatus,
+  subscribeStoreProDisplayPrice,
   type StoreBridgeStatus,
 } from "../lib/initNativeStoreBridge";
 import { usesStoreBilling } from "../lib/platform";
@@ -23,11 +25,17 @@ export function useProPurchase(t: TFn) {
   const [bridgeStatus, setBridgeStatus] = useState<StoreBridgeStatus>(() =>
     getStoreBridgeStatus(),
   );
+  const [storeProPrice, setStoreProPrice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!storeBilling) return;
     void initNativeStoreBridge();
-    return subscribeStoreBridgeStatus(setBridgeStatus);
+    const unsubBridge = subscribeStoreBridgeStatus(setBridgeStatus);
+    const unsubPrice = subscribeStoreProDisplayPrice(setStoreProPrice);
+    return () => {
+      unsubBridge();
+      unsubPrice();
+    };
   }, [storeBilling]);
 
   const storeReady =
@@ -46,9 +54,20 @@ export function useProPurchase(t: TFn) {
     setErr(null);
     setBusy(true);
     try {
+      const needsForce = getStoreBridgeStatus() === "failed";
+      await initNativeStoreBridge(needsForce ? { force: true } : undefined);
       if (import.meta.env.DEV && !isStoreBridgeAvailable()) {
         await devGrantStoreLicense();
         return { ok: true as const, via: "dev" as const };
+      }
+      if (!isStoreBridgeAvailable()) {
+        const detail = getStoreBridgeFailureDetail();
+        setErr(
+          detail
+            ? `${t("pricing.storeBridgeFailed")} (${detail})`
+            : t("pricing.storeBridgeFailed"),
+        );
+        return { ok: false as const };
       }
       await purchaseProViaStore();
       return { ok: true as const, via: "store" as const };
@@ -56,12 +75,17 @@ export function useProPurchase(t: TFn) {
       if (isAppError(e) && e.code === "errors.storePurchaseCancelled") {
         return { ok: false as const };
       }
-      setErr(formatErr(e));
+      if (isAppError(e)) {
+        const detail = e.detail ? String(e.detail) : "";
+        setErr(detail ? `${t(e.code)} (${detail})` : t(e.code));
+      } else {
+        setErr(formatErr(e));
+      }
       return { ok: false as const };
     } finally {
       setBusy(false);
     }
-  }, [formatErr]);
+  }, [formatErr, t]);
 
   const restoreStore = useCallback(async () => {
     setErr(null);
@@ -88,6 +112,7 @@ export function useProPurchase(t: TFn) {
     storeBilling,
     storeReady,
     bridgeStatus,
+    storeProPrice,
     busy,
     err,
     setErr,

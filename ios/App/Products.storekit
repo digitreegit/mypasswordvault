@@ -1,0 +1,48 @@
+{
+  "identifier" : "MPV_PRO_STOREKIT",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "0",
+    "_developerTeamID" : "REPLACE_WITH_TEAM_ID",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 0,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  },
+  "inAppPurchases" : [
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "PRO_LIFETIME",
+      "localizations" : [
+        {
+          "description" : "Unlimited password entries on this account forever.",
+          "displayName" : "PRO Lifetime",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.skyface.mypasswordvault.pro_lifetime",
+      "referenceName" : "PRO Lifetime",
+      "type" : "NonConsumable"
+    }
+  ]
+}

@@ -162,6 +162,196 @@ function AdminEmptyMark() {
   return <span className="text-ink-300">—</span>;
 }
 
+function AdminCustomerPlanBadges({
+  row,
+  planBadge,
+  t,
+}: {
+  row: AdminCustomerRow;
+  planBadge: { pro: string; free: string };
+  t: (key: string) => string;
+}) {
+  if (row.isAdmin) {
+    return (
+      <span className="inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800">
+        {t("admin.badgeAdmin")}
+      </span>
+    );
+  }
+  if (row.refunded) {
+    return (
+      <span className="inline-flex rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+        {t("admin.badgeRefunded")}
+      </span>
+    );
+  }
+  if (row.plan === "pro") {
+    return (
+      <span className="inline-flex flex-wrap items-center gap-1">
+        <span className="inline-flex rounded-full border border-ink-200 bg-white px-2 py-0.5 text-xs font-medium text-ink-700">
+          {planBadge.pro}
+        </span>
+        {row.complimentary ? (
+          <span className="inline-flex rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800">
+            {t("admin.badgeComplimentary")}
+          </span>
+        ) : null}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex rounded-full bg-ink-100 px-2 py-0.5 text-xs text-ink-600">
+      {planBadge.free}
+    </span>
+  );
+}
+
+function AdminCustomerActions({
+  row,
+  sessionUserId,
+  busyId,
+  t,
+  onComplaint,
+  onRefund,
+  onDelete,
+  className = "",
+}: {
+  row: AdminCustomerRow;
+  sessionUserId: string | undefined;
+  busyId: string | null;
+  t: (key: string) => string;
+  onComplaint: (row: AdminCustomerRow) => void;
+  onRefund: (row: AdminCustomerRow) => void;
+  onDelete: (row: AdminCustomerRow) => void;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`flex flex-row flex-wrap gap-1 justify-end items-center ${className}`.trim()}
+    >
+      {!row.isAdmin ? (
+        <button
+          type="button"
+          className={ADMIN_BTN_SECONDARY}
+          disabled={busyId === `complaint-${row.userId}`}
+          onClick={() => onComplaint(row)}
+        >
+          {t("admin.complaint")}
+        </button>
+      ) : null}
+      {row.licenseKey && !row.refunded && !row.isAdmin && row.plan === "pro" ? (
+        <button
+          type="button"
+          className={ADMIN_BTN_SECONDARY_DANGER}
+          disabled={busyId === row.userId}
+          onClick={() => void onRefund(row)}
+        >
+          {t("admin.refund")}
+        </button>
+      ) : null}
+      <button
+        type="button"
+        className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+        disabled={
+          busyId === `delete-${row.userId}` || row.userId === sessionUserId
+        }
+        title={t("admin.deleteUser")}
+        aria-label={t("admin.deleteUser")}
+        onClick={() => onDelete(row)}
+      >
+        <TrashIcon className="h-4 w-4" aria-hidden />
+      </button>
+    </div>
+  );
+}
+
+function AdminCustomerMobileCard({
+  row,
+  planBadge,
+  sessionUserId,
+  busyId,
+  t,
+  onComplaint,
+  onRefund,
+  onDelete,
+}: {
+  row: AdminCustomerRow;
+  planBadge: { pro: string; free: string };
+  sessionUserId: string | undefined;
+  busyId: string | null;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+  onComplaint: (row: AdminCustomerRow) => void;
+  onRefund: (row: AdminCustomerRow) => void;
+  onDelete: (row: AdminCustomerRow) => void;
+}) {
+  const amount = rowAmount(row);
+  const platform = platformLabel(displayPlatform(row), t);
+
+  return (
+    <li className="px-4 py-4 space-y-3">
+      <div className="min-w-0">
+        {row.email ? (
+          <p className="font-medium text-ink-900 break-all">{row.email}</p>
+        ) : (
+          <AdminEmptyMark />
+        )}
+        <div className="mt-2">
+          <AdminCustomerPlanBadges row={row} planBadge={planBadge} t={t} />
+        </div>
+      </div>
+
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">
+        <dt className="text-ink-500">{t("admin.colPlatform")}</dt>
+        <dd className="text-ink-800 min-w-0">
+          {platform ?? <AdminEmptyMark />}
+        </dd>
+
+        <dt className="text-ink-500">{t("admin.colPurchased")}</dt>
+        <dd className="text-ink-800 min-w-0">
+          {row.purchasedAt ? formatDate(row.purchasedAt) : <AdminEmptyMark />}
+        </dd>
+
+        <dt className="text-ink-500">{t("admin.colAmount")}</dt>
+        <dd
+          className={`tabular-nums min-w-0 ${
+            row.refunded && !row.isAdmin
+              ? "text-red-700 font-medium"
+              : amount != null
+                ? "text-emerald-600 font-medium"
+                : "text-ink-800"
+          }`}
+        >
+          {amount != null ? (
+            formatMoney(amount, row.currency)
+          ) : (
+            <AdminEmptyMark />
+          )}
+        </dd>
+
+        {row.licenseKey ? (
+          <>
+            <dt className="text-ink-500 self-center">{t("admin.colLicenseKey")}</dt>
+            <dd className="min-w-0">
+              <LicenseKeyCell licenseKey={row.licenseKey} t={t} />
+            </dd>
+          </>
+        ) : null}
+      </dl>
+
+      <AdminCustomerActions
+        row={row}
+        sessionUserId={sessionUserId}
+        busyId={busyId}
+        t={t}
+        onComplaint={onComplaint}
+        onRefund={onRefund}
+        onDelete={onDelete}
+        className="justify-start pt-1 border-t border-ink-100"
+      />
+    </li>
+  );
+}
+
 function adminErrorLabel(
   code: string,
   t: (key: string, vars?: Record<string, string | number>) => string,
@@ -225,7 +415,7 @@ function LicenseKeyCell({
   const label = copied ? t("admin.licenseKeyCopied") : t("admin.copyLicenseKey");
 
   return (
-    <div className="flex items-center gap-0.5 min-w-0 max-w-[14rem]">
+    <div className="flex items-center gap-0.5 min-w-0 w-full max-w-full">
       <span
         className="flex-1 min-w-0 text-sm text-ink-700 truncate"
         title={licenseKey}
@@ -410,13 +600,16 @@ export function AdminDashboard() {
   }, [loading, loadingMore, q, plan, refunded, rows.length, t]);
 
   const hasMore = rows.length < total;
-  const listSentinelRef = useRef<HTMLTableRowElement>(null);
+  const listSentinelEl = useRef<HTMLElement | null>(null);
+  const setListSentinelRef = useCallback((el: HTMLLIElement | HTMLTableRowElement | null) => {
+    listSentinelEl.current = el;
+  }, []);
   const loadMoreRef = useRef(loadMore);
   loadMoreRef.current = loadMore;
 
   useEffect(() => {
     if (!hasMore || loading || loadingMore) return;
-    const el = listSentinelRef.current;
+    const el = listSentinelEl.current;
     if (!el) return;
 
     const observer = new IntersectionObserver(
@@ -894,18 +1087,55 @@ export function AdminDashboard() {
             </p>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
+          <ul className="md:hidden divide-y divide-ink-100 list-none m-0 p-0">
+            {rows.length === 0 && !loading ? (
+              <li className="px-4 py-8 text-center text-sm text-ink-500">
+                {t("admin.noResults")}
+              </li>
+            ) : null}
+            {rows.map((row) => (
+              <AdminCustomerMobileCard
+                key={row.userId}
+                row={row}
+                planBadge={planBadge}
+                sessionUserId={session?.user?.id}
+                busyId={busyId}
+                t={t}
+                onComplaint={openComplaintModal}
+                onRefund={handleRefund}
+                onDelete={openDeleteModal}
+              />
+            ))}
+            {hasMore ? (
+              <li
+                ref={setListSentinelRef}
+                className="px-4 py-4 text-center text-xs text-ink-500"
+              >
+                {loadingMore ? t("admin.loadingMore") : t("admin.scrollForMore")}
+              </li>
+            ) : null}
+          </ul>
+
+          <div className="hidden md:block overflow-x-auto overscroll-x-contain">
+            <table className="w-full min-w-[56rem] text-left">
               <thead className="bg-ink-50 text-ink-500 text-xs">
                 <tr>
-                  <th className="px-4 py-2 font-medium text-xs text-ink-500">{t("admin.colEmail")}</th>
-                  <th className="px-4 py-2 font-medium text-xs text-ink-500">{t("admin.colPlan")}</th>
-                  <th className="px-4 py-2 font-medium text-xs text-ink-500">{t("admin.colPlatform")}</th>
+                  <th className="px-4 py-2 font-medium text-xs text-ink-500 min-w-[10rem]">
+                    {t("admin.colEmail")}
+                  </th>
+                  <th className="px-4 py-2 font-medium text-xs text-ink-500">
+                    {t("admin.colPlan")}
+                  </th>
+                  <th className="px-4 py-2 font-medium text-xs text-ink-500">
+                    {t("admin.colPlatform")}
+                  </th>
                   <th className="px-4 py-2 font-medium text-xs text-ink-500">
                     {t("admin.colPurchased")}
                   </th>
-                  <th className="px-4 py-2 font-medium text-xs text-ink-500">{t("admin.colAmount")}</th>
-                  <th className="px-4 py-2 font-medium text-xs text-ink-500 min-w-0 sm:min-w-[14rem]">
+                  <th className="px-4 py-2 font-medium text-xs text-ink-500">
+                    {t("admin.colAmount")}
+                  </th>
+                  <th className="px-4 py-2 font-medium text-xs text-ink-500 min-w-[14rem]">
                     {t("admin.colLicenseKey")}
                   </th>
                   <th className="px-4 py-2 font-medium text-xs text-ink-500 text-right">
@@ -923,9 +1153,12 @@ export function AdminDashboard() {
                 ) : null}
                 {rows.map((row) => (
                   <tr key={row.userId} className="hover:bg-ink-50/50">
-                    <td className="px-4 py-3 align-middle">
+                    <td className="px-4 py-3 align-middle min-w-[10rem] max-w-[16rem]">
                       {row.email ? (
-                        <div className="font-medium text-ink-800 break-all">
+                        <div
+                          className="font-medium text-ink-800 truncate"
+                          title={row.email}
+                        >
                           {row.email}
                         </div>
                       ) : (
@@ -933,33 +1166,16 @@ export function AdminDashboard() {
                       )}
                     </td>
                     <td className="px-4 py-3 align-middle whitespace-nowrap">
-                      {row.isAdmin ? (
-                        <span className="inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800">
-                          {t("admin.badgeAdmin")}
-                        </span>
-                      ) : row.refunded ? (
-                        <span className="inline-flex rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
-                          {t("admin.badgeRefunded")}
-                        </span>
-                      ) : row.plan === "pro" ? (
-                        <span className="inline-flex flex-wrap items-center gap-1">
-                          <span className="inline-flex rounded-full border border-ink-200 bg-white px-2 py-0.5 text-xs font-medium text-ink-700">
-                            {planBadge.pro}
-                          </span>
-                          {row.complimentary ? (
-                            <span className="inline-flex rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800">
-                              {t("admin.badgeComplimentary")}
-                            </span>
-                          ) : null}
-                        </span>
-                      ) : (
-                        <span className="inline-flex rounded-full bg-ink-100 px-2 py-0.5 text-xs text-ink-600">
-                          {planBadge.free}
-                        </span>
-                      )}
+                      <AdminCustomerPlanBadges
+                        row={row}
+                        planBadge={planBadge}
+                        t={t}
+                      />
                     </td>
                     <td className="px-4 py-3 align-middle whitespace-nowrap text-ink-700">
-                      {platformLabel(displayPlatform(row), t) ?? <AdminEmptyMark />}
+                      {platformLabel(displayPlatform(row), t) ?? (
+                        <AdminEmptyMark />
+                      )}
                     </td>
                     <td className="px-4 py-3 align-middle whitespace-nowrap text-ink-700">
                       {row.purchasedAt ? (
@@ -991,49 +1207,20 @@ export function AdminDashboard() {
                       )}
                     </td>
                     <td className="px-4 py-3 align-middle text-right whitespace-nowrap">
-                      <div className="flex flex-row flex-wrap gap-1 justify-end items-center">
-                        {!row.isAdmin ? (
-                          <button
-                            type="button"
-                            className={ADMIN_BTN_SECONDARY}
-                            disabled={busyId === `complaint-${row.userId}`}
-                            onClick={() => openComplaintModal(row)}
-                          >
-                            {t("admin.complaint")}
-                          </button>
-                        ) : null}
-                        {row.licenseKey &&
-                        !row.refunded &&
-                        !row.isAdmin &&
-                        row.plan === "pro" ? (
-                          <button
-                            type="button"
-                            className={ADMIN_BTN_SECONDARY_DANGER}
-                            disabled={busyId === row.userId}
-                            onClick={() => void handleRefund(row)}
-                          >
-                            {t("admin.refund")}
-                          </button>
-                        ) : null}
-                        <button
-                          type="button"
-                          className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:pointer-events-none"
-                          disabled={
-                            busyId === `delete-${row.userId}` ||
-                            row.userId === session?.user?.id
-                          }
-                          title={t("admin.deleteUser")}
-                          aria-label={t("admin.deleteUser")}
-                          onClick={() => openDeleteModal(row)}
-                        >
-                          <TrashIcon className="h-4 w-4" aria-hidden />
-                        </button>
-                      </div>
+                      <AdminCustomerActions
+                        row={row}
+                        sessionUserId={session?.user?.id}
+                        busyId={busyId}
+                        t={t}
+                        onComplaint={openComplaintModal}
+                        onRefund={handleRefund}
+                        onDelete={openDeleteModal}
+                      />
                     </td>
                   </tr>
                 ))}
                 {hasMore ? (
-                  <tr ref={listSentinelRef}>
+                  <tr ref={setListSentinelRef}>
                     <td colSpan={7} className="px-4 py-4 text-center text-xs text-ink-500">
                       {loadingMore ? t("admin.loadingMore") : t("admin.scrollForMore")}
                     </td>

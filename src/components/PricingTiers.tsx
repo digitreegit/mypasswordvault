@@ -23,9 +23,9 @@ export type PricingTiersProps = {
   storeBilling?: boolean;
   storeReady?: boolean;
   storeBridgeStatus?: StoreBridgeStatus;
+  /** App Store / Play localized price, e.g. ₩7,700 */
+  storeProPrice?: string | null;
   onStorePurchase?: () => void;
-  onSyncAccountLicense?: () => void;
-  onStoreRestore?: () => void;
   /** `drawer` uses plan tabs (PRO default) instead of side-by-side cards. */
   layout?: "page" | "drawer";
 };
@@ -59,18 +59,24 @@ export function PricingTiers({
   storeBilling = false,
   storeReady = false,
   storeBridgeStatus = "idle",
+  storeProPrice = null,
   onStorePurchase,
-  onSyncAccountLicense,
-  onStoreRestore,
   layout = "page",
 }: PricingTiersProps) {
   const isDrawer = layout === "drawer";
   const [activeTier, setActiveTier] = useState<TierTab>("pro");
   const nativePlatform = getNativePlatform();
-  const storeCtaKey =
-    nativePlatform === "android"
-      ? "pricing.ctaBuyPlay"
-      : "pricing.ctaBuyAppStore";
+  const storeUpgradeLabel = (() => {
+    if (!isDrawer || !storeBilling) {
+      return t(
+        nativePlatform === "android" ? "pricing.ctaBuyPlay" : "pricing.upgradeToPro",
+      );
+    }
+    if (storeProPrice) {
+      return t("pricing.ctaPay", { price: storeProPrice });
+    }
+    return t("pricing.ctaPayGeneric");
+  })();
   const cardClass = isDrawer ? "card p-5 flex flex-col min-w-0" : pageCardClass;
   const tierTitleClass = isDrawer
     ? "text-base font-semibold text-accent-700 uppercase tracking-wide"
@@ -88,7 +94,7 @@ export function PricingTiers({
     if (storeBridgeStatus === "loading" || storeBridgeStatus === "idle") {
       return t("pricing.storeBridgeLoading");
     }
-    return t("pricing.storeBridgeFailed");
+    return t("pricing.storeBridgeFailedHint");
   })();
 
   const freeSection = (
@@ -120,7 +126,18 @@ export function PricingTiers({
   );
 
   const proActions =
-    licensed !== true ? (
+    licensed === true && storeBilling ? (
+      <div className="mt-6 pt-3 border-t border-ink-100 space-y-2">
+        {userEmail ? (
+          <p className="text-xs text-ink-600 leading-snug">
+            {t("pricing.signedInAs", { email: userEmail })}
+          </p>
+        ) : null}
+        <span className="inline-flex items-center rounded-full bg-accent-600 px-3 py-1 text-sm font-semibold text-white tracking-wide">
+          {t("pricing.tierPaid")}
+        </span>
+      </div>
+    ) : licensed !== true ? (
       <div className="mt-6 pt-3 space-y-2">
         {!session ? (
           <button
@@ -142,72 +159,30 @@ export function PricingTiers({
               <p className="text-sm text-ink-500">{t("pricing.licenseChecking")}</p>
             ) : (
               <>
-                <p className="text-xs text-ink-500 leading-snug">
-                  {t("pricing.accountLicenseHint")}
-                </p>
-                {onSyncAccountLicense ? (
-                  <button
-                    type="button"
-                    className="btn-primary w-full justify-center"
-                    disabled={!configured || busy || loading}
-                    onClick={() => void onSyncAccountLicense()}
-                  >
-                    {busy ? t("app.loading") : t("pricing.syncAccountLicense")}
-                  </button>
-                ) : null}
-                <div className="space-y-2 border-t border-ink-100 pt-3">
-                  <p className="text-xs font-medium text-ink-700">
-                    {t("pricing.buyOnDeviceTitle")}
+                <button
+                  type="button"
+                  className="btn-primary w-full justify-center"
+                  disabled={
+                    !configured ||
+                    busy ||
+                    loading ||
+                    licensed === null ||
+                    !entitlementLoaded
+                  }
+                  onClick={() =>
+                    void (onStorePurchase ? onStorePurchase() : onCheckout())
+                  }
+                >
+                  {busy ? t("app.loading") : storeUpgradeLabel}
+                </button>
+                {storeStatusMessage ? (
+                  <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-2 leading-snug">
+                    {storeStatusMessage}
                   </p>
+                ) : storeReady ? (
                   <p className="text-xs text-ink-500 leading-snug">
-                    {t("pricing.buyOnDeviceHint")}
+                    {t("pricing.storeNote")}
                   </p>
-                  <button
-                    type="button"
-                    className="btn-secondary w-full justify-center"
-                    disabled={
-                      !configured ||
-                      busy ||
-                      loading ||
-                      licensed === null ||
-                      (!storeReady && !import.meta.env.DEV)
-                    }
-                    onClick={() =>
-                      void (onStorePurchase ? onStorePurchase() : onCheckout())
-                    }
-                  >
-                    {busy ? t("app.loading") : t(storeCtaKey)}
-                  </button>
-                  {storeStatusMessage ? (
-                    <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-2 leading-snug">
-                      {storeStatusMessage}
-                    </p>
-                  ) : storeReady ? (
-                    <p className="text-xs text-ink-500 leading-snug">
-                      {t("pricing.storeNote")}
-                    </p>
-                  ) : null}
-                </div>
-                {onStoreRestore ? (
-                  <details className="text-xs text-ink-500 leading-snug">
-                    <summary className="cursor-pointer text-ink-600 font-medium">
-                      {t("pricing.storeRestoreAppStore")}
-                    </summary>
-                    <p className="mt-2">{t("pricing.storeRestoreAppStoreHint")}</p>
-                    <button
-                      type="button"
-                      className="btn-secondary w-full justify-center text-sm mt-2"
-                      disabled={
-                        !configured ||
-                        busy ||
-                        loading ||
-                        (!storeReady && !import.meta.env.DEV)
-                      }
-                      onClick={() => void onStoreRestore()}
-                    >
-                      {t("pricing.storeRestore")}
-                    </button>
-                  </details>
                 ) : null}
               </>
             )}
@@ -241,8 +216,14 @@ export function PricingTiers({
         {t("pricing.mostPopular")}
       </span>
       <h2 className={tierTitleClass}>{t("pricing.tierPaid")}</h2>
-      <p className={priceClass}>$4.99</p>
-      <p className="text-xs text-ink-500 mt-1">{t("pricing.paidOnce")}</p>
+      <p className={priceClass}>
+        {storeBilling
+          ? storeProPrice ?? "…"
+          : "$4.99"}
+      </p>
+      <p className="text-xs text-ink-500 mt-1">
+        {storeBilling ? t("pricing.paidOnceStore") : t("pricing.paidOnce")}
+      </p>
       <p className="mt-2 text-sm text-ink-600 leading-relaxed">{t("pricing.paidDesc")}</p>
       <ul className={listClass}>
         {PRICING_PAID_FEATURE_KEYS.map((k) => (
@@ -277,7 +258,7 @@ export function PricingTiers({
         <p className="text-ink-500 text-sm">{t("app.authLoading")}</p>
       ) : null}
 
-      {configured && session && licensed === true ? (
+      {configured && session && licensed === true && !storeBilling ? (
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
           {t("pricing.youAreLicensed")}
         </div>

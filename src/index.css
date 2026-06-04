@@ -189,7 +189,11 @@ html.native-app .vault-top-header {
 }
 
 html.native-app .pricing-drawer-header {
-  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+  padding-top: 0.75rem;
+}
+
+html.native-app .pricing-drawer-sheet .pricing-drawer-header {
+  padding-top: 0.5rem;
 }
 
 html.native-app .pricing-drawer-body {

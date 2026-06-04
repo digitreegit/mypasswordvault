@@ -13,10 +13,9 @@ if (!existsSync(pbxPath)) {
 
 let pbx = readFileSync(pbxPath, "utf8");
 
-if (pbx.includes("com.apple.InAppPurchase")) {
-  console.log("patch-ios-iap: already enabled");
-  process.exit(0);
-}
+let changed = false;
+
+if (!pbx.includes("com.apple.InAppPurchase")) {
 
 const needle = "ProvisioningStyle = Automatic;";
 const insert = `${needle}
@@ -31,6 +30,21 @@ if (!pbx.includes(needle)) {
   process.exit(1);
 }
 
-pbx = pbx.replace(needle, insert);
-writeFileSync(pbxPath, pbx);
-console.log("patch-ios-iap: enabled In-App Purchase capability");
+  pbx = pbx.replace(needle, insert);
+  changed = true;
+  console.log("patch-ios-iap: enabled In-App Purchase capability");
+} else {
+  console.log("patch-ios-iap: In-App Purchase capability already enabled");
+}
+
+// StoreKit 2 plugin requires iOS 15+.
+const beforeTarget = pbx;
+pbx = pbx.replace(/IPHONEOS_DEPLOYMENT_TARGET = 14\.0;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
+if (pbx !== beforeTarget) {
+  changed = true;
+  console.log("patch-ios-iap: raised IPHONEOS_DEPLOYMENT_TARGET to 15.0");
+}
+
+if (changed) {
+  writeFileSync(pbxPath, pbx);
+}

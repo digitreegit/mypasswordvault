@@ -91,14 +91,31 @@ async function verifyStorePurchaseOnServer(
   });
 
   if (error) {
-    throw new AppError("errors.storeVerifyFailed", error.message);
+    let detail = error.message;
+    const ctx = (error as { context?: Response }).context;
+    if (ctx && typeof ctx.json === "function") {
+      try {
+        const body = (await ctx.json()) as { error?: string; detail?: string };
+        if (body?.error) detail = body.detail ? `${body.error}: ${body.detail}` : body.error;
+      } catch {
+        /* keep error.message */
+      }
+    }
+    throw new AppError("errors.storeVerifyFailed", detail);
   }
   const errCode =
     data && typeof data === "object" && "error" in data
       ? String((data as { error: string }).error)
       : null;
   if (errCode) {
-    throw new AppError("errors.storeVerifyFailed", errCode);
+    const detail =
+      data && typeof data === "object" && "detail" in data
+        ? String((data as { detail: string }).detail)
+        : undefined;
+    throw new AppError(
+      "errors.storeVerifyFailed",
+      detail ? `${errCode}: ${detail}` : errCode,
+    );
   }
 }
 

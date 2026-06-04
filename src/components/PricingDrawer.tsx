@@ -26,7 +26,6 @@ export function PricingDrawer({
     finalizePaidCheckout,
   } = useVault();
   const [stripeBusy, setStripeBusy] = useState(false);
-  const [syncBusy, setSyncBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [entered, setEntered] = useState(false);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
@@ -37,10 +36,10 @@ export function PricingDrawer({
     setErr: setStoreErr,
     storeReady,
     bridgeStatus,
+    storeProPrice,
     purchaseStore,
-    restoreStore,
   } = useProPurchase(t);
-  const busy = storeBilling ? storeBusy || syncBusy : stripeBusy;
+  const busy = storeBilling ? storeBusy : stripeBusy;
 
   useEffect(() => {
     if (!open) {
@@ -90,23 +89,6 @@ export function PricingDrawer({
     [finalizePaidCheckout, onClose],
   );
 
-  const syncAccountLicense = useCallback(async (): Promise<boolean> => {
-    setErr(null);
-    setStoreErr(null);
-    setSyncBusy(true);
-    try {
-      const lic = await refreshEntitlements({ keepLoaded: true });
-      if (lic) {
-        onClose();
-        return true;
-      }
-      setErr(t("pricing.syncAccountNotLicensed"));
-      return false;
-    } finally {
-      setSyncBusy(false);
-    }
-  }, [refreshEntitlements, onClose, setStoreErr, t]);
-
   const startCheckout = useCallback(() => {
     setErr(null);
     setStoreErr(null);
@@ -140,22 +122,6 @@ export function PricingDrawer({
     t,
   ]);
 
-  const handleStoreRestore = useCallback(() => {
-    setErr(null);
-    setStoreErr(null);
-    void (async () => {
-      if (await refreshEntitlements({ keepLoaded: true })) {
-        onClose();
-        return;
-      }
-      const r = await restoreStore();
-      if (r.ok) {
-        await refreshEntitlements();
-        onClose();
-      }
-    })();
-  }, [restoreStore, refreshEntitlements, onClose, setStoreErr]);
-
   const sb = getSupabase();
 
   if (!open) return null;
@@ -166,10 +132,10 @@ export function PricingDrawer({
 
   return createPortal(
     <>
-      <div className="fixed inset-0 z-[70]" role="presentation">
+      <div className="fixed inset-0 z-[70] flex flex-col justify-end" role="presentation">
         <button
           type="button"
-          className={`absolute inset-0 bg-ink-900/40 transition-opacity duration-300 ${
+          className={`absolute inset-0 bg-ink-900/45 transition-opacity duration-300 ${
             entered ? "opacity-100" : "opacity-0"
           }`}
           aria-label={t("vault.entryLimitModalClose")}
@@ -182,8 +148,8 @@ export function PricingDrawer({
           aria-labelledby="pricing-drawer-title"
           className={
             native
-              ? `pricing-drawer-native absolute inset-0 flex flex-col bg-white transition-opacity duration-300 ${
-                  entered ? "opacity-100" : "opacity-0"
+              ? `pricing-drawer-sheet relative flex w-full max-h-[min(92dvh,720px)] flex-col bg-white rounded-t-2xl shadow-[0_-8px_40px_rgba(15,23,42,0.18)] transition-transform duration-300 ease-out ${
+                  entered ? "translate-y-0" : "translate-y-full"
                 }`
               : `absolute inset-y-0 right-0 flex w-full max-w-[min(100%,56rem)] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out ${
                   entered ? "translate-x-0" : "translate-x-full"
@@ -191,7 +157,17 @@ export function PricingDrawer({
           }
           onClick={(e) => e.stopPropagation()}
         >
-          <header className="pricing-drawer-header shrink-0 flex items-start justify-between gap-3 border-b border-ink-200 px-4 py-4 sm:px-6">
+          {native ? (
+            <div
+              className="pricing-drawer-handle mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-ink-300"
+              aria-hidden
+            />
+          ) : null}
+          <header
+            className={`pricing-drawer-header shrink-0 flex items-start justify-between gap-3 border-b border-ink-200 px-4 py-4 sm:px-6 ${
+              native ? "pt-3" : ""
+            }`}
+          >
             <div className="min-w-0 pr-2">
               <h2
                 id="pricing-drawer-title"
@@ -228,9 +204,8 @@ export function PricingDrawer({
               storeBilling={storeBilling}
               storeReady={storeReady}
               storeBridgeStatus={bridgeStatus}
+              storeProPrice={storeProPrice}
               onStorePurchase={startCheckout}
-              onSyncAccountLicense={() => void syncAccountLicense()}
-              onStoreRestore={handleStoreRestore}
               layout="drawer"
             />
           </div>

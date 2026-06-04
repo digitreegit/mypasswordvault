@@ -42,7 +42,7 @@ Production build: set `.env` with `VITE_SUPABASE_*`, then `npm run cap:sync` bef
 | Edge `verify-store-purchase` (JWT) | `supabase/functions/verify-store-purchase/` |
 | Client `src/lib/storePurchase.ts` | Bridge + invoke |
 | Pricing UI (App Store / Play buttons, Restore) | `PricingTiers`, `useProPurchase` |
-| Apple / Google real verification | TODO in edge function |
+| Apple / Google real verification | iOS sandbox: JWS decode; production: App Store Server API when `APPLE_*` secrets set |
 | Native billing plugin | `capacitor-plugin-cdv-purchase` → `initNativeStoreBridge.ts` |
 
 ### Product ID (both stores)

@@ -30,7 +30,19 @@ Keep your existing web redirect URLs (`https://vault.skyface.com/app/**`, local 
 1. Open `ios/App/App.xcworkspace` (not `.xcodeproj`).
 2. Select the **App** target → **Signing & Capabilities**.
 3. Set your **Team** and ensure **Bundle Identifier** is `com.skyface.mypasswordvault` (or change it in `capacitor.config.ts` and re-sync).
-4. Connect an iPhone or choose a simulator, then **Run** (▶).
+4. Confirm **In-App Purchase** capability is enabled (`npm run cap:sync` runs `patch-ios-iap.mjs`).
+5. Connect an iPhone or choose a simulator, then **Run** (▶).
+
+## In-app purchase (PRO)
+
+Product ID (non-consumable): `com.skyface.mypasswordvault.pro_lifetime`
+
+1. **App Store Connect** → your app → **In-App Purchases** → create the product with that ID (Ready to Submit / Approved for sandbox).
+2. On a **physical device**, sign into **Settings → App Store → Sandbox Account** with a sandbox tester.
+3. For **local Xcode testing** without Connect: **Product → Scheme → Edit Scheme → Run → Options → StoreKit Configuration** → select `ios/App/Products.storekit`.
+4. Rebuild after changes: `npm run cap:sync`, then Xcode **Clean Build Folder** → **Run**.
+
+If pricing shows “Could not connect to the App Store”, check the Xcode console for `store.initialize failed` or `product_missing` — usually the SKU is missing in Connect or StoreKit config is not assigned to the scheme.
 
 ## Environment variables for release builds
 

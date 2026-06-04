@@ -261,8 +261,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "errors.storeWebOnly": "스토어 결제는 모바일 앱에서만 가능합니다.",
   "errors.storeUnsupported": "이 기기에서는 인앱 결제를 지원하지 않습니다.",
   "errors.storeBridgeMissing":
-    "App Store 결제를 이 기기에서 사용할 수 없습니다. 웹에서 결제하셨다면 먼저 계정에서 PRO를 동기화하세요.",
-  "errors.storeVerifyFailed": "스토어 구매를 확인하지 못했습니다. 구매 복원을 시도하거나 문의하세요.",
+    "App Store 결제를 사용할 수 없습니다. App Store Connect에 PRO 상품이 있는지 확인한 뒤 앱을 다시 빌드하세요.",
+  "errors.storeVerifyFailed": "스토어 구매를 확인하지 못했습니다. 다시 시도하거나 문의하세요.",
   "errors.storeDevOnly": "개발용 스토어 부여는 개발 빌드에서만 사용할 수 있습니다.",
   "errors.storePurchaseCancelled": "구매가 취소되었습니다.",
   "errors.entryLimitReached":
@@ -567,6 +567,10 @@ export const MESSAGES_KR: Record<string, string> = {
   "pricing.ctaBuy": "안전한 결제 페이지로 이동",
   "pricing.stripeNote": "결제는 Stripe 보안 모달에서 처리됩니다.",
   "pricing.ctaBuyAppStore": "App Store에서 PRO 구매",
+  "pricing.upgradeToPro": "Pro로 업그레이드",
+  "pricing.ctaPay": "{{price}} 결제",
+  "pricing.ctaPayGeneric": "구매하기",
+  "pricing.paidOnceStore": "일회 구매 — 구독 없음",
   "pricing.ctaBuyPlay": "Google Play에서 PRO 구매",
   "pricing.storeNote":
     "앱 내 일회 구매입니다. 같은 이메일 계정이면 웹·다른 기기에서도 동기화 후 PRO가 적용됩니다.",
@@ -585,7 +589,9 @@ export const MESSAGES_KR: Record<string, string> = {
     "복원은 App Store 구매 전용입니다. 웹 구매는 같은 이메일로 로그인하면 자동으로 적용됩니다.",
   "pricing.storeBridgeLoading": "App Store에 연결하는 중…",
   "pricing.storeBridgeFailed":
-    "App Store 결제를 사용할 수 없습니다. Xcode에서 In-App Purchase capability를 추가하고, App Store Connect에 com.skyface.mypasswordvault.pro_lifetime 상품을 만든 뒤 다시 빌드하세요.",
+    "인앱 결제를 위해 App Store에 연결하지 못했습니다.",
+  "pricing.storeBridgeFailedHint":
+    "App Store Connect에 com.skyface.mypasswordvault.pro_lifetime(비소모성) 상품을 등록하고, 기기에서 Sandbox Apple ID로 테스트하거나 Xcode Run → Options에서 Products.storekit을 지정하세요.",
   "pricing.planTabsAria": "요금제 비교",
   "pricing.storeBridgePending":
     "이 빌드에는 인앱 결제 플러그인이 아직 연결되지 않았습니다. docs/mobile.md를 참고하거나 웹에서 같은 계정으로 구매하세요.",

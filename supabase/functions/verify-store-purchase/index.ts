@@ -5,6 +5,7 @@
  */
 import { createClient } from "npm:@supabase/supabase-js@2.49.8";
 import { grantLicense } from "../_shared/grantEntitlement.ts";
+import { verifyApplePurchase } from "../_shared/appleStoreVerify.ts";
 
 const cors: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -47,21 +48,6 @@ type Body = {
   transaction_id?: string;
   restore?: boolean;
 };
-
-async function verifyApplePurchase(
-  _verificationData: string,
-  _productId: string,
-): Promise<{ ok: boolean; transactionId: string; error?: string }> {
-  const bundleId = Deno.env.get("APPLE_BUNDLE_ID")?.trim();
-  const issuerId = Deno.env.get("APPLE_ISSUER_ID")?.trim();
-  const keyId = Deno.env.get("APPLE_KEY_ID")?.trim();
-  const privateKey = Deno.env.get("APPLE_PRIVATE_KEY")?.trim();
-  if (!bundleId || !issuerId || !keyId || !privateKey) {
-    return { ok: false, transactionId: "", error: "apple_not_configured" };
-  }
-  // TODO: App Store Server API v2 — decode JWS / GET /transactions/{id}
-  return { ok: false, transactionId: "", error: "apple_verify_not_implemented" };
-}
 
 async function verifyGooglePurchase(
   _purchaseToken: string,
@@ -140,7 +126,7 @@ Deno.serve(async (req) => {
   } else if (platform === "ios") {
     const r = await verifyApplePurchase(verificationData, productId ?? "");
     if (!r.ok) {
-      return json({ error: r.error ?? "verify_failed" }, 501);
+      return json({ error: r.error ?? "verify_failed" }, 502);
     }
     verifiedTransactionId = r.transactionId;
   } else {
@@ -166,6 +152,15 @@ Deno.serve(async (req) => {
     return json({ error: "transaction_owned_by_other_user" }, 409);
   }
 
+  if (existing?.licensed && existing.user_id === user.id) {
+    return json({
+      licensed: true,
+      purchase_platform: platform,
+      restore: Boolean(body.restore),
+      already_licensed: true,
+    });
+  }
+
   const { error: grantError } = await grantLicense(admin, {
     userId: user.id,
     platform,
@@ -178,7 +173,10 @@ Deno.serve(async (req) => {
 
   if (grantError) {
     console.error("verify-store-purchase grant failed", grantError);
-    return json({ error: "db_error" }, 500);
+    return json(
+      { error: "db_error", detail: grantError.message },
+      500,
+    );
   }
 
   return json({
