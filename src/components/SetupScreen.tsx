@@ -762,11 +762,9 @@ export function SetupScreen() {
 
   return (
     <>
-      <AppShell wide splitScroll>
-        <div className="setup-shell-header shrink-0">{setupHeader}</div>
-        <div className="setup-shell-scroll native-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain">
-          {setupBody}
-        </div>
+      <AppShell wide>
+        {setupHeader}
+        {setupBody}
       </AppShell>
       {passkeyHelp}
     </>

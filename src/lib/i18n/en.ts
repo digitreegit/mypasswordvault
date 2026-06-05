@@ -7,6 +7,28 @@ export const MESSAGES_EN: Record<string, string> = {
   "app.authLoading": "Checking your session…",
   "app.brandName": "My Password Vault",
 
+  "launch.splashSubtitle": "Secure passwords, synced across your devices.",
+  "launch.skip": "Skip",
+  "launch.getStarted": "Get started",
+  "launch.onboardCarouselAria": "Getting started",
+  "launch.onboardDotsAria": "Onboarding progress",
+  "launch.onboard1ArtLabel": "Spreadsheet illustration placeholder",
+  "launch.onboard1Title": "Still using a spreadsheet for passwords?",
+  "launch.onboard1Body":
+    "Rows and shared files are not built for secrets. Move off spreadsheets and sticky notes into a vault made for passwords.",
+  "launch.onboard2ArtLabel": "Security illustration placeholder",
+  "launch.onboard2Title": "Encrypted and passkey-ready",
+  "launch.onboard2Body":
+    "Your data stays encrypted on device. Unlock quickly with a passkey or backup sign-in.",
+  "launch.onboard3ArtLabel": "Sync illustration placeholder",
+  "launch.onboard3Title": "Sync across web and mobile",
+  "launch.onboard3Body":
+    "Sign in with the same account on every device. Only encrypted ciphertext syncs to the cloud.",
+  "launch.onboard4ArtLabel": "Vault illustration placeholder",
+  "launch.onboard4Title": "One vault for every password",
+  "launch.onboard4Body":
+    "Keep logins organized in a single encrypted vault you control — free to start, upgrade when you need more.",
+
   "auth.title": "Welcome back",
   "auth.titleSignUp": "Get started",
   "auth.titleForgot": "Forgot your password?",

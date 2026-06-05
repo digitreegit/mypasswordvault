@@ -15,6 +15,7 @@ import {
 import { CheckoutCancelRelay } from "./components/CheckoutCancelRelay";
 import { CheckoutPopupRelay } from "./components/CheckoutPopupRelay";
 import { AdminDashboard } from "./components/AdminDashboard";
+import { NativeLaunchGate } from "./components/NativeLaunchGate";
 import {
   isCheckoutPopupCancelReturn,
   isCheckoutPopupReturn,
@@ -37,6 +38,14 @@ function useHashPath(): string {
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
   return path;
+}
+
+function AuthEntry({ skipLaunchGate = false }: { skipLaunchGate?: boolean }) {
+  return (
+    <NativeLaunchGate skip={skipLaunchGate}>
+      <AuthScreen />
+    </NativeLaunchGate>
+  );
 }
 
 function HtmlLang() {
@@ -114,7 +123,7 @@ function AuthenticatedApp() {
 
   if (hashPath === "admin") {
     if (passwordRecoveryPending || !session?.user?.id) {
-      return <AuthScreen />;
+      return <AuthEntry skipLaunchGate={passwordRecoveryPending} />;
     }
     return <AdminDashboard />;
   }
@@ -128,7 +137,7 @@ function AuthenticatedApp() {
   }
 
   if (passwordRecoveryPending || !session?.user?.id) {
-    return <AuthScreen />;
+    return <AuthEntry skipLaunchGate={passwordRecoveryPending} />;
   }
 
   const passkeyDisplayName =

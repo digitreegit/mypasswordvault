@@ -3,9 +3,16 @@ import { isNativeApp } from "./platform";
 const SCROLL_SELECTOR =
   ".app-shell__panel, .native-screen__scroll, .native-scroll, .pricing-drawer-body, .setup-shell-scroll";
 
+const HORIZONTAL_SCROLL_SELECTOR = ".native-onboard__scroller";
+
 function isScrollable(el: Element): boolean {
   const node = el as HTMLElement;
   return node.scrollHeight > node.clientHeight + 1;
+}
+
+function isHorizontallyScrollable(el: Element): boolean {
+  const node = el as HTMLElement;
+  return node.scrollWidth > node.clientWidth + 1;
 }
 
 /** Stop WKWebView rubber-band when the gesture is not inside a scrollable panel. */
@@ -33,7 +40,17 @@ export function initNativeViewportLock(): void {
       const dx = touch.clientX - startX;
       const dy = touch.clientY - startY;
 
-      const scrollHost = (e.target as Element | null)?.closest(SCROLL_SELECTOR);
+      const target = e.target as Element | null;
+      const horizontalHost = target?.closest(HORIZONTAL_SCROLL_SELECTOR);
+      if (
+        horizontalHost &&
+        isHorizontallyScrollable(horizontalHost) &&
+        Math.abs(dx) > Math.abs(dy)
+      ) {
+        return;
+      }
+
+      const scrollHost = target?.closest(SCROLL_SELECTOR);
       if (scrollHost && isScrollable(scrollHost)) {
         return;
       }

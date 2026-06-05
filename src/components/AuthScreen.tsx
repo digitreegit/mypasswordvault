@@ -104,7 +104,12 @@ function OrDivider({ text }: { text: string }) {
   );
 }
 
-export function AuthScreen() {
+export function AuthScreen({
+  initialAuthView,
+}: {
+  /** Native onboarding opens sign-up first. */
+  initialAuthView?: Extract<AuthView, "signin" | "signup">;
+} = {}) {
   const {
     configured,
     passwordRecoveryPending,
@@ -117,7 +122,9 @@ export function AuthScreen() {
     () => readStoredLocale() ?? detectBrowserLocale()
   );
   const [view, setView] = useState<AuthView>(() =>
-    passwordRecoveryPending ? "new-password" : "signin"
+    passwordRecoveryPending
+      ? "new-password"
+      : (initialAuthView ?? "signin")
   );
   /** Bump to re-read last-used method from localStorage after each login attempt. */
   const [lastUsedRevision, setLastUsedRevision] = useState(0);

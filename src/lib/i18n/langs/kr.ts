@@ -9,6 +9,28 @@ export const MESSAGES_KR: Record<string, string> = {
   "app.authLoading": "로그인 상태 확인 중…",
   "app.brandName": "My Password Vault",
 
+  "launch.splashSubtitle": "안전한 비밀번호 관리, 모든 기기에서 동기화.",
+  "launch.skip": "건너뛰기",
+  "launch.getStarted": "시작하기",
+  "launch.onboardCarouselAria": "시작하기",
+  "launch.onboardDotsAria": "온보딩 진행",
+  "launch.onboard1ArtLabel": "스프레드시트 일러스트 플레이스홀더",
+  "launch.onboard1Title": "아직 비밀번호를 스프레드시트로 관리하시나요?",
+  "launch.onboard1Body":
+    "행·열 표와 공유 파일은 비밀번호 보관에 맞지 않습니다. 스프레드시트와 메모에서 벗어나 전용 금고로 옮기세요.",
+  "launch.onboard2ArtLabel": "보안 일러스트 플레이스홀더",
+  "launch.onboard2Title": "암호화와 패스키 지원",
+  "launch.onboard2Body":
+    "데이터는 기기에서 암호화됩니다. 패스키 또는 백업 로그인으로 빠르게 잠금 해제하세요.",
+  "launch.onboard3ArtLabel": "동기화 일러스트 플레이스홀더",
+  "launch.onboard3Title": "웹·모바일 간 동기화",
+  "launch.onboard3Body":
+    "같은 계정으로 모든 기기에서 사용하세요. 클라우드에는 암호문만 동기화됩니다.",
+  "launch.onboard4ArtLabel": "금고 일러스트 플레이스홀더",
+  "launch.onboard4Title": "모든 비밀번호를 한 곳에",
+  "launch.onboard4Body":
+    "로그인 정보를 하나의 암호화 금고에 정리해 보관하세요. 무료로 시작하고 필요할 때 업그레이드하세요.",
+
   "auth.title": "다시 오신 것을 환영합니다",
   "auth.titleSignUp": "시작하기",
   "auth.titleForgot": "비밀번호를 잊으셨나요?",
