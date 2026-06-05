@@ -15,9 +15,9 @@ export const MESSAGES_KR: Record<string, string> = {
   "launch.onboardCarouselAria": "시작하기",
   "launch.onboardDotsAria": "온보딩 진행",
   "launch.onboard1ArtLabel": "스프레드시트 일러스트 플레이스홀더",
-  "launch.onboard1Title": "아직 비밀번호를 스프레드시트로 관리하시나요?",
+  "launch.onboard1Title": "스프레드시트 같은 로컬 우선 금고",
   "launch.onboard1Body":
-    "행·열 표와 공유 파일은 비밀번호 보관에 맞지 않습니다. 스프레드시트와 메모에서 벗어나 전용 금고로 옮기세요.",
+    "스프레드시트와 메모에서 벗어나 비밀번호 전용 금고로 옮기세요.",
   "launch.onboard2ArtLabel": "보안 일러스트 플레이스홀더",
   "launch.onboard2Title": "암호화와 패스키 지원",
   "launch.onboard2Body":

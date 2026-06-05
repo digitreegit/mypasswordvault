@@ -1125,47 +1125,60 @@ export function VaultScreen() {
             />
           </div>
           <div className="md:hidden flex w-full min-w-0 flex-col gap-2 mb-1.5">
-            <div className="flex w-full min-w-0 flex-col gap-2 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-x-2">
-            <div className="flex min-w-0 items-center gap-2">
-              <label
-                className="text-xs font-medium text-ink-600 shrink-0"
-                htmlFor="vault-mobile-sort"
-              >
-                {t("vault.sortBy")}
-              </label>
-              <div className="relative min-w-0 flex-1">
-                <select
-                  id="vault-mobile-sort"
-                  className="input w-full appearance-none py-1.5 pl-3 pr-9 text-sm min-w-0"
-                  value={sortKey}
-                  onChange={(e) => {
-                    const k = e.target.value as SortKey;
-                    editDisplayOrderRef.current = null;
-                    setSortRevision((r) => r + 1);
-                    setSortKey(k);
-                    setSortDir(k === "updatedAt" ? "desc" : "asc");
-                  }}
+            <button
+              type="button"
+              className={`${VAULT_TOOLBAR_BTN_PRIMARY} w-full`}
+              onClick={addEntry}
+              disabled={atEntryLimit}
+              title={t("vault.addRow")}
+              aria-label={t("vault.addRow")}
+            >
+              <Plus />
+              <span>{t("vault.addRow")}</span>
+            </button>
+            <div className="flex w-full min-w-0 items-center gap-2">
+              <div className="flex min-w-0 flex-1 items-center gap-1.5 rounded-lg border border-ink-200 bg-white px-2 shadow-sm">
+                <label
+                  className="text-xs font-medium text-ink-500 shrink-0"
+                  htmlFor="vault-mobile-sort"
                 >
-                  <option value="updatedAt">{t("vault.sortRecent")}</option>
-                  <option value="category">{t("vault.colCategory")}</option>
-                  <option value="site">{t("vault.colSite")}</option>
-                </select>
-                <ChevronDownIcon className={heroChevronSort} aria-hidden />
+                  {t("vault.sortBy")}
+                </label>
+                <div className="relative min-w-0 flex-1">
+                  <select
+                    id="vault-mobile-sort"
+                    className="w-full min-w-0 appearance-none border-0 bg-transparent py-2 pl-0 pr-7 text-sm text-ink-800 focus:outline-none focus:ring-0"
+                    value={sortKey}
+                    onChange={(e) => {
+                      const k = e.target.value as SortKey;
+                      editDisplayOrderRef.current = null;
+                      setSortRevision((r) => r + 1);
+                      setSortKey(k);
+                      setSortDir(k === "updatedAt" ? "desc" : "asc");
+                    }}
+                  >
+                    <option value="updatedAt">{t("vault.sortRecent")}</option>
+                    <option value="category">{t("vault.colCategory")}</option>
+                    <option value="site">{t("vault.colSite")}</option>
+                  </select>
+                  <ChevronDownIcon
+                    className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400"
+                    aria-hidden
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-ink-500 hover:bg-ink-50 hover:text-ink-800 touch-manipulation"
+                  onClick={() => {
+                    editDisplayOrderRef.current = null;
+                    setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                    setSortRevision((r) => r + 1);
+                  }}
+                  aria-label={sortDir === "asc" ? "Ascending" : "Descending"}
+                >
+                  <ChevronUpDownIcon className="h-4 w-4" />
+                </button>
               </div>
-              <button
-                type="button"
-                className="btn-secondary text-sm px-2.5 min-w-[2.5rem] shrink-0 touch-manipulation"
-                onClick={() => {
-                  editDisplayOrderRef.current = null;
-                  setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                  setSortRevision((r) => r + 1);
-                }}
-                aria-label={sortDir === "asc" ? "Ascending" : "Descending"}
-              >
-                <ChevronUpDownIcon className="h-3.5 w-3.5" />
-              </button>
-            </div>
-            <div className="flex min-w-0 items-center justify-end gap-2 shrink-0 flex-wrap">
               <button
                 type="button"
                 className={VAULT_TOOLBAR_BTN_ICON}
@@ -1180,17 +1193,6 @@ export function VaultScreen() {
               </button>
               <button
                 type="button"
-                className={VAULT_TOOLBAR_BTN_PRIMARY}
-                onClick={addEntry}
-                disabled={atEntryLimit}
-                title={t("vault.addRow")}
-                aria-label={t("vault.addRow")}
-              >
-                <Plus />
-                <span>{t("vault.addShort")}</span>
-              </button>
-              <button
-                type="button"
                 className={VAULT_TOOLBAR_BTN_ICON}
                 onClick={lock}
                 title={t("vault.lock")}
@@ -1199,8 +1201,7 @@ export function VaultScreen() {
                 <Lock />
               </button>
             </div>
-            </div>
-            <p className="mt-2 mb-1 w-full min-w-0 text-left text-xs text-ink-500 tabular-nums leading-snug break-words">
+            <p className="mb-1 w-full min-w-0 text-left text-xs text-ink-500 tabular-nums leading-snug break-words">
               {t("vault.totalItems", { count: filtered.length })}
               {categorySummaryParts.length > 0 && (
                 <span>{` (${categorySummaryParts.join(", ")})`}</span>
@@ -1655,9 +1656,11 @@ function MobileEntryDetail({
           <ChevronLeftIcon className="h-5 w-5" aria-hidden />
         </button>
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-ink-500 truncate">
-            {entryCategoryLabel(entry.categoryId, categories, t)}
-          </p>
+          {entry.categoryId ? (
+            <p className="text-xs text-ink-500 truncate">
+              {entryCategoryLabel(entry.categoryId, categories, t)}
+            </p>
+          ) : null}
           <p className="font-semibold text-ink-900 truncate">{siteLabel}</p>
         </div>
         <div className="shrink-0">

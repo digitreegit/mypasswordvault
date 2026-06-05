@@ -1,7 +1,7 @@
 import { isNativeApp } from "./platform";
 
 const SCROLL_SELECTOR =
-  ".app-shell__panel, .native-screen__scroll, .native-scroll, .pricing-drawer-body, .setup-shell-scroll";
+  ".app-shell__panel, .native-screen__scroll, .native-scroll, .setup-screen__body--fixed, .pricing-drawer-body, .setup-shell-scroll";
 
 const HORIZONTAL_SCROLL_SELECTOR = ".native-onboard__scroller";
 

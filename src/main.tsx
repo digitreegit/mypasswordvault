@@ -19,6 +19,7 @@ import {
 } from "./lib/siteOrigin";
 import { ensureOAuthSessionFromUrl } from "./lib/supabaseAuthRedirect";
 import { isNativeApp } from "./lib/platform";
+import { initNativeScrollFocus } from "./lib/nativeScrollFocus";
 import { initNativeViewportLock } from "./lib/nativeViewportLock";
 import { initNativeStoreBridge } from "./lib/initNativeStoreBridge";
 import { initNativeKeyboard } from "./lib/initNativeKeyboard";
@@ -26,6 +27,7 @@ import { initNativeKeyboard } from "./lib/initNativeKeyboard";
 if (isNativeApp()) {
   document.documentElement.classList.add("native-app");
   initNativeViewportLock();
+  initNativeScrollFocus();
   void initNativeKeyboard().catch((e) => {
     console.error("initNativeKeyboard", e);
   });

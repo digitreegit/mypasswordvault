@@ -64,6 +64,10 @@ function sidebarNavClass(active: boolean): string {
 const SETTINGS_PAGE =
   "settings-page max-w-6xl mx-auto w-full min-w-0 box-border px-4 sm:px-6 lg:px-8";
 
+/** Matches VaultScreen header row gutters (vault-top-header alignment). */
+const VAULT_HEADER_PAGE =
+  "vault-page max-w-6xl mx-auto w-full min-w-0 box-border pl-[max(0.75rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] sm:pl-[max(1rem,env(safe-area-inset-left,0px))] sm:pr-[max(1rem,env(safe-area-inset-right,0px))] md:pl-[max(1.5rem,env(safe-area-inset-left,0px))] md:pr-[max(1.5rem,env(safe-area-inset-right,0px))] lg:pl-[max(2rem,env(safe-area-inset-left,0px))] lg:pr-[max(2rem,env(safe-area-inset-right,0px))]";
+
 const SETTINGS_HEADER_ICON_BTN =
   "inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-600 hover:bg-ink-50 transition-colors shrink-0";
 
@@ -593,11 +597,12 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
 
   return (
     <div className={nativeScreenRootClass("bg-white")}>
-      <header className={`${nativeFixedHeaderClass()} bg-white`}>
-        <div className="w-full border-b border-ink-200">
-          <div
-            className={`${SETTINGS_PAGE} flex items-center justify-between gap-3 py-1 sm:py-1.5`}
-          >
+      <div className={nativeFixedHeaderClass()}>
+        <header className="vault-top-header w-full bg-white pt-[max(0.375rem,env(safe-area-inset-top))]">
+          <div className="w-full border-b border-ink-200">
+            <div
+              className={`${VAULT_HEADER_PAGE} flex items-center justify-between gap-3 py-1 sm:py-1.5`}
+            >
             <div className="flex items-center gap-2.5 min-w-0">
               <Shield className="w-7 h-auto text-accent-500 shrink-0" />
               <span
@@ -650,7 +655,8 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
             </div>
           </div>
         </div>
-      </header>
+        </header>
+      </div>
 
       <div
         className={nativeMainScrollClass(

@@ -27,6 +27,7 @@ import {
 } from "../lib/supabaseClient";
 import { ScreenHeader } from "./ScreenHeader";
 import { AppShell } from "./AppShell";
+import { NativePinnedAppShell } from "./NativePinnedAppShell";
 import { privacyPolicyUrl, termsOfUseUrl } from "../lib/privacyPolicyUrl";
 import { Eye, EyeOff } from "./Icons";
 
@@ -102,6 +103,44 @@ function OrDivider({ text }: { text: string }) {
       <span className="h-px flex-1 bg-ink-200" aria-hidden />
     </div>
   );
+}
+
+function AuthPageIntro({
+  title,
+  subtitle,
+  titleClassName = "text-xl font-semibold text-ink-900 tracking-tight",
+}: {
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
+  titleClassName?: string;
+}) {
+  return (
+    <div className="setup-shell-intro mb-5 space-y-1">
+      <h1 className={["font-sans", titleClassName].join(" ")}>{title}</h1>
+      {subtitle ? (
+        <p className="text-sm text-ink-500 leading-snug">{subtitle}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function AuthScreenLayout({
+  header,
+  children,
+  remeasureKey,
+}: {
+  header: React.ReactNode;
+  children: React.ReactNode;
+  remeasureKey?: unknown;
+}) {
+  if (isNativeApp()) {
+    return (
+      <NativePinnedAppShell header={header} remeasureKey={remeasureKey}>
+        {children}
+      </NativePinnedAppShell>
+    );
+  }
+  return <AppShell>{children}</AppShell>;
 }
 
 export function AuthScreen({
@@ -295,43 +334,55 @@ export function AuthScreen({
   }
 
   if (!configured) {
+    const notConfiguredHeader = (
+      <ScreenHeader
+        brandName={t("app.brandName")}
+        pageTitle={t("auth.notConfiguredTitle")}
+        hideTitle={isNativeApp()}
+        locale={locale}
+        onLocaleChange={handleLocaleChange}
+        languageAriaLabel={t("settings.language")}
+        brandHomeHref={brandHomeHref}
+        brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
+        className={isNativeApp() ? "mb-0" : undefined}
+      />
+    );
+
     return (
-      <AppShell>
+      <AuthScreenLayout header={notConfiguredHeader}>
         <div className="space-y-4">
-          <ScreenHeader
-            brandName={t("app.brandName")}
-            pageTitle={t("auth.notConfiguredTitle")}
-            locale={locale}
-            onLocaleChange={handleLocaleChange}
-            languageAriaLabel={t("settings.language")}
-            brandHomeHref={brandHomeHref}
-            brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
-          />
+          {!isNativeApp() ? notConfiguredHeader : null}
+          {isNativeApp() ? (
+            <AuthPageIntro title={t("auth.notConfiguredTitle")} />
+          ) : null}
           <p className="text-sm text-ink-600 leading-snug whitespace-pre-line">
             {t("auth.notConfiguredBody")}
           </p>
         </div>
-      </AppShell>
+      </AuthScreenLayout>
     );
   }
 
   const showSignInSignUp = view === "signin" || view === "signup";
 
-  return (
-    <AppShell>
-      <div className="space-y-5">
-        <ScreenHeader
-          brandName={t("app.brandName")}
-          pageTitle={pageTitle}
-          subtitle={pageSubtitle}
-          titleClassName="text-2xl font-bold text-ink-900 tracking-tight"
-          locale={locale}
-          onLocaleChange={handleLocaleChange}
-          languageAriaLabel={t("settings.language")}
-          brandHomeHref={brandHomeHref}
-          brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
-        />
+  const authHeader = (
+    <ScreenHeader
+      brandName={t("app.brandName")}
+      pageTitle={pageTitle}
+      subtitle={isNativeApp() ? undefined : pageSubtitle}
+      titleClassName="text-2xl font-bold text-ink-900 tracking-tight"
+      hideTitle={isNativeApp()}
+      locale={locale}
+      onLocaleChange={handleLocaleChange}
+      languageAriaLabel={t("settings.language")}
+      brandHomeHref={brandHomeHref}
+      brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
+      className={isNativeApp() ? "mb-0" : undefined}
+    />
+  );
 
+  const authForms = (
+    <>
         {view === "new-password" && (
           <form className="space-y-4" onSubmit={(e) => void onNewPasswordSubmit(e)}>
             <PasswordField
@@ -543,8 +594,23 @@ export function AuthScreen({
             })}
           </p>
         )}
+    </>
+  );
+
+  return (
+    <AuthScreenLayout header={authHeader} remeasureKey={view}>
+      <div className="space-y-5">
+        {!isNativeApp() ? authHeader : null}
+        {isNativeApp() ? (
+          <AuthPageIntro
+            title={pageTitle}
+            subtitle={pageSubtitle}
+            titleClassName="text-2xl font-bold text-ink-900 tracking-tight"
+          />
+        ) : null}
+        {authForms}
       </div>
-    </AppShell>
+    </AuthScreenLayout>
   );
 }
 

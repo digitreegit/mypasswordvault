@@ -190,7 +190,7 @@ function NativeGettingStartedScreen({
   return (
     <div
       className={nativeScreenRootClass(
-        "native-launch native-launch--intro bg-white text-ink-900",
+        "native-launch native-launch--intro bg-white text-ink-900 font-sans",
       )}
     >
       <div className="native-onboard flex flex-1 flex-col min-h-0">
@@ -211,10 +211,10 @@ function NativeGettingStartedScreen({
                 variant={page.graphic}
                 label={t(`launch.onboard${index + 1}ArtLabel`)}
               />
-              <h2 className="mt-8 text-2xl font-bold tracking-tight text-ink-900 text-center">
+              <h2 className="native-onboard__title mt-8 text-center">
                 {t(page.titleKey)}
               </h2>
-              <p className="mt-3 text-sm text-ink-600 leading-relaxed text-center max-w-md mx-auto">
+              <p className="native-onboard__body mt-4 text-center max-w-md mx-auto">
                 {t(page.bodyKey)}
               </p>
             </section>

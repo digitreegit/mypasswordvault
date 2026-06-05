@@ -1,5 +1,6 @@
 import { MESSAGES_EN as en } from "../en";
 import { AUTH_DE, AUTH_ES, AUTH_FR, AUTH_IT } from "./auth_i18n";
+import { LAUNCH_DE, LAUNCH_ES, LAUNCH_FR, LAUNCH_IT } from "./launch_i18n";
 import { PRICING_DE, PRICING_ES, PRICING_FR, PRICING_IT } from "./pricing_i18n";
 import { SETTINGS_DE, SETTINGS_ES, SETTINGS_FR, SETTINGS_IT } from "./settings_i18n";
 import { SETUP_DE, SETUP_ES, SETUP_FR, SETUP_IT } from "./setup_i18n";
@@ -124,6 +125,7 @@ export const MESSAGES_ES: Record<string, string> = {
   "pwdGen.cAmbiguous": "Excluir caracteres ambiguos",
   ...SETUP_ES,
   ...AUTH_ES,
+  ...LAUNCH_ES,
   ...PRICING_ES,
   ...SETTINGS_ES,
 };
@@ -246,6 +248,7 @@ export const MESSAGES_DE: Record<string, string> = {
   "pwdGen.cAmbiguous": "Mehrdeutige Zeichen ausschließen",
   ...SETUP_DE,
   ...AUTH_DE,
+  ...LAUNCH_DE,
   ...PRICING_DE,
   ...SETTINGS_DE,
 };
@@ -370,6 +373,7 @@ export const MESSAGES_FR: Record<string, string> = {
   "pwdGen.cAmbiguous": "Exclure les caractères ambigus",
   ...SETUP_FR,
   ...AUTH_FR,
+  ...LAUNCH_FR,
   ...PRICING_FR,
   ...SETTINGS_FR,
 };
@@ -494,6 +498,7 @@ export const MESSAGES_IT: Record<string, string> = {
   "pwdGen.cAmbiguous": "Escludi caratteri ambigui",
   ...SETUP_IT,
   ...AUTH_IT,
+  ...LAUNCH_IT,
   ...PRICING_IT,
   ...SETTINGS_IT,
 };

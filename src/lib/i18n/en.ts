@@ -13,9 +13,9 @@ export const MESSAGES_EN: Record<string, string> = {
   "launch.onboardCarouselAria": "Getting started",
   "launch.onboardDotsAria": "Onboarding progress",
   "launch.onboard1ArtLabel": "Spreadsheet illustration placeholder",
-  "launch.onboard1Title": "Still using a spreadsheet for passwords?",
+  "launch.onboard1Title": "Local-first vault like a spreadsheet",
   "launch.onboard1Body":
-    "Rows and shared files are not built for secrets. Move off spreadsheets and sticky notes into a vault made for passwords.",
+    "Move off spreadsheets and sticky notes into a vault made for passwords.",
   "launch.onboard2ArtLabel": "Security illustration placeholder",
   "launch.onboard2Title": "Encrypted and passkey-ready",
   "launch.onboard2Body":

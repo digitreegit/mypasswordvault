@@ -9,6 +9,7 @@ import { useVault } from "../lib/vault";
 import { LockOpen, Eye, EyeOff } from "./Icons";
 import { ScreenHeader } from "./ScreenHeader";
 import { AppShell } from "./AppShell";
+import { NativePinnedAppShell } from "./NativePinnedAppShell";
 import { isAppError } from "../lib/errors";
 import { passkeyRegisteredForCurrentSite } from "../lib/passkey";
 import { isNativeApp } from "../lib/platform";
@@ -110,19 +111,32 @@ export function LockScreen() {
     if (!canPasskey) setShowBackup(true);
   }, [canPasskey]);
 
-  return (
-    <AppShell>
-      <div className="space-y-4">
-        <ScreenHeader
-          brandName={t("app.brandName")}
-          pageTitle={t("lock.title")}
-          locale={locale}
-          onLocaleChange={(l) => void setLocale(l)}
-          languageAriaLabel={t("settings.language")}
-          brandHomeHref={brandHomeHref}
-          brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
-        />
+  const lockHeader = (
+    <ScreenHeader
+      brandName={t("app.brandName")}
+      pageTitle={t("lock.title")}
+      hideTitle={isNativeApp()}
+      locale={locale}
+      onLocaleChange={(l) => void setLocale(l)}
+      languageAriaLabel={t("settings.language")}
+      brandHomeHref={brandHomeHref}
+      brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
+      className={isNativeApp() ? "mb-0" : undefined}
+    />
+  );
+
+  const lockBody = (
+    <>
+      {isNativeApp() ? (
+        <div className="setup-shell-intro mb-5 space-y-1">
+          <h1 className="font-sans text-xl font-semibold text-ink-900 tracking-tight">
+            {t("lock.title")}
+          </h1>
+          <p className="text-sm text-ink-500 leading-snug">{t("lock.subtitle")}</p>
+        </div>
+      ) : (
         <p className="text-sm text-ink-500 leading-snug">{t("lock.subtitle")}</p>
+      )}
 
         {checkoutFlash ? (
           <div
@@ -322,6 +336,22 @@ export function LockScreen() {
           </form>
           </>
         )}
+    </>
+  );
+
+  if (isNativeApp()) {
+    return (
+      <NativePinnedAppShell header={lockHeader} remeasureKey={showBackup}>
+        <div className="space-y-4">{lockBody}</div>
+      </NativePinnedAppShell>
+    );
+  }
+
+  return (
+    <AppShell>
+      <div className="space-y-4">
+        {lockHeader}
+        {lockBody}
       </div>
     </AppShell>
   );
