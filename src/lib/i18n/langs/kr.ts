@@ -9,6 +9,11 @@ export const MESSAGES_KR: Record<string, string> = {
   "app.authLoading": "로그인 상태 확인 중…",
   "app.brandName": "My Password Vault",
 
+  "keyboard.toolbarAria": "키보드 탐색",
+  "keyboard.previousField": "이전 입력란",
+  "keyboard.nextField": "다음 입력란",
+  "keyboard.done": "완료",
+
   "launch.splashSubtitle": "안전한 비밀번호 관리, 모든 기기에서 동기화.",
   "launch.skip": "건너뛰기",
   "launch.getStarted": "시작하기",
@@ -472,6 +477,11 @@ export const MESSAGES_KR: Record<string, string> = {
   "vault.search": "검색 (사이트, URL, 사용자명, 메모, 카테고리)",
   "vault.searchPlaceholder": "검색",
   "vault.mobileBack": "뒤로",
+  "vault.mobileDeleteModalBody": "이 항목을 삭제할까요? 되돌릴 수 없습니다.",
+  "vault.mobileDeleteConfirm": "항목 삭제",
+  "vault.mobileDiscardModalBody":
+    "저장하지 않은 변경이 있습니다. 버리고 돌아갈까요?",
+  "vault.mobileDiscardConfirm": "버리기",
   "vault.addShort": "추가",
   "vault.colCategory": "카테고리",
   "vault.manageCategories": "카테고리 관리",

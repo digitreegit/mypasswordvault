@@ -4,6 +4,7 @@ import {
   nativeMainScrollClass,
   nativeScreenRootClass,
 } from "../lib/nativeLayout";
+import { scrollFocusedFieldAboveKeyboard } from "../lib/nativeScrollFocus";
 
 type NativePinnedAppShellProps = {
   header: React.ReactNode;
@@ -48,9 +49,7 @@ export function NativePinnedAppShell({
       const target = e.target;
       if (!(target instanceof HTMLElement)) return;
       if (!scrollRoot.contains(target)) return;
-      window.setTimeout(() => {
-        target.scrollIntoView({ block: "center", behavior: "auto" });
-      }, 360);
+      scrollFocusedFieldAboveKeyboard(target, scrollRoot);
     };
     scrollRoot.addEventListener("focusin", onFocusIn);
     return () => scrollRoot.removeEventListener("focusin", onFocusIn);

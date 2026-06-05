@@ -14,14 +14,8 @@ import { isAppError } from "../lib/errors";
 import { passkeyRegisteredForCurrentSite } from "../lib/passkey";
 import { isNativeApp } from "../lib/platform";
 
-const LOCK_BTN_BASE =
-  "inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 min-h-[2.5rem] text-sm font-medium shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
-const LOCK_BTN_PRIMARY = `${LOCK_BTN_BASE} w-full border border-accent-600 bg-accent-600 text-white hover:bg-accent-700`;
-const LOCK_BTN_SECONDARY_COMPACT = `${LOCK_BTN_BASE} shrink-0 border border-ink-200 bg-white text-ink-800 hover:bg-ink-50 whitespace-nowrap`;
-const LOCK_BTN_DANGER = `${LOCK_BTN_BASE} flex-1 min-w-0 border border-red-600 bg-red-600 text-white hover:bg-red-700 whitespace-nowrap`;
-
 const LOCK_TAB_BASE =
-  "flex-1 min-w-0 px-1 pb-2.5 pt-0.5 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30 focus-visible:ring-offset-2 rounded-t-md";
+  "flex-1 min-w-0 px-1 pb-2.5 pt-0.5 text-xs font-medium transition-colors border-b-2 -mb-px focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30 focus-visible:ring-offset-2 rounded-t-md";
 const LOCK_TAB_ACTIVE = `${LOCK_TAB_BASE} border-accent-600 text-accent-700`;
 const LOCK_TAB_INACTIVE = `${LOCK_TAB_BASE} border-transparent text-ink-500 hover:text-ink-800 hover:border-ink-200`;
 
@@ -132,10 +126,10 @@ export function LockScreen() {
           <h1 className="font-sans text-xl font-semibold text-ink-900 tracking-tight">
             {t("lock.title")}
           </h1>
-          <p className="text-sm text-ink-500 leading-snug">{t("lock.subtitle")}</p>
+          <p className="text-xs text-ink-500 leading-snug">{t("lock.subtitle")}</p>
         </div>
       ) : (
-        <p className="text-sm text-ink-500 leading-snug">{t("lock.subtitle")}</p>
+        <p className="text-xs text-ink-500 leading-snug">{t("lock.subtitle")}</p>
       )}
 
         {checkoutFlash ? (
@@ -178,7 +172,7 @@ export function LockScreen() {
         {canPasskey && (
           <button
             type="button"
-            className={LOCK_BTN_PRIMARY}
+            className="btn-primary w-full inline-flex items-center justify-center gap-2"
             onClick={() => void handlePasskey()}
             disabled={busy}
           >
@@ -187,15 +181,15 @@ export function LockScreen() {
           </button>
         )}
 
-        <div className="pt-1 text-center">
+        <p className="pt-1 text-center text-xs text-ink-600">
           <button
             type="button"
-            className="text-sm text-accent-600 hover:underline font-medium"
+            className="font-semibold text-accent-600 hover:underline focus:outline-none focus-visible:underline"
             onClick={() => setShowBackup((v) => !v)}
           >
             {showBackup ? t("lock.hideBackup") : t("lock.useBackup")}
           </button>
-        </div>
+        </p>
 
         {showBackup && (
           <>
@@ -205,7 +199,7 @@ export function LockScreen() {
               aria-hidden
             />
             <form onSubmit={handle} className="space-y-4 pt-4">
-            <p className="text-xs text-ink-500">{t("lock.backupHint")}</p>
+            <p className="text-xs text-ink-500 leading-snug">{t("lock.backupHint")}</p>
             <div>
               <label className="label">{t("lock.masterPw")}</label>
               <div className="relative">
@@ -288,7 +282,7 @@ export function LockScreen() {
             {error && <div className="text-sm text-red-600">{error}</div>}
             <button
               type="submit"
-              className={LOCK_BTN_PRIMARY}
+              className="btn-primary w-full inline-flex items-center justify-center gap-2"
               disabled={
                 busy ||
                 !pw ||
@@ -310,19 +304,19 @@ export function LockScreen() {
                   </button>
                 </div>
               ) : (
-                <div className="space-y-2 text-xs text-left">
+                <div className="space-y-2 text-sm text-left">
                   <p className="text-red-600 leading-snug mb-3">{t("lock.resetWarn")}</p>
                   <div className="flex gap-2 justify-start">
                     <button
                       type="button"
-                      className={LOCK_BTN_SECONDARY_COMPACT}
+                      className="btn-secondary shrink-0 whitespace-nowrap"
                       onClick={() => setConfirmReset(false)}
                     >
                       {t("common.cancel")}
                     </button>
                     <button
                       type="button"
-                      className={LOCK_BTN_DANGER}
+                      className="btn-danger flex-1 min-w-0 whitespace-nowrap"
                       onClick={async () => {
                         await resetVault();
                       }}

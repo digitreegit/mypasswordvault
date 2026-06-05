@@ -23,6 +23,7 @@ import {
 } from "./lib/checkoutReturn";
 import { nativeScreenRootClass } from "./lib/nativeLayout";
 import { isNativeApp } from "./lib/platform";
+import { KeyboardAccessoryBar } from "./components/KeyboardAccessoryBar";
 
 function parseHashPath(): string {
   if (typeof window === "undefined") return "";
@@ -164,6 +165,7 @@ export default function App() {
   const tree = (
     <AuthProvider>
       <AuthenticatedApp />
+      <KeyboardAccessoryBar />
     </AuthProvider>
   );
   if (isNativeApp()) {

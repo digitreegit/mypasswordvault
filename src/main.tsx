@@ -24,10 +24,11 @@ import { initNativeViewportLock } from "./lib/nativeViewportLock";
 import { initNativeStoreBridge } from "./lib/initNativeStoreBridge";
 import { initNativeKeyboard } from "./lib/initNativeKeyboard";
 
+initNativeScrollFocus();
+
 if (isNativeApp()) {
   document.documentElement.classList.add("native-app");
   initNativeViewportLock();
-  initNativeScrollFocus();
   void initNativeKeyboard().catch((e) => {
     console.error("initNativeKeyboard", e);
   });

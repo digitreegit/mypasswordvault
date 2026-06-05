@@ -118,7 +118,7 @@ function AuthPageIntro({
     <div className="setup-shell-intro mb-5 space-y-1">
       <h1 className={["font-sans", titleClassName].join(" ")}>{title}</h1>
       {subtitle ? (
-        <p className="text-sm text-ink-500 leading-snug">{subtitle}</p>
+        <p className="text-xs text-ink-500 leading-snug">{subtitle}</p>
       ) : null}
     </div>
   );

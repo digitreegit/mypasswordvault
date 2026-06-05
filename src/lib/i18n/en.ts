@@ -7,6 +7,11 @@ export const MESSAGES_EN: Record<string, string> = {
   "app.authLoading": "Checking your session…",
   "app.brandName": "My Password Vault",
 
+  "keyboard.toolbarAria": "Keyboard navigation",
+  "keyboard.previousField": "Previous field",
+  "keyboard.nextField": "Next field",
+  "keyboard.done": "Done",
+
   "launch.splashSubtitle": "Secure passwords, synced across your devices.",
   "launch.skip": "Skip",
   "launch.getStarted": "Get started",
@@ -482,6 +487,11 @@ export const MESSAGES_EN: Record<string, string> = {
   "vault.search": "Search (site, URL, username, memo, category)",
   "vault.searchPlaceholder": "Search",
   "vault.mobileBack": "Back",
+  "vault.mobileDeleteModalBody": "Delete this entry? This cannot be undone.",
+  "vault.mobileDeleteConfirm": "Delete entry",
+  "vault.mobileDiscardModalBody":
+    "You have unsaved changes. Discard them and go back?",
+  "vault.mobileDiscardConfirm": "Discard",
   "vault.addShort": "Add",
   "vault.colCategory": "Category",
   "vault.manageCategories": "Manage categories",

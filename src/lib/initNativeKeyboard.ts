@@ -1,7 +1,10 @@
 import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
+import { setKeyboardInsetPx } from "./keyboardInset";
+import { reflowFocusedFieldScroll } from "./nativeScrollFocus";
 import { isNativeApp } from "./platform";
 
 let initialized = false;
+let pluginKeyboardHeight = 0;
 
 /** Pin the document — iOS WKWebView shifts scroll offset when the keyboard opens. */
 function pinDocumentScroll(): void {
@@ -21,7 +24,13 @@ function syncVisualViewportVars(): void {
     "--native-vv-height",
     `${vv.height}px`,
   );
+  const vvKeyboardInset = Math.max(
+    0,
+    window.innerHeight - vv.offsetTop - vv.height,
+  );
+  setKeyboardInsetPx(Math.max(vvKeyboardInset, pluginKeyboardHeight));
   pinDocumentScroll();
+  reflowFocusedFieldScroll();
 }
 
 /**
@@ -51,17 +60,21 @@ export async function initNativeKeyboard(): Promise<void> {
   vv?.addEventListener("scroll", syncVisualViewportVars);
 
   try {
-    await Keyboard.addListener("keyboardWillShow", () => {
+    await Keyboard.addListener("keyboardWillShow", (info) => {
+      pluginKeyboardHeight = info.keyboardHeight;
       syncVisualViewportVars();
       pinDocumentScroll();
     });
-    await Keyboard.addListener("keyboardDidShow", () => {
+    await Keyboard.addListener("keyboardDidShow", (info) => {
+      pluginKeyboardHeight = info.keyboardHeight;
       syncVisualViewportVars();
       pinDocumentScroll();
     });
     await Keyboard.addListener("keyboardWillHide", () => {
+      pluginKeyboardHeight = 0;
       document.documentElement.style.removeProperty("--native-vv-offset-top");
       document.documentElement.style.removeProperty("--native-vv-height");
+      setKeyboardInsetPx(0);
       pinDocumentScroll();
     });
   } catch {
@@ -74,40 +87,58 @@ export function subscribeNativeKeyboardInsets(
 ): () => void {
   if (!isNativeApp()) return () => undefined;
 
-  let removeShow: (() => void) | undefined;
-  let removeHide: (() => void) | undefined;
-  let removeVv = () => undefined;
+  const removers: Array<() => void> = [];
 
   const vv = window.visualViewport;
   if (vv) {
-    const onVv = () => syncVisualViewportVars();
+    const onVv = () => {
+      syncVisualViewportVars();
+      onChange(readKeyboardInsetFromDom());
+    };
     vv.addEventListener("resize", onVv);
     vv.addEventListener("scroll", onVv);
-    removeVv = () => {
+    removers.push(() => {
       vv.removeEventListener("resize", onVv);
       vv.removeEventListener("scroll", onVv);
-    };
+    });
   }
 
   void Keyboard.addListener("keyboardWillShow", (info) => {
+    pluginKeyboardHeight = info.keyboardHeight;
     onChange(info.keyboardHeight);
     syncVisualViewportVars();
     pinDocumentScroll();
   }).then((h) => {
-    removeShow = () => void h.remove();
+    removers.push(() => void h.remove());
+  });
+
+  void Keyboard.addListener("keyboardDidShow", (info) => {
+    pluginKeyboardHeight = info.keyboardHeight;
+    onChange(info.keyboardHeight);
+    syncVisualViewportVars();
+    pinDocumentScroll();
+  }).then((h) => {
+    removers.push(() => void h.remove());
   });
 
   void Keyboard.addListener("keyboardWillHide", () => {
+    pluginKeyboardHeight = 0;
     onChange(0);
     syncVisualViewportVars();
     pinDocumentScroll();
   }).then((h) => {
-    removeHide = () => void h.remove();
+    removers.push(() => void h.remove());
   });
 
   return () => {
-    removeShow?.();
-    removeHide?.();
-    removeVv();
+    removers.forEach((remove) => remove());
   };
+}
+
+function readKeyboardInsetFromDom(): number {
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(
+    "--native-keyboard-inset",
+  );
+  const parsed = Number.parseFloat(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }

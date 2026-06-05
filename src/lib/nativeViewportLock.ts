@@ -1,9 +1,10 @@
 import { isNativeApp } from "./platform";
 
 const SCROLL_SELECTOR =
-  ".app-shell__panel, .native-screen__scroll, .native-scroll, .setup-screen__body--fixed, .pricing-drawer-body, .setup-shell-scroll";
+  ".app-shell__panel, .native-screen__scroll, .native-scroll, .mobile-entry-detail__scroll, .setup-screen__body--fixed, .pricing-drawer-body, .setup-shell-scroll";
 
 const HORIZONTAL_SCROLL_SELECTOR = ".native-onboard__scroller";
+const SWIPE_ROW_SELECTOR = ".mobile-swipe-row";
 
 function isScrollable(el: Element): boolean {
   const node = el as HTMLElement;
@@ -47,6 +48,10 @@ export function initNativeViewportLock(): void {
         isHorizontallyScrollable(horizontalHost) &&
         Math.abs(dx) > Math.abs(dy)
       ) {
+        return;
+      }
+
+      if (target?.closest(SWIPE_ROW_SELECTOR) && Math.abs(dx) > Math.abs(dy)) {
         return;
       }
 

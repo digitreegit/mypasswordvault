@@ -16,6 +16,13 @@ body {
   @apply font-sans;
 }
 
+/* Fine print / meta (desktop default; mobile scale in @media below) */
+.type-caption,
+.text-caption {
+  font-size: 0.75rem;
+  line-height: 1.33;
+}
+
 /* ── Native Capacitor: fixed viewport, no page bounce/drift ── */
 html.native-app {
   position: fixed;
@@ -92,7 +99,14 @@ html.native-app .native-screen__scroll {
   overscroll-behavior: contain;
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(
+    1.25rem,
+    env(safe-area-inset-bottom, 0px),
+    calc(
+      var(--native-keyboard-inset, 0px) + var(--keyboard-accessory-height, 2.75rem) +
+        var(--keyboard-accessory-gap, 0.5rem) + 1rem
+    )
+  );
 }
 
 /* Auth / lock / setup: top-aligned full-width panel on mobile; centered card on sm+ */
@@ -146,7 +160,11 @@ html.native-app .app-shell__panel {
   border-radius: 0;
   box-shadow: none;
   background: #fff;
-  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(
+    1.25rem,
+    env(safe-area-inset-bottom, 0px),
+    calc(var(--native-keyboard-inset, 0px) + var(--keyboard-accessory-height, 2.75rem) + 1rem)
+  );
 }
 
 @media (min-width: 640px) {
@@ -282,8 +300,27 @@ html.native-app .setup-screen__body--fixed {
   -webkit-overflow-scrolling: touch;
   padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
   padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
-  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(
+    1.25rem,
+    env(safe-area-inset-bottom, 0px),
+    calc(
+      var(--native-keyboard-inset, 0px) + var(--keyboard-accessory-height, 2.75rem) +
+        var(--keyboard-accessory-gap, 0.5rem) + 1rem
+    )
+  );
   box-sizing: border-box;
+}
+
+html.native-app .mobile-entry-detail__scroll,
+.mobile-entry-detail__scroll {
+  padding-bottom: max(
+    1rem,
+    env(safe-area-inset-bottom, 0px),
+    calc(
+      var(--native-keyboard-inset, 0px) + var(--keyboard-accessory-height, 2.75rem) +
+        var(--keyboard-accessory-gap, 0.5rem) + 1rem
+    )
+  );
 }
 
 html.native-app .setup-screen {
@@ -359,7 +396,7 @@ html.native-app .native-onboard__body {
 }
 
 html.native-app .native-onboard__title {
-  font-size: 1.875rem;
+  font-size: var(--type-headline, 1.75rem);
   line-height: 1.25;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -367,7 +404,7 @@ html.native-app .native-onboard__title {
 }
 
 html.native-app .native-onboard__body {
-  font-size: 1.0625rem;
+  font-size: var(--type-body, 1.0625rem);
   line-height: 1.55;
   font-weight: 400;
   color: #42424a;
@@ -377,6 +414,232 @@ html.native-app .native-onboard__body {
   html.native-app .admin-page {
     padding-left: 1.5rem;
     padding-right: 1.5rem;
+  }
+}
+
+/* ── Floating keyboard accessory bar (mobile + native) ── */
+:root {
+  --keyboard-accessory-gap: 0.5rem;
+  --keyboard-accessory-height: 2.75rem;
+  --keyboard-accessory-margin-x: 1.25rem;
+}
+
+.keyboard-accessory-bar {
+  position: fixed;
+  left: max(
+    var(--keyboard-accessory-margin-x),
+    env(safe-area-inset-left, 0px)
+  );
+  right: max(
+    var(--keyboard-accessory-margin-x),
+    env(safe-area-inset-right, 0px)
+  );
+  bottom: calc(
+    var(--native-keyboard-inset, 0px) + var(--keyboard-accessory-gap)
+  );
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: var(--keyboard-accessory-height);
+  padding: 0.3125rem 0.4375rem 0.3125rem 0.5625rem;
+  border-radius: 9999px;
+  background: rgb(247 247 248 / 0.82);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgb(217 217 223 / 0.65);
+  box-shadow:
+    0 4px 24px rgb(18 18 22 / 0.12),
+    0 1px 3px rgb(18 18 22 / 0.06);
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+
+.keyboard-accessory-bar__nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.125rem;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.45);
+}
+
+.keyboard-accessory-bar__nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: #42424a;
+  transition: background-color 0.15s ease;
+}
+
+.keyboard-accessory-bar__nav-btn:active:not(:disabled) {
+  background: rgb(238 238 241 / 0.9);
+}
+
+.keyboard-accessory-bar__nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.keyboard-accessory-bar__done {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 9999px;
+  background: #4f46e5;
+  color: #fff;
+  box-shadow: 0 2px 8px rgb(79 70 229 / 0.35);
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.keyboard-accessory-bar__done:active {
+  background: #4338ca;
+  transform: scale(0.96);
+}
+
+@media (min-width: 768px) {
+  html:not(.native-app) .keyboard-accessory-bar {
+    display: none;
+  }
+}
+
+/* ── Mobile typography + controls (iOS-like; native + narrow web) ── */
+@media (max-width: 767px) {
+  :root {
+    /* iOS-style type scale */
+    --type-caption: 0.8125rem; /* 13px — meta, counts */
+    --type-sub: 0.9375rem; /* 15px — hints, subtitles, labels */
+    --type-body: 1.0625rem; /* 17px — default body */
+    --type-title: 1.375rem; /* 22px — section titles */
+    --type-headline: 1.75rem; /* 28px — page headlines */
+    --leading-body: 1.41;
+    --leading-sub: 1.45;
+    --leading-caption: 1.38;
+  }
+
+  /* Remap Tailwind text utilities to the mobile scale */
+  .text-xs {
+    font-size: var(--type-sub) !important;
+    line-height: var(--leading-sub);
+  }
+  .text-sm {
+    font-size: var(--type-body) !important;
+    line-height: var(--leading-body);
+  }
+  .text-base {
+    font-size: var(--type-body) !important;
+    line-height: var(--leading-body);
+  }
+  .text-lg {
+    font-size: var(--type-title) !important;
+    line-height: 1.35;
+  }
+  .text-xl {
+    font-size: var(--type-headline) !important;
+    line-height: 1.3;
+  }
+  .text-2xl {
+    font-size: 2rem !important;
+    line-height: 1.25;
+  }
+
+  /* Explicit smallest tier (legal fine print, footnotes) */
+  .type-caption,
+  .text-caption {
+    font-size: var(--type-caption) !important;
+    line-height: var(--leading-caption);
+  }
+
+  .type-body {
+    font-size: var(--type-body);
+    line-height: var(--leading-body);
+  }
+  .type-sub {
+    font-size: var(--type-sub);
+    line-height: var(--leading-sub);
+    color: #5e5e68;
+  }
+
+  /* Shells inherit body size */
+  .app-shell__panel,
+  .setup-screen__body--fixed,
+  .native-screen__scroll,
+  .native-launch__scroll,
+  .native-screen {
+    font-size: var(--type-body);
+    line-height: var(--leading-body);
+  }
+
+  .setup-shell-intro h1 {
+    font-size: var(--type-headline);
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #121216;
+  }
+  .setup-shell-intro p {
+    font-size: var(--type-sub);
+    line-height: var(--leading-sub);
+    color: #5e5e68;
+  }
+
+  .input {
+    min-height: 2.75rem;
+    border-radius: 0.75rem;
+    padding: 0.625rem 1rem;
+    font-size: var(--type-body);
+    line-height: var(--leading-body);
+  }
+
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-danger,
+  .btn-danger-soft {
+    min-height: 2.75rem;
+    border-radius: 0.75rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    font-size: var(--type-body);
+  }
+
+  .label,
+  .mobile-field-label {
+    font-size: var(--type-sub);
+    line-height: var(--leading-sub);
+  }
+
+  .mobile-list-group {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: 1px solid rgb(217 217 223 / 0.9);
+    background: #fff;
+  }
+
+  .mobile-list-group > li + li {
+    border-top: 1px solid #eeeef1;
+  }
+
+  .mobile-swipe-row__delete {
+    min-height: 100%;
+    width: 5.5rem;
+    font-size: var(--type-body);
+    font-weight: 500;
+  }
+
+  .mobile-swipe-row__content {
+    border-radius: 0;
   }
 }
 

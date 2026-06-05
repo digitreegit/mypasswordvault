@@ -457,9 +457,9 @@ const VAULT_PAGE =
   "vault-page max-w-6xl mx-auto w-full min-w-0 box-border pl-[max(0.75rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] sm:pl-[max(1rem,env(safe-area-inset-left,0px))] sm:pr-[max(1rem,env(safe-area-inset-right,0px))] md:pl-[max(1.5rem,env(safe-area-inset-left,0px))] md:pr-[max(1.5rem,env(safe-area-inset-right,0px))] lg:pl-[max(2rem,env(safe-area-inset-left,0px))] lg:pr-[max(2rem,env(safe-area-inset-right,0px))]";
 /** Figma toolbar: white pill buttons with light border */
 const VAULT_TOOLBAR_BTN_PRIMARY =
-  "inline-flex items-center justify-center gap-1.5 rounded-lg border border-accent-600 bg-accent-600 px-3 py-2 min-h-[2.5rem] text-sm font-medium text-white shadow-sm hover:bg-accent-700 transition-colors disabled:opacity-50 disabled:pointer-events-none shrink-0";
+  "inline-flex items-center justify-center gap-1.5 rounded-xl md:rounded-lg border border-accent-600 bg-accent-600 px-4 md:px-3 py-2.5 md:py-2 min-h-[2.75rem] md:min-h-[2.5rem] text-base md:text-sm font-medium text-white shadow-sm hover:bg-accent-700 transition-colors disabled:opacity-50 disabled:pointer-events-none shrink-0";
 const VAULT_TOOLBAR_BTN_ICON =
-  "inline-flex items-center justify-center rounded-lg border border-ink-200 bg-white h-10 min-w-10 text-ink-600 shadow-sm hover:bg-ink-50 transition-colors shrink-0";
+  "inline-flex items-center justify-center rounded-xl md:rounded-lg border border-ink-200 bg-white h-11 min-w-11 md:h-10 md:min-w-10 text-ink-600 shadow-sm hover:bg-ink-50 transition-colors shrink-0";
 
 const VAULT_HEADER_ICON_BTN =
   "inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-600 hover:bg-ink-50 transition-colors shrink-0";
@@ -517,6 +517,9 @@ export function VaultScreen() {
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [generatorFor, setGeneratorFor] = useState<string | null>(null);
+  const [mobileGeneratorPassword, setMobileGeneratorPassword] = useState<
+    string | null
+  >(null);
   const [showCategories, setShowCategories] = useState(false);
   const [categoriesStartWithNew, setCategoriesStartWithNew] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -1137,9 +1140,9 @@ export function VaultScreen() {
               <span>{t("vault.addRow")}</span>
             </button>
             <div className="flex w-full min-w-0 items-center gap-2">
-              <div className="flex min-w-0 flex-1 items-center gap-1.5 rounded-lg border border-ink-200 bg-white px-2 shadow-sm">
+              <div className="flex min-w-0 flex-1 items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3 shadow-sm min-h-[2.75rem]">
                 <label
-                  className="text-xs font-medium text-ink-500 shrink-0"
+                  className="text-sm font-medium text-ink-500 shrink-0"
                   htmlFor="vault-mobile-sort"
                 >
                   {t("vault.sortBy")}
@@ -1147,7 +1150,7 @@ export function VaultScreen() {
                 <div className="relative min-w-0 flex-1">
                   <select
                     id="vault-mobile-sort"
-                    className="w-full min-w-0 appearance-none border-0 bg-transparent py-2 pl-0 pr-7 text-sm text-ink-800 focus:outline-none focus:ring-0"
+                    className="w-full min-w-0 appearance-none border-0 bg-transparent py-2 pl-0 pr-7 text-base text-ink-800 focus:outline-none focus:ring-0"
                     value={sortKey}
                     onChange={(e) => {
                       const k = e.target.value as SortKey;
@@ -1201,7 +1204,7 @@ export function VaultScreen() {
                 <Lock />
               </button>
             </div>
-            <p className="mb-1 w-full min-w-0 text-left text-xs text-ink-500 tabular-nums leading-snug break-words">
+            <p className="mb-1 w-full min-w-0 text-left text-caption text-ink-500 tabular-nums leading-snug break-words">
               {t("vault.totalItems", { count: filtered.length })}
               {categorySummaryParts.length > 0 && (
                 <span>{` (${categorySummaryParts.join(", ")})`}</span>
@@ -1259,9 +1262,9 @@ export function VaultScreen() {
           )}
         </p>
 
-        <ul className="md:hidden space-y-3 list-none p-0 m-0">
+        <ul className="md:hidden mobile-list-group list-none p-0 m-0">
           {filtered.length === 0 ? (
-            <li className="card rounded-lg p-8 text-center text-ink-500 text-sm">
+            <li className="p-8 text-center text-ink-500 text-base">
               {t("vault.empty")}{" "}
               <button
                 type="button"
@@ -1275,10 +1278,11 @@ export function VaultScreen() {
           ) : (
             filtered.map((e) => (
               <li key={e.id}>
-                <MobileEntryRow
+                <MobileSwipeEntryRow
                   entry={e}
                   categories={categories}
                   onOpen={() => setMobileDetailId(e.id)}
+                  onDelete={() => void handleRemoveEntry(e.id)}
                   t={t}
                 />
               </li>
@@ -1296,11 +1300,21 @@ export function VaultScreen() {
             }}
             revealed={showAll || revealed.has(mobileDetailEntry.id)}
             toggleReveal={() => toggleReveal(mobileDetailEntry.id)}
-            onChange={(patch) =>
-              upsertEntry({ id: mobileDetailEntry.id, ...patch })
+            onSave={(draft) =>
+              upsertEntry({
+                id: draft.id,
+                site: draft.site,
+                categoryId: draft.categoryId,
+                username: draft.username,
+                password: draft.password,
+                url: draft.url,
+                memo: draft.memo,
+              })
             }
             onDelete={() => void handleRemoveEntry(mobileDetailEntry.id)}
             onGenerate={() => openPasswordGenerator(mobileDetailEntry.id)}
+            generatorPassword={mobileGeneratorPassword}
+            onGeneratorPasswordConsumed={() => setMobileGeneratorPassword(null)}
             onCopy={copyText}
             copiedKey={copiedKey}
             categories={categories}
@@ -1401,7 +1415,7 @@ export function VaultScreen() {
           </div>
         </div>
 
-        <p className="w-full min-w-0 break-words text-left text-xs text-ink-400 leading-normal mt-2 sm:mt-4">
+        <p className="w-full min-w-0 break-words text-left text-caption text-ink-400 leading-normal mt-2 sm:mt-4">
           {t("vault.footer")}
         </p>
         </div>
@@ -1411,7 +1425,11 @@ export function VaultScreen() {
         <PasswordGenerator
           onClose={closePasswordGenerator}
           onUse={async (pw) => {
-            await upsertEntry({ id: generatorFor, password: pw });
+            if (mobileDetailId === generatorFor) {
+              setMobileGeneratorPassword(pw);
+            } else {
+              await upsertEntry({ id: generatorFor, password: pw });
+            }
             closePasswordGenerator();
           }}
         />
@@ -1563,41 +1581,212 @@ function useEntryRowEdit(
   };
 }
 
-function MobileEntryRow({
+const MOBILE_SWIPE_DELETE_WIDTH = 88;
+
+function MobileSwipeEntryRow({
   entry,
   categories,
   onOpen,
+  onDelete,
   t,
 }: {
   entry: DecryptedEntry;
   categories: VaultCategory[];
   onOpen: () => void;
+  onDelete: () => void;
   t: TFn;
 }) {
   const catLabel = entry.categoryId
     ? entryCategoryLabel(entry.categoryId, categories, t)
     : null;
   const siteLabel = entry.site.trim() || t("vault.newEntry");
+  const [offset, setOffset] = useState(0);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const startX = useRef(0);
+  const startOffset = useRef(0);
+  const dragging = useRef(false);
+
+  const closeSwipe = () => setOffset(0);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    startX.current = e.touches[0].clientX;
+    startOffset.current = offset;
+    dragging.current = true;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!dragging.current || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - startX.current;
+    const next = Math.min(
+      0,
+      Math.max(-MOBILE_SWIPE_DELETE_WIDTH, startOffset.current + dx)
+    );
+    setOffset(next);
+  };
+
+  const onTouchEnd = () => {
+    if (!dragging.current) return;
+    dragging.current = false;
+    const open = offset < -MOBILE_SWIPE_DELETE_WIDTH / 2;
+    setOffset(open ? -MOBILE_SWIPE_DELETE_WIDTH : 0);
+  };
+
+  const handleOpen = () => {
+    if (offset < 0) {
+      closeSwipe();
+      return;
+    }
+    onOpen();
+  };
+
+  const handleDeleteConfirm = () => {
+    setDeleteModalOpen(false);
+    closeSwipe();
+    onDelete();
+  };
 
   return (
-    <button
-      type="button"
-      className="w-full rounded-xl border border-ink-200 bg-white px-3 py-3 flex items-center gap-2.5 text-left shadow-sm active:bg-ink-50 touch-manipulation"
-      onClick={onOpen}
-    >
-      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-        <span className="text-xs font-medium text-ink-500 truncate flex items-center min-h-[1rem]">
-          {catLabel ?? (
-            <span
-              className="inline-block h-px w-2.5 shrink-0 rounded-full bg-ink-300"
+    <>
+      <div className="mobile-swipe-row relative overflow-hidden bg-white">
+        <button
+          type="button"
+          className="mobile-swipe-row__delete absolute inset-y-0 right-0 flex items-center justify-center bg-red-600 text-white touch-manipulation"
+          onClick={() => setDeleteModalOpen(true)}
+          aria-label={t("vault.ttDelete")}
+        >
+          {t("vault.ttDelete")}
+        </button>
+        <div
+          className="mobile-swipe-row__content relative bg-white transition-transform duration-200 ease-out will-change-transform"
+          style={{ transform: `translateX(${offset}px)` }}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          onTouchCancel={onTouchEnd}
+        >
+          <button
+            type="button"
+            className="w-full px-4 py-3.5 min-h-[3.25rem] flex items-center gap-3 text-left active:bg-ink-50 touch-manipulation"
+            onClick={handleOpen}
+          >
+            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+              {catLabel ? (
+                <span className="text-sm text-ink-500 truncate">{catLabel}</span>
+              ) : null}
+              <span className="text-base font-medium text-ink-900 truncate">
+                {siteLabel}
+              </span>
+            </div>
+            <ChevronRightIcon
+              className="h-5 w-5 shrink-0 text-ink-300"
               aria-hidden
             />
-          )}
-        </span>
-        <span className="font-medium text-ink-900 truncate">{siteLabel}</span>
+          </button>
+        </div>
       </div>
-      <ChevronRightIcon className="h-4 w-4 shrink-0 text-ink-400" aria-hidden />
-    </button>
+      <MobileActionModal
+        open={deleteModalOpen}
+        title={t("vault.ttDelete")}
+        body={t("vault.mobileDeleteModalBody")}
+        cancelLabel={t("common.cancel")}
+        confirmLabel={t("vault.mobileDeleteConfirm")}
+        onCancel={() => setDeleteModalOpen(false)}
+        onConfirm={handleDeleteConfirm}
+      />
+    </>
+  );
+}
+
+function mobileEntryDraftFrom(entry: DecryptedEntry): DecryptedEntry {
+  return {
+    id: entry.id,
+    categoryId: entry.categoryId,
+    site: entry.site,
+    url: entry.url,
+    username: entry.username,
+    password: entry.password,
+    notes: entry.notes,
+    memo: entry.memo,
+    updatedAt: entry.updatedAt,
+  };
+}
+
+function mobileEntryDraftDirty(a: DecryptedEntry, b: DecryptedEntry): boolean {
+  return (
+    a.categoryId !== b.categoryId ||
+    a.site !== b.site ||
+    a.url !== b.url ||
+    a.username !== b.username ||
+    a.password !== b.password ||
+    a.memo !== b.memo
+  );
+}
+
+function MobileActionModal({
+  open,
+  title,
+  body,
+  warning,
+  cancelLabel,
+  confirmLabel,
+  confirmClassName = "btn-danger",
+  onCancel,
+  onConfirm,
+}: {
+  open: boolean;
+  title: string;
+  body: string;
+  warning?: string;
+  cancelLabel: string;
+  confirmLabel: string;
+  confirmClassName?: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  if (!open) return null;
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40"
+      role="presentation"
+      onClick={onCancel}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="card w-full max-w-md shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-5 py-3 border-b border-ink-200">
+          <h2 className="font-sans text-lg font-semibold text-ink-900 tracking-tight leading-tight">
+            {title}
+          </h2>
+        </div>
+        <div className="px-5 py-4 space-y-3">
+          <p className="text-sm text-ink-700 leading-snug">{body}</p>
+          {warning ? (
+            <p className="text-sm text-red-700 leading-snug">{warning}</p>
+          ) : null}
+        </div>
+        <div className="px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+          <button
+            type="button"
+            className="btn-secondary text-sm w-full sm:w-auto"
+            onClick={onCancel}
+          >
+            {cancelLabel}
+          </button>
+          <button
+            type="button"
+            className={`${confirmClassName} text-sm w-full sm:w-auto`}
+            onClick={onConfirm}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -1607,9 +1796,11 @@ function MobileEntryDetail({
   categories,
   revealed,
   toggleReveal,
-  onChange,
+  onSave,
   onDelete,
   onGenerate,
+  generatorPassword,
+  onGeneratorPasswordConsumed,
   onCopy,
   copiedKey,
   onPinEntryRow,
@@ -1618,8 +1809,17 @@ function MobileEntryDetail({
   onRegisterCategoryMenuOpen,
   onOpenCategoriesAddNew,
   t,
-}: Omit<RowProps, "expanded" | "onToggleExpand"> & { onClose: () => void }) {
-  const [confirmDel, setConfirmDel] = useState(false);
+}: Omit<RowProps, "expanded" | "onToggleExpand" | "onChange"> & {
+  onClose: () => void;
+  onSave: (draft: DecryptedEntry) => void | Promise<void>;
+  generatorPassword?: string | null;
+  onGeneratorPasswordConsumed?: () => void;
+}) {
+  const [savedEntry, setSavedEntry] = useState(() => mobileEntryDraftFrom(entry));
+  const [draft, setDraft] = useState(() => mobileEntryDraftFrom(entry));
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [discardModalOpen, setDiscardModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const rowRef = useRef<HTMLDivElement>(null);
   const {
     onEditFocus,
@@ -1636,220 +1836,285 @@ function MobileEntryDetail({
     onRegisterCategoryMenuOpen
   );
 
-  const siteLabel = entry.site.trim() || t("vault.newEntry");
+  useEffect(() => {
+    const next = mobileEntryDraftFrom(entry);
+    setSavedEntry(next);
+    setDraft(next);
+  }, [entry.id, entry.updatedAt]);
+
+  useEffect(() => {
+    if (generatorPassword == null) return;
+    setDraft((current) => ({ ...current, password: generatorPassword }));
+    onGeneratorPasswordConsumed?.();
+  }, [generatorPassword, onGeneratorPasswordConsumed]);
+
+  const isDirty = mobileEntryDraftDirty(draft, savedEntry);
+  const siteLabel = draft.site.trim() || t("vault.newEntry");
+  const patchDraft = (patch: Partial<DecryptedEntry>) => {
+    setDraft((current) => ({ ...current, ...patch }));
+  };
+
+  const requestClose = () => {
+    if (isDirty) {
+      setDiscardModalOpen(true);
+      return;
+    }
+    onClose();
+  };
+
+  const handleSave = async () => {
+    if (!isDirty || saving) return;
+    const normalized: DecryptedEntry = {
+      ...draft,
+      site: cellCommitValue(draft.site, t("vault.newEntry")),
+    };
+    setSaving(true);
+    try {
+      await onSave(normalized);
+      setSavedEntry(mobileEntryDraftFrom(normalized));
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = () => {
+    setDeleteModalOpen(false);
+    onDelete();
+  };
 
   return createPortal(
-    <div
-      ref={rowRef}
-      data-vault-entry-id={entry.id}
-      className="fixed inset-0 z-50 flex flex-col bg-white w-full min-w-0 overflow-x-hidden md:hidden"
-      onMouseEnter={onRowMouseEnter}
-      onMouseLeave={onRowMouseLeave}
-    >
-      <header className="shrink-0 flex items-center gap-2 border-b border-ink-200 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))]">
+    <>
+      <div
+        ref={rowRef}
+        data-vault-entry-id={entry.id}
+        className="fixed inset-0 z-50 flex flex-col bg-white w-full min-w-0 overflow-x-hidden md:hidden"
+        onMouseEnter={onRowMouseEnter}
+        onMouseLeave={onRowMouseLeave}
+      >
+        <header className="shrink-0 flex items-center gap-2 border-b border-ink-200 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))]">
+          <button
+            type="button"
+          className="inline-flex items-center justify-center rounded-xl p-2.5 text-ink-600 hover:bg-ink-100 touch-manipulation shrink-0 min-w-11 min-h-11"
+          onClick={requestClose}
+            aria-label={t("vault.mobileBack")}
+          >
+            <ChevronLeftIcon className="h-5 w-5" aria-hidden />
+          </button>
+          <div className="min-w-0 flex-1">
+            {draft.categoryId ? (
+              <p className="text-xs text-ink-500 truncate">
+                {entryCategoryLabel(draft.categoryId, categories, t)}
+              </p>
+            ) : null}
+          <p className="font-semibold text-lg text-ink-900 truncate">{siteLabel}</p>
+        </div>
         <button
           type="button"
-          className="inline-flex items-center justify-center rounded-lg p-2 text-ink-600 hover:bg-ink-100 touch-manipulation shrink-0"
-          onClick={onClose}
-          aria-label={t("vault.mobileBack")}
-        >
-          <ChevronLeftIcon className="h-5 w-5" aria-hidden />
-        </button>
-        <div className="min-w-0 flex-1">
-          {entry.categoryId ? (
-            <p className="text-xs text-ink-500 truncate">
-              {entryCategoryLabel(entry.categoryId, categories, t)}
-            </p>
-          ) : null}
-          <p className="font-semibold text-ink-900 truncate">{siteLabel}</p>
-        </div>
-        <div className="shrink-0">
-          {!confirmDel ? (
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-lg p-2 text-ink-400 hover:text-red-600 hover:bg-red-50 touch-manipulation min-w-9 min-h-9"
-              onClick={() => setConfirmDel(true)}
-              title={t("vault.ttDelete")}
-              aria-label={t("vault.ttDelete")}
+          className="inline-flex items-center justify-center rounded-xl p-2.5 text-ink-400 hover:text-red-600 hover:bg-red-50 touch-manipulation min-w-11 min-h-11 shrink-0"
+            onClick={() => setDeleteModalOpen(true)}
+            title={t("vault.ttDelete")}
+            aria-label={t("vault.ttDelete")}
+          >
+            <Trash />
+          </button>
+        </header>
+
+        <div className="mobile-entry-detail__scroll native-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 space-y-4">
+          <div className="space-y-1 w-full">
+            <span className="mobile-field-label font-medium text-ink-600 block">
+              {t("vault.colSite")}
+            </span>
+            <BlurInput
+              id={`m-site-${entry.id}`}
+              className="input w-full min-w-0"
+              value={cellDisplayValue(draft.site, t("vault.newEntry"))}
+              placeholder={t("vault.newEntry")}
+              onLiveCommit={(site) => patchDraft({ site })}
+              onCommit={(site) =>
+                patchDraft({ site: cellCommitValue(site, t("vault.newEntry")) })
+              }
+              onEditFocus={onEditFocus}
+              onEditBlur={onEditBlur}
+            />
+          </div>
+
+          <div className="space-y-1 w-full">
+            <span className="mobile-field-label font-medium text-ink-600 block">
+              {t("vault.colCategory")}
+            </span>
+            <CategorySelect
+              className="input w-full cursor-pointer"
+              value={draft.categoryId}
+              categories={categories}
+              onChange={(categoryId) => patchDraft({ categoryId })}
+              onAddCategory={onOpenCategoriesAddNew}
+              onEditFocus={onEditFocus}
+              onEditBlur={onEditBlur}
+              onOpenChange={onCategoryOpenChange}
+              t={t}
+            />
+          </div>
+
+          <div className="space-y-1 w-full min-w-0">
+            <label
+              className="mobile-field-label font-medium text-ink-600 block"
+              htmlFor={`m-user-${entry.id}`}
             >
-              <Trash />
-            </button>
-            ) : (
-            <div className="inline-flex shrink-0 flex-nowrap items-center gap-1 whitespace-nowrap">
-              <button
-                type="button"
-                className="shrink-0 whitespace-nowrap text-xs text-ink-500 hover:text-ink-700 px-2 py-1.5 touch-manipulation"
-                onClick={() => setConfirmDel(false)}
+              {t("vault.colUser")}
+            </label>
+            <div className="flex w-full min-w-0 items-center gap-0.5">
+              <BlurInput
+                id={`m-user-${entry.id}`}
+                className="input min-w-0 flex-1 w-0"
+                value={draft.username}
+                placeholder={t("vault.phUser")}
+                onLiveCommit={(username) => patchDraft({ username })}
+                onCommit={(username) => patchDraft({ username })}
+                onEditFocus={onEditFocus}
+                onEditBlur={onEditBlur}
+              />
+              <IconBtn
+                onClick={() => onCopy(draft.username, `un:${entry.id}`)}
+                title={t("vault.ttCopyUser")}
               >
-                {t("common.cancel")}
-              </button>
-              <button
-                type="button"
-                className="shrink-0 whitespace-nowrap text-xs text-red-600 font-medium px-2 py-1.5 touch-manipulation"
-                onClick={onDelete}
-              >
-                {t("common.confirm")}
-              </button>
+                {copiedKey === `un:${entry.id}` ? <Check /> : <Copy />}
+              </IconBtn>
             </div>
-          )}
-        </div>
-      </header>
-
-      <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <div className="space-y-1 w-full">
-          <span className="text-xs font-medium text-ink-600 block">
-            {t("vault.colSite")}
-          </span>
-          <BlurInput
-            id={`m-site-${entry.id}`}
-            className="input w-full min-w-0"
-            value={cellDisplayValue(entry.site, t("vault.newEntry"))}
-            placeholder={t("vault.newEntry")}
-            onCommit={(site) =>
-              onChange({ site: cellCommitValue(site, t("vault.newEntry")) })
-            }
-            onEditFocus={onEditFocus}
-            onEditBlur={onEditBlur}
-          />
-        </div>
-
-        <div className="space-y-1 w-full">
-          <span className="text-xs font-medium text-ink-600 block">
-            {t("vault.colCategory")}
-          </span>
-          <CategorySelect
-            className="input w-full cursor-pointer"
-            value={entry.categoryId}
-            categories={categories}
-            onChange={(categoryId) => onChange({ categoryId })}
-            onAddCategory={onOpenCategoriesAddNew}
-            onEditFocus={onEditFocus}
-            onEditBlur={onEditBlur}
-            onOpenChange={onCategoryOpenChange}
-            t={t}
-          />
-        </div>
-
-        <div className="space-y-1 w-full min-w-0">
-          <label
-            className="text-xs font-medium text-ink-600 block"
-            htmlFor={`m-user-${entry.id}`}
-          >
-            {t("vault.colUser")}
-          </label>
-          <div className="flex w-full min-w-0 items-center gap-0.5">
-            <BlurInput
-              id={`m-user-${entry.id}`}
-              className="input min-w-0 flex-1 w-0"
-              value={entry.username}
-              placeholder={t("vault.phUser")}
-              onCommit={(username) => onChange({ username })}
-              onEditFocus={onEditFocus}
-              onEditBlur={onEditBlur}
-            />
-            <IconBtn
-              onClick={() => onCopy(entry.username, `un:${entry.id}`)}
-              title={t("vault.ttCopyUser")}
-            >
-              {copiedKey === `un:${entry.id}` ? <Check /> : <Copy />}
-            </IconBtn>
           </div>
-        </div>
 
-        <div className="space-y-1 w-full min-w-0">
-          <label
-            className="text-xs font-medium text-ink-600 block"
-            htmlFor={`m-pass-${entry.id}`}
-          >
-            {t("vault.colPass")}
-          </label>
-          <div className="flex w-full min-w-0 items-center gap-0.5">
-            <BlurInput
-              id={`m-pass-${entry.id}`}
-              className="input min-w-0 flex-1 w-0"
-              type={revealed ? "text" : "password"}
-              value={entry.password}
-              placeholder={t("vault.phPass")}
-              spellCheck={false}
-              autoComplete="off"
-              onCommit={(password) => onChange({ password })}
-              onEditFocus={onEditFocus}
-              onEditBlur={onEditBlur}
-            />
-            <IconBtn
-              onClick={toggleReveal}
-              title={revealed ? t("vault.hide") : t("vault.show")}
+          <div className="space-y-1 w-full min-w-0">
+            <label
+              className="mobile-field-label font-medium text-ink-600 block"
+              htmlFor={`m-pass-${entry.id}`}
             >
-              {revealed ? <EyeOff /> : <Eye />}
-            </IconBtn>
-            <IconBtn
-              onClick={() => onCopy(entry.password, `pw:${entry.id}`)}
-              title={t("vault.ttCopyPass")}
-            >
-              {copiedKey === `pw:${entry.id}` ? <Check /> : <Copy />}
-            </IconBtn>
-            <IconBtn onClick={onGenerate} title={t("vault.ttGenPass")}>
-              <Refresh />
-            </IconBtn>
+              {t("vault.colPass")}
+            </label>
+            <div className="flex w-full min-w-0 items-center gap-0.5">
+              <BlurInput
+                id={`m-pass-${entry.id}`}
+                className="input min-w-0 flex-1 w-0"
+                type={revealed ? "text" : "password"}
+                value={draft.password}
+                placeholder={t("vault.phPass")}
+                spellCheck={false}
+                autoComplete="off"
+                onLiveCommit={(password) => patchDraft({ password })}
+                onCommit={(password) => patchDraft({ password })}
+                onEditFocus={onEditFocus}
+                onEditBlur={onEditBlur}
+              />
+              <IconBtn
+                onClick={toggleReveal}
+                title={revealed ? t("vault.hide") : t("vault.show")}
+              >
+                {revealed ? <EyeOff /> : <Eye />}
+              </IconBtn>
+              <IconBtn
+                onClick={() => onCopy(draft.password, `pw:${entry.id}`)}
+                title={t("vault.ttCopyPass")}
+              >
+                {copiedKey === `pw:${entry.id}` ? <Check /> : <Copy />}
+              </IconBtn>
+              <IconBtn onClick={onGenerate} title={t("vault.ttGenPass")}>
+                <Refresh />
+              </IconBtn>
+            </div>
           </div>
-        </div>
 
-        <div className="space-y-4">
-              <div className="space-y-1 w-full min-w-0">
+          <div className="space-y-4">
+            <div className="space-y-1 w-full min-w-0">
                 <label
-                  className="text-xs font-medium text-ink-600 block"
+                  className="mobile-field-label font-medium text-ink-600 block"
                   htmlFor={`m-url-${entry.id}`}
                 >
                   {t("vault.colUrl")}
                 </label>
-                <div className="flex w-full min-w-0 items-center gap-0.5">
-                  <ExpandTextInput
-                    id={`m-url-${entry.id}`}
-                    value={entry.url}
-                    onCommit={(url) => onChange({ url })}
-                    placeholder={t("vault.phUrl")}
-                    onEditFocus={onEditFocus}
-                    onEditBlur={onEditBlur}
-                  />
-                  {entry.url ? (
-                    <a
-                      className="inline-flex shrink-0 items-center justify-center rounded-md border border-ink-200 bg-white p-2 text-ink-400 touch-manipulation hover:text-accent-600 min-w-9 min-h-9"
-                      href={
-                        /^https?:\/\//i.test(entry.url)
-                          ? entry.url
-                          : `https://${entry.url}`
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title={t("vault.ttOpenTab")}
-                    >
-                      <ExternalLink />
-                    </a>
-                  ) : null}
-                </div>
+              <div className="flex w-full min-w-0 items-center gap-0.5">
+                <ExpandTextInput
+                  id={`m-url-${entry.id}`}
+                  value={draft.url}
+                  onLiveCommit={(url) => patchDraft({ url })}
+                  onCommit={(url) => patchDraft({ url })}
+                  placeholder={t("vault.phUrl")}
+                  onEditFocus={onEditFocus}
+                  onEditBlur={onEditBlur}
+                />
+                {draft.url ? (
+                  <a
+                    className="inline-flex shrink-0 items-center justify-center rounded-md border border-ink-200 bg-white p-2 text-ink-400 touch-manipulation hover:text-accent-600 min-w-9 min-h-9"
+                    href={
+                      /^https?:\/\//i.test(draft.url)
+                        ? draft.url
+                        : `https://${draft.url}`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={t("vault.ttOpenTab")}
+                  >
+                    <ExternalLink />
+                  </a>
+                ) : null}
               </div>
-              <div className="space-y-1 w-full min-w-0">
+            </div>
+            <div className="space-y-1 w-full min-w-0">
                 <label
-                  className="text-xs font-medium text-ink-600 block"
+                  className="mobile-field-label font-medium text-ink-600 block"
                   htmlFor={`m-memo-${entry.id}`}
                 >
                   {t("vault.colMemo")}
                 </label>
-                <ExpandMemoArea
-                  id={`m-memo-${entry.id}`}
-                  value={entry.memo}
-                  onCommit={(memo) => onChange({ memo })}
-                  placeholder={t("vault.phMemo")}
-                  onEditFocus={onEditFocus}
-                  onEditBlur={onEditBlur}
-                />
-              </div>
+              <ExpandMemoArea
+                id={`m-memo-${entry.id}`}
+                value={draft.memo}
+                onLiveCommit={(memo) => patchDraft({ memo })}
+                onCommit={(memo) => patchDraft({ memo })}
+                placeholder={t("vault.phMemo")}
+                onEditFocus={onEditFocus}
+                onEditBlur={onEditBlur}
+              />
+            </div>
+          </div>
         </div>
+
+        <footer className="shrink-0 border-t border-ink-200 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <button
+            type="button"
+            className="btn-primary w-full"
+            disabled={!isDirty || saving}
+            onClick={() => void handleSave()}
+          >
+            {saving ? t("app.loading") : t("common.save")}
+          </button>
+        </footer>
       </div>
-    </div>,
+
+      <MobileActionModal
+        open={deleteModalOpen}
+        title={t("vault.ttDelete")}
+        body={t("vault.mobileDeleteModalBody")}
+        cancelLabel={t("common.cancel")}
+        confirmLabel={t("vault.mobileDeleteConfirm")}
+        onCancel={() => setDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+      />
+      <MobileActionModal
+        open={discardModalOpen}
+        title={t("vault.mobileBack")}
+        body={t("vault.mobileDiscardModalBody")}
+        cancelLabel={t("common.cancel")}
+        confirmLabel={t("vault.mobileDiscardConfirm")}
+        onCancel={() => setDiscardModalOpen(false)}
+        onConfirm={() => {
+          setDiscardModalOpen(false);
+          onClose();
+        }}
+      />
+    </>,
     document.body
   );
 }
+
 function IconBtn({
   children,
   onClick,
@@ -1862,7 +2127,7 @@ function IconBtn({
   return (
     <button
       type="button"
-      className="shrink-0 text-ink-400 hover:text-accent-600 touch-manipulation h-9 w-9 inline-flex items-center justify-center rounded-md"
+      className="shrink-0 text-ink-400 hover:text-accent-600 touch-manipulation h-11 w-11 md:h-9 md:w-9 inline-flex items-center justify-center rounded-xl md:rounded-md"
       onClick={onClick}
       title={title}
     >
@@ -1880,6 +2145,7 @@ function BlurInput({
   spellCheck,
   autoComplete,
   onCommit,
+  onLiveCommit,
   onEditFocus,
   onEditBlur,
 }: {
@@ -1891,6 +2157,7 @@ function BlurInput({
   spellCheck?: boolean;
   autoComplete?: string;
   onCommit: (v: string) => void;
+  onLiveCommit?: (v: string) => void;
   onEditFocus?: () => void;
   onEditBlur?: () => void;
 }) {
@@ -1909,7 +2176,10 @@ function BlurInput({
       onPointerDown={(e) => {
         if (e.button === 0) onEditFocus?.();
       }}
-      onChange={(e) => setLocal(e.target.value)}
+      onChange={(e) => {
+        setLocal(e.target.value);
+        onLiveCommit?.(e.target.value);
+      }}
       onBlur={() => {
         if (local !== value) onCommit(local);
         onEditBlur?.();
@@ -2194,6 +2464,7 @@ function ExpandTextInput({
   id,
   value,
   onCommit,
+  onLiveCommit,
   placeholder,
   onEditFocus,
   onEditBlur,
@@ -2201,6 +2472,7 @@ function ExpandTextInput({
   id: string;
   value: string;
   onCommit: (v: string) => void;
+  onLiveCommit?: (v: string) => void;
   placeholder: string;
   onEditFocus?: () => void;
   onEditBlur?: () => void;
@@ -2214,7 +2486,10 @@ function ExpandTextInput({
       id={id}
       className="input min-w-0 w-full flex-1"
       value={local}
-      onChange={(e) => setLocal(e.target.value)}
+      onChange={(e) => {
+        setLocal(e.target.value);
+        onLiveCommit?.(e.target.value);
+      }}
       placeholder={placeholder}
       spellCheck={false}
       onFocus={onEditFocus}
@@ -2240,6 +2515,7 @@ function ExpandMemoArea({
   id,
   value,
   onCommit,
+  onLiveCommit,
   placeholder,
   onEditFocus,
   onEditBlur,
@@ -2247,6 +2523,7 @@ function ExpandMemoArea({
   id: string;
   value: string;
   onCommit: (v: string) => void;
+  onLiveCommit?: (v: string) => void;
   placeholder: string;
   onEditFocus?: () => void;
   onEditBlur?: () => void;
@@ -2260,7 +2537,10 @@ function ExpandMemoArea({
       id={id}
       className="input w-full min-h-[6.5rem] resize-y text-sm leading-snug"
       value={local}
-      onChange={(e) => setLocal(e.target.value)}
+      onChange={(e) => {
+        setLocal(e.target.value);
+        onLiveCommit?.(e.target.value);
+      }}
       placeholder={placeholder}
       spellCheck={true}
       onFocus={onEditFocus}
