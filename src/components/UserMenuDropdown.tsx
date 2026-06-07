@@ -9,7 +9,13 @@ const MENU_ITEM_SIGN_OUT =
   "block w-full text-left px-3 py-2 text-sm font-normal text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors";
 const MENU_DIVIDER = "border-t border-ink-200";
 
-export function UserMenuDropdown({ className = "" }: { className?: string }) {
+export function UserMenuDropdown({
+  className = "",
+  triggerClassName = "ui-icon-btn ui-icon-btn--compact ui-icon-btn--round text-ink-600 shrink-0",
+}: {
+  className?: string;
+  triggerClassName?: string;
+}) {
   const { user, signOut } = useAuth();
   const { t } = useVault();
   const [open, setOpen] = useState(false);
@@ -44,7 +50,7 @@ export function UserMenuDropdown({ className = "" }: { className?: string }) {
     <div ref={wrapRef} className={`relative ${className}`.trim()}>
       <button
         type="button"
-        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-600 hover:bg-ink-50 transition-colors shrink-0"
+        className={triggerClassName}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={t("nav.userMenu")}
@@ -53,7 +59,7 @@ export function UserMenuDropdown({ className = "" }: { className?: string }) {
           setOpen((v) => !v);
         }}
       >
-        <User className="w-[1.125rem] h-[1.125rem]" />
+        <User aria-hidden />
       </button>
       {!open ? null : (
         <div

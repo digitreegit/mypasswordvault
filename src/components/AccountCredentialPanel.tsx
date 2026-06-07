@@ -31,7 +31,7 @@ function ModalShell({
         aria-modal="true"
         aria-labelledby="account-modal-title"
       >
-        <div className="px-5 py-4 border-b border-ink-200 flex items-start justify-between gap-2">
+        <div className="action-modal__header px-5 py-4 border-b border-ink-200 flex items-start justify-between gap-2">
           <h2
             id="account-modal-title"
             className="font-sans text-lg font-semibold text-ink-900 tracking-tight"
@@ -49,7 +49,7 @@ function ModalShell({
         </div>
         <div className="px-5 py-4">{children}</div>
         {footer ? (
-          <div className="px-5 py-3 border-t border-ink-100 flex justify-end gap-2">
+          <div className="action-modal__footer px-5 py-3 border-t border-ink-100 flex justify-end gap-2">
             {footer}
           </div>
         ) : null}
@@ -100,7 +100,7 @@ function PasswordInput({
           onClick={onToggleShow}
           aria-label={show ? hideAria : showAria}
         >
-          {show ? <EyeOff width={18} height={18} /> : <Eye width={18} height={18} />}
+          {show ? <EyeOff aria-hidden /> : <Eye aria-hidden />}
         </button>
       </div>
     </div>

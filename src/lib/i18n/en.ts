@@ -320,7 +320,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.generalSubtitle": "Auto-lock and other vault preferences on this device.",
   "settings.securitySubtitle":
     "Passkeys, authenticator app, and recovery codes for unlocking your vault.",
-  "settings.securityPasskeysTitle": "Passkeys",
+  "settings.securityPasskeysTitle": "Passkey",
   "settings.securityPasskeysHint":
     "Passwordless unlock with biometrics, device PIN, or a security key registered during setup.",
   "settings.securityPasskeyLegacyHint":
@@ -374,6 +374,8 @@ export const MESSAGES_EN: Record<string, string> = {
     "USB, NFC, or Bluetooth security key (YubiKey, etc.).",
   "settings.passkeysAddPhoneHint":
     "Scan a QR code to register a passkey on your phone or tablet.",
+  "settings.passkeysAddPhoneDesktopHint":
+    "Open Settings → Security on a Mac or PC in Chrome or Safari, then tap Phone passkey to show a QR code for your phone or tablet.",
   "settings.danger": "Danger zone",
   "settings.resetVault": "Reset vault (delete all data)",
   "settings.resetDesc":
@@ -387,6 +389,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.fileBackupAdvancedHint":
     "Optional export/import. Only use a .json file you exported yourself here; it is the same encrypted data. Master password and 6-digit codes still match the vault when that file was made.",
   "settings.exportBackup": "Download backup (.json)",
+  "settings.exportBackupFailed":
+    "Could not export backup. Try again, or choose Save to Files in the share sheet.",
   "settings.copyBackupFail": "Could not copy (size or permission). Use download instead.",
   "settings.importBackup": "Import backup…",
   "settings.importConfirm": "Replace this device’s vault with the backup? Unsaved changes here will be lost. You will need to unlock again.",

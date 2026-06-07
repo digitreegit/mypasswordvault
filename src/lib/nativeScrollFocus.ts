@@ -1,8 +1,11 @@
 import { getKeyboardAwareVisibleBand } from "./keyboardInset";
-import { KEYBOARD_SCROLL_ROOT_SELECTOR } from "./keyboardFocusNavigation";
+import {
+  KEYBOARD_SCROLL_ROOT_SELECTOR,
+  isKeyboardFocusableTarget,
+  isKeyboardNavLocked,
+  setLastKeyboardField,
+} from "./keyboardFocusNavigation";
 import { isNativeApp } from "./platform";
-
-const FOCUSABLE_SELECTOR = "input, textarea, select, [contenteditable='true']";
 
 let focusedField: HTMLElement | null = null;
 
@@ -58,17 +61,19 @@ export function initNativeScrollFocus(): void {
 
     const target = e.target;
     if (!(target instanceof HTMLElement)) return;
-    if (!target.matches(FOCUSABLE_SELECTOR)) return;
+    if (!isKeyboardFocusableTarget(target)) return;
 
     const scrollRoot = target.closest(
       KEYBOARD_SCROLL_ROOT_SELECTOR,
     ) as HTMLElement | null;
 
     focusedField = target;
+    setLastKeyboardField(target);
     scrollFocusedFieldAboveKeyboard(target, scrollRoot);
   });
 
   document.addEventListener("focusout", (e) => {
+    if (isKeyboardNavLocked()) return;
     const target = e.target;
     if (target === focusedField) {
       focusedField = null;

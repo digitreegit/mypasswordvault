@@ -151,7 +151,7 @@ export function isPasskeyMethodRegistered(
   return method.rowKind === "selectable" && registeredIds.has(method.id);
 }
 
-export type SettingsPasskeyAddId = "platform" | "security-key" | "hybrid";
+export type SettingsPasskeyAddId = "platform";
 
 export interface SettingsPasskeyAddOption {
   id: SettingsPasskeyAddId;
@@ -199,7 +199,7 @@ function hasPasskeyKind(
   return passkeys.some((pk) => resolvePasskeyKind(pk) === kind);
 }
 
-/** Options for adding passkeys from Settings (platform, security key, phone). */
+/** Options for adding a platform passkey from Settings (when none registered yet). */
 export async function getSettingsPasskeyAddOptions(
   existing: StoredPasskey[] = [],
 ): Promise<SettingsPasskeyAddOption[]> {
@@ -214,24 +214,6 @@ export async function getSettingsPasskeyAddOptions(
       labelKey: "setup.passkeyDeviceTitle",
       subtitleKey: "settings.passkeysAddPlatformHint",
       hints: ["client-device"],
-    });
-  }
-
-  if (!hasPasskeyKind(existing, "hybrid")) {
-    options.push({
-      id: "hybrid",
-      labelKey: "setup.passkeyMethodPhone",
-      subtitleKey: "settings.passkeysAddPhoneHint",
-      hints: ["hybrid"],
-    });
-  }
-
-  if (!hasPasskeyKind(existing, "security-key")) {
-    options.push({
-      id: "security-key",
-      labelKey: "setup.passkeyMethodSecurityKey",
-      subtitleKey: "settings.passkeysAddSecurityKeyHint",
-      hints: ["security-key"],
     });
   }
 

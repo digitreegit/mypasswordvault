@@ -363,6 +363,8 @@ export const MESSAGES_KR: Record<string, string> = {
     "이 기기의 생체 인증, 기기 PIN 또는 기존 잠금 해제 방식을 사용합니다.",
   "settings.passkeysAddSecurityKeyHint":
     "USB, NFC 또는 Bluetooth 보안 키(YubiKey 등).",
+  "settings.passkeysAddPhoneDesktopHint":
+    "Mac 또는 PC에서 Chrome·Safari로 설정 → 보안을 연 뒤 「휴대폰 패스키」를 눌러 QR 코드를 표시하고 휴대폰·태블릿으로 스캔하세요.",
   "settings.passkeysAddPhoneHint":
     "QR 코드를 스캔하여 휴대폰이나 태블릿에 패스키를 등록합니다.",
   "settings.danger": "위험 구역",
@@ -378,6 +380,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.fileBackupAdvancedHint":
     "선택 사항입니다. 이 앱에서 보낸 .json만 가져오세요. 데이터는 동일하게 암호화되어 있으며, 마스터 비밀번호·6자리 코드는 그 파일을 만든 당시의 금고와 같아야 합니다.",
   "settings.exportBackup": "백업 다운로드 (.json)",
+  "settings.exportBackupFailed":
+    "백업을 내보낼 수 없습니다. 다시 시도하거나 공유 시트에서 '파일에 저장'을 선택하세요.",
   "settings.copyBackupFail": "복사에 실패했습니다(용량 또는 권한). 다운로드를 사용하세요.",
   "settings.importBackup": "백업 가져오기…",
   "settings.importConfirm": "이 기기의 vault를 백업으로 바꿀까요? 저장하지 않은 변경은 사라지며 다시 잠금 해제해야 합니다.",

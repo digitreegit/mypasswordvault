@@ -270,6 +270,16 @@ function allowCredentialsDescriptors(passkeys: StoredPasskey[]) {
   }));
 }
 
+function isHybridOnlyHints(
+  hints?: ("client-device" | "security-key" | "hybrid")[],
+): boolean {
+  return (
+    !!hints?.includes("hybrid") &&
+    !hints.includes("security-key") &&
+    !hints.includes("client-device")
+  );
+}
+
 async function createRegistration(
   opts: {
     userId: string;
@@ -289,6 +299,15 @@ async function createRegistration(
   };
   if (strategy.enablePrf) {
     customProperties.extensions = prfEnableExtension();
+  }
+  // @passwordless-id/webauthn sets authenticatorAttachment to "cross-platform"
+  // for hybrid hints, which opens the security-key sheet (not the QR / caBLE flow).
+  if (isHybridOnlyHints(opts.hints)) {
+    customProperties.authenticatorSelection = {
+      userVerification: "required",
+      residentKey: "preferred",
+      requireResidentKey: false,
+    };
   }
   return client.register({
     user: {

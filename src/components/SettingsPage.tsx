@@ -7,12 +7,12 @@ import {
   CheckIcon,
   ClipboardDocumentIcon,
 } from "@heroicons/react/24/outline";
-import { ChevronDown, Shield } from "./Icons";
+import { ChevronDown } from "./Icons";
 import { LOCALES, LOCALE_LABELS, type Locale } from "../lib/i18n/locale";
 import { AccountCredentialPanel } from "./AccountCredentialPanel";
 import { PlanBadge } from "./PlanBadge";
 import { UserMenuDropdown } from "./UserMenuDropdown";
-import { LanguageMenu } from "./LanguageMenu";
+import { NativeTopHeader, NATIVE_HEADER_ICON_BTN } from "./NativeTopHeader";
 import {
   SettingsFreeFeatures,
   SettingsFreePlanUpgrade,
@@ -46,7 +46,7 @@ function settingsHref(section: SettingsSection): string {
 
 function settingsTabClass(active: boolean): string {
   const base =
-    "shrink-0 px-3 sm:px-4 pb-2.5 pt-1 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30 focus-visible:ring-offset-2 rounded-t-md";
+    "settings-mobile-tab shrink-0 px-3 pb-2.5 pt-1 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30 focus-visible:ring-offset-2 rounded-t-md touch-manipulation";
   return active
     ? `${base} border-accent-600 text-accent-700`
     : `${base} border-transparent text-ink-500 hover:text-ink-800 hover:border-ink-200`;
@@ -64,12 +64,10 @@ function sidebarNavClass(active: boolean): string {
 const SETTINGS_PAGE =
   "settings-page max-w-6xl mx-auto w-full min-w-0 box-border px-4 sm:px-6 lg:px-8";
 
-/** Matches VaultScreen header row gutters (vault-top-header alignment). */
-const VAULT_HEADER_PAGE =
-  "vault-page max-w-6xl mx-auto w-full min-w-0 box-border pl-[max(0.75rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] sm:pl-[max(1rem,env(safe-area-inset-left,0px))] sm:pr-[max(1rem,env(safe-area-inset-right,0px))] md:pl-[max(1.5rem,env(safe-area-inset-left,0px))] md:pr-[max(1.5rem,env(safe-area-inset-right,0px))] lg:pl-[max(2rem,env(safe-area-inset-left,0px))] lg:pr-[max(2rem,env(safe-area-inset-right,0px))]";
+const SETTINGS_HEADER_ICON_BTN = NATIVE_HEADER_ICON_BTN;
 
-const SETTINGS_HEADER_ICON_BTN =
-  "inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-600 hover:bg-ink-50 transition-colors shrink-0";
+const SETTINGS_BACK_TO_VAULT_CLASS =
+  "settings-back-to-vault-btn btn-secondary inline-flex items-center gap-1.5 self-start shrink-0";
 
 export function SettingsPage({ section }: { section: SettingsSection }) {
   const {
@@ -148,6 +146,33 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     ? section
     : (navItems[0]?.id ?? "general");
 
+  const tablistRef = useRef<HTMLDivElement>(null);
+  const tabTouchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    const wrap = tablistRef.current;
+    const tab = wrap?.querySelector<HTMLElement>(`#settings-tab-${activeSection}`);
+    tab?.scrollIntoView({ inline: "nearest", block: "nearest", behavior: "smooth" });
+  }, [activeSection]);
+
+  const onTabStripTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    tabTouchStartRef.current = {
+      x: e.touches[0]?.clientX ?? 0,
+      y: e.touches[0]?.clientY ?? 0,
+    };
+  }, []);
+
+  const onTabStripTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    const start = tabTouchStartRef.current;
+    const touch = e.touches[0];
+    if (!start || !touch) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 4) {
+      e.stopPropagation();
+    }
+  }, []);
+
   const pageTitle =
     activeSection === "general"
       ? t("settings.navGeneral")
@@ -221,7 +246,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     try {
       const json = await exportBackup();
       const d = new Date().toISOString().slice(0, 10);
-      downloadJsonFile(`mypasswordapp-vault-${d}.json`, json);
+      await downloadJsonFile(`mypasswordapp-vault-${d}.json`, json);
     } catch (e: unknown) {
       setBackupToast(
         isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
@@ -454,7 +479,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     return (
       <div className="space-y-4">
         <div className="rounded-lg border border-orange-200 bg-orange-50 p-5 sm:p-6">
-          <p className="text-sm text-orange-900 leading-snug">{t("settings.syncHint")}</p>
+          <p className="settings-sync-hint text-orange-900 leading-snug">{t("settings.syncHint")}</p>
         </div>
         <div className="card p-5 sm:p-6 space-y-3">
           <h3 className="text-sm font-semibold text-ink-800">
@@ -555,7 +580,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
           >
             {signingOut ? t("app.loading") : t("settings.signOut")}
           </button>
-          <p className="text-xs text-ink-500 leading-snug">{t("settings.signOutHint")}</p>
+          <p className="settings-account-action-hint text-ink-500 leading-snug">{t("settings.signOutHint")}</p>
         </div>
 
         <hr className="border-ink-200" />
@@ -569,7 +594,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
           >
             {t("settings.deleteAccount")}
           </button>
-          <p className="text-xs text-red-700 leading-snug">{t("settings.deleteAccountHint")}</p>
+          <p className="settings-account-action-hint text-red-700 leading-snug">{t("settings.deleteAccountHint")}</p>
         </div>
         </div>
       </div>
@@ -598,64 +623,46 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   return (
     <div className={nativeScreenRootClass("bg-white")}>
       <div className={nativeFixedHeaderClass()}>
-        <header className="vault-top-header w-full bg-white pt-[max(0.375rem,env(safe-area-inset-top))]">
-          <div className="w-full border-b border-ink-200">
-            <div
-              className={`${VAULT_HEADER_PAGE} flex items-center justify-between gap-3 py-1 sm:py-1.5`}
-            >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <Shield className="w-7 h-auto text-accent-500 shrink-0" />
-              <span
-                className="font-brand font-semibold text-base sm:text-[1.0625rem] text-ink-900 tracking-tight truncate leading-none -translate-y-0.5"
-                translate="no"
-              >
-                {t("app.brandName")}
-              </span>
-            </div>
-            <div className="flex items-center gap-2.5 shrink-0">
-              {configured && user?.id ? (
-                <>
-                  {showHeaderUpgrade ? (
-                    <button
-                      type="button"
-                      className="vault-header-upgrade-btn"
-                      onClick={openPricingDrawer}
-                    >
-                      {t("vault.entryLimitUpgrade")}
-                    </button>
-                  ) : null}
-                  {entitlementLoaded ? (
-                    <PlanBadge
-                      label={
-                        isAdmin
-                          ? t("vault.licenseBadgeAdmin")
-                          : licensed
-                            ? t("vault.licenseBadgePro")
-                            : t("vault.licenseBadgeFree")
-                      }
-                      href={isAdmin ? "#/admin" : undefined}
-                      ariaLabel={isAdmin ? t("admin.title") : undefined}
-                    />
-                  ) : (
-                    <span
-                      className="h-[1.375rem] w-[2.75rem] rounded-full bg-ink-100 animate-pulse shrink-0"
-                      aria-hidden
-                    />
-                  )}
-                </>
-              ) : null}
-              <UserMenuDropdown />
-              <LanguageMenu
-                value={locale}
-                onChange={(l) => void setLocale(l)}
-                ariaLabel={t("settings.language")}
-                align="right"
-                triggerClassName={SETTINGS_HEADER_ICON_BTN}
-              />
-            </div>
-          </div>
-        </div>
-        </header>
+        <NativeTopHeader
+          brandName={t("app.brandName")}
+          trailing={
+            configured && user?.id ? (
+              <>
+                {showHeaderUpgrade ? (
+                  <button
+                    type="button"
+                    className="vault-header-upgrade-btn"
+                    onClick={openPricingDrawer}
+                  >
+                    {t("vault.entryLimitUpgrade")}
+                  </button>
+                ) : null}
+                {entitlementLoaded ? (
+                  <PlanBadge
+                    label={
+                      isAdmin
+                        ? t("vault.licenseBadgeAdmin")
+                        : licensed
+                          ? t("vault.licenseBadgePro")
+                          : t("vault.licenseBadgeFree")
+                    }
+                    href={isAdmin ? "#/admin" : undefined}
+                    ariaLabel={isAdmin ? t("admin.title") : undefined}
+                  />
+                ) : (
+                  <span
+                    className="h-[1.375rem] w-[2.75rem] rounded-full bg-ink-100 animate-pulse shrink-0"
+                    aria-hidden
+                  />
+                )}
+                <UserMenuDropdown triggerClassName={SETTINGS_HEADER_ICON_BTN} />
+              </>
+            ) : null
+          }
+          locale={locale}
+          onLocaleChange={(l) => void setLocale(l)}
+          languageAriaLabel={t("settings.language")}
+        />
       </div>
 
       <div
@@ -667,13 +674,13 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
           <aside className="hidden md:block shrink-0 md:w-56 lg:w-60 md:pr-4">
             <a
               href={vaultHref}
-              className="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink-600 hover:text-ink-900 transition-colors"
+              className={SETTINGS_BACK_TO_VAULT_CLASS}
               onClick={(e) => {
                 e.preventDefault();
                 window.location.hash = vaultHref.replace(/^#/, "");
               }}
             >
-              <ArrowLeftIcon className="h-4 w-4 shrink-0" aria-hidden />
+              <ArrowLeftIcon className="h-3 w-3 shrink-0 ui-icon-fixed" aria-hidden />
               {t("account.backToVault")}
             </a>
 
@@ -695,37 +702,44 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
           </aside>
 
           <div className="flex-1 min-w-0">
-            <div className="md:hidden space-y-4">
+            <div className="md:hidden min-w-0 w-full space-y-4">
               <a
                 href={vaultHref}
-                className="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink-600 hover:text-ink-900 transition-colors"
+                className={SETTINGS_BACK_TO_VAULT_CLASS}
                 onClick={(e) => {
                   e.preventDefault();
                   window.location.hash = vaultHref.replace(/^#/, "");
                 }}
               >
-                <ArrowLeftIcon className="h-4 w-4 shrink-0" aria-hidden />
+                <ArrowLeftIcon className="h-3 w-3 shrink-0 ui-icon-fixed" aria-hidden />
                 {t("account.backToVault")}
               </a>
 
-              <nav
-                className="flex gap-0 border-b border-ink-200 overflow-x-auto -mx-1 px-1"
-                role="tablist"
-                aria-label={t("settings.navAria")}
+              <div
+                ref={tablistRef}
+                className="settings-mobile-tablist-wrap min-w-0 w-full"
+                onTouchStart={onTabStripTouchStart}
+                onTouchMove={onTabStripTouchMove}
               >
-                {navItems.map((item) => (
-                  <a
-                    key={item.id}
-                    id={`settings-tab-${item.id}`}
-                    href={settingsHref(item.id)}
-                    role="tab"
-                    aria-selected={activeSection === item.id}
-                    className={settingsTabClass(activeSection === item.id)}
-                  >
-                    {item.label}
-                  </a>
-                ))}
-              </nav>
+                <nav
+                  className="settings-mobile-tablist flex flex-nowrap gap-0 border-b border-ink-200"
+                  role="tablist"
+                  aria-label={t("settings.navAria")}
+                >
+                  {navItems.map((item) => (
+                    <a
+                      key={item.id}
+                      id={`settings-tab-${item.id}`}
+                      href={settingsHref(item.id)}
+                      role="tab"
+                      aria-selected={activeSection === item.id}
+                      className={settingsTabClass(activeSection === item.id)}
+                    >
+                      {item.label}
+                    </a>
+                  ))}
+                </nav>
+              </div>
             </div>
 
             <div
@@ -734,10 +748,12 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
               aria-labelledby={`settings-tab-${activeSection}`}
             >
               <div className="space-y-1">
-                <h1 className="text-2xl font-semibold text-ink-900 tracking-tight">
+                <h1 className="settings-section-title text-2xl font-semibold text-ink-900 tracking-tight">
                   {pageTitle}
                 </h1>
-                <p className="text-sm text-ink-500 leading-snug">{pageSubtitle}</p>
+                <p className="settings-section-subtitle text-sm text-ink-500 leading-snug">
+                  {pageSubtitle}
+                </p>
               </div>
 
               {backupToast && (
@@ -770,7 +786,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
                 className="card w-full max-w-md shadow-lg"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="px-5 py-3 border-b border-ink-200">
+                <div className="action-modal__header px-5 py-3 border-b border-ink-200">
                   <div className="flex items-center justify-between gap-2">
                     <h2
                       id="settings-delete-account-title"
@@ -803,7 +819,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
                     </p>
                   ) : null}
                 </div>
-                <div className="px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+                <div className="action-modal__footer px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
                   <button
                     type="button"
                     className="btn-secondary text-sm w-full sm:w-auto"

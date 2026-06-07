@@ -281,7 +281,7 @@ export const SETTINGS_ES: Record<string, string> = {
   "settings.navGeneral": "General",
   "settings.navPlan": "Plan",
   "settings.navSecurity": "Seguridad",
-  "settings.navBackup": "Copia de seguridad",
+  "settings.navBackup": "Respaldo",
   "settings.generalSubtitle": "Bloqueo automático y otras preferencias de la bóveda en este dispositivo.",
   "settings.securitySubtitle":
     "Añade passkeys, llaves de seguridad y otros métodos de desbloqueo sin contraseña.",

@@ -4,17 +4,19 @@ import { Check, ChevronDown, ChevronUp } from "./Icons";
 import { detectBrowserLocale } from "../lib/i18n/locale";
 import { translate } from "../lib/i18n/bundles";
 import {
-  focusAdjacentField,
+  focusAdjacentFieldWithLock,
   getActiveScrollRoot,
   getFocusableFields,
+  getLastKeyboardField,
   isKeyboardFocusableTarget,
+  setLastKeyboardField,
 } from "../lib/keyboardFocusNavigation";
+import { readKeyboardInset, setKeyboardInsetPx } from "../lib/keyboardInset";
 import {
-  KEYBOARD_INSET_THRESHOLD_PX,
-  readKeyboardInset,
-  setKeyboardInsetPx,
-} from "../lib/keyboardInset";
-import { subscribeNativeKeyboardInsets } from "../lib/initNativeKeyboard";
+  getKeyboardSession,
+  subscribeKeyboardSession,
+  syncKeyboardSessionFromViewport,
+} from "../lib/keyboardSession";
 import { isNativeApp } from "../lib/platform";
 
 function useKeyboardAccessoryEnabled(): boolean {
@@ -33,136 +35,112 @@ function useKeyboardAccessoryEnabled(): boolean {
   return enabled;
 }
 
-function useKeyboardInset(enabled: boolean): number {
-  const [inset, setInset] = useState(0);
-
-  useEffect(() => {
-    if (!enabled) {
-      setInset(0);
-      return;
-    }
-
-    const sync = () => setInset(readKeyboardInset());
-
-    sync();
-
-    const vv = window.visualViewport;
-    vv?.addEventListener("resize", sync);
-    vv?.addEventListener("scroll", sync);
-    window.addEventListener("focusin", sync);
-    window.addEventListener("focusout", sync);
-
-    const removeNative = isNativeApp()
-      ? subscribeNativeKeyboardInsets((height) => {
-          setInset(height > 0 ? height : readKeyboardInset());
-        })
-      : undefined;
-
-    if (!isNativeApp()) {
-      const syncVar = () => {
-        const height = readKeyboardInset();
-        setKeyboardInsetPx(height);
-        sync();
-      };
-      vv?.addEventListener("resize", syncVar);
-      vv?.addEventListener("scroll", syncVar);
-      syncVar();
-      return () => {
-        vv?.removeEventListener("resize", sync);
-        vv?.removeEventListener("scroll", sync);
-        vv?.removeEventListener("resize", syncVar);
-        vv?.removeEventListener("scroll", syncVar);
-        window.removeEventListener("focusin", sync);
-        window.removeEventListener("focusout", sync);
-        removeNative?.();
-        setKeyboardInsetPx(0);
-      };
-    }
-
-    return () => {
-      vv?.removeEventListener("resize", sync);
-      vv?.removeEventListener("scroll", sync);
-      window.removeEventListener("focusin", sync);
-      window.removeEventListener("focusout", sync);
-      removeNative?.();
-    };
-  }, [enabled]);
-
-  return inset;
-}
-
-function useFocusedFieldState(enabled: boolean): {
-  focused: boolean;
+function fieldNavState(from: HTMLElement | null): {
   hasPrev: boolean;
   hasNext: boolean;
 } {
-  const [state, setState] = useState({
-    focused: false,
-    hasPrev: false,
-    hasNext: false,
-  });
+  if (!from || !isKeyboardFocusableTarget(from)) {
+    return { hasPrev: false, hasNext: false };
+  }
+  const scrollRoot = getActiveScrollRoot(from);
+  const fields = getFocusableFields(scrollRoot);
+  const index = fields.indexOf(from);
+  return {
+    hasPrev: index > 0,
+    hasNext: index >= 0 && index < fields.length - 1,
+  };
+}
 
-  const refresh = useCallback(() => {
-    if (!enabled) {
-      setState({ focused: false, hasPrev: false, hasNext: false });
-      return;
-    }
-
-    const active = document.activeElement;
-    if (!isKeyboardFocusableTarget(active)) {
-      setState({ focused: false, hasPrev: false, hasNext: false });
-      return;
-    }
-
-    const scrollRoot = getActiveScrollRoot(active);
-    const fields = getFocusableFields(scrollRoot);
-    const index = fields.indexOf(active);
-    setState({
-      focused: true,
-      hasPrev: index > 0,
-      hasNext: index >= 0 && index < fields.length - 1,
-    });
-  }, [enabled]);
-
-  useEffect(() => {
-    refresh();
-    document.addEventListener("focusin", refresh);
-    document.addEventListener("focusout", refresh);
-    return () => {
-      document.removeEventListener("focusin", refresh);
-      document.removeEventListener("focusout", refresh);
-    };
-  }, [refresh]);
-
-  return state;
+function resolveActiveField(): HTMLElement | null {
+  const active = document.activeElement;
+  if (active instanceof HTMLElement && isKeyboardFocusableTarget(active)) {
+    return active;
+  }
+  return getLastKeyboardField();
 }
 
 /** iOS-style floating toolbar above the software keyboard (mobile + native). */
 export function KeyboardAccessoryBar() {
   const enabled = useKeyboardAccessoryEnabled();
-  const keyboardInset = useKeyboardInset(enabled);
-  const { focused, hasPrev, hasNext } = useFocusedFieldState(enabled);
   const locale = detectBrowserLocale();
   const t = (key: string) => translate(locale, key);
+  const [keyboardOpen, setKeyboardOpen] = useState(
+    () => getKeyboardSession().open,
+  );
+  const [navState, setNavState] = useState(() => {
+    const field = resolveActiveField();
+    return { ...fieldNavState(field), field };
+  });
 
-  const visible =
-    enabled &&
-    keyboardInset >= KEYBOARD_INSET_THRESHOLD_PX &&
-    focused;
+  const refreshNavState = useCallback(() => {
+    const field = resolveActiveField();
+    if (field) setLastKeyboardField(field);
+    setNavState({ ...fieldNavState(field), field });
+  }, []);
 
-  const keepFocus = (e: React.PointerEvent) => {
+  useEffect(() => {
+    if (!enabled) return;
+
+    const unsubSession = subscribeKeyboardSession(({ open }) => {
+      setKeyboardOpen(open);
+    });
+
+    if (!isNativeApp()) {
+      const sync = () => {
+        syncKeyboardSessionFromViewport();
+        setKeyboardInsetPx(readKeyboardInset());
+      };
+      sync();
+      const vv = window.visualViewport;
+      vv?.addEventListener("resize", sync);
+      vv?.addEventListener("scroll", sync);
+      window.addEventListener("focusin", sync);
+      return () => {
+        vv?.removeEventListener("resize", sync);
+        vv?.removeEventListener("scroll", sync);
+        window.removeEventListener("focusin", sync);
+        unsubSession();
+        setKeyboardInsetPx(0);
+      };
+    }
+
+    return unsubSession;
+  }, [enabled]);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const onFocusIn = (e: FocusEvent) => {
+      const target = e.target;
+      if (target instanceof HTMLElement && isKeyboardFocusableTarget(target)) {
+        setLastKeyboardField(target);
+      }
+      refreshNavState();
+    };
+
+    document.addEventListener("focusin", onFocusIn);
+    refreshNavState();
+    return () => document.removeEventListener("focusin", onFocusIn);
+  }, [enabled, refreshNavState]);
+
+  const visible = enabled && keyboardOpen;
+
+  const runNav = (direction: "prev" | "next") => {
+    const from = getLastKeyboardField() ?? navState.field;
+    if (!from) return;
+    focusAdjacentFieldWithLock(direction, from);
+    window.setTimeout(refreshNavState, 0);
+    window.setTimeout(refreshNavState, 120);
+    window.setTimeout(refreshNavState, 320);
+  };
+
+  const stopToolbarFocus = (e: React.SyntheticEvent) => {
     e.preventDefault();
-  };
-
-  const onPrevious = () => {
-    focusAdjacentField("prev");
-  };
-
-  const onNext = () => {
-    focusAdjacentField("next");
+    e.stopPropagation();
   };
 
   const onDone = async () => {
+    setLastKeyboardField(null);
     const active = document.activeElement;
     if (active instanceof HTMLElement) active.blur();
     if (isNativeApp()) {
@@ -183,36 +161,52 @@ export function KeyboardAccessoryBar() {
       aria-label={t("keyboard.toolbarAria")}
     >
       <div className="keyboard-accessory-bar__nav">
-        <button
-          type="button"
-          className="keyboard-accessory-bar__nav-btn"
+        <div
+          role="button"
+          tabIndex={-1}
+          aria-disabled={!navState.hasPrev}
           aria-label={t("keyboard.previousField")}
-          disabled={!hasPrev}
-          onPointerDown={keepFocus}
-          onClick={onPrevious}
+          className={`keyboard-accessory-bar__nav-btn${navState.hasPrev ? "" : " keyboard-accessory-bar__nav-btn--disabled"}`}
+          onTouchStart={(e) => {
+            stopToolbarFocus(e);
+            if (navState.hasPrev) runNav("prev");
+          }}
+          onMouseDown={(e) => {
+            stopToolbarFocus(e);
+            if (navState.hasPrev) runNav("prev");
+          }}
         >
-          <ChevronUp width={18} height={18} aria-hidden />
-        </button>
-        <button
-          type="button"
-          className="keyboard-accessory-bar__nav-btn"
+          <ChevronUp aria-hidden />
+        </div>
+        <div
+          role="button"
+          tabIndex={-1}
+          aria-disabled={!navState.hasNext}
           aria-label={t("keyboard.nextField")}
-          disabled={!hasNext}
-          onPointerDown={keepFocus}
-          onClick={onNext}
+          className={`keyboard-accessory-bar__nav-btn${navState.hasNext ? "" : " keyboard-accessory-bar__nav-btn--disabled"}`}
+          onTouchStart={(e) => {
+            stopToolbarFocus(e);
+            if (navState.hasNext) runNav("next");
+          }}
+          onMouseDown={(e) => {
+            stopToolbarFocus(e);
+            if (navState.hasNext) runNav("next");
+          }}
         >
-          <ChevronDown width={18} height={18} aria-hidden />
-        </button>
+          <ChevronDown aria-hidden />
+        </div>
       </div>
-      <button
-        type="button"
-        className="keyboard-accessory-bar__done"
+      <div
+        role="button"
+        tabIndex={-1}
         aria-label={t("keyboard.done")}
-        onPointerDown={keepFocus}
+        className="keyboard-accessory-bar__done"
+        onTouchStart={stopToolbarFocus}
+        onMouseDown={stopToolbarFocus}
         onClick={() => void onDone()}
       >
-        <Check width={18} height={18} aria-hidden strokeWidth={2.5} />
-      </button>
+        <Check aria-hidden strokeWidth={2.5} />
+      </div>
     </div>
   );
 }

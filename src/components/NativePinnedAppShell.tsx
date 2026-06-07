@@ -68,7 +68,7 @@ export function NativePinnedAppShell({
     >
       <header
         ref={headerRef}
-        className={`${nativeFixedHeaderClass()} setup-screen__header setup-screen__header--fixed border-b border-ink-200 bg-white px-5 pt-1 ${headerClassName}`.trim()}
+        className={`${nativeFixedHeaderClass()} setup-screen__header setup-screen__header--fixed bg-white ${headerClassName || "border-b border-ink-200 px-5 pt-1"}`.trim()}
       >
         {header}
       </header>

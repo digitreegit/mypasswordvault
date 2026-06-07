@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import {
   CheckIcon,
+  ChevronRightIcon,
   ExclamationTriangleIcon,
   PlusIcon,
-  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { isAuthV2 } from "../lib/authV2";
 import { isAppError } from "../lib/errors";
@@ -15,7 +15,6 @@ import {
   getSettingsPasskeyAddOptions,
   type SettingsPasskeyAddOption,
 } from "../lib/passkeyMethods";
-import type { PasskeyKind } from "../lib/storage";
 import { isIpLiteralHost } from "../lib/siteOrigin";
 import {
   copyTextForClipboard,
@@ -105,12 +104,6 @@ function passkeyAddOptionTitle(
   return `${base} ${t("common.optional")}`;
 }
 
-function passkeyKindFromAddOption(id: SettingsPasskeyAddOption["id"]): PasskeyKind {
-  if (id === "hybrid") return "hybrid";
-  if (id === "security-key") return "security-key";
-  return "platform";
-}
-
 function PasskeyAddOptionBox({
   title,
   subtitle,
@@ -165,7 +158,6 @@ export function SecuritySettingsPanel() {
     meta,
     isPasskeySupported,
     addPasskey,
-    removePasskey,
     completePasskeyPrf,
     passkeyWebAuthnLabelNeedsRefresh,
     passkeyIdentityEmail,
@@ -202,7 +194,6 @@ export function SecuritySettingsPanel() {
   >([]);
 
   const passkeys = meta?.passkeys ?? [];
-  const isLastPasskey = passkeys.length === 1;
   const showPasskeys =
     meta && isAuthV2(meta) && isPasskeySupported && passkeys.length > 0;
   const wrongDomain =
@@ -236,7 +227,7 @@ export function SecuritySettingsPanel() {
       await addPasskey({
         hints: option.hints,
         label: t(option.labelKey),
-        kind: passkeyKindFromAddOption(option.id),
+        kind: "platform",
       });
       setPasskeySuccess(t("settings.passkeysAdded"));
       window.setTimeout(() => setPasskeySuccess(null), 3000);
@@ -266,19 +257,6 @@ export function SecuritySettingsPanel() {
       } else {
         setPasskeyError(formatError(e, t));
       }
-    } finally {
-      setPasskeyBusy(false);
-    }
-  }
-
-  async function handleRemovePasskey(credentialId: string) {
-    setPasskeyError(null);
-    setPasskeySuccess(null);
-    setPasskeyBusy(true);
-    try {
-      await removePasskey(credentialId);
-    } catch (e: unknown) {
-      setPasskeyError(formatError(e, t));
     } finally {
       setPasskeyBusy(false);
     }
@@ -465,25 +443,6 @@ export function SecuritySettingsPanel() {
                           : t("settings.passkeyFinishPrf")}
                       </button>
                     ) : null}
-                    <button
-                      type="button"
-                      className="btn-ghost p-2 text-ink-400 hover:text-red-600 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-ink-400"
-                      disabled={passkeyBusy || isLastPasskey}
-                      aria-disabled={passkeyBusy || isLastPasskey}
-                      title={
-                        isLastPasskey
-                          ? t("settings.passkeysRemoveLastHint")
-                          : undefined
-                      }
-                      aria-label={
-                        isLastPasskey
-                          ? t("settings.passkeysRemoveLastHint")
-                          : t("settings.passkeysRemoveLabel")
-                      }
-                      onClick={() => void handleRemovePasskey(pk.id)}
-                    >
-                      <TrashIcon className="h-4 w-4" aria-hidden />
-                    </button>
                   </div>
                 </li>
               );
@@ -722,17 +681,20 @@ export function SecuritySettingsPanel() {
             </div>
           </div>
         ) : (
-          <button
-            type="button"
-            className="btn-secondary text-sm"
-            disabled={recoveryBusy}
-            onClick={() => {
-              setRecoveryError(null);
-              setRecoveryConfirm(true);
-            }}
-          >
-            {t("settings.securityRecoveryRegenerate")}
-          </button>
+          <div className="border-t border-ink-100 pt-3">
+            <button
+              type="button"
+              className="w-full flex items-center justify-between gap-3 py-0.5 text-sm font-medium text-ink-600 hover:text-ink-800 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30 rounded-md"
+              disabled={recoveryBusy}
+              onClick={() => {
+                setRecoveryError(null);
+                setRecoveryConfirm(true);
+              }}
+            >
+              <span>{t("settings.securityRecoveryRegenerate")}</span>
+              <ChevronRightIcon className="h-4 w-4 shrink-0 text-ink-400" aria-hidden />
+            </button>
+          </div>
         )}
         {recoveryError ? (
           <p className="text-sm text-red-600">{recoveryError}</p>

@@ -170,7 +170,7 @@ export function CategoriesDialog({
         role="dialog"
         aria-labelledby="cat-dialog-title"
       >
-        <div className="px-5 py-3 border-b border-ink-200">
+        <div className="action-modal__header px-5 py-3 border-b border-ink-200">
           <div className="flex items-center justify-between gap-2">
             <h1
               id="cat-dialog-title"
@@ -251,7 +251,7 @@ export function CategoriesDialog({
                   title={t("vault.dragToReorder")}
                   aria-label={t("vault.dragToReorder")}
                   className={[
-                    "shrink-0 cursor-grab touch-none rounded p-1.5 text-ink-400 hover:bg-ink-100 hover:text-ink-600 active:cursor-grabbing",
+                    "ui-icon-btn shrink-0 cursor-grab touch-none active:cursor-grabbing",
                     busy ? "cursor-not-allowed opacity-40" : "",
                   ].join(" ")}
                   onDragStart={(e) => {
@@ -304,7 +304,7 @@ export function CategoriesDialog({
                 />
                 <button
                   type="button"
-                  className="btn-ghost p-2 text-ink-400 hover:text-red-600 shrink-0"
+                  className="ui-icon-btn ui-icon-btn--danger shrink-0"
                   onClick={() => setDeleteTargetId(c.id)}
                   disabled={busy}
                   title={t("vault.deleteCategory")}
@@ -316,7 +316,7 @@ export function CategoriesDialog({
             })}
           </ul>
         </div>
-        <div className="px-5 py-3 border-t border-ink-100 flex items-center justify-between gap-2">
+        <div className="action-modal__footer px-5 py-3 border-t border-ink-100 flex items-center justify-between gap-2">
           <button
             type="button"
             className="btn-secondary text-sm shrink-0"
@@ -361,7 +361,7 @@ export function CategoriesDialog({
           className="card w-full max-w-md shadow-lg"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="px-5 py-3 border-b border-ink-200">
+          <div className="action-modal__header px-5 py-3 border-b border-ink-200">
             <h2
               id="cat-delete-title"
               className="font-sans text-lg font-semibold text-ink-900 tracking-tight leading-tight"
@@ -379,7 +379,7 @@ export function CategoriesDialog({
               </p>
             ) : null}
           </div>
-          <div className="px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+          <div className="action-modal__footer px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
             <button
               type="button"
               className="btn-secondary text-sm w-full sm:w-auto"

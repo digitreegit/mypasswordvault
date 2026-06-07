@@ -8,6 +8,7 @@ import {
 import { useVault } from "../lib/vault";
 import { LockOpen, Eye, EyeOff } from "./Icons";
 import { ScreenHeader } from "./ScreenHeader";
+import { NativeTopHeader } from "./NativeTopHeader";
 import { AppShell } from "./AppShell";
 import { NativePinnedAppShell } from "./NativePinnedAppShell";
 import { isAppError } from "../lib/errors";
@@ -105,17 +106,25 @@ export function LockScreen() {
     if (!canPasskey) setShowBackup(true);
   }, [canPasskey]);
 
-  const lockHeader = (
-    <ScreenHeader
+  const lockHeader = isNativeApp() ? (
+    <NativeTopHeader
       brandName={t("app.brandName")}
-      pageTitle={t("lock.title")}
-      hideTitle={isNativeApp()}
       locale={locale}
       onLocaleChange={(l) => void setLocale(l)}
       languageAriaLabel={t("settings.language")}
       brandHomeHref={brandHomeHref}
       brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
-      className={isNativeApp() ? "mb-0" : undefined}
+      fixedHost
+    />
+  ) : (
+    <ScreenHeader
+      brandName={t("app.brandName")}
+      pageTitle={t("lock.title")}
+      locale={locale}
+      onLocaleChange={(l) => void setLocale(l)}
+      languageAriaLabel={t("settings.language")}
+      brandHomeHref={brandHomeHref}
+      brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
     />
   );
 
@@ -184,7 +193,7 @@ export function LockScreen() {
         <p className="pt-1 text-center text-xs text-ink-600">
           <button
             type="button"
-            className="font-semibold text-accent-600 hover:underline focus:outline-none focus-visible:underline"
+            className="font-semibold text-ink-600 hover:text-ink-800 hover:underline focus:outline-none focus-visible:underline"
             onClick={() => setShowBackup((v) => !v)}
           >
             {showBackup ? t("lock.hideBackup") : t("lock.useBackup")}
@@ -335,7 +344,11 @@ export function LockScreen() {
 
   if (isNativeApp()) {
     return (
-      <NativePinnedAppShell header={lockHeader} remeasureKey={showBackup}>
+      <NativePinnedAppShell
+        header={lockHeader}
+        remeasureKey={showBackup}
+        headerClassName="native-top-header-fixed-host"
+      >
         <div className="space-y-4">{lockBody}</div>
       </NativePinnedAppShell>
     );

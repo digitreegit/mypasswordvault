@@ -80,7 +80,7 @@ function SetupStepper({ stage, t }: { stage: Stage; t: TFn }) {
                       : "bg-ink-100 text-ink-400",
                 ].join(" ")}
               >
-                {done ? <Check className="h-3 w-3" /> : i + 1}
+                {done ? <Check className="ui-icon-xs" aria-hidden /> : i + 1}
               </span>
               <span
                 className={[
@@ -144,7 +144,7 @@ function PasskeyHelpModal({ t, onClose }: { t: TFn; onClose: () => void }) {
         aria-modal="true"
         aria-labelledby="passkey-help-title"
       >
-        <div className="px-5 py-4 border-b border-ink-200 flex items-start justify-between gap-2">
+        <div className="action-modal__header px-5 py-4 border-b border-ink-200 flex items-start justify-between gap-2">
           <h2
             id="passkey-help-title"
             className="font-sans text-lg font-semibold text-ink-900 tracking-tight"
@@ -165,7 +165,7 @@ function PasskeyHelpModal({ t, onClose }: { t: TFn; onClose: () => void }) {
             <p key={p.slice(0, 24)}>{p}</p>
           ))}
         </div>
-        <div className="px-5 py-4 border-t border-ink-200 bg-ink-50/80">
+        <div className="action-modal__footer px-5 py-4 border-t border-ink-200 bg-ink-50/80">
           <button type="button" className="btn-primary w-full" onClick={onClose}>
             {t("setup.passkeyHelpGotIt")}
           </button>

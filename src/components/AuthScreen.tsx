@@ -754,9 +754,9 @@ function PasswordField({
           aria-label={show ? hideAria : showAria}
         >
           {show ? (
-            <EyeOff width={18} height={18} />
+            <EyeOff aria-hidden />
           ) : (
-            <Eye width={18} height={18} />
+            <Eye aria-hidden />
           )}
         </button>
       </div>

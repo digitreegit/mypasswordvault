@@ -1,4 +1,10 @@
 import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
+import { isKeyboardNavLocked } from "./keyboardFocusNavigation";
+import {
+  cancelPendingKeyboardHide,
+  notifyKeyboardHide,
+  notifyKeyboardShow,
+} from "./keyboardSession";
 import { setKeyboardInsetPx } from "./keyboardInset";
 import { reflowFocusedFieldScroll } from "./nativeScrollFocus";
 import { isNativeApp } from "./platform";
@@ -29,6 +35,9 @@ function syncVisualViewportVars(): void {
     window.innerHeight - vv.offsetTop - vv.height,
   );
   setKeyboardInsetPx(Math.max(vvKeyboardInset, pluginKeyboardHeight));
+  if (Math.max(vvKeyboardInset, pluginKeyboardHeight) >= 40) {
+    notifyKeyboardShow(Math.max(vvKeyboardInset, pluginKeyboardHeight));
+  }
   pinDocumentScroll();
   reflowFocusedFieldScroll();
 }
@@ -62,19 +71,25 @@ export async function initNativeKeyboard(): Promise<void> {
   try {
     await Keyboard.addListener("keyboardWillShow", (info) => {
       pluginKeyboardHeight = info.keyboardHeight;
+      notifyKeyboardShow(info.keyboardHeight);
       syncVisualViewportVars();
       pinDocumentScroll();
     });
     await Keyboard.addListener("keyboardDidShow", (info) => {
       pluginKeyboardHeight = info.keyboardHeight;
+      notifyKeyboardShow(info.keyboardHeight);
       syncVisualViewportVars();
       pinDocumentScroll();
     });
     await Keyboard.addListener("keyboardWillHide", () => {
+      if (isKeyboardNavLocked()) {
+        cancelPendingKeyboardHide();
+        return;
+      }
       pluginKeyboardHeight = 0;
       document.documentElement.style.removeProperty("--native-vv-offset-top");
       document.documentElement.style.removeProperty("--native-vv-height");
-      setKeyboardInsetPx(0);
+      notifyKeyboardHide();
       pinDocumentScroll();
     });
   } catch {
@@ -105,7 +120,7 @@ export function subscribeNativeKeyboardInsets(
 
   void Keyboard.addListener("keyboardWillShow", (info) => {
     pluginKeyboardHeight = info.keyboardHeight;
-    onChange(info.keyboardHeight);
+    notifyKeyboardShow(info.keyboardHeight);
     syncVisualViewportVars();
     pinDocumentScroll();
   }).then((h) => {
@@ -114,7 +129,7 @@ export function subscribeNativeKeyboardInsets(
 
   void Keyboard.addListener("keyboardDidShow", (info) => {
     pluginKeyboardHeight = info.keyboardHeight;
-    onChange(info.keyboardHeight);
+    notifyKeyboardShow(info.keyboardHeight);
     syncVisualViewportVars();
     pinDocumentScroll();
   }).then((h) => {
@@ -122,8 +137,12 @@ export function subscribeNativeKeyboardInsets(
   });
 
   void Keyboard.addListener("keyboardWillHide", () => {
+    if (isKeyboardNavLocked()) {
+      cancelPendingKeyboardHide();
+      return;
+    }
     pluginKeyboardHeight = 0;
-    onChange(0);
+    notifyKeyboardHide();
     syncVisualViewportVars();
     pinDocumentScroll();
   }).then((h) => {

@@ -1246,7 +1246,7 @@ export function AdminDashboard() {
                 className="card w-full max-w-md shadow-lg"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="px-5 py-3 border-b border-ink-200">
+                <div className="action-modal__header px-5 py-3 border-b border-ink-200">
                   <div className="flex items-center justify-between gap-2">
                     <h2
                       id="admin-complaint-title"
@@ -1284,7 +1284,7 @@ export function AdminDashboard() {
                     />
                   </div>
                 </div>
-                <div className="px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+                <div className="action-modal__footer px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
                   <button
                     type="button"
                     className="btn-secondary text-sm w-full sm:w-auto"
@@ -1322,7 +1322,7 @@ export function AdminDashboard() {
                 className="card w-full max-w-md shadow-lg"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="px-5 py-3 border-b border-ink-200">
+                <div className="action-modal__header px-5 py-3 border-b border-ink-200">
                   <div className="flex items-center justify-between gap-2">
                     <h2
                       id="admin-delete-title"
@@ -1354,7 +1354,7 @@ export function AdminDashboard() {
                     </p>
                   ) : null}
                 </div>
-                <div className="px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+                <div className="action-modal__footer px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
                   <button
                     type="button"
                     className="btn-secondary text-sm w-full sm:w-auto"

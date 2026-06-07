@@ -3,12 +3,12 @@ import { createPortal } from "react-dom";
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
-  ChevronRightIcon,
   ChevronUpDownIcon,
   InformationCircleIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { NativeTopHeader, NATIVE_HEADER_ICON_BTN } from "./NativeTopHeader";
 import { useCheckoutReturn } from "../hooks/useCheckoutReturn";
 import {
   clearCheckoutPending,
@@ -31,12 +31,10 @@ import {
   Lock,
   Plus,
   Refresh,
-  Shield,
   Trash,
   ExternalLink,
   Check,
 } from "./Icons";
-import { LanguageMenu } from "./LanguageMenu";
 import { PlanBadge } from "./PlanBadge";
 import { UserMenuDropdown } from "./UserMenuDropdown";
 import { isAppError } from "../lib/errors";
@@ -374,7 +372,7 @@ function CategorySelect({
       <button
         ref={buttonRef}
         type="button"
-        className={`flex w-full items-center gap-1 text-left ${className ?? ""}`.trim()}
+        className={`category-select-trigger flex w-full items-center gap-1 text-left ${className ?? ""}`.trim()}
         onClick={() => {
           if (open) closeMenu();
           else openMenu();
@@ -395,10 +393,7 @@ function CategorySelect({
             label
           )}
         </span>
-        <ChevronDownIcon
-          className="ml-1.5 h-3.5 w-3.5 shrink-0 text-ink-400"
-          aria-hidden
-        />
+        <ChevronDownIcon className="ml-1.5 shrink-0 text-ink-400" aria-hidden />
       </button>
       {open &&
         createPortal(
@@ -451,7 +446,7 @@ function CategorySelect({
 
 /** Sort dropdown: compact gray chevron toward the trailing edge */
 const heroChevronSort =
-  "pointer-events-none absolute right-2 top-1/2 h-4 w-4 shrink-0 -translate-y-1/2 text-ink-400";
+  "pointer-events-none absolute right-2 top-1/2 shrink-0 -translate-y-1/2 text-ink-400";
 
 const VAULT_PAGE =
   "vault-page max-w-6xl mx-auto w-full min-w-0 box-border pl-[max(0.75rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] sm:pl-[max(1rem,env(safe-area-inset-left,0px))] sm:pr-[max(1rem,env(safe-area-inset-right,0px))] md:pl-[max(1.5rem,env(safe-area-inset-left,0px))] md:pr-[max(1.5rem,env(safe-area-inset-right,0px))] lg:pl-[max(2rem,env(safe-area-inset-left,0px))] lg:pr-[max(2rem,env(safe-area-inset-right,0px))]";
@@ -459,10 +454,13 @@ const VAULT_PAGE =
 const VAULT_TOOLBAR_BTN_PRIMARY =
   "inline-flex items-center justify-center gap-1.5 rounded-xl md:rounded-lg border border-accent-600 bg-accent-600 px-4 md:px-3 py-2.5 md:py-2 min-h-[2.75rem] md:min-h-[2.5rem] text-base md:text-sm font-medium text-white shadow-sm hover:bg-accent-700 transition-colors disabled:opacity-50 disabled:pointer-events-none shrink-0";
 const VAULT_TOOLBAR_BTN_ICON =
-  "inline-flex items-center justify-center rounded-xl md:rounded-lg border border-ink-200 bg-white h-11 min-w-11 md:h-10 md:min-w-10 text-ink-600 shadow-sm hover:bg-ink-50 transition-colors shrink-0";
+  "ui-icon-btn ui-icon-btn--bordered text-ink-600 shadow-sm transition-colors shrink-0";
+const VAULT_TOOLBAR_BTN_ICON_MOBILE =
+  "ui-icon-btn ui-icon-btn--compact vault-toolbar-icon-btn ui-icon-btn--bordered text-ink-600 shadow-sm transition-colors shrink-0";
+const VAULT_TOOLBAR_ADD_BTN_MOBILE =
+  "ui-icon-btn ui-icon-btn--compact vault-toolbar-icon-btn vault-toolbar-add-btn shrink-0 touch-manipulation disabled:opacity-50 disabled:pointer-events-none";
 
-const VAULT_HEADER_ICON_BTN =
-  "inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-600 hover:bg-ink-50 transition-colors shrink-0";
+const VAULT_HEADER_ICON_BTN = NATIVE_HEADER_ICON_BTN;
 
 export function VaultScreen() {
   const { configured, user } = useAuth();
@@ -1030,78 +1028,68 @@ export function VaultScreen() {
             </div>
           </div>
         )}
-        <header
-          className={`vault-top-header w-full bg-white ${
-            showEntryLimitBanner
-              ? ""
-              : "pt-[max(0.375rem,env(safe-area-inset-top))]"
-          }`}
-        >
-          <div className="w-full border-b border-ink-200">
-            <div
-              className={`${VAULT_PAGE} flex items-center justify-between gap-3 py-1 sm:py-1.5`}
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <Shield className="w-7 h-auto text-accent-500 shrink-0" />
-                <span
-                  className="font-brand font-semibold text-base sm:text-[1.0625rem] text-ink-900 tracking-tight truncate leading-none -translate-y-0.5"
-                  translate="no"
-                >
-                  {t("app.brandName")}
-                </span>
-              </div>
-              <div className="flex items-center gap-2.5 shrink-0">
-                {configured && user?.id ? (
-                  <>
-                    {showHeaderUpgrade ? (
-                      <button
-                        type="button"
-                        className="vault-header-upgrade-btn"
-                        onClick={openPricingDrawer}
-                      >
-                        {t("vault.entryLimitUpgrade")}
-                      </button>
-                    ) : null}
-                    {entitlementLoaded ? (
-                      <PlanBadge
-                        label={
-                          showAdminBadge
-                            ? t("vault.licenseBadgeAdmin")
-                            : showProBadge
-                              ? t("vault.licenseBadgePro")
-                              : t("vault.licenseBadgeFree")
-                        }
-                        href={showAdminBadge ? "#/admin" : undefined}
-                        ariaLabel={showAdminBadge ? t("admin.title") : undefined}
-                      />
-                    ) : (
-                      <span
-                        className="h-[1.375rem] w-[2.75rem] rounded-full bg-ink-100 animate-pulse shrink-0"
-                        aria-hidden
-                      />
-                    )}
-                  </>
+        <NativeTopHeader
+          brandName={t("app.brandName")}
+          trailing={
+            configured && user?.id ? (
+              <>
+                {showHeaderUpgrade ? (
+                  <button
+                    type="button"
+                    className="vault-header-upgrade-btn"
+                    onClick={openPricingDrawer}
+                  >
+                    {t("vault.entryLimitUpgrade")}
+                  </button>
                 ) : null}
-                <UserMenuDropdown />
-                <LanguageMenu
-                  value={locale}
-                  onChange={(l) => void setLocale(l)}
-                  ariaLabel={t("settings.language")}
-                  align="right"
-                  triggerClassName={VAULT_HEADER_ICON_BTN}
-                />
-              </div>
-            </div>
-          </div>
-        </header>
+                {entitlementLoaded ? (
+                  <PlanBadge
+                    label={
+                      showAdminBadge
+                        ? t("vault.licenseBadgeAdmin")
+                        : showProBadge
+                          ? t("vault.licenseBadgePro")
+                          : t("vault.licenseBadgeFree")
+                    }
+                    href={showAdminBadge ? "#/admin" : undefined}
+                    ariaLabel={showAdminBadge ? t("admin.title") : undefined}
+                  />
+                ) : (
+                  <span
+                    className="h-[1.375rem] w-[2.75rem] rounded-full bg-ink-100 animate-pulse shrink-0"
+                    aria-hidden
+                  />
+                )}
+                <UserMenuDropdown triggerClassName={VAULT_HEADER_ICON_BTN} />
+              </>
+            ) : null
+          }
+          locale={locale}
+          onLocaleChange={(l) => void setLocale(l)}
+          languageAriaLabel={t("settings.language")}
+        />
       </div>
 
       <main className={nativeMainScrollClass("pb-3 sm:pb-6")}>
         <div className={`${VAULT_PAGE} pt-3 pb-5 sm:pt-4 sm:pb-6`}>
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4 mb-1">
-          <div className="relative w-full md:hidden">
+          <div className="vault-mobile-search-wrap relative w-full md:hidden input-with-icon">
             <MagnifyingGlassIcon
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400"
+              className="vault-mobile-search-icon pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-400"
+              aria-hidden
+            />
+            <input
+              className="input vault-mobile-search w-full shadow-sm"
+              placeholder={t("vault.searchPlaceholder")}
+              title={t("vault.search")}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              enterKeyHint="search"
+            />
+          </div>
+          <div className="relative hidden md:block w-full min-w-0 md:w-[25rem] md:max-w-[25rem] shrink-0 input-with-icon">
+            <MagnifyingGlassIcon
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-400"
               aria-hidden
             />
             <input
@@ -1113,36 +1101,11 @@ export function VaultScreen() {
               enterKeyHint="search"
             />
           </div>
-          <div className="relative hidden md:block w-full min-w-0 md:w-[25rem] md:max-w-[25rem] shrink-0">
-            <MagnifyingGlassIcon
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400"
-              aria-hidden
-            />
-            <input
-              className="input w-full pl-9 shadow-sm"
-              placeholder={t("vault.searchPlaceholder")}
-              title={t("vault.search")}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              enterKeyHint="search"
-            />
-          </div>
-          <div className="md:hidden flex w-full min-w-0 flex-col gap-2 mb-1.5">
-            <button
-              type="button"
-              className={`${VAULT_TOOLBAR_BTN_PRIMARY} w-full`}
-              onClick={addEntry}
-              disabled={atEntryLimit}
-              title={t("vault.addRow")}
-              aria-label={t("vault.addRow")}
-            >
-              <Plus />
-              <span>{t("vault.addRow")}</span>
-            </button>
+          <div className="md:hidden flex w-full min-w-0 flex-col gap-1.5 mb-1.5">
             <div className="flex w-full min-w-0 items-center gap-2">
-              <div className="flex min-w-0 flex-1 items-center gap-1.5 rounded-xl border border-ink-200 bg-white px-3 shadow-sm min-h-[2.75rem]">
+              <div className="vault-mobile-sort flex min-w-0 flex-1 items-center gap-1 rounded-xl border border-ink-200 bg-white pl-3 pr-2 shadow-sm min-h-[2.75rem]">
                 <label
-                  className="text-sm font-medium text-ink-500 shrink-0"
+                  className="vault-sort-label shrink-0"
                   htmlFor="vault-mobile-sort"
                 >
                   {t("vault.sortBy")}
@@ -1150,7 +1113,7 @@ export function VaultScreen() {
                 <div className="relative min-w-0 flex-1">
                   <select
                     id="vault-mobile-sort"
-                    className="w-full min-w-0 appearance-none border-0 bg-transparent py-2 pl-0 pr-7 text-base text-ink-800 focus:outline-none focus:ring-0"
+                    className="vault-sort-select w-full min-w-0 appearance-none border-0 bg-transparent py-2 pl-0 pr-7 text-ink-800 focus:outline-none focus:ring-0"
                     value={sortKey}
                     onChange={(e) => {
                       const k = e.target.value as SortKey;
@@ -1165,13 +1128,13 @@ export function VaultScreen() {
                     <option value="site">{t("vault.colSite")}</option>
                   </select>
                   <ChevronDownIcon
-                    className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400"
+                    className="vault-sort-chevron pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-ink-400"
                     aria-hidden
                   />
                 </div>
                 <button
                   type="button"
-                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-ink-500 hover:bg-ink-50 hover:text-ink-800 touch-manipulation"
+                  className="vault-sort-dir-btn inline-flex h-8 w-5 shrink-0 items-center justify-center rounded-md text-ink-500 hover:bg-ink-50 hover:text-ink-800 touch-manipulation"
                   onClick={() => {
                     editDisplayOrderRef.current = null;
                     setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -1179,12 +1142,12 @@ export function VaultScreen() {
                   }}
                   aria-label={sortDir === "asc" ? "Ascending" : "Descending"}
                 >
-                  <ChevronUpDownIcon className="h-4 w-4" />
+                  <ChevronUpDownIcon className="vault-sort-updown" aria-hidden />
                 </button>
               </div>
               <button
                 type="button"
-                className={VAULT_TOOLBAR_BTN_ICON}
+                className={VAULT_TOOLBAR_BTN_ICON_MOBILE}
                 onClick={() => {
                   setCategoriesStartWithNew(false);
                   setShowCategories(true);
@@ -1196,12 +1159,22 @@ export function VaultScreen() {
               </button>
               <button
                 type="button"
-                className={VAULT_TOOLBAR_BTN_ICON}
+                className={VAULT_TOOLBAR_BTN_ICON_MOBILE}
                 onClick={lock}
                 title={t("vault.lock")}
                 aria-label={t("vault.lock")}
               >
                 <Lock />
+              </button>
+              <button
+                type="button"
+                className={VAULT_TOOLBAR_ADD_BTN_MOBILE}
+                onClick={addEntry}
+                disabled={atEntryLimit}
+                title={t("vault.addRow")}
+                aria-label={t("vault.addRow")}
+              >
+                <Plus aria-hidden />
               </button>
             </div>
             <p className="mb-1 w-full min-w-0 text-left text-caption text-ink-500 tabular-nums leading-snug break-words">
@@ -1262,7 +1235,7 @@ export function VaultScreen() {
           )}
         </p>
 
-        <ul className="md:hidden mobile-list-group list-none p-0 m-0">
+        <ul className="md:hidden mobile-list-group list-none p-0 m-0 flex flex-col gap-2">
           {filtered.length === 0 ? (
             <li className="p-8 text-center text-ink-500 text-base">
               {t("vault.empty")}{" "}
@@ -1415,7 +1388,7 @@ export function VaultScreen() {
           </div>
         </div>
 
-        <p className="w-full min-w-0 break-words text-left text-caption text-ink-400 leading-normal mt-2 sm:mt-4">
+        <p className="vault-security-footer w-full min-w-0 break-words text-left text-ink-400 leading-normal mt-2 sm:mt-4">
           {t("vault.footer")}
         </p>
         </div>
@@ -1672,16 +1645,12 @@ function MobileSwipeEntryRow({
           >
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
               {catLabel ? (
-                <span className="text-sm text-ink-500 truncate">{catLabel}</span>
+                <span className="vault-entry-category truncate">{catLabel}</span>
               ) : null}
               <span className="text-base font-medium text-ink-900 truncate">
                 {siteLabel}
               </span>
             </div>
-            <ChevronRightIcon
-              className="h-5 w-5 shrink-0 text-ink-300"
-              aria-hidden
-            />
           </button>
         </div>
       </div>
@@ -1757,7 +1726,7 @@ function MobileActionModal({
         className="card w-full max-w-md shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-5 py-3 border-b border-ink-200">
+        <div className="action-modal__header px-5 py-3 border-b border-ink-200">
           <h2 className="font-sans text-lg font-semibold text-ink-900 tracking-tight leading-tight">
             {title}
           </h2>
@@ -1768,7 +1737,7 @@ function MobileActionModal({
             <p className="text-sm text-red-700 leading-snug">{warning}</p>
           ) : null}
         </div>
-        <div className="px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+        <div className="action-modal__footer px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
           <button
             type="button"
             className="btn-secondary text-sm w-full sm:w-auto"
@@ -1895,11 +1864,11 @@ function MobileEntryDetail({
         <header className="shrink-0 flex items-center gap-2 border-b border-ink-200 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))]">
           <button
             type="button"
-          className="inline-flex items-center justify-center rounded-xl p-2.5 text-ink-600 hover:bg-ink-100 touch-manipulation shrink-0 min-w-11 min-h-11"
-          onClick={requestClose}
+            className="ui-icon-btn text-ink-600 shrink-0"
+            onClick={requestClose}
             aria-label={t("vault.mobileBack")}
           >
-            <ChevronLeftIcon className="h-5 w-5" aria-hidden />
+            <ChevronLeftIcon aria-hidden />
           </button>
           <div className="min-w-0 flex-1">
             {draft.categoryId ? (
@@ -1911,7 +1880,7 @@ function MobileEntryDetail({
         </div>
         <button
           type="button"
-          className="inline-flex items-center justify-center rounded-xl p-2.5 text-ink-400 hover:text-red-600 hover:bg-red-50 touch-manipulation min-w-11 min-h-11 shrink-0"
+          className="ui-icon-btn ui-icon-btn--danger shrink-0"
             onClick={() => setDeleteModalOpen(true)}
             title={t("vault.ttDelete")}
             aria-label={t("vault.ttDelete")}
@@ -1991,25 +1960,30 @@ function MobileEntryDetail({
               {t("vault.colPass")}
             </label>
             <div className="flex w-full min-w-0 items-center gap-0.5">
-              <BlurInput
-                id={`m-pass-${entry.id}`}
-                className="input min-w-0 flex-1 w-0"
-                type={revealed ? "text" : "password"}
-                value={draft.password}
-                placeholder={t("vault.phPass")}
-                spellCheck={false}
-                autoComplete="off"
-                onLiveCommit={(password) => patchDraft({ password })}
-                onCommit={(password) => patchDraft({ password })}
-                onEditFocus={onEditFocus}
-                onEditBlur={onEditBlur}
-              />
-              <IconBtn
-                onClick={toggleReveal}
-                title={revealed ? t("vault.hide") : t("vault.show")}
-              >
-                {revealed ? <EyeOff /> : <Eye />}
-              </IconBtn>
+              <div className="relative min-w-0 flex-1 w-0">
+                <BlurInput
+                  id={`m-pass-${entry.id}`}
+                  className="input min-w-0 w-full pr-10"
+                  type={revealed ? "text" : "password"}
+                  value={draft.password}
+                  placeholder={t("vault.phPass")}
+                  spellCheck={false}
+                  autoComplete="off"
+                  onLiveCommit={(password) => patchDraft({ password })}
+                  onCommit={(password) => patchDraft({ password })}
+                  onEditFocus={onEditFocus}
+                  onEditBlur={onEditBlur}
+                />
+                <button
+                  type="button"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-ink-300 hover:text-ink-300 active:text-ink-300 focus:text-ink-300 focus:outline-none focus-visible:text-ink-300"
+                  onClick={toggleReveal}
+                  title={revealed ? t("vault.hide") : t("vault.show")}
+                  aria-label={revealed ? t("vault.hide") : t("vault.show")}
+                >
+                  {revealed ? <EyeOff /> : <Eye />}
+                </button>
+              </div>
               <IconBtn
                 onClick={() => onCopy(draft.password, `pw:${entry.id}`)}
                 title={t("vault.ttCopyPass")}
@@ -2042,7 +2016,7 @@ function MobileEntryDetail({
                 />
                 {draft.url ? (
                   <a
-                    className="inline-flex shrink-0 items-center justify-center rounded-md border border-ink-200 bg-white p-2 text-ink-400 touch-manipulation hover:text-accent-600 min-w-9 min-h-9"
+                    className="ui-icon-btn shrink-0 hover:text-accent-600"
                     href={
                       /^https?:\/\//i.test(draft.url)
                         ? draft.url
@@ -2066,6 +2040,7 @@ function MobileEntryDetail({
                 </label>
               <ExpandMemoArea
                 id={`m-memo-${entry.id}`}
+                className="vault-mobile-memo"
                 value={draft.memo}
                 onLiveCommit={(memo) => patchDraft({ memo })}
                 onCommit={(memo) => patchDraft({ memo })}
@@ -2077,7 +2052,7 @@ function MobileEntryDetail({
           </div>
         </div>
 
-        <footer className="shrink-0 border-t border-ink-200 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <footer className="shrink-0 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             className="btn-primary w-full"
@@ -2127,7 +2102,7 @@ function IconBtn({
   return (
     <button
       type="button"
-      className="shrink-0 text-ink-400 hover:text-accent-600 touch-manipulation h-11 w-11 md:h-9 md:w-9 inline-flex items-center justify-center rounded-xl md:rounded-md"
+      className="ui-icon-btn shrink-0"
       onClick={onClick}
       title={title}
     >
@@ -2312,25 +2287,28 @@ function Row({
         </td>
         <td className="px-0 py-1 align-middle">
           <div className="flex items-center">
-            <BlurCellInput
-              className="cell-input flex-1"
-              type={revealed ? "text" : "password"}
-              value={entry.password}
-              onCommit={(password) => onChange({ password })}
-              placeholder={t("vault.phPass")}
-              spellCheck={false}
-              autoComplete="off"
-              onEditFocus={onEditFocus}
-              onEditBlur={onEditBlur}
-            />
-            <button
-              type="button"
-              className="px-1.5 sm:px-1.5 text-ink-400 hover:text-accent-600 touch-manipulation min-w-8 min-h-8 inline-flex items-center justify-center"
-              onClick={toggleReveal}
-              title={revealed ? t("vault.hide") : t("vault.show")}
-            >
-              {revealed ? <EyeOff /> : <Eye />}
-            </button>
+            <div className="relative flex-1 min-w-0">
+              <BlurCellInput
+                className="cell-input w-full pr-8"
+                type={revealed ? "text" : "password"}
+                value={entry.password}
+                onCommit={(password) => onChange({ password })}
+                placeholder={t("vault.phPass")}
+                spellCheck={false}
+                autoComplete="off"
+                onEditFocus={onEditFocus}
+                onEditBlur={onEditBlur}
+              />
+              <button
+                type="button"
+                className="absolute right-0.5 top-1/2 -translate-y-1/2 p-1 text-ink-400 hover:text-accent-600 touch-manipulation inline-flex items-center justify-center"
+                onClick={toggleReveal}
+                title={revealed ? t("vault.hide") : t("vault.show")}
+                aria-label={revealed ? t("vault.hide") : t("vault.show")}
+              >
+                {revealed ? <EyeOff /> : <Eye />}
+              </button>
+            </div>
             <button
               type="button"
               className="px-1.5 text-ink-400 hover:text-accent-600 touch-manipulation min-w-8 min-h-8 inline-flex items-center justify-center"
@@ -2519,6 +2497,7 @@ function ExpandMemoArea({
   placeholder,
   onEditFocus,
   onEditBlur,
+  className = "",
 }: {
   id: string;
   value: string;
@@ -2527,6 +2506,7 @@ function ExpandMemoArea({
   placeholder: string;
   onEditFocus?: () => void;
   onEditBlur?: () => void;
+  className?: string;
 }) {
   const [local, setLocal] = useState(value);
   React.useEffect(() => {
@@ -2535,7 +2515,7 @@ function ExpandMemoArea({
   return (
     <textarea
       id={id}
-      className="input w-full min-h-[6.5rem] resize-y text-sm leading-snug"
+      className={`input w-full min-h-[6.5rem] resize-y text-sm leading-snug ${className}`.trim()}
       value={local}
       onChange={(e) => {
         setLocal(e.target.value);

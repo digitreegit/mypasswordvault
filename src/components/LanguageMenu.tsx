@@ -150,11 +150,7 @@ export function LanguageMenu({
             />
           </>
         ) : (
-          <Globe
-            width={triggerClassName ? 18 : 20}
-            height={triggerClassName ? 18 : 20}
-            className="shrink-0"
-          />
+          <Globe className="shrink-0" aria-hidden />
         )}
       </button>
       {panel}

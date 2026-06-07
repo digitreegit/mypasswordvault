@@ -1,5 +1,5 @@
 import React from "react";
-import { Shield } from "./Icons";
+import { AppBrand } from "./AppBrand";
 import { LanguageMenu } from "./LanguageMenu";
 import type { Locale } from "../lib/i18n/locale";
 
@@ -15,6 +15,7 @@ interface ScreenHeaderProps {
   /** e.g. Close / Cancel on the same row as the page title */
   titleRowEnd?: React.ReactNode;
   className?: string;
+  /** @deprecated Use global `.app-brand` sizing in index.css */
   shieldClassName?: string;
   /** Forwarded to `<h1>` for dialog `aria-labelledby` */
   titleId?: string;
@@ -39,7 +40,6 @@ export function ScreenHeader({
   brandHomeAriaLabel,
   titleRowEnd,
   className,
-  shieldClassName = "w-8 h-auto",
   titleId,
   beforeTitle,
   subtitle,
@@ -52,35 +52,11 @@ export function ScreenHeader({
       className={["space-y-3", className].filter(Boolean).join(" ")}
     >
       <div className="flex items-center justify-between gap-2 min-h-[2.5rem]">
-        {brandHomeHref ? (
-          <a
-            href={brandHomeHref}
-            className="flex items-center gap-2 min-w-0 rounded-md outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-            aria-label={brandHomeAriaLabel}
-          >
-            <Shield
-              className={["text-accent-500 shrink-0", shieldClassName].filter(Boolean).join(" ")}
-            />
-            <span
-              className="font-brand font-semibold text-base text-ink-800 tracking-tight truncate"
-              translate="no"
-            >
-              {brandName}
-            </span>
-          </a>
-        ) : (
-          <div className="flex items-center gap-2 min-w-0">
-            <Shield
-              className={["text-accent-500 shrink-0", shieldClassName].filter(Boolean).join(" ")}
-            />
-            <span
-              className="font-brand font-semibold text-base text-ink-800 tracking-tight truncate"
-              translate="no"
-            >
-              {brandName}
-            </span>
-          </div>
-        )}
+        <AppBrand
+          name={brandName}
+          href={brandHomeHref}
+          homeAriaLabel={brandHomeAriaLabel}
+        />
         {showLanguageMenu && locale && onLocaleChange ? (
           <LanguageMenu
             value={locale}
