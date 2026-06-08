@@ -3,6 +3,7 @@ import {
   CheckIcon,
   ChevronRightIcon,
   ExclamationTriangleIcon,
+  PlusCircleIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import { isAuthV2 } from "../lib/authV2";
@@ -149,6 +150,64 @@ function SecuritySection({
       <h3 className="text-sm font-semibold text-ink-800">{title}</h3>
       <p className="text-xs text-ink-600 leading-snug">{hint}</p>
       {children}
+    </div>
+  );
+}
+
+function SecurityCtaRow({
+  label,
+  disabled,
+  onClick,
+  tone = "indigo",
+  trailingChevron = false,
+}: {
+  label: string;
+  disabled?: boolean;
+  onClick: () => void;
+  tone?: "indigo" | "gray";
+  trailingChevron?: boolean;
+}) {
+  const toneClass =
+    tone === "gray"
+      ? "text-ink-600 hover:text-ink-800"
+      : "text-accent-600 hover:text-accent-700";
+  const sizeClass = trailingChevron
+    ? "text-[0.875rem] leading-[1.43]"
+    : "text-[1rem] leading-normal";
+  const buttonClass = [
+    "inline-flex items-center gap-1 py-0.5 font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30 rounded-md",
+    sizeClass,
+    toneClass,
+  ].join(" ");
+  const leadingIconClass =
+    tone === "gray"
+      ? "h-4 w-4 shrink-0 text-ink-400"
+      : "h-4 w-4 shrink-0 text-accent-500";
+  const trailingIconClass =
+    tone === "gray"
+      ? "h-4 w-4 shrink-0 text-ink-400"
+      : "h-4 w-4 shrink-0 text-accent-500";
+
+  return (
+    <div className="border-t border-ink-200 pt-3">
+      <button
+        type="button"
+        className={buttonClass}
+        disabled={disabled}
+        onClick={onClick}
+      >
+        {trailingChevron ? (
+          <>
+            <span>{label}</span>
+            <ChevronRightIcon className={trailingIconClass} aria-hidden />
+          </>
+        ) : (
+          <>
+            <PlusCircleIcon className={leadingIconClass} aria-hidden />
+            <span>{label}</span>
+          </>
+        )}
+      </button>
     </div>
   );
 }
@@ -572,19 +631,16 @@ export function SecuritySettingsPanel() {
             </div>
           </div>
         ) : (
-          <div className="space-y-3">
+          <>
             <p className="text-sm text-ink-600 leading-snug">
               {t("settings.securityTotpNotConfigured")}
             </p>
-            <button
-              type="button"
-              className="btn-secondary text-sm"
+            <SecurityCtaRow
+              label={t("settings.securityTotpSetup")}
               disabled={totpBusy}
               onClick={() => void startTotpEnrollment()}
-            >
-              {t("settings.securityTotpSetup")}
-            </button>
-          </div>
+            />
+          </>
         )}
         {totpError ? <p className="text-sm text-red-600">{totpError}</p> : null}
         {totpSuccess ? (
@@ -694,20 +750,16 @@ export function SecuritySettingsPanel() {
             </div>
           </div>
         ) : (
-          <div className="border-t border-ink-100 pt-3">
-            <button
-              type="button"
-              className="w-full flex items-center justify-between gap-3 py-0.5 text-sm font-medium text-ink-600 hover:text-ink-800 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30 rounded-md"
-              disabled={recoveryBusy}
-              onClick={() => {
-                setRecoveryError(null);
-                setRecoveryConfirm(true);
-              }}
-            >
-              <span>{t("settings.securityRecoveryRegenerate")}</span>
-              <ChevronRightIcon className="h-4 w-4 shrink-0 text-ink-400" aria-hidden />
-            </button>
-          </div>
+          <SecurityCtaRow
+            label={t("settings.securityRecoveryRegenerate")}
+            tone="gray"
+            trailingChevron
+            disabled={recoveryBusy}
+            onClick={() => {
+              setRecoveryError(null);
+              setRecoveryConfirm(true);
+            }}
+          />
         )}
         {recoveryError ? (
           <p className="text-sm text-red-600">{recoveryError}</p>

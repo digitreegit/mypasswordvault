@@ -478,9 +478,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   function renderBackup() {
     return (
       <div className="space-y-4">
-        <div className="rounded-lg border border-orange-200 bg-orange-50 p-5 sm:p-6">
-          <p className="settings-sync-hint text-orange-900 leading-snug">{t("settings.syncHint")}</p>
-        </div>
+        <p className="settings-sync-hint text-ink-600 leading-snug">{t("settings.syncHint")}</p>
         <div className="card p-5 sm:p-6 space-y-3">
           <h3 className="text-sm font-semibold text-ink-800">
             {t("settings.fileBackupAdvanced")}
