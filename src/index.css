@@ -48,21 +48,30 @@ body {
   }
 }
 
-/* iOS native — HIG: 17pt body, 44pt touch targets, softer corners */
+/* iOS native — Apple HIG type + icon scale (isolated from web) */
 html.native-app.native-ios {
-  --type-caption: 0.8125rem;
-  --type-sub: 0.9375rem;
-  --type-body: 1.0625rem;
-  --type-title: 1.375rem;
-  --type-headline: 1.75rem;
+  --type-caption: 0.8125rem; /* 13pt footnote */
+  --type-sub: 0.9375rem; /* 15pt subheadline */
+  --type-body: 1.0625rem; /* 17pt body */
+  --type-title: 1.375rem; /* 22pt title */
+  --type-headline: 1.75rem; /* 28pt large title */
   --leading-body: 1.41;
   --leading-sub: 1.45;
   --leading-caption: 1.38;
+  --ui-icon-size: 1.25rem; /* 20pt toolbar / row icons */
+  --ui-icon-size-sm: 1.0625rem; /* 17pt inline */
+  --ui-icon-size-compact: 1rem;
+  --ui-icon-btn-size: 2.75rem; /* 44pt touch */
+  --ui-icon-btn-size-compact: 2.375rem;
   --btn-font-size: 1.0625rem;
   --btn-line-height: 1.41;
   --btn-min-height: 2.75rem;
   --btn-radius: 0.75rem;
   --btn-padding-inline: 1rem;
+  --app-brand-shield-size: 2.125rem;
+  --app-brand-text-size: 1.0625rem;
+  --type-field-label: var(--type-sub);
+  --leading-field-label: var(--leading-sub);
 }
 
 /* Android native — Material 3: 14sp labels, 40dp height (enable when shell ships) */
@@ -80,10 +89,13 @@ html.native-app.native-android {
   --btn-min-height: 2.5rem;
   --btn-radius: 1.25rem;
   --btn-padding-inline: 1.5rem;
+  --type-field-label: var(--type-sub);
+  --leading-field-label: var(--leading-sub);
 }
 
+/* Narrow mobile web only — do not scale Capacitor icons globally */
 @media (max-width: 767px) {
-  :root {
+  html:not(.native-app) {
     --ui-icon-size: 1.5rem;
     --ui-icon-size-sm: 1.25rem;
     --ui-icon-size-compact: 1.125rem;
@@ -533,7 +545,7 @@ html.native-app .native-onboard__body {
 }
 
 @media (min-width: 640px) {
-  :root {
+  html:not(.native-app) {
     --app-brand-text-size: 1.125rem;
   }
 }
@@ -758,142 +770,312 @@ html.native-app .native-onboard__body {
     --btn-min-height: 2.75rem;
     --btn-radius: 0.5rem;
     --btn-padding-inline: 1rem;
+    --type-field-label: var(--type-sub);
+    --leading-field-label: var(--leading-sub);
   }
 
-  /* Remap Tailwind text utilities inside mobile shells only */
+  /* ── iOS native: Apple HIG text scale (Capacitor only) ── */
   html.native-ios .text-xs,
-  html.native-android .text-xs,
-  .app-shell__panel .text-xs,
-  .vault-page .text-xs,
-  .settings-page .text-xs,
-  .native-screen .text-xs,
-  .setup-screen__body--fixed .text-xs {
+  html.native-ios .vault-page .text-xs,
+  html.native-ios .settings-page .text-xs,
+  html.native-ios .native-screen .text-xs,
+  html.native-ios .setup-screen__body--fixed .text-xs {
+    font-size: var(--type-caption) !important;
+    line-height: var(--leading-caption);
+  }
+  html.native-ios .text-sm,
+  html.native-ios .vault-page .text-sm,
+  html.native-ios .settings-page .text-sm,
+  html.native-ios .native-screen .text-sm,
+  html.native-ios .setup-screen__body--fixed .text-sm {
     font-size: var(--type-sub) !important;
     line-height: var(--leading-sub);
   }
-  html.native-ios .text-sm,
-  html.native-android .text-sm,
-  .app-shell__panel .text-sm,
-  .vault-page .text-sm,
-  .settings-page .text-sm,
-  .native-screen .text-sm,
-  .setup-screen__body--fixed .text-sm {
-    font-size: var(--type-body) !important;
-    line-height: var(--leading-body);
-  }
   html.native-ios .text-base,
-  html.native-android .text-base,
-  .app-shell__panel .text-base,
-  .vault-page .text-base,
-  .settings-page .text-base,
-  .native-screen .text-base,
-  .setup-screen__body--fixed .text-base {
+  html.native-ios .vault-page .text-base,
+  html.native-ios .settings-page .text-base,
+  html.native-ios .native-screen .text-base,
+  html.native-ios .setup-screen__body--fixed .text-base {
     font-size: var(--type-body) !important;
     line-height: var(--leading-body);
   }
   html.native-ios .text-lg,
-  html.native-android .text-lg,
-  .app-shell__panel .text-lg,
-  .vault-page .text-lg,
-  .settings-page .text-lg,
-  .native-screen .text-lg,
-  .setup-screen__body--fixed .text-lg {
+  html.native-ios .vault-page .text-lg,
+  html.native-ios .settings-page .text-lg,
+  html.native-ios .native-screen .text-lg,
+  html.native-ios .setup-screen__body--fixed .text-lg {
     font-size: var(--type-title) !important;
     line-height: 1.35;
   }
   html.native-ios .text-xl,
-  html.native-android .text-xl,
-  .app-shell__panel .text-xl,
-  .vault-page .text-xl,
-  .settings-page .text-xl,
-  .native-screen .text-xl,
-  .setup-screen__body--fixed .text-xl {
-    font-size: var(--type-headline) !important;
-    line-height: 1.3;
+  html.native-ios .vault-page .text-xl,
+  html.native-ios .settings-page .text-xl,
+  html.native-ios .native-screen .text-xl,
+  html.native-ios .setup-screen__body--fixed .text-xl {
+    font-size: var(--type-title) !important;
+    line-height: 1.35;
   }
   html.native-ios .text-2xl,
-  html.native-android .text-2xl,
-  .app-shell__panel .text-2xl,
-  .vault-page .text-2xl,
-  .settings-page .text-2xl,
-  .native-screen .text-2xl,
-  .setup-screen__body--fixed .text-2xl {
-    font-size: 2rem !important;
+  html.native-ios .vault-page .text-2xl,
+  html.native-ios .settings-page .text-2xl,
+  html.native-ios .native-screen .text-2xl,
+  html.native-ios .setup-screen__body--fixed .text-2xl {
+    font-size: var(--type-headline) !important;
     line-height: 1.25;
   }
 
   html.native-ios .web-auth-subtitle,
-  html.native-android .web-auth-subtitle,
-  .app-shell__panel .web-auth-subtitle,
-  .native-screen .web-auth-subtitle {
+  html.native-ios .native-screen .web-auth-subtitle {
     font-size: var(--type-sub) !important;
     line-height: var(--leading-sub);
     color: #5e5e68;
   }
 
   html.native-ios .lock-panel-hint,
-  html.native-android .lock-panel-hint,
-  .app-shell__panel .lock-panel-hint,
-  .native-screen .lock-panel-hint {
+  html.native-ios .native-screen .lock-panel-hint {
     font-size: var(--type-sub);
     line-height: var(--leading-sub);
     color: #5e5e68;
   }
 
   html.native-ios .lock-panel-link,
-  html.native-android .lock-panel-link,
-  .app-shell__panel .lock-panel-link,
-  .native-screen .lock-panel-link {
+  html.native-ios .native-screen .lock-panel-link {
     font-size: var(--type-sub);
     line-height: var(--leading-sub);
     color: #5e5e68;
   }
 
-  /* Explicit smallest tier (legal fine print, footnotes) */
-  .type-caption,
-  .text-caption {
+  html.native-ios .type-caption,
+  html.native-ios .text-caption {
     font-size: var(--type-caption) !important;
     line-height: var(--leading-caption);
   }
 
-  .type-body {
+  html.native-ios .type-body {
     font-size: var(--type-body);
     line-height: var(--leading-body);
   }
-  .type-sub {
+
+  html.native-ios .type-sub {
     font-size: var(--type-sub);
     line-height: var(--leading-sub);
     color: #5e5e68;
   }
 
-  /* Shells inherit body size */
-  .app-shell__panel,
-  .setup-screen__body--fixed,
-  .native-screen__scroll,
-  .native-launch__scroll,
-  .native-screen {
+  html.native-ios .vault-page,
+  html.native-ios .settings-page,
+  html.native-ios .native-screen,
+  html.native-ios .native-screen__scroll,
+  html.native-ios .native-launch__scroll,
+  html.native-ios .setup-screen__body--fixed {
     font-size: var(--type-body);
     line-height: var(--leading-body);
   }
 
-  .setup-shell-intro h1 {
+  html.native-ios .setup-shell-intro h1 {
     font-size: var(--type-headline);
     line-height: 1.25;
     font-weight: 700;
     letter-spacing: -0.02em;
     color: #121216;
   }
-  .setup-shell-intro p {
+
+  html.native-ios .setup-shell-intro p {
     font-size: var(--type-sub);
     line-height: var(--leading-sub);
     color: #5e5e68;
   }
 
+  html.native-ios .settings-page h1.settings-section-title,
+  html.native-ios .settings-section-title {
+    font-size: var(--type-title) !important;
+    line-height: 1.3;
+  }
+
+  html.native-ios .screen-page-title {
+    font-size: var(--type-title) !important;
+    line-height: 1.35;
+  }
+
+  html.native-ios .screen-page-title.text-2xl {
+    font-size: var(--type-headline) !important;
+    line-height: 1.25;
+  }
+
+  html.native-ios .mobile-swipe-row__content .text-lg,
+  html.native-ios .vault-page .mobile-swipe-row .text-lg {
+    font-size: var(--type-body) !important;
+    line-height: var(--leading-body);
+  }
+
+  html.native-ios .settings-mobile-tab {
+    font-size: var(--type-sub) !important;
+    line-height: var(--leading-sub);
+  }
+
+  html.native-ios .settings-section-subtitle {
+    font-size: var(--type-sub) !important;
+    line-height: var(--leading-sub);
+  }
+
+  html.native-ios .vault-toolbar-icon-btn > svg,
+  html.native-ios .vault-toolbar-icon-btn > .ui-icon,
+  html.native-ios #root .vault-toolbar-icon-btn > svg[aria-hidden] {
+    width: var(--ui-icon-size);
+    height: var(--ui-icon-size);
+  }
+
+  /* ── Mobile web browser only (not Capacitor) ── */
+  html:not(.native-app) .text-xs,
+  html:not(.native-app) .app-shell__panel .text-xs,
+  html:not(.native-app) .vault-page .text-xs,
+  html:not(.native-app) .settings-page .text-xs,
+  html:not(.native-app) .native-screen .text-xs,
+  html:not(.native-app) .setup-screen__body--fixed .text-xs {
+    font-size: var(--type-sub) !important;
+    line-height: var(--leading-sub);
+  }
+  html:not(.native-app) .text-sm,
+  html:not(.native-app) .app-shell__panel .text-sm,
+  html:not(.native-app) .vault-page .text-sm,
+  html:not(.native-app) .settings-page .text-sm,
+  html:not(.native-app) .native-screen .text-sm,
+  html:not(.native-app) .setup-screen__body--fixed .text-sm {
+    font-size: var(--type-body) !important;
+    line-height: var(--leading-body);
+  }
+  html:not(.native-app) .text-base,
+  html:not(.native-app) .app-shell__panel .text-base,
+  html:not(.native-app) .vault-page .text-base,
+  html:not(.native-app) .settings-page .text-base,
+  html:not(.native-app) .native-screen .text-base,
+  html:not(.native-app) .setup-screen__body--fixed .text-base {
+    font-size: var(--type-body) !important;
+    line-height: var(--leading-body);
+  }
+  html:not(.native-app) .text-lg,
+  html:not(.native-app) .app-shell__panel .text-lg,
+  html:not(.native-app) .vault-page .text-lg,
+  html:not(.native-app) .settings-page .text-lg,
+  html:not(.native-app) .native-screen .text-lg,
+  html:not(.native-app) .setup-screen__body--fixed .text-lg {
+    font-size: var(--type-title) !important;
+    line-height: 1.35;
+  }
+  html:not(.native-app) .text-xl,
+  html:not(.native-app) .app-shell__panel .text-xl,
+  html:not(.native-app) .vault-page .text-xl,
+  html:not(.native-app) .settings-page .text-xl,
+  html:not(.native-app) .native-screen .text-xl,
+  html:not(.native-app) .setup-screen__body--fixed .text-xl {
+    font-size: var(--type-headline) !important;
+    line-height: 1.3;
+  }
+  html:not(.native-app) .text-2xl,
+  html:not(.native-app) .app-shell__panel .text-2xl,
+  html:not(.native-app) .vault-page .text-2xl,
+  html:not(.native-app) .settings-page .text-2xl,
+  html:not(.native-app) .native-screen .text-2xl,
+  html:not(.native-app) .setup-screen__body--fixed .text-2xl {
+    font-size: 2rem !important;
+    line-height: 1.25;
+  }
+
+  html:not(.native-app) .web-auth-subtitle,
+  html:not(.native-app) .app-shell__panel .web-auth-subtitle,
+  html:not(.native-app) .native-screen .web-auth-subtitle {
+    font-size: var(--type-sub) !important;
+    line-height: var(--leading-sub);
+    color: #5e5e68;
+  }
+
+  html:not(.native-app) .lock-panel-hint,
+  html:not(.native-app) .app-shell__panel .lock-panel-hint,
+  html:not(.native-app) .native-screen .lock-panel-hint {
+    font-size: var(--type-sub);
+    line-height: var(--leading-sub);
+    color: #5e5e68;
+  }
+
+  html:not(.native-app) .lock-panel-link,
+  html:not(.native-app) .app-shell__panel .lock-panel-link,
+  html:not(.native-app) .native-screen .lock-panel-link {
+    font-size: var(--type-sub);
+    line-height: var(--leading-sub);
+    color: #5e5e68;
+  }
+
+  html:not(.native-app) .type-caption,
+  html:not(.native-app) .text-caption {
+    font-size: var(--type-caption) !important;
+    line-height: var(--leading-caption);
+  }
+
+  html:not(.native-app) .type-body {
+    font-size: var(--type-body);
+    line-height: var(--leading-body);
+  }
+
+  html:not(.native-app) .type-sub {
+    font-size: var(--type-sub);
+    line-height: var(--leading-sub);
+    color: #5e5e68;
+  }
+
+  html:not(.native-app) .app-shell__panel,
+  html:not(.native-app) .setup-screen__body--fixed,
+  html:not(.native-app) .native-screen__scroll,
+  html:not(.native-app) .native-launch__scroll,
+  html:not(.native-app) .native-screen {
+    font-size: var(--type-body);
+    line-height: var(--leading-body);
+  }
+
+  html:not(.native-app) .setup-shell-intro h1 {
+    font-size: var(--type-headline);
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #121216;
+  }
+
+  html:not(.native-app) .setup-shell-intro p {
+    font-size: var(--type-sub);
+    line-height: var(--leading-sub);
+    color: #5e5e68;
+  }
+
+  /* Android native (future) — keep separate from iOS */
+  html.native-android .text-xs,
+  html.native-android .vault-page .text-xs,
+  html.native-android .settings-page .text-xs,
+  html.native-android .native-screen .text-xs {
+    font-size: var(--type-caption) !important;
+    line-height: var(--leading-caption);
+  }
+  html.native-android .text-sm,
+  html.native-android .vault-page .text-sm,
+  html.native-android .settings-page .text-sm,
+  html.native-android .native-screen .text-sm {
+    font-size: var(--type-sub) !important;
+    line-height: var(--leading-sub);
+  }
+  html.native-android .text-base,
+  html.native-android .vault-page .text-base,
+  html.native-android .settings-page .text-base,
+  html.native-android .native-screen .text-base {
+    font-size: var(--type-body) !important;
+    line-height: var(--leading-body);
+  }
+
+  /* Field inputs — global selectors cover portaled overlays (createPortal → body) */
   html.native-ios .input:not(textarea),
   html.native-ios .vault-page .input:not(textarea),
   html.native-ios .settings-page .input:not(textarea),
   html.native-ios .native-screen .input:not(textarea),
   html.native-ios .setup-screen__body--fixed .input:not(textarea),
+  html.native-android .input:not(textarea),
+  html:not(.native-app) .input:not(textarea),
   html:not(.native-app) .app-shell__panel .input:not(textarea),
   html:not(.native-app) .vault-page .input:not(textarea),
   html:not(.native-app) .settings-page .input:not(textarea),
@@ -902,8 +1084,9 @@ html.native-app .native-onboard__body {
     min-height: 2.75rem;
     border-radius: 0.75rem;
     padding: 0.625rem 1rem;
-    font-size: var(--type-body);
-    line-height: var(--leading-body);
+    font-size: var(--type-body) !important;
+    line-height: var(--leading-body) !important;
+    font-weight: 400;
   }
 
   html.native-ios textarea.input,
@@ -911,6 +1094,8 @@ html.native-app .native-onboard__body {
   html.native-ios .settings-page textarea.input,
   html.native-ios .native-screen textarea.input,
   html.native-ios .setup-screen__body--fixed textarea.input,
+  html.native-android textarea.input,
+  html:not(.native-app) textarea.input,
   html:not(.native-app) .app-shell__panel textarea.input,
   html:not(.native-app) .vault-page textarea.input,
   html:not(.native-app) .settings-page textarea.input,
@@ -918,8 +1103,9 @@ html.native-app .native-onboard__body {
   html:not(.native-app) .setup-screen__body--fixed textarea.input {
     border-radius: 0.75rem;
     padding: 0.625rem 1rem;
-    font-size: var(--type-body);
-    line-height: var(--leading-body);
+    font-size: var(--type-body) !important;
+    line-height: var(--leading-body) !important;
+    font-weight: 400;
   }
 
   html.native-android .input:not(textarea),
@@ -927,14 +1113,17 @@ html.native-app .native-onboard__body {
     min-height: 3.5rem;
     border-radius: 0.25rem;
     padding: 1rem;
-    font-size: var(--type-body);
-    line-height: var(--leading-body);
+    font-size: var(--type-body) !important;
+    line-height: var(--leading-body) !important;
+    font-weight: 400;
   }
 
   .vault-mobile-memo {
     min-height: 8rem !important;
   }
 
+  /* All mobile .btn-* share token typography (beats Tailwind text-sm on same element).
+     Global html:not(.native-app) selectors cover portaled modals (createPortal → body). */
   html.native-ios .btn,
   html.native-ios .btn-primary,
   html.native-ios .btn-secondary,
@@ -947,6 +1136,12 @@ html.native-app .native-onboard__body {
   html.native-android .btn-ghost,
   html.native-android .btn-danger,
   html.native-android .btn-danger-soft,
+  html:not(.native-app) .btn,
+  html:not(.native-app) .btn-primary,
+  html:not(.native-app) .btn-secondary,
+  html:not(.native-app) .btn-ghost,
+  html:not(.native-app) .btn-danger,
+  html:not(.native-app) .btn-danger-soft,
   html:not(.native-app) .app-shell__panel .btn,
   html:not(.native-app) .app-shell__panel .btn-primary,
   html:not(.native-app) .app-shell__panel .btn-secondary,
@@ -971,28 +1166,66 @@ html.native-app .native-onboard__body {
   html:not(.native-app) .native-screen .btn-ghost,
   html:not(.native-app) .native-screen .btn-danger,
   html:not(.native-app) .native-screen .btn-danger-soft {
-    font-size: var(--btn-font-size);
-    line-height: var(--btn-line-height);
+    font-size: var(--btn-font-size) !important;
+    line-height: var(--btn-line-height) !important;
+    font-weight: 500;
     min-height: var(--btn-min-height);
     border-radius: var(--btn-radius);
     padding-left: var(--btn-padding-inline);
     padding-right: var(--btn-padding-inline);
   }
 
+  /* Compact inline actions (e.g. security row) keep caption size */
+  html.native-ios .btn.text-xs,
+  html.native-ios .btn-primary.text-xs,
+  html.native-ios .btn-secondary.text-xs,
+  html.native-ios .btn-ghost.text-xs,
+  html.native-android .btn.text-xs,
+  html.native-android .btn-primary.text-xs,
+  html.native-android .btn-secondary.text-xs,
+  html.native-android .btn-ghost.text-xs,
+  html:not(.native-app) .btn.text-xs,
+  html:not(.native-app) .btn-primary.text-xs,
+  html:not(.native-app) .btn-secondary.text-xs,
+  html:not(.native-app) .btn-ghost.text-xs {
+    font-size: var(--type-caption) !important;
+    line-height: var(--leading-caption) !important;
+    min-height: auto;
+  }
+
+  /* Field labels smaller than inputs; !important beats .label { @apply text-sm } remap */
   html.native-ios .label,
   html.native-ios .mobile-field-label,
   html.native-android .label,
   html.native-android .mobile-field-label,
-  .app-shell__panel .label,
-  .app-shell__panel .mobile-field-label,
-  .vault-page .label,
-  .vault-page .mobile-field-label,
-  .settings-page .label,
-  .settings-page .mobile-field-label,
-  .native-screen .label,
-  .native-screen .mobile-field-label {
-    font-size: var(--type-sub);
-    line-height: var(--leading-sub);
+  html:not(.native-app) .label,
+  html:not(.native-app) .mobile-field-label,
+  html:not(.native-app) .app-shell__panel .label,
+  html:not(.native-app) .app-shell__panel .mobile-field-label,
+  html:not(.native-app) .vault-page .label,
+  html:not(.native-app) .vault-page .mobile-field-label,
+  html:not(.native-app) .settings-page .label,
+  html:not(.native-app) .settings-page .mobile-field-label,
+  html:not(.native-app) .native-screen .label,
+  html:not(.native-app) .native-screen .mobile-field-label {
+    font-size: var(--type-field-label) !important;
+    line-height: var(--leading-field-label) !important;
+    font-weight: 500;
+  }
+
+  html.native-ios .label.text-xs,
+  html.native-ios .mobile-field-label.text-xs,
+  html.native-android .label.text-xs,
+  html.native-android .mobile-field-label.text-xs,
+  html:not(.native-app) .label.text-xs,
+  html:not(.native-app) .mobile-field-label.text-xs {
+    font-size: var(--type-caption) !important;
+    line-height: var(--leading-caption) !important;
+  }
+
+  html:not(.native-app) .mobile-entry-detail__scroll {
+    font-size: var(--type-body);
+    line-height: var(--leading-body);
   }
 
   .mobile-list-group {
@@ -1007,6 +1240,31 @@ html.native-app .native-onboard__body {
 
   .vault-mobile-search {
     padding-left: 2.25rem;
+  }
+
+  html.native-ios .vault-mobile-search,
+  html.native-ios .vault-page .vault-mobile-search.input {
+    padding-left: 2.5rem !important;
+  }
+
+  html.native-ios .settings-back-to-vault-btn {
+    min-height: 1.875rem !important;
+    padding: 0.25rem 0.625rem !important;
+    font-size: 0.8125rem !important;
+    line-height: 1.38;
+    border-radius: 0.375rem;
+    background: #fff !important;
+    border-color: rgb(217 217 223 / 1);
+    box-shadow: 0 1px 2px rgb(18 18 22 / 0.04);
+  }
+
+  html.native-ios .settings-back-to-vault-btn:active:not(:disabled) {
+    background: #f7f7f8 !important;
+  }
+
+  html.native-ios .settings-back-to-vault-btn svg[aria-hidden] {
+    width: 0.75rem !important;
+    height: 0.75rem !important;
   }
 
   .vault-mobile-search-wrap svg.vault-mobile-search-icon[aria-hidden],
@@ -1056,12 +1314,12 @@ html.native-app .native-onboard__body {
     vertical-align: top;
   }
 
-  .settings-mobile-tab {
+  html:not(.native-app) .settings-mobile-tab {
     font-size: 0.9375rem !important;
     line-height: 1.45;
   }
 
-  .settings-back-to-vault-btn {
+  html:not(.native-app) .settings-back-to-vault-btn {
     min-height: 2rem !important;
     padding: 0.375rem 0.75rem !important;
     font-size: 0.8125rem !important;
@@ -1072,21 +1330,21 @@ html.native-app .native-onboard__body {
     box-shadow: 0 1px 2px rgb(18 18 22 / 0.04);
   }
 
-  .settings-back-to-vault-btn:hover:not(:disabled) {
+  html:not(.native-app) .settings-back-to-vault-btn:hover:not(:disabled) {
     background: #f7f7f8 !important;
   }
 
-  .settings-back-to-vault-btn svg[aria-hidden] {
+  html:not(.native-app) .settings-back-to-vault-btn svg[aria-hidden] {
     width: 0.625rem !important;
     height: 0.625rem !important;
   }
 
-  .settings-section-title {
+  html:not(.native-app) .settings-section-title {
     font-size: 1.5rem !important;
     line-height: 1.3;
   }
 
-  .settings-section-subtitle {
+  html:not(.native-app) .settings-section-subtitle {
     font-size: 0.9375rem !important;
     line-height: 1.45;
   }
@@ -1152,9 +1410,9 @@ html.native-app .native-onboard__body {
     height: var(--ui-icon-size-compact);
   }
 
-  .vault-toolbar-icon-btn > svg,
-  .vault-toolbar-icon-btn > .ui-icon,
-  #root .vault-toolbar-icon-btn > svg[aria-hidden] {
+  html:not(.native-app) .vault-toolbar-icon-btn > svg,
+  html:not(.native-app) .vault-toolbar-icon-btn > .ui-icon,
+  html:not(.native-app) #root .vault-toolbar-icon-btn > svg[aria-hidden] {
     width: 1.5rem;
     height: 1.5rem;
   }

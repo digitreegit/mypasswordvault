@@ -381,10 +381,23 @@
           width: 100%;
         }
 
-        .landing-nav-panel .nav-actions > .btn {
+        .landing-nav-panel .nav-actions > .btn,
+        .landing-nav-panel .nav-actions #landing-auth-root .btn {
           width: 100%;
           justify-content: center;
           min-height: 2.75rem;
+        }
+
+        .landing-nav-panel .nav-actions #landing-auth-root {
+          display: flex;
+          width: 100%;
+          justify-content: center;
+        }
+
+        .landing-nav-panel .nav-actions #landing-auth-root .landing-user-menu {
+          width: 100%;
+          display: flex;
+          justify-content: center;
         }
 
         .landing-nav-panel .nav-actions .landing-lang-root {

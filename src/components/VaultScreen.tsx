@@ -1672,7 +1672,10 @@ function MobileSwipeEntryRow({
         body={t("vault.mobileDeleteModalBody")}
         cancelLabel={t("common.cancel")}
         confirmLabel={t("vault.mobileDeleteConfirm")}
-        onCancel={() => setDeleteModalOpen(false)}
+        onCancel={() => {
+          setDeleteModalOpen(false);
+          closeSwipe();
+        }}
         onConfirm={handleDeleteConfirm}
       />
     </>
@@ -1752,14 +1755,14 @@ function MobileActionModal({
         <div className="action-modal__footer px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
           <button
             type="button"
-            className="btn-secondary text-sm w-full sm:w-auto"
+            className="btn-secondary w-full sm:w-auto"
             onClick={onCancel}
           >
             {cancelLabel}
           </button>
           <button
             type="button"
-            className={`${confirmClassName} text-sm w-full sm:w-auto`}
+            className={`${confirmClassName} w-full sm:w-auto`}
             onClick={onConfirm}
           >
             {confirmLabel}
