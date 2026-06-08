@@ -242,11 +242,11 @@ export const MESSAGES_KR: Record<string, string> = {
   "errors.passkeyNotSupported": "이 브라우저에서는 패스키를 지원하지 않습니다.",
   "errors.passkeyFailed": "패스키 확인에 실패했습니다.",
   "errors.passkeyCancelled":
-    "패스키 로그인이 취소되었거나 시간이 초과되었습니다. 다시 시도하거나 아래 백업 로그인을 사용하세요.",
+    "패스키 잠금 해제가 취소되었습니다. 패스키 버튼을 눌러 다시 시도하세요.",
   "errors.passkeyCancelledSetup":
     "패스키 등록이 취소되었거나 시간이 초과되었습니다. Continue를 누른 뒤 Face ID 또는 기기 암호 안내를 끝까지 완료하세요.",
   "errors.passkeyTimeout":
-    "패스키 로그인 시간이 초과되었습니다. 다시 시도하거나 아래 백업 로그인을 사용하세요.",
+    "패스키 잠금 해제 시간이 초과되었습니다. 패스키 버튼을 눌러 다시 시도하세요.",
   "errors.passkeyTimeoutSetup":
     "패스키 등록 시간이 초과되었습니다. Continue를 누른 뒤 Face ID 또는 기기 암호 안내를 끝까지 완료하세요.",
   "errors.passkeyWrongDomain":

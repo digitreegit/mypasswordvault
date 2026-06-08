@@ -249,11 +249,11 @@ export const MESSAGES_EN: Record<string, string> = {
   "errors.passkeyNotSupported": "Passkeys are not supported in this browser.",
   "errors.passkeyFailed": "Passkey verification failed.",
   "errors.passkeyCancelled":
-    "Passkey sign-in was cancelled or timed out. Try again, or use backup sign-in below.",
+    "Passkey unlock was cancelled. Tap the passkey button to try again.",
   "errors.passkeyCancelledSetup":
     "Passkey registration was cancelled or timed out. Tap Continue and complete the Face ID or device passcode prompt.",
   "errors.passkeyTimeout":
-    "Passkey sign-in timed out. Try again, or use backup sign-in below.",
+    "Passkey unlock timed out. Tap the passkey button to try again.",
   "errors.passkeyTimeoutSetup":
     "Passkey registration timed out. Tap Continue and complete the Face ID or device passcode prompt.",
   "errors.passkeyWrongDomain":

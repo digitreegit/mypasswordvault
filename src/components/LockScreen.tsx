@@ -54,20 +54,28 @@ export function LockScreen() {
   const [code, setCode] = useState("");
   const [backupMode, setBackupMode] = useState<"totp" | "recovery">("totp");
   const [showBackup, setShowBackup] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [backupError, setBackupError] = useState<string | null>(null);
+  const [passkeyError, setPasskeyError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
 
   async function handlePasskey() {
-    setError(null);
+    setPasskeyError(null);
     setBusy(true);
     try {
       await unlockWithPasskey();
     } catch (err: unknown) {
-      setError(
+      if (
+        isAppError(err) &&
+        (err.code === "errors.passkeyCancelled" ||
+          err.code === "errors.passkeyTimeout")
+      ) {
+        return;
+      }
+      setPasskeyError(
         isAppError(err)
           ? t(err.code)
-          : (err as Error)?.message ?? t("lock.errFailed")
+          : (err as Error)?.message ?? t("lock.errFailed"),
       );
     } finally {
       setBusy(false);
@@ -76,15 +84,15 @@ export function LockScreen() {
 
   async function handle(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
+    setBackupError(null);
     setBusy(true);
     try {
       await unlock(pw, code, backupMode);
     } catch (err: unknown) {
-      setError(
+      setBackupError(
         isAppError(err)
           ? t(err.code)
-          : (err as Error)?.message ?? t("lock.errFailed")
+          : (err as Error)?.message ?? t("lock.errFailed"),
       );
     } finally {
       setBusy(false);
@@ -179,22 +187,30 @@ export function LockScreen() {
         )}
 
         {canPasskey && (
-          <button
-            type="button"
-            className="btn-primary w-full inline-flex items-center justify-center gap-2"
-            onClick={() => void handlePasskey()}
-            disabled={busy}
-          >
-            <LockOpen className="w-4 h-4 shrink-0" aria-hidden />
-            {t("lock.unlockPasskey")}
-          </button>
+          <>
+            <button
+              type="button"
+              className="btn-primary w-full inline-flex items-center justify-center gap-2"
+              onClick={() => void handlePasskey()}
+              disabled={busy}
+            >
+              <LockOpen className="w-4 h-4 shrink-0" aria-hidden />
+              {t("lock.unlockPasskey")}
+            </button>
+            {passkeyError ? (
+              <p className="text-sm text-red-600 leading-snug">{passkeyError}</p>
+            ) : null}
+          </>
         )}
 
         <p className="pt-1 text-center text-xs text-ink-600">
           <button
             type="button"
             className="font-semibold text-ink-600 hover:text-ink-800 hover:underline focus:outline-none focus-visible:underline"
-            onClick={() => setShowBackup((v) => !v)}
+            onClick={() => {
+              setPasskeyError(null);
+              setShowBackup((v) => !v);
+            }}
           >
             {showBackup ? t("lock.hideBackup") : t("lock.useBackup")}
           </button>
@@ -288,7 +304,9 @@ export function LockScreen() {
                 placeholder={backupMode === "totp" ? "000000" : "XXXX-XXXX"}
               />
             </div>
-            {error && <div className="text-sm text-red-600">{error}</div>}
+            {backupError ? (
+              <div className="text-sm text-red-600">{backupError}</div>
+            ) : null}
             <button
               type="submit"
               className="btn-primary w-full inline-flex items-center justify-center gap-2"
@@ -315,17 +333,17 @@ export function LockScreen() {
               ) : (
                 <div className="space-y-2 text-sm text-left">
                   <p className="text-red-600 leading-snug mb-3">{t("lock.resetWarn")}</p>
-                  <div className="flex gap-2 justify-start">
+                  <div className="flex gap-2 justify-start items-center">
                     <button
                       type="button"
-                      className="btn-secondary shrink-0 whitespace-nowrap"
+                      className="btn-secondary shrink-0"
                       onClick={() => setConfirmReset(false)}
                     >
                       {t("common.cancel")}
                     </button>
                     <button
                       type="button"
-                      className="btn-danger flex-1 min-w-0 whitespace-nowrap"
+                      className="btn-danger flex-1 min-w-0 whitespace-normal text-center leading-snug !h-auto py-2.5"
                       onClick={async () => {
                         await resetVault();
                       }}
