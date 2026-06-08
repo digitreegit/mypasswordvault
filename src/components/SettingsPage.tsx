@@ -290,11 +290,11 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
         <div className="card p-5 sm:p-6 space-y-3">
           <h3
             id="settings-autolock-title"
-            className="text-sm font-semibold text-ink-800"
+            className="settings-card-title text-sm font-semibold text-ink-800"
           >
             {t("settings.autoLock")}
           </h3>
-          <p className="text-xs text-ink-600 leading-snug">
+          <p className="settings-card-hint text-xs text-ink-600 leading-snug">
             {t("settings.autoLockHint")}
           </p>
           <div className="relative">
@@ -342,11 +342,11 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
         <div className="card p-5 sm:p-6 space-y-3">
           <h3
             id="settings-language-title"
-            className="text-sm font-semibold text-ink-800"
+            className="settings-card-title text-sm font-semibold text-ink-800"
           >
             {t("settings.language")}
           </h3>
-          <p className="text-xs text-ink-600 leading-snug">
+          <p className="settings-card-hint text-xs text-ink-600 leading-snug">
             {t("settings.languageHint")}
           </p>
           <div className="relative">
@@ -479,12 +479,12 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   function renderBackup() {
     return (
       <div className="space-y-4">
-        <p className="settings-sync-hint text-ink-600 leading-snug">{t("settings.syncHint")}</p>
+        <p className="settings-sync-hint text-orange-700 leading-snug">{t("settings.syncHint")}</p>
         <div className="card p-5 sm:p-6 space-y-3">
-          <h3 className="text-sm font-semibold text-ink-800">
+          <h3 className="settings-card-title text-sm font-semibold text-ink-800">
             {t("settings.fileBackupAdvanced")}
           </h3>
-          <p className="text-xs text-ink-600 leading-snug">
+          <p className="settings-card-hint text-xs text-ink-600 leading-snug">
             {t("settings.fileBackupAdvancedHint")}
           </p>
           <div className="flex flex-col sm:flex-row gap-2">

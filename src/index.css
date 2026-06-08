@@ -757,6 +757,16 @@ html.native-app .native-onboard__body {
     height: 0.75rem !important;
   }
 
+  html:not(.native-app) .settings-page .settings-card-title {
+    font-size: 0.9375rem !important;
+    line-height: 1.45;
+  }
+
+  html:not(.native-app) .settings-page .settings-card-hint {
+    font-size: 0.8125rem !important;
+    line-height: 1.38;
+  }
+
   /* Admin customers table — truncate long license keys; keep actions visible */
   html:not(.native-app) .admin-customers-col-email {
     width: 20%;

@@ -147,8 +147,8 @@ function SecuritySection({
 }) {
   return (
     <div className="card p-5 sm:p-6 space-y-3">
-      <h3 className="text-sm font-semibold text-ink-800">{title}</h3>
-      <p className="text-xs text-ink-600 leading-snug">{hint}</p>
+      <h3 className="settings-card-title text-sm font-semibold text-ink-800">{title}</h3>
+      <p className="settings-card-hint text-xs text-ink-600 leading-snug">{hint}</p>
       {children}
     </div>
   );
@@ -635,7 +635,7 @@ export function SecuritySettingsPanel() {
           </div>
         ) : (
           <>
-            <p className="text-sm text-ink-600 leading-snug">
+            <p className="settings-card-hint text-sm text-orange-700 leading-snug">
               {t("settings.securityTotpNotConfigured")}
             </p>
             <SecurityCtaRow
@@ -661,7 +661,7 @@ export function SecuritySettingsPanel() {
             count: recoveryCodesRemaining,
           })}
         />
-        <p className="text-xs text-ink-600 leading-snug">
+        <p className="settings-card-hint text-xs text-ink-600 leading-snug">
           {t("settings.securityRecoveryOnceHint")}
         </p>
 
