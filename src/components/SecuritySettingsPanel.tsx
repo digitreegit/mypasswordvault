@@ -158,38 +158,41 @@ function SecurityCtaRow({
   label,
   disabled,
   onClick,
-  tone = "indigo",
+  tone = "blue",
   trailingChevron = false,
 }: {
   label: string;
   disabled?: boolean;
   onClick: () => void;
-  tone?: "indigo" | "gray";
+  tone?: "blue" | "gray";
   trailingChevron?: boolean;
 }) {
   const toneClass =
     tone === "gray"
       ? "text-ink-600 hover:text-ink-800"
-      : "text-accent-600 hover:text-accent-700";
+      : "text-sky-600 hover:text-sky-700";
   const sizeClass = trailingChevron
     ? "text-[0.875rem] leading-[1.43]"
     : "text-[1rem] leading-normal";
   const buttonClass = [
-    "inline-flex items-center gap-1 py-0.5 font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30 rounded-md",
+    "inline-flex items-center gap-1 py-0.5 font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 rounded-md",
+    tone === "gray"
+      ? "focus-visible:ring-accent-500/30"
+      : "focus-visible:ring-sky-500/30",
     sizeClass,
     toneClass,
   ].join(" ");
   const leadingIconClass =
     tone === "gray"
       ? "h-4 w-4 shrink-0 text-ink-400"
-      : "h-4 w-4 shrink-0 text-accent-500";
+      : "h-4 w-4 shrink-0 text-sky-500";
   const trailingIconClass =
     tone === "gray"
       ? "h-4 w-4 shrink-0 text-ink-400"
-      : "h-4 w-4 shrink-0 text-accent-500";
+      : "h-4 w-4 shrink-0 text-sky-500";
 
   return (
-    <div className="border-t border-ink-200 pt-3">
+    <div className="border-t border-ink-100 pt-3">
       <button
         type="button"
         className={buttonClass}
