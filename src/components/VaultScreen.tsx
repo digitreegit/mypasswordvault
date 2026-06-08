@@ -1248,15 +1248,7 @@ export function VaultScreen() {
         <ul className="md:hidden mobile-list-group list-none p-0 m-0 flex flex-col gap-2">
           {filtered.length === 0 ? (
             <li className="p-8 text-center text-ink-500 text-base">
-              {t("vault.empty")}{" "}
-              <button
-                type="button"
-                className="text-accent-600 hover:underline disabled:opacity-50 disabled:pointer-events-none"
-                onClick={addEntry}
-                disabled={atEntryLimit}
-              >
-                {t("vault.emptyCta")}
-              </button>
+              {t("vault.empty")}
             </li>
           ) : (
             filtered.map((e) => (
@@ -1358,15 +1350,7 @@ export function VaultScreen() {
                       colSpan={5}
                       className="text-center py-16 text-ink-500"
                     >
-                      {t("vault.empty")}{" "}
-                      <button
-                        type="button"
-                        className="text-accent-600 hover:underline disabled:opacity-50 disabled:pointer-events-none"
-                        onClick={addEntry}
-                        disabled={atEntryLimit}
-                      >
-                        {t("vault.emptyCta")}
-                      </button>
+                      {t("vault.empty")}
                     </td>
                   </tr>
                 </tbody>

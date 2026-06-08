@@ -234,11 +234,11 @@ export function StripeCheckoutModal({
           </h2>
           <button
             type="button"
-            className="inline-flex shrink-0 items-center justify-center rounded-lg p-2 text-ink-500 hover:bg-ink-100 hover:text-ink-800 transition-colors"
+            className="modal-close-btn inline-flex shrink-0 items-center justify-center rounded-lg p-2 text-ink-500 hover:bg-ink-100 hover:text-ink-800 transition-colors"
             onClick={handleClose}
             aria-label={t("pricing.checkoutModalClose")}
           >
-            <XMarkIcon className="h-5 w-5" aria-hidden />
+            <XMarkIcon className="modal-close-btn__icon h-5 w-5" aria-hidden />
           </button>
         </header>
 

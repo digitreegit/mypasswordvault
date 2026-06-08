@@ -151,7 +151,7 @@ export function PricingDrawer({
               ? `pricing-drawer-sheet relative flex w-full max-h-[min(92dvh,720px)] flex-col bg-white rounded-t-2xl shadow-[0_-8px_40px_rgba(15,23,42,0.18)] transition-transform duration-300 ease-out ${
                   entered ? "translate-y-0" : "translate-y-full"
                 }`
-              : `absolute inset-y-0 right-0 flex w-full max-w-[min(100%,56rem)] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out ${
+              : `pricing-drawer-panel absolute inset-y-0 right-0 flex w-full max-w-[min(100%,32rem)] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out ${
                   entered ? "translate-x-0" : "translate-x-full"
                 }`
           }
@@ -179,12 +179,12 @@ export function PricingDrawer({
             </div>
             <button
               type="button"
-              className="inline-flex shrink-0 items-center justify-center rounded-lg p-2 text-ink-500 hover:bg-ink-100 hover:text-ink-800 transition-colors disabled:opacity-40"
+              className="modal-close-btn inline-flex shrink-0 items-center justify-center rounded-lg p-2 text-ink-500 hover:bg-ink-100 hover:text-ink-800 transition-colors disabled:opacity-40"
               onClick={onClose}
               disabled={checkoutModalOpen}
               aria-label={t("vault.entryLimitModalClose")}
             >
-              <XMarkIcon className="h-5 w-5" aria-hidden />
+              <XMarkIcon className="modal-close-btn__icon h-5 w-5" aria-hidden />
             </button>
           </header>
 

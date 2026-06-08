@@ -8,6 +8,7 @@ import {
   ClipboardDocumentIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronDown } from "./Icons";
+import { ModalCloseButton } from "./ModalCloseButton";
 import { LOCALES, LOCALE_LABELS, type Locale } from "../lib/i18n/locale";
 import { AccountCredentialPanel } from "./AccountCredentialPanel";
 import { PlanBadge } from "./PlanBadge";
@@ -792,14 +793,11 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
                     >
                       {t("settings.deleteAccount")}
                     </h2>
-                    <button
-                      type="button"
-                      className="shrink-0 rounded-md px-2 py-1 text-sm font-medium text-ink-600 hover:bg-ink-100 hover:text-ink-900"
+                    <ModalCloseButton
                       onClick={closeDeleteAccountModal}
+                      ariaLabel={t("common.close")}
                       disabled={deletingAccount}
-                    >
-                      {t("common.close")}
-                    </button>
+                    />
                   </div>
                 </div>
                 <div className="px-5 py-4 space-y-3">

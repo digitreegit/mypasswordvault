@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  ChevronRightIcon,
   QuestionMarkCircleIcon,
   ShieldCheckIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { CautionNotice } from "./CautionNotice";
+import { ModalCloseButton } from "./ModalCloseButton";
 import { useVault } from "../lib/vault";
 import {
   copyTextForClipboard,
@@ -151,14 +152,7 @@ function PasskeyHelpModal({ t, onClose }: { t: TFn; onClose: () => void }) {
           >
             {t("setup.passkeyHelpTitle")}
           </h2>
-          <button
-            type="button"
-            className="btn-ghost p-1.5 -mr-1 text-ink-500 shrink-0"
-            onClick={onClose}
-            aria-label={t("common.close")}
-          >
-            <XMarkIcon className="h-5 w-5" aria-hidden />
-          </button>
+          <ModalCloseButton onClick={onClose} ariaLabel={t("common.close")} />
         </div>
         <div className="px-5 py-4 space-y-3 text-sm text-ink-700 leading-relaxed">
           {paragraphs.map((p) => (
@@ -581,14 +575,17 @@ export function SetupScreen() {
               {t("setup.nextRecovery")}
             </button>
             <div className="space-y-3">
-              <button
-                type="button"
-                className="btn-secondary w-full text-sm"
-                onClick={handleSkipTotp}
-                disabled={busy}
-              >
-                {t("setup.skipBackupTotp")}
-              </button>
+              <div className="border-t border-ink-100 pt-3">
+                <button
+                  type="button"
+                  className="inline-flex w-full items-center justify-center gap-1 text-sm font-medium text-ink-600 hover:text-ink-900 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                  onClick={handleSkipTotp}
+                  disabled={busy}
+                >
+                  <span>{t("setup.skipBackupTotp")}</span>
+                  <ChevronRightIcon className="h-4 w-4 shrink-0" aria-hidden />
+                </button>
+              </div>
               <CautionNotice showIcon>{t("setup.backupTotpRecommend")}</CautionNotice>
             </div>
           </div>

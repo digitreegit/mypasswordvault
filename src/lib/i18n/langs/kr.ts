@@ -517,8 +517,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "vault.colMemo": "메모",
   "vault.colActions": "동작",
   "vault.colAction": "액션",
-  "vault.empty": "저장된 항목이 없습니다.",
-  "vault.emptyCta": "새 항목을 추가하세요.",
+  "vault.empty": "항목 없음",
   "vault.footer":
     "비밀번호는 AES-GCM-256으로 암호화됩니다. 로그인 시 암호문이 계정에 동기화되며 서버는 내용을 읽을 수 없습니다. 복사된 비밀번호는 20초 후 클립보드에서 지워집니다.",
   "vault.totalItems": "전체 {{count}}개",
@@ -563,6 +562,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "pwdGen.cAmbiguous": "혼동되는 문자 제외",
   "pwdGen.minDigits": "최소 숫자 개수",
   "pwdGen.minSymbols": "최소 특수문자 개수",
+  "pwdGen.decreaseCount": "{{label}} 줄이기",
+  "pwdGen.increaseCount": "{{label}} 늘리기",
 
   "pricing.backHome": "소개 페이지",
   "pricing.backApp": "금고로 돌아가기",

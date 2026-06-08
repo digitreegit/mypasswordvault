@@ -3,6 +3,13 @@ import { AUTH_DE, AUTH_ES, AUTH_FR, AUTH_IT } from "./auth_i18n";
 import { LAUNCH_DE, LAUNCH_ES, LAUNCH_FR, LAUNCH_IT } from "./launch_i18n";
 import { PRICING_DE, PRICING_ES, PRICING_FR, PRICING_IT } from "./pricing_i18n";
 import { SETTINGS_DE, SETTINGS_ES, SETTINGS_FR, SETTINGS_IT } from "./settings_i18n";
+import {
+  SETTINGS_SECURITY_DE,
+  SETTINGS_SECURITY_ES,
+  SETTINGS_SECURITY_FR,
+  SETTINGS_SECURITY_IT,
+} from "./settings_security_i18n";
+import { PWDGEN_DE, PWDGEN_ES, PWDGEN_FR, PWDGEN_IT } from "./pwd_gen_i18n";
 import { SETUP_DE, SETUP_ES, SETUP_FR, SETUP_IT } from "./setup_i18n";
 
 export const MESSAGES_ES: Record<string, string> = {
@@ -96,8 +103,7 @@ export const MESSAGES_ES: Record<string, string> = {
   "vault.uncategorized": "—",
   "vault.summaryUncategorized": "Sin categoría",
   "vault.addShort": "Añadir",
-  "vault.empty": "No hay entradas.",
-  "vault.emptyCta": "Añada su primera entrada.",
+  "vault.empty": "Sin entradas",
   "vault.footer":
     "Las contraseñas se cifran con AES-GCM-256 y solo se guardan en este dispositivo. El portapapeles se borra a los 20 s.",
   "vault.totalItems": "Total: {{count}} entradas",
@@ -128,6 +134,8 @@ export const MESSAGES_ES: Record<string, string> = {
   ...LAUNCH_ES,
   ...PRICING_ES,
   ...SETTINGS_ES,
+  ...SETTINGS_SECURITY_ES,
+  ...PWDGEN_ES,
 };
 
 export const MESSAGES_DE: Record<string, string> = {
@@ -219,8 +227,7 @@ export const MESSAGES_DE: Record<string, string> = {
   "vault.uncategorized": "—",
   "vault.summaryUncategorized": "Unkategorisiert",
   "vault.addShort": "Hinzufügen",
-  "vault.empty": "Keine Einträge.",
-  "vault.emptyCta": "Ersten Eintrag hinzufügen.",
+  "vault.empty": "Keine Einträge",
   "vault.footer":
     "Passwörter mit AES-GCM-256 verschlüsselt, nur lokal. Zwischenablage nach 20 s geleert.",
   "vault.totalItems": "Gesamt: {{count}} Einträge",
@@ -251,6 +258,8 @@ export const MESSAGES_DE: Record<string, string> = {
   ...LAUNCH_DE,
   ...PRICING_DE,
   ...SETTINGS_DE,
+  ...SETTINGS_SECURITY_DE,
+  ...PWDGEN_DE,
 };
 
 export const MESSAGES_FR: Record<string, string> = {
@@ -344,8 +353,7 @@ export const MESSAGES_FR: Record<string, string> = {
   "vault.uncategorized": "—",
   "vault.summaryUncategorized": "Sans catégorie",
   "vault.addShort": "Ajouter",
-  "vault.empty": "Aucune entrée.",
-  "vault.emptyCta": "Ajoutez votre première entrée.",
+  "vault.empty": "Aucune entrée",
   "vault.footer":
     "Mots de passe chiffrés en AES-GCM-256, stockés localement. Presse-papiers effacé après 20 s.",
   "vault.totalItems": "Total : {{count}} entrées",
@@ -376,6 +384,8 @@ export const MESSAGES_FR: Record<string, string> = {
   ...LAUNCH_FR,
   ...PRICING_FR,
   ...SETTINGS_FR,
+  ...SETTINGS_SECURITY_FR,
+  ...PWDGEN_FR,
 };
 
 export const MESSAGES_IT: Record<string, string> = {
@@ -469,8 +479,7 @@ export const MESSAGES_IT: Record<string, string> = {
   "vault.uncategorized": "—",
   "vault.summaryUncategorized": "Senza categoria",
   "vault.addShort": "Aggiungi",
-  "vault.empty": "Nessuna voce.",
-  "vault.emptyCta": "Aggiungi la prima voce.",
+  "vault.empty": "Nessuna voce",
   "vault.footer":
     "Password crittografate con AES-GCM-256 solo in locale. Appunti cancellati dopo 20 s.",
   "vault.totalItems": "Totale: {{count}} voci",
@@ -501,4 +510,6 @@ export const MESSAGES_IT: Record<string, string> = {
   ...LAUNCH_IT,
   ...PRICING_IT,
   ...SETTINGS_IT,
+  ...SETTINGS_SECURITY_IT,
+  ...PWDGEN_IT,
 };

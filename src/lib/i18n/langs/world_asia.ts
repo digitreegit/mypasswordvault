@@ -3,6 +3,12 @@ import { AUTH_CN, AUTH_ID, AUTH_JP } from "./auth_i18n";
 import { LAUNCH_CN, LAUNCH_ID, LAUNCH_JP } from "./launch_i18n";
 import { PRICING_CN, PRICING_ID, PRICING_JP } from "./pricing_i18n";
 import { SETTINGS_CN, SETTINGS_ID, SETTINGS_JP } from "./settings_i18n";
+import {
+  SETTINGS_SECURITY_CN,
+  SETTINGS_SECURITY_ID,
+  SETTINGS_SECURITY_JP,
+} from "./settings_security_i18n";
+import { PWDGEN_CN, PWDGEN_ID, PWDGEN_JP } from "./pwd_gen_i18n";
 import { SETUP_CN, SETUP_ID, SETUP_JP } from "./setup_i18n";
 
 export const MESSAGES_CN: Record<string, string> = {
@@ -90,8 +96,7 @@ export const MESSAGES_CN: Record<string, string> = {
   "vault.uncategorized": "—",
   "vault.summaryUncategorized": "未分类",
   "vault.addShort": "添加",
-  "vault.empty": "暂无条目。",
-  "vault.emptyCta": "添加第一条。",
+  "vault.empty": "暂无条目",
   "vault.footer":
     "密码使用 AES-GCM-256 加密，仅保存在本机。复制后 20 秒清除剪贴板。",
   "vault.totalItems": "共 {{count}} 条",
@@ -122,6 +127,8 @@ export const MESSAGES_CN: Record<string, string> = {
   ...LAUNCH_CN,
   ...PRICING_CN,
   ...SETTINGS_CN,
+  ...SETTINGS_SECURITY_CN,
+  ...PWDGEN_CN,
 };
 
 export const MESSAGES_JP: Record<string, string> = {
@@ -211,8 +218,7 @@ export const MESSAGES_JP: Record<string, string> = {
   "vault.uncategorized": "—",
   "vault.summaryUncategorized": "未分類",
   "vault.addShort": "追加",
-  "vault.empty": "エントリがありません。",
-  "vault.emptyCta": "最初のエントリを追加",
+  "vault.empty": "エントリなし",
   "vault.footer":
     "パスワードは AES-GCM-256 で暗号化され、この端末のみに保存されます。コピー後 20 秒でクリップボードを消去します。",
   "vault.totalItems": "合計 {{count}} 件",
@@ -243,6 +249,8 @@ export const MESSAGES_JP: Record<string, string> = {
   ...LAUNCH_JP,
   ...PRICING_JP,
   ...SETTINGS_JP,
+  ...SETTINGS_SECURITY_JP,
+  ...PWDGEN_JP,
 };
 
 export const MESSAGES_ID: Record<string, string> = {
@@ -334,8 +342,7 @@ export const MESSAGES_ID: Record<string, string> = {
   "vault.uncategorized": "—",
   "vault.summaryUncategorized": "Tanpa kategori",
   "vault.addShort": "Tambah",
-  "vault.empty": "Belum ada entri.",
-  "vault.emptyCta": "Tambahkan entri pertama.",
+  "vault.empty": "Tidak ada entri",
   "vault.footer":
     "Kata sandi dienkripsi AES-GCM-256 hanya di perangkat ini. Papan klip dikosongkan setelah 20 dtk.",
   "vault.totalItems": "Total: {{count}} entri",
@@ -366,4 +373,6 @@ export const MESSAGES_ID: Record<string, string> = {
   ...LAUNCH_ID,
   ...PRICING_ID,
   ...SETTINGS_ID,
+  ...SETTINGS_SECURITY_ID,
+  ...PWDGEN_ID,
 };

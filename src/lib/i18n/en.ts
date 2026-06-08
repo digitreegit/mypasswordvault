@@ -527,8 +527,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "vault.colMemo": "Memo",
   "vault.colActions": "Actions",
   "vault.colAction": "Action",
-  "vault.empty": "No entries yet.",
-  "vault.emptyCta": "Add your first entry.",
+  "vault.empty": "No entries",
   "vault.footer":
     "Passwords are encrypted with AES-GCM-256. When signed in, ciphertext syncs to your account; the server cannot read your secrets. Copied passwords are cleared from the clipboard after 20 seconds.",
   "vault.totalItems": "Total: {{count}} items",
@@ -576,6 +575,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "pwdGen.cAmbiguous": "Exclude ambiguous characters",
   "pwdGen.minDigits": "Minimum numbers",
   "pwdGen.minSymbols": "Minimum special characters",
+  "pwdGen.decreaseCount": "Decrease {{label}}",
+  "pwdGen.increaseCount": "Increase {{label}}",
 
   "pricing.backHome": "Home",
   "pricing.backApp": "Back to vault",

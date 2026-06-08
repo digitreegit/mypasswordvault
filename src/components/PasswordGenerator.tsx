@@ -8,6 +8,7 @@ import {
 } from "../lib/passwordGenerator";
 import { useVault } from "../lib/vault";
 import { Refresh, Check, Copy } from "./Icons";
+import { ModalCloseButton } from "./ModalCloseButton";
 
 interface Props {
   initial?: Partial<GenOptions>;
@@ -32,12 +33,14 @@ function MinCountControl({
   max,
   disabled,
   onChange,
+  t,
 }: {
   label: string;
   value: number;
   max: number;
   disabled?: boolean;
   onChange: (next: number) => void;
+  t: (key: string, vars?: Record<string, string | number>) => string;
 }) {
   return (
     <div
@@ -53,7 +56,7 @@ function MinCountControl({
           className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-ink-200 bg-white text-ink-600 hover:bg-ink-50 disabled:opacity-40 disabled:pointer-events-none"
           disabled={disabled || value <= 0}
           onClick={() => onChange(value - 1)}
-          aria-label={`${label} decrease`}
+          aria-label={t("pwdGen.decreaseCount", { label })}
         >
           −
         </button>
@@ -65,7 +68,7 @@ function MinCountControl({
           className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-ink-200 bg-white text-ink-600 hover:bg-ink-50 disabled:opacity-40 disabled:pointer-events-none"
           disabled={disabled || value >= max}
           onClick={() => onChange(value + 1)}
-          aria-label={`${label} increase`}
+          aria-label={t("pwdGen.increaseCount", { label })}
         >
           +
         </button>
@@ -134,9 +137,10 @@ export function PasswordGenerator({ initial, onUse, onClose }: Props) {
           <h1 className="font-sans text-xl font-semibold text-ink-900 tracking-tight">
             {t("pwdGen.title")}
           </h1>
-          <button type="button" className="btn-ghost text-sm shrink-0" onClick={onClose}>
-            {t("common.close")}
-          </button>
+          <ModalCloseButton
+            onClick={onClose}
+            ariaLabel={t("common.close")}
+          />
         </div>
 
         <div className="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm break-all min-h-[64px] flex items-center">
@@ -235,6 +239,7 @@ export function PasswordGenerator({ initial, onUse, onClose }: Props) {
             max={opts.length}
             disabled={!opts.digits}
             onChange={(minDigits) => setGenOpts({ minDigits })}
+            t={t}
           />
           <MinCountControl
             label={t("pwdGen.minSymbols")}
@@ -242,6 +247,7 @@ export function PasswordGenerator({ initial, onUse, onClose }: Props) {
             max={opts.length}
             disabled={!opts.symbols}
             onChange={(minSymbols) => setGenOpts({ minSymbols })}
+            t={t}
           />
         </div>
 

@@ -3,8 +3,8 @@ import type { User } from "@supabase/supabase-js";
 import {
   EnvelopeIcon,
   PencilSquareIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { ModalCloseButton } from "./ModalCloseButton";
 import { AUTH_LAST_METHOD_CHANGED } from "../lib/authLastUsed";
 import { getUserSignInMethod, useAuth } from "../lib/auth";
 import { isAppError } from "../lib/errors";
@@ -15,11 +15,13 @@ type TFn = (key: string, vars?: Record<string, string | number>) => string;
 function ModalShell({
   title,
   onClose,
+  closeAriaLabel,
   children,
   footer,
 }: {
   title: string;
   onClose: () => void;
+  closeAriaLabel: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
 }) {
@@ -38,14 +40,7 @@ function ModalShell({
           >
             {title}
           </h2>
-          <button
-            type="button"
-            className="btn-ghost p-1.5 -mr-1 text-ink-500 shrink-0"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            <XMarkIcon className="h-5 w-5" aria-hidden />
-          </button>
+          <ModalCloseButton onClick={onClose} ariaLabel={closeAriaLabel} />
         </div>
         <div className="px-5 py-4">{children}</div>
         {footer ? (
@@ -255,7 +250,11 @@ export function AccountCredentialPanel({
       </div>
 
       {passwordOpen ? (
-        <ModalShell title={t("settings.changePasswordTitle")} onClose={closePasswordModal}>
+        <ModalShell
+          title={t("settings.changePasswordTitle")}
+          onClose={closePasswordModal}
+          closeAriaLabel={t("common.close")}
+        >
           <form id="account-change-password" onSubmit={handlePasswordSave} className="space-y-4">
             <p className="text-sm text-ink-600 leading-snug">
               {t("settings.changePasswordSubtitle")}
@@ -303,6 +302,7 @@ export function AccountCredentialPanel({
         <ModalShell
           title={t("settings.updateEmailTitle")}
           onClose={closeEmailModal}
+          closeAriaLabel={t("common.close")}
           footer={
             <>
               <button

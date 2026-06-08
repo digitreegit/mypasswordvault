@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useVault } from "../lib/vault";
 import { newId, type VaultCategory } from "../lib/storage";
 import { GripVertical, Trash } from "./Icons";
+import { ModalCloseButton } from "./ModalCloseButton";
 function reorderBeforeTarget(
   list: VaultCategory[],
   draggedId: string,
@@ -178,13 +179,10 @@ export function CategoriesDialog({
             >
               {t("vault.categoriesTitle")}
             </h1>
-            <button
-              type="button"
-              className="shrink-0 rounded-md px-2 py-1 text-sm font-medium text-ink-600 hover:bg-ink-100 hover:text-ink-900"
+            <ModalCloseButton
               onClick={onClose}
-            >
-              {t("common.close")}
-            </button>
+              ariaLabel={t("common.close")}
+            />
           </div>
         </div>
         <div className="px-5 py-3 overflow-y-auto flex-1 space-y-2">
@@ -316,7 +314,7 @@ export function CategoriesDialog({
             })}
           </ul>
         </div>
-        <div className="action-modal__footer px-5 py-3 border-t border-ink-100 flex items-center justify-between gap-2">
+        <div className="action-modal__footer action-modal__footer--normal-btns px-5 py-3 border-t border-ink-100 flex items-center justify-between gap-2">
           <button
             type="button"
             className="btn-secondary shrink-0"

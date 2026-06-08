@@ -37,6 +37,7 @@ import {
   type AdminStats,
 } from "../lib/adminApi";
 import { AdminRegionBarChart, AdminSalesBarChart } from "./AdminSalesBarChart";
+import { ModalCloseButton } from "./ModalCloseButton";
 import {
   nativeFixedHeaderClass,
   nativeMainScrollClass,
@@ -1263,13 +1264,10 @@ export function AdminDashboard() {
                     >
                       {t("admin.complaintModalTitle")}
                     </h2>
-                    <button
-                      type="button"
-                      className="shrink-0 rounded-md px-2 py-1 text-sm font-medium text-ink-600 hover:bg-ink-100 hover:text-ink-900"
+                    <ModalCloseButton
                       onClick={closeComplaintModal}
-                    >
-                      {t("common.close")}
-                    </button>
+                      ariaLabel={t("common.close")}
+                    />
                   </div>
                 </div>
                 <div className="px-5 py-4 space-y-4">
@@ -1339,13 +1337,10 @@ export function AdminDashboard() {
                     >
                       {t("admin.deleteUser")}
                     </h2>
-                    <button
-                      type="button"
-                      className="shrink-0 rounded-md px-2 py-1 text-sm font-medium text-ink-600 hover:bg-ink-100 hover:text-ink-900"
+                    <ModalCloseButton
                       onClick={closeDeleteModal}
-                    >
-                      {t("common.close")}
-                    </button>
+                      ariaLabel={t("common.close")}
+                    />
                   </div>
                 </div>
                 <div className="px-5 py-4 space-y-3">
