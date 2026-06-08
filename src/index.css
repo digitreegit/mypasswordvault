@@ -21,6 +21,65 @@ body {
   --ui-icon-size: 1rem;
   --ui-icon-size-sm: 1.125rem;
   --ui-icon-btn-size: 2.25rem;
+
+  /* Button tokens — overridden per platform below (sizes in rem) */
+  --btn-font-size: 0.875rem;
+  --btn-line-height: 1.43;
+  --btn-min-height: 2.5rem;
+  --btn-radius: 0.375rem;
+  --btn-padding-inline: 0.75rem;
+}
+
+/* Desktop web (≥768px): 16px labels, compact chrome */
+@media (min-width: 768px) {
+  html:not(.native-app) {
+    --btn-font-size: 1rem;
+    --btn-line-height: 1.5;
+    --btn-min-height: 2.5rem;
+    --btn-radius: 0.375rem;
+    --btn-padding-inline: 0.75rem;
+    --app-brand-shield-size: 2rem;
+    --language-menu-globe-size: 1.25rem;
+  }
+
+  html:not(.native-app) .language-menu > button svg.ui-icon {
+    width: var(--language-menu-globe-size) !important;
+    height: var(--language-menu-globe-size) !important;
+  }
+}
+
+/* iOS native — HIG: 17pt body, 44pt touch targets, softer corners */
+html.native-app.native-ios {
+  --type-caption: 0.8125rem;
+  --type-sub: 0.9375rem;
+  --type-body: 1.0625rem;
+  --type-title: 1.375rem;
+  --type-headline: 1.75rem;
+  --leading-body: 1.41;
+  --leading-sub: 1.45;
+  --leading-caption: 1.38;
+  --btn-font-size: 1.0625rem;
+  --btn-line-height: 1.41;
+  --btn-min-height: 2.75rem;
+  --btn-radius: 0.75rem;
+  --btn-padding-inline: 1rem;
+}
+
+/* Android native — Material 3: 14sp labels, 40dp height (enable when shell ships) */
+html.native-app.native-android {
+  --type-caption: 0.6875rem;
+  --type-sub: 0.8125rem;
+  --type-body: 0.875rem;
+  --type-title: 1.375rem;
+  --type-headline: 1.75rem;
+  --leading-body: 1.43;
+  --leading-sub: 1.45;
+  --leading-caption: 1.33;
+  --btn-font-size: 0.875rem;
+  --btn-line-height: 1.43;
+  --btn-min-height: 2.5rem;
+  --btn-radius: 1.25rem;
+  --btn-padding-inline: 1.5rem;
 }
 
 @media (max-width: 767px) {
@@ -582,44 +641,212 @@ html.native-app .native-onboard__body {
   }
 }
 
-/* ── Mobile typography + controls (iOS-like; native + narrow web) ── */
-@media (max-width: 767px) {
-  :root {
-    /* iOS-style type scale */
-    --type-caption: 0.8125rem; /* 13px — meta, counts */
-    --type-sub: 0.9375rem; /* 15px — hints, subtitles, labels */
-    --type-body: 1.0625rem; /* 17px — default body */
-    --type-title: 1.375rem; /* 22px — section titles */
-    --type-headline: 1.75rem; /* 28px — page headlines */
-    --leading-body: 1.41;
-    --leading-sub: 1.45;
-    --leading-caption: 1.38;
+/* ── Desktop web auth (lock / sign-in / setup card): fixed typography ── */
+@media (min-width: 768px) {
+  html:not(.native-app) .web-auth-subtitle {
+    font-size: 0.875rem !important;
+    line-height: 1.43 !important;
+    color: #5e5e68;
   }
 
-  /* Remap Tailwind text utilities to the mobile scale */
-  .text-xs {
+  html:not(.native-app) .lock-panel-hint {
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: #5e5e68;
+  }
+
+  html:not(.native-app) .lock-panel-link {
+    font-size: 0.875rem;
+    line-height: 1.43;
+    color: #5e5e68;
+  }
+
+  html:not(.native-app) .app-shell__panel .text-xs {
+    font-size: 0.75rem !important;
+    line-height: 1.33 !important;
+  }
+
+  html:not(.native-app) .app-shell__panel .text-sm {
+    font-size: 0.875rem !important;
+    line-height: 1.43 !important;
+  }
+
+  html:not(.native-app) .app-shell__panel .text-base {
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+  }
+
+  html:not(.native-app) .app-shell__panel .text-lg {
+    font-size: 1.125rem !important;
+    line-height: 1.4 !important;
+  }
+
+  html:not(.native-app) .app-shell__panel .text-xl {
+    font-size: 1.25rem !important;
+    line-height: 1.35 !important;
+  }
+
+  html:not(.native-app) .app-shell__panel .screen-page-title-block {
+    margin-top: 1.5rem !important;
+  }
+
+  html:not(.native-app) .app-shell__panel .screen-page-title {
+    font-size: 1.5rem !important;
+    line-height: 1.35 !important;
+  }
+
+  html:not(.native-app) .app-shell__panel .label {
+    font-size: 0.875rem !important;
+    line-height: 1.43 !important;
+  }
+
+  html:not(.native-app) .app-shell__panel .input:not(textarea) {
+    font-size: 0.875rem !important;
+    line-height: 1.43 !important;
+    min-height: 2.5rem;
+  }
+
+  html:not(.native-app) .btn,
+  html:not(.native-app) .btn-primary,
+  html:not(.native-app) .btn-secondary,
+  html:not(.native-app) .btn-ghost,
+  html:not(.native-app) .btn-danger,
+  html:not(.native-app) .btn-danger-soft {
+    font-size: var(--btn-font-size) !important;
+    line-height: var(--btn-line-height);
+    min-height: var(--btn-min-height);
+    border-radius: var(--btn-radius);
+    padding-left: var(--btn-padding-inline);
+    padding-right: var(--btn-padding-inline);
+  }
+
+  html:not(.native-app) .settings-back-to-vault-btn {
+    min-height: 1.875rem !important;
+    padding: 0.25rem 0.625rem !important;
+    font-size: 0.8125rem !important;
+    line-height: 1.38;
+    border-radius: 0.375rem;
+    background: #fff !important;
+    border-color: rgb(217 217 223 / 1);
+    box-shadow: 0 1px 2px rgb(18 18 22 / 0.04);
+  }
+
+  html:not(.native-app) .settings-back-to-vault-btn:hover:not(:disabled) {
+    background: #f7f7f8 !important;
+  }
+
+  html:not(.native-app) .settings-back-to-vault-btn svg[aria-hidden] {
+    width: 0.75rem !important;
+    height: 0.75rem !important;
+  }
+}
+
+/* ── Mobile typography + controls (scoped; does not remap global desktop text) ── */
+@media (max-width: 767px) {
+  /* Narrow mobile web (browser, not Capacitor) — touch-friendly without iOS chrome */
+  html:not(.native-app) {
+    --type-caption: 0.8125rem;
+    --type-sub: 0.9375rem;
+    --type-body: 1rem;
+    --type-title: 1.375rem;
+    --type-headline: 1.75rem;
+    --leading-body: 1.5;
+    --leading-sub: 1.45;
+    --leading-caption: 1.38;
+    --btn-font-size: 1rem;
+    --btn-line-height: 1.5;
+    --btn-min-height: 2.75rem;
+    --btn-radius: 0.5rem;
+    --btn-padding-inline: 1rem;
+  }
+
+  /* Remap Tailwind text utilities inside mobile shells only */
+  html.native-ios .text-xs,
+  html.native-android .text-xs,
+  .app-shell__panel .text-xs,
+  .vault-page .text-xs,
+  .settings-page .text-xs,
+  .native-screen .text-xs,
+  .setup-screen__body--fixed .text-xs {
     font-size: var(--type-sub) !important;
     line-height: var(--leading-sub);
   }
-  .text-sm {
+  html.native-ios .text-sm,
+  html.native-android .text-sm,
+  .app-shell__panel .text-sm,
+  .vault-page .text-sm,
+  .settings-page .text-sm,
+  .native-screen .text-sm,
+  .setup-screen__body--fixed .text-sm {
     font-size: var(--type-body) !important;
     line-height: var(--leading-body);
   }
-  .text-base {
+  html.native-ios .text-base,
+  html.native-android .text-base,
+  .app-shell__panel .text-base,
+  .vault-page .text-base,
+  .settings-page .text-base,
+  .native-screen .text-base,
+  .setup-screen__body--fixed .text-base {
     font-size: var(--type-body) !important;
     line-height: var(--leading-body);
   }
-  .text-lg {
+  html.native-ios .text-lg,
+  html.native-android .text-lg,
+  .app-shell__panel .text-lg,
+  .vault-page .text-lg,
+  .settings-page .text-lg,
+  .native-screen .text-lg,
+  .setup-screen__body--fixed .text-lg {
     font-size: var(--type-title) !important;
     line-height: 1.35;
   }
-  .text-xl {
+  html.native-ios .text-xl,
+  html.native-android .text-xl,
+  .app-shell__panel .text-xl,
+  .vault-page .text-xl,
+  .settings-page .text-xl,
+  .native-screen .text-xl,
+  .setup-screen__body--fixed .text-xl {
     font-size: var(--type-headline) !important;
     line-height: 1.3;
   }
-  .text-2xl {
+  html.native-ios .text-2xl,
+  html.native-android .text-2xl,
+  .app-shell__panel .text-2xl,
+  .vault-page .text-2xl,
+  .settings-page .text-2xl,
+  .native-screen .text-2xl,
+  .setup-screen__body--fixed .text-2xl {
     font-size: 2rem !important;
     line-height: 1.25;
+  }
+
+  html.native-ios .web-auth-subtitle,
+  html.native-android .web-auth-subtitle,
+  .app-shell__panel .web-auth-subtitle,
+  .native-screen .web-auth-subtitle {
+    font-size: var(--type-sub) !important;
+    line-height: var(--leading-sub);
+    color: #5e5e68;
+  }
+
+  html.native-ios .lock-panel-hint,
+  html.native-android .lock-panel-hint,
+  .app-shell__panel .lock-panel-hint,
+  .native-screen .lock-panel-hint {
+    font-size: var(--type-sub);
+    line-height: var(--leading-sub);
+    color: #5e5e68;
+  }
+
+  html.native-ios .lock-panel-link,
+  html.native-android .lock-panel-link,
+  .app-shell__panel .lock-panel-link,
+  .native-screen .lock-panel-link {
+    font-size: var(--type-sub);
+    line-height: var(--leading-sub);
+    color: #5e5e68;
   }
 
   /* Explicit smallest tier (legal fine print, footnotes) */
@@ -662,7 +889,16 @@ html.native-app .native-onboard__body {
     color: #5e5e68;
   }
 
-  .input:not(textarea) {
+  html.native-ios .input:not(textarea),
+  html.native-ios .vault-page .input:not(textarea),
+  html.native-ios .settings-page .input:not(textarea),
+  html.native-ios .native-screen .input:not(textarea),
+  html.native-ios .setup-screen__body--fixed .input:not(textarea),
+  html:not(.native-app) .app-shell__panel .input:not(textarea),
+  html:not(.native-app) .vault-page .input:not(textarea),
+  html:not(.native-app) .settings-page .input:not(textarea),
+  html:not(.native-app) .native-screen .input:not(textarea),
+  html:not(.native-app) .setup-screen__body--fixed .input:not(textarea) {
     min-height: 2.75rem;
     border-radius: 0.75rem;
     padding: 0.625rem 1rem;
@@ -670,9 +906,27 @@ html.native-app .native-onboard__body {
     line-height: var(--leading-body);
   }
 
-  textarea.input {
+  html.native-ios textarea.input,
+  html.native-ios .vault-page textarea.input,
+  html.native-ios .settings-page textarea.input,
+  html.native-ios .native-screen textarea.input,
+  html.native-ios .setup-screen__body--fixed textarea.input,
+  html:not(.native-app) .app-shell__panel textarea.input,
+  html:not(.native-app) .vault-page textarea.input,
+  html:not(.native-app) .settings-page textarea.input,
+  html:not(.native-app) .native-screen textarea.input,
+  html:not(.native-app) .setup-screen__body--fixed textarea.input {
     border-radius: 0.75rem;
     padding: 0.625rem 1rem;
+    font-size: var(--type-body);
+    line-height: var(--leading-body);
+  }
+
+  html.native-android .input:not(textarea),
+  html.native-android textarea.input {
+    min-height: 3.5rem;
+    border-radius: 0.25rem;
+    padding: 1rem;
     font-size: var(--type-body);
     line-height: var(--leading-body);
   }
@@ -681,21 +935,62 @@ html.native-app .native-onboard__body {
     min-height: 8rem !important;
   }
 
-  .btn,
-  .btn-primary,
-  .btn-secondary,
-  .btn-ghost,
-  .btn-danger,
-  .btn-danger-soft {
-    min-height: 2.75rem;
-    border-radius: 0.75rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    font-size: var(--type-body);
+  html.native-ios .btn,
+  html.native-ios .btn-primary,
+  html.native-ios .btn-secondary,
+  html.native-ios .btn-ghost,
+  html.native-ios .btn-danger,
+  html.native-ios .btn-danger-soft,
+  html.native-android .btn,
+  html.native-android .btn-primary,
+  html.native-android .btn-secondary,
+  html.native-android .btn-ghost,
+  html.native-android .btn-danger,
+  html.native-android .btn-danger-soft,
+  html:not(.native-app) .app-shell__panel .btn,
+  html:not(.native-app) .app-shell__panel .btn-primary,
+  html:not(.native-app) .app-shell__panel .btn-secondary,
+  html:not(.native-app) .app-shell__panel .btn-ghost,
+  html:not(.native-app) .app-shell__panel .btn-danger,
+  html:not(.native-app) .app-shell__panel .btn-danger-soft,
+  html:not(.native-app) .vault-page .btn,
+  html:not(.native-app) .vault-page .btn-primary,
+  html:not(.native-app) .vault-page .btn-secondary,
+  html:not(.native-app) .vault-page .btn-ghost,
+  html:not(.native-app) .vault-page .btn-danger,
+  html:not(.native-app) .vault-page .btn-danger-soft,
+  html:not(.native-app) .settings-page .btn,
+  html:not(.native-app) .settings-page .btn-primary,
+  html:not(.native-app) .settings-page .btn-secondary,
+  html:not(.native-app) .settings-page .btn-ghost,
+  html:not(.native-app) .settings-page .btn-danger,
+  html:not(.native-app) .settings-page .btn-danger-soft,
+  html:not(.native-app) .native-screen .btn,
+  html:not(.native-app) .native-screen .btn-primary,
+  html:not(.native-app) .native-screen .btn-secondary,
+  html:not(.native-app) .native-screen .btn-ghost,
+  html:not(.native-app) .native-screen .btn-danger,
+  html:not(.native-app) .native-screen .btn-danger-soft {
+    font-size: var(--btn-font-size);
+    line-height: var(--btn-line-height);
+    min-height: var(--btn-min-height);
+    border-radius: var(--btn-radius);
+    padding-left: var(--btn-padding-inline);
+    padding-right: var(--btn-padding-inline);
   }
 
-  .label,
-  .mobile-field-label {
+  html.native-ios .label,
+  html.native-ios .mobile-field-label,
+  html.native-android .label,
+  html.native-android .mobile-field-label,
+  .app-shell__panel .label,
+  .app-shell__panel .mobile-field-label,
+  .vault-page .label,
+  .vault-page .mobile-field-label,
+  .settings-page .label,
+  .settings-page .mobile-field-label,
+  .native-screen .label,
+  .native-screen .mobile-field-label {
     font-size: var(--type-sub);
     line-height: var(--leading-sub);
   }
@@ -896,7 +1191,13 @@ html.native-app .native-onboard__body {
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 min-h-[2.5rem] text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-1.5 py-2 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    font-size: var(--btn-font-size, 0.875rem);
+    line-height: var(--btn-line-height, 1.43);
+    min-height: var(--btn-min-height, 2.5rem);
+    border-radius: var(--btn-radius, 0.375rem);
+    padding-left: var(--btn-padding-inline, 0.75rem);
+    padding-right: var(--btn-padding-inline, 0.75rem);
   }
   .btn-primary {
     @apply btn bg-accent-600 text-white hover:bg-accent-700;
@@ -950,7 +1251,9 @@ html.native-app .native-onboard__body {
   }
 
   /* Heroicons / inline SVGs without explicit opt-out */
-  #root svg[aria-hidden]:not(.ui-icon-fixed):not(.ui-icon-xs):not([data-icon-fixed]) {
+  #root svg[aria-hidden]:not(.ui-icon-fixed):not(.ui-icon-xs):not([data-icon-fixed]):not(
+      .app-brand__shield
+    ) {
     width: var(--ui-icon-size);
     height: var(--ui-icon-size);
     flex-shrink: 0;
@@ -1065,9 +1368,10 @@ html.native-app .native-onboard__body {
     box-shadow: 0 0 0 2px rgb(255 255 255), 0 0 0 4px rgb(99 102 241 / 0.45);
   }
 
+  #root .app-brand__shield,
   .app-brand__shield {
-    width: var(--app-brand-shield-size);
-    height: auto;
+    width: var(--app-brand-shield-size) !important;
+    height: auto !important;
     flex-shrink: 0;
   }
 

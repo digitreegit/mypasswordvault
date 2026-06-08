@@ -2,6 +2,7 @@ import { clearAuthLastMethod, clearPendingAuthMethod } from "./authLastUsed";
 import { clearPasswordRecoveryPending } from "./passwordRecoveryPending";
 import { getSupabase, isSupabaseConfigured } from "./supabaseClient";
 import { wipeAll } from "./storage";
+import { clearVaultOwnerUserId } from "./vaultOwner";
 
 function functionsBaseUrl(): string {
   const url = (import.meta.env.VITE_SUPABASE_URL ?? "").replace(/\/$/, "");
@@ -57,6 +58,7 @@ export async function requestAccountDeletion(): Promise<void> {
 /** Remove vault and auth-related data stored on this device. */
 export async function clearAllLocalAppData(): Promise<void> {
   await wipeAll();
+  clearVaultOwnerUserId();
   clearPendingAuthMethod();
   clearAuthLastMethod();
   clearPasswordRecoveryPending();

@@ -18,7 +18,7 @@ import {
   redirectVercelPreviewToCanonical,
 } from "./lib/siteOrigin";
 import { ensureOAuthSessionFromUrl } from "./lib/supabaseAuthRedirect";
-import { isNativeApp } from "./lib/platform";
+import { getNativePlatform, isNativeApp } from "./lib/platform";
 import { initNativeScrollFocus } from "./lib/nativeScrollFocus";
 import { initNativeViewportLock } from "./lib/nativeViewportLock";
 import { initNativeStoreBridge } from "./lib/initNativeStoreBridge";
@@ -28,6 +28,10 @@ initNativeScrollFocus();
 
 if (isNativeApp()) {
   document.documentElement.classList.add("native-app");
+  const nativePlatform = getNativePlatform();
+  if (nativePlatform) {
+    document.documentElement.classList.add(`native-${nativePlatform}`);
+  }
   initNativeViewportLock();
   void initNativeKeyboard().catch((e) => {
     console.error("initNativeKeyboard", e);

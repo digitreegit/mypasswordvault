@@ -32,8 +32,9 @@ import {
   registerVaultPasskey,
   passkeysNeedWebAuthnLabelRefresh,
   resolvePasskeyUserIdentity,
+  syncPasskeyWebAuthnNamesToEmail,
 } from "./passkey";
-import { getAuthLastEmail } from "./authLastUsed";
+import { stampVaultMetaForUser } from "./vaultOwner";
 import { resolvePasskeyKind } from "./passkeyMethods";
 import {
   generateRecoveryCodes,
@@ -194,7 +195,7 @@ function resolvePasskeyIdentityForVault(
   userEmail?: string | null,
   userDisplayName?: string | null,
 ) {
-  const email = userEmail?.trim() || getAuthLastEmail();
+  const email = userEmail?.trim() || null;
   return resolvePasskeyUserIdentity({
     userId,
     email,
@@ -345,7 +346,9 @@ export function VaultProvider({
     const m = await getMeta();
     if (!m) return;
     try {
-      const json = buildVaultBackupJson(m, await listEntries());
+      const stamped = stampVaultMetaForUser(m, userId);
+      if (stamped !== m) await putMeta(stamped);
+      const json = buildVaultBackupJson(stamped, await listEntries());
       await upsertRemoteVaultBackup(userId, json);
     } catch (e) {
       console.error("Cloud vault push failed", e);
@@ -371,7 +374,7 @@ export function VaultProvider({
     let cancelled = false;
     (async () => {
       try {
-        if (userId) await reconcileCloudAtStartup(userId);
+        if (userId) await reconcileCloudAtStartup(userId, userEmail);
       } catch (e) {
         console.error("Cloud vault reconcile failed", e);
       }
@@ -381,9 +384,27 @@ export function VaultProvider({
         setStatus("fresh");
         setMeta(null);
       } else {
-        setMeta(m);
-        if (m.locale) {
-          const L = normalizeLocale(m.locale);
+        let activeMeta = m;
+        const syncedPasskeys = syncPasskeyWebAuthnNamesToEmail(
+          m.passkeys,
+          userEmail,
+        );
+        if (syncedPasskeys) {
+          activeMeta = stampVaultMetaForUser(
+            { ...m, passkeys: syncedPasskeys, updatedAt: Date.now() },
+            userId,
+          );
+          await putMeta(activeMeta);
+        } else if (userId) {
+          const stamped = stampVaultMetaForUser(m, userId);
+          if (stamped !== m) {
+            activeMeta = stamped;
+            await putMeta(activeMeta);
+          }
+        }
+        setMeta(activeMeta);
+        if (activeMeta.locale) {
+          const L = normalizeLocale(activeMeta.locale);
           setLocaleState(L);
           try {
             localStorage.setItem(LOCALE_STORAGE_KEY, L);
@@ -397,7 +418,7 @@ export function VaultProvider({
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, userEmail]);
 
   // Keep UI in sync with the in-memory session (e.g. right after setup before re-lock).
   useEffect(() => {
@@ -932,26 +953,29 @@ export function VaultProvider({
     const verifierEnc = await encryptString(pending.dataKey, VERIFIER_PLAINTEXT);
     const totpEnc = await encryptString(pending.dataKey, pending.totpSecret);
     const now = Date.now();
-    const m: VaultMeta = {
-      id: "vault",
-      authVersion: 2,
-      salt: toBase64(pending.salt),
-      pbkdf2Iterations: pending.pbkdf2Iterations,
-      passwordWrap: pending.passwordWrap,
-      passkeyDataKeyWrap: pending.passkeyDataKeyWrap,
-      prfSalt: pending.prfSalt,
-      passkeys: pending.passkeys,
-      passkeyRpId: currentPasskeyRpId(),
-      recoveryCodeHashes: pending.recoveryCodeHashes,
-      verifier: verifierEnc,
-      totpSecret: totpEnc,
-      totpLabel: TOTP_BACKUP_ACCOUNT,
-      autoLockMinutes: pending.autoLockMinutes,
-      locale: localeRef.current,
-      categories: [],
-      createdAt: now,
-      updatedAt: now,
-    };
+    const m = stampVaultMetaForUser(
+      {
+        id: "vault",
+        authVersion: 2,
+        salt: toBase64(pending.salt),
+        pbkdf2Iterations: pending.pbkdf2Iterations,
+        passwordWrap: pending.passwordWrap,
+        passkeyDataKeyWrap: pending.passkeyDataKeyWrap,
+        prfSalt: pending.prfSalt,
+        passkeys: pending.passkeys,
+        passkeyRpId: currentPasskeyRpId(),
+        recoveryCodeHashes: pending.recoveryCodeHashes,
+        verifier: verifierEnc,
+        totpSecret: totpEnc,
+        totpLabel: TOTP_BACKUP_ACCOUNT,
+        autoLockMinutes: pending.autoLockMinutes,
+        locale: localeRef.current,
+        categories: [],
+        createdAt: now,
+        updatedAt: now,
+      },
+      userId,
+    );
     await putMeta(m);
     sessionRef.current = {
       key: pending.dataKey,
@@ -965,7 +989,7 @@ export function VaultProvider({
     setStatus("unlocked");
     await flushCloudPush();
     void refreshEntitlements();
-  }, [flushCloudPush, refreshEntitlements]);
+  }, [flushCloudPush, refreshEntitlements, userId]);
 
   const abortSetup = useCallback(async () => {
     pendingSetupRef.current = null;
@@ -973,15 +997,33 @@ export function VaultProvider({
 
   const finishUnlock = useCallback(
     async (m: VaultMeta, dataKey: CryptoKey, totpSecret: string) => {
+      let activeMeta = m;
+      const syncedPasskeys = syncPasskeyWebAuthnNamesToEmail(
+        m.passkeys,
+        userEmail,
+      );
+      if (syncedPasskeys) {
+        activeMeta = stampVaultMetaForUser(
+          { ...m, passkeys: syncedPasskeys, updatedAt: Date.now() },
+          userId,
+        );
+        await putMeta(activeMeta);
+      } else if (userId) {
+        const stamped = stampVaultMetaForUser(m, userId);
+        if (stamped !== m) {
+          activeMeta = stamped;
+          await putMeta(activeMeta);
+        }
+      }
       sessionRef.current = { key: dataKey, totpSecret };
       setBackupTotpEnabled(totpSecret.length > 0);
-      setMeta(m);
+      setMeta(activeMeta);
       lastActivityRef.current = Date.now();
       await loadEntries(dataKey);
       setStatus("unlocked");
       void refreshEntitlements();
     },
-    [loadEntries, refreshEntitlements]
+    [loadEntries, refreshEntitlements, userEmail, userId]
   );
 
   const unlockWithPasskey = useCallback(async () => {
@@ -1260,7 +1302,7 @@ export function VaultProvider({
   const recoveryCodesRemaining = meta?.recoveryCodeHashes?.length ?? 0;
 
   const passkeyIdentityEmail = useMemo(
-    () => userEmail?.trim() || getAuthLastEmail() || null,
+    () => userEmail?.trim() || null,
     [userEmail],
   );
 

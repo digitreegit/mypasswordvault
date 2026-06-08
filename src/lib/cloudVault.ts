@@ -11,6 +11,13 @@ import { AppError } from "./errors";
 import { buildVaultBackupJson, parseVaultBackup } from "./vaultBackup";
 import { getSupabase } from "./supabaseClient";
 import type { PostgrestError } from "@supabase/supabase-js";
+import { vaultPasskeysIndicateDifferentAccount } from "./passkey";
+import {
+  clearVaultOwnerUserId,
+  resolveVaultOwner,
+  setVaultOwnerUserId,
+  stampVaultMetaForUser,
+} from "./vaultOwner";
 
 /** PostgREST when `user_vaults` was never created in the project. */
 function assertSupabaseVaultOk(error: PostgrestError | null): void {
@@ -69,6 +76,27 @@ export async function deleteRemoteVaultBackup(userId: string): Promise<void> {
   if (error) assertSupabaseVaultOk(error);
 }
 
+async function importVaultSnapshot(
+  meta: VaultMeta,
+  entries: VaultEntry[],
+  ownerUserId: string,
+): Promise<void> {
+  await wipeAll();
+  const metaNorm = stampVaultMetaForUser(
+    { ...meta, categories: meta.categories ?? [] },
+    ownerUserId,
+  );
+  await putMeta(metaNorm);
+  for (const e of entries) {
+    const row: VaultEntry = {
+      ...e,
+      categoryId: typeof e.categoryId === "string" ? e.categoryId : "",
+      memo: typeof e.memo === "string" ? e.memo : "",
+    };
+    await putEntry(row);
+  }
+}
+
 /**
  * Replace the local vault with the remote snapshot (ignores timestamps).
  * Use on a new device or when the local copy is wrong; unlock afterward with the same
@@ -85,55 +113,69 @@ export async function forcePullRemoteVault(userId: string): Promise<boolean> {
     throw new AppError("errors.invalidBackup");
   }
   const { meta, entries } = payload;
-  await wipeAll();
-  const metaNorm: VaultMeta = {
-    ...meta,
-    categories: meta.categories ?? [],
-  };
-  await putMeta(metaNorm);
-  for (const e of entries) {
-    const row: VaultEntry = {
-      ...e,
-      categoryId: typeof e.categoryId === "string" ? e.categoryId : "",
-      memo: typeof e.memo === "string" ? e.memo : "",
-    };
-    await putEntry(row);
-  }
+  await importVaultSnapshot(meta, entries, userId);
   return true;
+}
+
+async function switchLocalVaultToAccount(userId: string): Promise<void> {
+  const remote = await fetchRemoteVaultBackup(userId);
+  await wipeAll();
+  clearVaultOwnerUserId();
+  if (remote) {
+    const { meta, entries } = parseVaultBackup(remote);
+    await importVaultSnapshot(meta, entries, userId);
+    return;
+  }
+  setVaultOwnerUserId(userId);
 }
 
 /**
  * On sign-in: merge local IndexedDB with cloud snapshot using `meta.updatedAt` (last-write-wins).
  * Does not decrypt secrets — only moves ciphertext JSON.
  */
-export async function reconcileCloudAtStartup(userId: string): Promise<void> {
+export async function reconcileCloudAtStartup(
+  userId: string,
+  userEmail?: string | null,
+): Promise<void> {
   const remote = await fetchRemoteVaultBackup(userId);
   const local = await getMeta();
+  const localOwner = resolveVaultOwner(local);
+
+  if (local && localOwner && localOwner !== userId) {
+    await switchLocalVaultToAccount(userId);
+    return;
+  }
+
+  if (
+    local &&
+    !localOwner &&
+    vaultPasskeysIndicateDifferentAccount(local.passkeys, userEmail)
+  ) {
+    await switchLocalVaultToAccount(userId);
+    return;
+  }
 
   if (!remote && !local) return;
 
   if (!remote && local) {
-    const json = buildVaultBackupJson(local, await listEntries());
+    const stamped = stampVaultMetaForUser(local, userId);
+    if (stamped !== local) await putMeta(stamped);
+    const json = buildVaultBackupJson(stamped, await listEntries());
     await upsertRemoteVaultBackup(userId, json);
     return;
   }
 
   if (remote && !local) {
     const { meta, entries } = parseVaultBackup(remote);
-    await wipeAll();
-    await putMeta({ ...meta, categories: meta.categories ?? [] });
-    for (const e of entries) {
-      await putEntry({
-        ...e,
-        categoryId: typeof e.categoryId === "string" ? e.categoryId : "",
-        memo: typeof e.memo === "string" ? e.memo : "",
-      });
-    }
+    await importVaultSnapshot(meta, entries, userId);
     return;
   }
 
   if (remote && local) {
-    const localJson = buildVaultBackupJson(local, await listEntries());
+    const localJson = buildVaultBackupJson(
+      stampVaultMetaForUser(local, userId),
+      await listEntries(),
+    );
     let remoteTime: number;
     let localTime: number;
     try {
@@ -145,15 +187,7 @@ export async function reconcileCloudAtStartup(userId: string): Promise<void> {
     }
     if (remoteTime > localTime) {
       const { meta, entries } = parseVaultBackup(remote);
-      await wipeAll();
-      await putMeta({ ...meta, categories: meta.categories ?? [] });
-      for (const e of entries) {
-        await putEntry({
-          ...e,
-          categoryId: typeof e.categoryId === "string" ? e.categoryId : "",
-          memo: typeof e.memo === "string" ? e.memo : "",
-        });
-      }
+      await importVaultSnapshot(meta, entries, userId);
     } else if (localTime > remoteTime) {
       await upsertRemoteVaultBackup(userId, localJson);
     }

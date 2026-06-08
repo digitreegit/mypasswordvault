@@ -126,7 +126,10 @@ export function LanguageMenu({
     );
 
   return (
-    <div className={["relative inline-block", className].filter(Boolean).join(" ")} ref={rootRef}>
+    <div
+      className={["relative inline-block language-menu", className].filter(Boolean).join(" ")}
+      ref={rootRef}
+    >
       <button
         ref={buttonRef}
         type="button"

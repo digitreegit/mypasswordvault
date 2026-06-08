@@ -62,6 +62,8 @@ export interface VaultMeta {
   categories?: VaultCategory[];
   /** UI language (plaintext; not secret). */
   locale?: Locale;
+  /** Supabase user id that owns this vault snapshot (cloud sync + account switch). */
+  cloudUserId?: string;
   createdAt: number;
   updatedAt: number;
 }

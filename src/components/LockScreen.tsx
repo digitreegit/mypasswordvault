@@ -128,6 +128,7 @@ export function LockScreen() {
     <ScreenHeader
       brandName={t("app.brandName")}
       pageTitle={t("lock.title")}
+      subtitle={t("lock.subtitle")}
       locale={locale}
       onLocaleChange={(l) => void setLocale(l)}
       languageAriaLabel={t("settings.language")}
@@ -143,11 +144,9 @@ export function LockScreen() {
           <h1 className="font-sans text-xl font-semibold text-ink-900 tracking-tight">
             {t("lock.title")}
           </h1>
-          <p className="text-xs text-ink-500 leading-snug">{t("lock.subtitle")}</p>
+          <p className="web-auth-subtitle">{t("lock.subtitle")}</p>
         </div>
-      ) : (
-        <p className="text-xs text-ink-500 leading-snug">{t("lock.subtitle")}</p>
-      )}
+      ) : null}
 
         {checkoutFlash ? (
           <div
@@ -203,7 +202,7 @@ export function LockScreen() {
           </>
         )}
 
-        <p className="pt-1 text-center text-xs text-ink-600">
+        <p className="pt-1 text-center lock-panel-link">
           <button
             type="button"
             className="font-semibold text-ink-600 hover:text-ink-800 hover:underline focus:outline-none focus-visible:underline"
@@ -224,7 +223,7 @@ export function LockScreen() {
               aria-hidden
             />
             <form onSubmit={handle} className="space-y-4 pt-4">
-            <p className="text-xs text-ink-500 leading-snug">{t("lock.backupHint")}</p>
+            <p className="lock-panel-hint">{t("lock.backupHint")}</p>
             <div>
               <label className="label">{t("lock.masterPw")}</label>
               <div className="relative">
@@ -324,7 +323,7 @@ export function LockScreen() {
                 <div className="text-center">
                   <button
                     type="button"
-                    className="text-xs text-ink-500 hover:text-red-600"
+                    className="lock-panel-hint hover:text-red-600"
                     onClick={() => setConfirmReset(true)}
                   >
                     {t("lock.forget")}

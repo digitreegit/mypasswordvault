@@ -412,6 +412,19 @@ export function SecuritySettingsPanel() {
                       <p className="text-xs text-amber-800 leading-snug">
                         {t("settings.passkeyFinishPrfHint")}
                       </p>
+                    ) : passkeyIdentityEmail ? (
+                      <p
+                        className={`text-xs truncate ${
+                          pk.webAuthnName &&
+                          !isLegacyPasskeyWebAuthnName(pk.webAuthnName) &&
+                          pk.webAuthnName.trim().toLowerCase() !==
+                            passkeyIdentityEmail.toLowerCase()
+                            ? "text-amber-800"
+                            : "text-sky-700"
+                        }`}
+                      >
+                        {passkeyIdentityEmail}
+                      </p>
                     ) : pk.webAuthnName &&
                       isLegacyPasskeyWebAuthnName(pk.webAuthnName) ? (
                       <p className="text-xs text-amber-800 truncate">

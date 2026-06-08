@@ -43,7 +43,7 @@ export function ScreenHeader({
   titleId,
   beforeTitle,
   subtitle,
-  titleClassName = "text-xl font-semibold text-ink-900 tracking-tight",
+  titleClassName = "font-semibold text-ink-900 tracking-tight",
   showLanguageMenu = true,
   hideTitle = false,
 }: ScreenHeaderProps) {
@@ -68,9 +68,12 @@ export function ScreenHeader({
       </div>
       {beforeTitle}
       {!hideTitle ? (
-      <div className="space-y-1">
+      <div className="space-y-1 screen-page-title-block">
         <div className="flex items-start justify-between gap-2">
-          <h1 id={titleId} className={["font-sans", titleClassName].join(" ")}>
+          <h1
+            id={titleId}
+            className={["font-sans screen-page-title", titleClassName].join(" ")}
+          >
             {pageTitle}
           </h1>
           {titleRowEnd ? (
@@ -78,7 +81,7 @@ export function ScreenHeader({
           ) : null}
         </div>
         {subtitle ? (
-          <p className="text-sm text-ink-500 leading-snug">{subtitle}</p>
+          <p className="web-auth-subtitle">{subtitle}</p>
         ) : null}
       </div>
       ) : null}

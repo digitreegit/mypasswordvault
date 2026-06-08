@@ -61,6 +61,14 @@ function emptyDraftEntry(id: string): DecryptedEntry {
   };
 }
 
+/** Matches Tailwind `md:` — mobile list/detail vs desktop table. */
+function isMobileVaultLayout(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(max-width: 767px)").matches
+  );
+}
+
 /** Treat legacy/default placeholder text as empty so hint styling applies. */
 function cellDisplayValue(value: string, placeholder?: string): string {
   const trimmed = value.trim();
@@ -812,7 +820,9 @@ export function VaultScreen() {
     const nextDraft = [id, ...draftEntryIdsRef.current.filter((x) => x !== id)];
     draftEntryIdsRef.current = nextDraft;
     setDraftEntryIds(nextDraft);
-    setMobileDetailId(id);
+    if (isMobileVaultLayout()) {
+      setMobileDetailId(id);
+    }
     try {
       await upsertEntry({
         id,
@@ -1398,10 +1408,12 @@ export function VaultScreen() {
         <PasswordGenerator
           onClose={closePasswordGenerator}
           onUse={async (pw) => {
-            if (mobileDetailId === generatorFor) {
+            const entryId = generatorFor;
+            if (!entryId) return;
+            if (isMobileVaultLayout() && mobileDetailId === entryId) {
               setMobileGeneratorPassword(pw);
             } else {
-              await upsertEntry({ id: generatorFor, password: pw });
+              await upsertEntry({ id: entryId, password: pw });
             }
             closePasswordGenerator();
           }}
@@ -2137,7 +2149,11 @@ function BlurInput({
   onEditBlur?: () => void;
 }) {
   const [local, setLocal] = useState(value);
-  React.useEffect(() => setLocal(value), [value]);
+  const userEditedRef = useRef(false);
+  React.useEffect(() => {
+    setLocal(value);
+    userEditedRef.current = false;
+  }, [value]);
   return (
     <input
       id={id}
@@ -2153,10 +2169,12 @@ function BlurInput({
       }}
       onChange={(e) => {
         setLocal(e.target.value);
+        userEditedRef.current = true;
         onLiveCommit?.(e.target.value);
       }}
       onBlur={() => {
-        if (local !== value) onCommit(local);
+        if (userEditedRef.current && local !== value) onCommit(local);
+        userEditedRef.current = false;
         onEditBlur?.();
       }}
       onKeyDown={(e) => {
@@ -2289,6 +2307,7 @@ function Row({
           <div className="flex items-center">
             <div className="relative flex-1 min-w-0">
               <BlurCellInput
+                key={`pass-${entry.id}-${entry.password}`}
                 className="cell-input w-full pr-8"
                 type={revealed ? "text" : "password"}
                 value={entry.password}
@@ -2456,8 +2475,10 @@ function ExpandTextInput({
   onEditBlur?: () => void;
 }) {
   const [local, setLocal] = useState(value);
+  const userEditedRef = useRef(false);
   React.useEffect(() => {
     setLocal(value);
+    userEditedRef.current = false;
   }, [value]);
   return (
     <input
@@ -2466,6 +2487,7 @@ function ExpandTextInput({
       value={local}
       onChange={(e) => {
         setLocal(e.target.value);
+        userEditedRef.current = true;
         onLiveCommit?.(e.target.value);
       }}
       placeholder={placeholder}
@@ -2475,7 +2497,8 @@ function ExpandTextInput({
         if (e.button === 0) onEditFocus?.();
       }}
       onBlur={() => {
-        if (local !== value) onCommit(local);
+        if (userEditedRef.current && local !== value) onCommit(local);
+        userEditedRef.current = false;
         onEditBlur?.();
       }}
       onKeyDown={(e) => {
@@ -2509,8 +2532,10 @@ function ExpandMemoArea({
   className?: string;
 }) {
   const [local, setLocal] = useState(value);
+  const userEditedRef = useRef(false);
   React.useEffect(() => {
     setLocal(value);
+    userEditedRef.current = false;
   }, [value]);
   return (
     <textarea
@@ -2519,13 +2544,15 @@ function ExpandMemoArea({
       value={local}
       onChange={(e) => {
         setLocal(e.target.value);
+        userEditedRef.current = true;
         onLiveCommit?.(e.target.value);
       }}
       placeholder={placeholder}
       spellCheck={true}
       onFocus={onEditFocus}
       onBlur={() => {
-        if (local !== value) onCommit(local);
+        if (userEditedRef.current && local !== value) onCommit(local);
+        userEditedRef.current = false;
         onEditBlur?.();
       }}
       onKeyDown={(e) => {
@@ -2562,7 +2589,11 @@ function BlurCellInput({
   "aria-label"?: string;
 }) {
   const [local, setLocal] = useState(value);
-  React.useEffect(() => setLocal(value), [value]);
+  const userEditedRef = useRef(false);
+  React.useEffect(() => {
+    setLocal(value);
+    userEditedRef.current = false;
+  }, [value]);
   return (
     <input
       className={className}
@@ -2576,9 +2607,13 @@ function BlurCellInput({
       onPointerDown={(e) => {
         if (e.button === 0) onEditFocus?.();
       }}
-      onChange={(e) => setLocal(e.target.value)}
+      onChange={(e) => {
+        setLocal(e.target.value);
+        userEditedRef.current = true;
+      }}
       onBlur={() => {
-        if (local !== value) onCommit(local);
+        if (userEditedRef.current && local !== value) onCommit(local);
+        userEditedRef.current = false;
         onEditBlur?.();
       }}
       onKeyDown={(e) => {

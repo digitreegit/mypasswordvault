@@ -56,7 +56,7 @@ function sidebarNavClass(active: boolean): string {
   return [
     "block rounded-md px-3 py-2 text-[14px] font-medium transition-colors",
     active
-      ? "bg-ink-100 text-ink-900"
+      ? "bg-ink-50 text-ink-900"
       : "text-ink-600 hover:bg-ink-50 hover:text-ink-900",
   ].join(" ");
 }

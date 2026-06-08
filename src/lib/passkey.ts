@@ -179,13 +179,57 @@ export function isLegacyPasskeyWebAuthnName(name: string | undefined): boolean {
   return LEGACY_PASSKEY_WEBAUTHN_NAME.test(name.trim());
 }
 
-/** True when OS prompts may still show `user-xxxxxxxx` until passkeys are re-registered. */
+function passkeyWebAuthnNameMatchesEmail(
+  webAuthnName: string | undefined,
+  email: string,
+): boolean {
+  const stored = webAuthnName?.trim().toLowerCase();
+  if (!stored || isLegacyPasskeyWebAuthnName(webAuthnName)) return false;
+  return stored === email.trim().toLowerCase();
+}
+
+/** True when passkey rows should prompt re-registration or show a stale-identity warning. */
 export function passkeysNeedWebAuthnLabelRefresh(
   passkeys: { webAuthnName?: string }[] | undefined,
   email: string | null | undefined,
 ): boolean {
   if (!email?.trim() || !passkeys?.length) return false;
-  return passkeys.some((p) => isLegacyPasskeyWebAuthnName(p.webAuthnName));
+  const want = email.trim();
+  return passkeys.some(
+    (p) =>
+      isLegacyPasskeyWebAuthnName(p.webAuthnName) ||
+      !passkeyWebAuthnNameMatchesEmail(p.webAuthnName, want),
+  );
+}
+
+/** True when stored passkey identities look tied to a different signed-in email. */
+export function vaultPasskeysIndicateDifferentAccount(
+  passkeys: { webAuthnName?: string }[] | undefined,
+  email: string | null | undefined,
+): boolean {
+  if (!email?.trim() || !passkeys?.length) return false;
+  const want = email.trim().toLowerCase();
+  return passkeys.some((p) => {
+    const stored = p.webAuthnName?.trim().toLowerCase();
+    if (!stored || isLegacyPasskeyWebAuthnName(p.webAuthnName)) return false;
+    return stored !== want;
+  });
+}
+
+/** Update stored WebAuthn display names to the current signed-in email (metadata only). */
+export function syncPasskeyWebAuthnNamesToEmail(
+  passkeys: StoredPasskey[] | undefined,
+  email: string | null | undefined,
+): StoredPasskey[] | null {
+  const want = email?.trim();
+  if (!want || !passkeys?.length) return null;
+  let changed = false;
+  const next = passkeys.map((pk) => {
+    if (passkeyWebAuthnNameMatchesEmail(pk.webAuthnName, want)) return pk;
+    changed = true;
+    return { ...pk, webAuthnName: want };
+  });
+  return changed ? next : null;
 }
 
 export function kindFromHints(
