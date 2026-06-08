@@ -319,7 +319,7 @@ export function CategoriesDialog({
         <div className="action-modal__footer px-5 py-3 border-t border-ink-100 flex items-center justify-between gap-2">
           <button
             type="button"
-            className="btn-secondary text-sm shrink-0"
+            className="btn-secondary shrink-0"
             disabled={busy}
             onClick={() => {
               const id = newId();
@@ -330,12 +330,12 @@ export function CategoriesDialog({
             {t("vault.addCategory")}
           </button>
           <div className="flex justify-end gap-2">
-            <button type="button" className="btn-ghost" onClick={onClose} disabled={busy}>
+            <button type="button" className="btn-ghost shrink-0" onClick={onClose} disabled={busy}>
               {t("common.cancel")}
             </button>
             <button
               type="button"
-              className="btn-primary"
+              className="btn-primary shrink-0"
               onClick={() => void save()}
               disabled={busy || !canSave}
             >

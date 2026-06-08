@@ -22,12 +22,17 @@ body {
   --ui-icon-size-sm: 1.125rem;
   --ui-icon-btn-size: 2.25rem;
 
-  /* Button tokens — overridden per platform below (sizes in rem) */
+  /* Button tokens — normal (default) and small (modals, compact chrome) */
   --btn-font-size: 0.875rem;
   --btn-line-height: 1.43;
   --btn-min-height: 2.5rem;
   --btn-radius: 0.375rem;
   --btn-padding-inline: 0.75rem;
+  --btn-sm-font-size: 0.8125rem;
+  --btn-sm-line-height: 1.38;
+  --btn-sm-min-height: 2rem;
+  --btn-sm-radius: 0.375rem;
+  --btn-sm-padding-inline: 0.625rem;
 }
 
 /* Desktop web (≥768px): 16px labels, compact chrome */
@@ -750,6 +755,60 @@ html.native-app .native-onboard__body {
   html:not(.native-app) .settings-back-to-vault-btn svg[aria-hidden] {
     width: 0.75rem !important;
     height: 0.75rem !important;
+  }
+
+  /* Admin customers table — truncate long license keys; keep actions visible */
+  html:not(.native-app) .admin-customers-col-email {
+    width: 20%;
+  }
+
+  html:not(.native-app) .admin-customers-col-plan {
+    width: 11%;
+  }
+
+  html:not(.native-app) .admin-customers-col-platform {
+    width: 7%;
+  }
+
+  html:not(.native-app) .admin-customers-col-purchased {
+    width: 16%;
+  }
+
+  html:not(.native-app) .admin-customers-col-amount {
+    width: 7%;
+  }
+
+  html:not(.native-app) .admin-customers-col-license {
+    width: 24%;
+  }
+
+  html:not(.native-app) .admin-customers-col-actions {
+    width: 15%;
+  }
+
+  /* Setup passkey — “This device” key icon (2× base size on desktop web) */
+  html:not(.native-app) .passkey-device-key__badge {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  html:not(.native-app) .passkey-device-key__icon {
+    width: 3rem !important;
+    height: 3rem !important;
+  }
+
+  /* Desktop modals/dialogs: compact footer actions (Add / Cancel / Save) */
+  html:not(.native-app) .action-modal__footer .btn,
+  html:not(.native-app) .action-modal__footer .btn-primary,
+  html:not(.native-app) .action-modal__footer .btn-secondary,
+  html:not(.native-app) .action-modal__footer .btn-ghost,
+  html:not(.native-app) .action-modal__footer .btn-danger,
+  html:not(.native-app) .action-modal__footer .btn-danger-soft {
+    font-size: var(--btn-sm-font-size) !important;
+    line-height: var(--btn-sm-line-height);
+    min-height: var(--btn-sm-min-height);
+    border-radius: var(--btn-sm-radius);
+    padding: 0.25rem var(--btn-sm-padding-inline);
   }
 }
 
@@ -1500,6 +1559,17 @@ html.native-app .native-onboard__body {
   .btn-danger-soft {
     @apply btn bg-red-50 text-red-700 border border-red-300 hover:bg-red-100 hover:border-red-400;
   }
+
+  /* Small tier — combine with .btn-primary | .btn-secondary | .btn-ghost | .btn-danger */
+  .btn-sm {
+    font-size: var(--btn-sm-font-size) !important;
+    line-height: var(--btn-sm-line-height);
+    min-height: var(--btn-sm-min-height);
+    border-radius: var(--btn-sm-radius);
+    padding: 0.25rem var(--btn-sm-padding-inline);
+    gap: 0.375rem;
+  }
+
   .input {
     @apply w-full rounded-md border border-ink-200 bg-white px-3 py-2 text-sm shadow-sm
            placeholder:text-ink-300 placeholder:font-normal

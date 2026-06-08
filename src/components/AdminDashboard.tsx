@@ -415,16 +415,16 @@ function LicenseKeyCell({
   const label = copied ? t("admin.licenseKeyCopied") : t("admin.copyLicenseKey");
 
   return (
-    <div className="flex items-center gap-0.5 min-w-0 w-full max-w-full">
+    <div className="admin-license-key-cell flex items-center gap-1 min-w-0 w-full max-w-full overflow-hidden">
       <span
-        className="flex-1 min-w-0 text-sm text-ink-700 truncate"
+        className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-ink-700"
         title={licenseKey}
       >
         {licenseKey}
       </span>
       <button
         type="button"
-        className="inline-flex shrink-0 items-center justify-center rounded-md p-1 text-ink-600 hover:bg-ink-100 hover:text-ink-900 transition-colors disabled:opacity-50"
+        className="admin-license-key-copy inline-flex shrink-0 items-center justify-center rounded-md p-1 text-ink-600 hover:bg-ink-100 hover:text-ink-900 transition-colors disabled:opacity-50"
         aria-label={label}
         title={label}
         onClick={() => void handleCopy()}
@@ -1117,10 +1117,19 @@ export function AdminDashboard() {
           </ul>
 
           <div className="hidden md:block overflow-x-auto overscroll-x-contain">
-            <table className="w-full min-w-[56rem] text-left">
+            <table className="admin-customers-table w-full table-fixed text-left">
+              <colgroup>
+                <col className="admin-customers-col-email" />
+                <col className="admin-customers-col-plan" />
+                <col className="admin-customers-col-platform" />
+                <col className="admin-customers-col-purchased" />
+                <col className="admin-customers-col-amount" />
+                <col className="admin-customers-col-license" />
+                <col className="admin-customers-col-actions" />
+              </colgroup>
               <thead className="bg-ink-50 text-ink-500 text-xs">
                 <tr>
-                  <th className="px-4 py-2 font-medium text-xs text-ink-500 min-w-[10rem]">
+                  <th className="px-4 py-2 font-medium text-xs text-ink-500">
                     {t("admin.colEmail")}
                   </th>
                   <th className="px-4 py-2 font-medium text-xs text-ink-500">
@@ -1135,7 +1144,7 @@ export function AdminDashboard() {
                   <th className="px-4 py-2 font-medium text-xs text-ink-500">
                     {t("admin.colAmount")}
                   </th>
-                  <th className="px-4 py-2 font-medium text-xs text-ink-500 min-w-[14rem]">
+                  <th className="px-4 py-2 font-medium text-xs text-ink-500">
                     {t("admin.colLicenseKey")}
                   </th>
                   <th className="px-4 py-2 font-medium text-xs text-ink-500 text-right">
@@ -1153,7 +1162,7 @@ export function AdminDashboard() {
                 ) : null}
                 {rows.map((row) => (
                   <tr key={row.userId} className="hover:bg-ink-50/50">
-                    <td className="px-4 py-3 align-middle min-w-[10rem] max-w-[16rem]">
+                    <td className="px-4 py-3 align-middle overflow-hidden">
                       {row.email ? (
                         <div
                           className="font-medium text-ink-800 truncate"
@@ -1199,14 +1208,14 @@ export function AdminDashboard() {
                         <AdminEmptyMark />
                       )}
                     </td>
-                    <td className="px-4 py-3 align-middle">
+                    <td className="px-4 py-3 align-middle overflow-hidden">
                       {row.licenseKey ? (
                         <LicenseKeyCell licenseKey={row.licenseKey} t={t} />
                       ) : (
                         <AdminEmptyMark />
                       )}
                     </td>
-                    <td className="px-4 py-3 align-middle text-right whitespace-nowrap">
+                    <td className="px-4 py-3 align-middle text-right whitespace-nowrap w-[1%]">
                       <AdminCustomerActions
                         row={row}
                         sessionUserId={session?.user?.id}

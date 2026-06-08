@@ -99,8 +99,12 @@ export function PasskeySetupPicker({
           </p>
         ) : (
           <div className="flex items-start gap-3">
-            <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-50 text-accent-600">
-              <KeyIcon className="h-6 w-6" aria-hidden strokeWidth={1.5} />
+            <span className="passkey-device-key__badge inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-50 text-accent-600">
+              <KeyIcon
+                className="passkey-device-key__icon h-6 w-6"
+                aria-hidden
+                strokeWidth={1.5}
+              />
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
