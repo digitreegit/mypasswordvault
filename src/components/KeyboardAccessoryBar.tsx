@@ -9,11 +9,13 @@ import {
   getFocusableFields,
   getLastKeyboardField,
   isKeyboardFocusableTarget,
+  isKeyboardNavLocked,
   setLastKeyboardField,
 } from "../lib/keyboardFocusNavigation";
 import { readKeyboardInset, setKeyboardInsetPx } from "../lib/keyboardInset";
 import {
   getKeyboardSession,
+  notifyKeyboardHide,
   subscribeKeyboardSession,
   syncKeyboardSessionFromViewport,
 } from "../lib/keyboardSession";
@@ -71,6 +73,12 @@ export function KeyboardAccessoryBar() {
     const field = resolveActiveField();
     return { ...fieldNavState(field), field };
   });
+  const [editingField, setEditingField] = useState(() => {
+    const active = document.activeElement;
+    return (
+      active instanceof HTMLElement && isKeyboardFocusableTarget(active)
+    );
+  });
 
   const refreshNavState = useCallback(() => {
     const field = resolveActiveField();
@@ -110,20 +118,52 @@ export function KeyboardAccessoryBar() {
   useEffect(() => {
     if (!enabled) return;
 
+    const refreshEditingField = () => {
+      window.setTimeout(() => {
+        const active = document.activeElement;
+        setEditingField(
+          active instanceof HTMLElement && isKeyboardFocusableTarget(active),
+        );
+      }, 0);
+    };
+
     const onFocusIn = (e: FocusEvent) => {
       const target = e.target;
       if (target instanceof HTMLElement && isKeyboardFocusableTarget(target)) {
         setLastKeyboardField(target);
+        setEditingField(true);
       }
       refreshNavState();
+      if (!isNativeApp()) syncKeyboardSessionFromViewport();
+    };
+
+    const onFocusOut = () => {
+      window.setTimeout(() => {
+        const active = document.activeElement;
+        const stillEditing =
+          active instanceof HTMLElement && isKeyboardFocusableTarget(active);
+        setEditingField(stillEditing);
+        refreshNavState();
+        if (!stillEditing && !isNativeApp() && !isKeyboardNavLocked()) {
+          notifyKeyboardHide();
+        }
+      }, 120);
     };
 
     document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("focusout", onFocusOut);
     refreshNavState();
-    return () => document.removeEventListener("focusin", onFocusIn);
+    refreshEditingField();
+    return () => {
+      document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("focusout", onFocusOut);
+    };
   }, [enabled, refreshNavState]);
 
-  const visible = enabled && keyboardOpen;
+  const visible =
+    enabled &&
+    keyboardOpen &&
+    (editingField || isKeyboardNavLocked());
 
   const runNav = (direction: "prev" | "next") => {
     const from = getLastKeyboardField() ?? navState.field;
@@ -141,6 +181,7 @@ export function KeyboardAccessoryBar() {
 
   const onDone = async () => {
     setLastKeyboardField(null);
+    setEditingField(false);
     const active = document.activeElement;
     if (active instanceof HTMLElement) active.blur();
     if (isNativeApp()) {
@@ -149,6 +190,8 @@ export function KeyboardAccessoryBar() {
       } catch {
         /* plugin missing */
       }
+    } else {
+      notifyKeyboardHide();
     }
   };
 

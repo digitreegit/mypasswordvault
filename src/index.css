@@ -770,8 +770,8 @@ html.native-app .native-onboard__body {
     --btn-min-height: 2.75rem;
     --btn-radius: 0.5rem;
     --btn-padding-inline: 1rem;
-    --type-field-label: var(--type-sub);
-    --leading-field-label: var(--leading-sub);
+    --type-field-label: var(--type-caption);
+    --leading-field-label: var(--leading-caption);
   }
 
   /* ── iOS native: Apple HIG text scale (Capacitor only) ── */
@@ -1045,6 +1045,13 @@ html.native-app .native-onboard__body {
     color: #5e5e68;
   }
 
+  html:not(.native-app) .screen-page-title,
+  html:not(.native-app) .app-shell__panel .screen-page-title,
+  html:not(.native-app) .native-screen .screen-page-title {
+    font-size: var(--type-title) !important;
+    line-height: 1.35;
+  }
+
   /* Android native (future) — keep separate from iOS */
   html.native-android .text-xs,
   html.native-android .vault-page .text-xs,
@@ -1228,6 +1235,21 @@ html.native-app .native-onboard__body {
     line-height: var(--leading-body);
   }
 
+  html:not(.native-app) .vault-password-field .input {
+    padding-right: 2.75rem !important;
+  }
+
+  html:not(.native-app) .vault-password-toggle {
+    z-index: 2;
+    background: rgb(255 255 255 / 0.92);
+    pointer-events: auto;
+  }
+
+  html:not(.native-app) .vault-password-toggle svg[aria-hidden] {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+  }
+
   .mobile-list-group {
     border: none;
     background: transparent;
@@ -1240,6 +1262,12 @@ html.native-app .native-onboard__body {
 
   .vault-mobile-search {
     padding-left: 2.25rem;
+  }
+
+  html:not(.native-app) .vault-mobile-search,
+  html:not(.native-app) .vault-page .vault-mobile-search.input,
+  html:not(.native-app) .input.vault-mobile-search {
+    padding-left: 2.5rem !important;
   }
 
   html.native-ios .vault-mobile-search,

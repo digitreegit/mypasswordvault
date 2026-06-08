@@ -1975,10 +1975,10 @@ function MobileEntryDetail({
               {t("vault.colPass")}
             </label>
             <div className="flex w-full min-w-0 items-center gap-0.5">
-              <div className="relative min-w-0 flex-1 w-0">
+              <div className="relative min-w-0 flex-1 w-0 vault-password-field">
                 <BlurInput
                   id={`m-pass-${entry.id}`}
-                  className="input min-w-0 w-full pr-10"
+                  className="input min-w-0 w-full"
                   type={revealed ? "text" : "password"}
                   value={draft.password}
                   placeholder={t("vault.phPass")}
@@ -1991,7 +1991,7 @@ function MobileEntryDetail({
                 />
                 <button
                   type="button"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-ink-300 hover:text-ink-300 active:text-ink-300 focus:text-ink-300 focus:outline-none focus-visible:text-ink-300"
+                  className="vault-password-toggle absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-ink-500 hover:text-ink-700 active:text-ink-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30"
                   onClick={toggleReveal}
                   title={revealed ? t("vault.hide") : t("vault.show")}
                   aria-label={revealed ? t("vault.hide") : t("vault.show")}
