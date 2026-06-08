@@ -2,16 +2,20 @@ import React from "react";
 
 /** App shield + lock symbol (#6366F1) — splash & onboarding brand mark. */
 export function BrandSplashSymbol({
-  className = "h-[7.875rem] w-[8.5rem]",
+  className = "",
+  "aria-label": ariaLabel,
   ...props
 }: React.SVGProps<SVGSVGElement>) {
+  const decorative = !ariaLabel;
   return (
     <svg
       viewBox="0 0 136 126"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-      className={className}
+      aria-hidden={decorative ? true : undefined}
+      aria-label={ariaLabel}
+      role={decorative ? undefined : "img"}
+      className={["brand-splash-symbol", className].filter(Boolean).join(" ")}
       {...props}
     >
       <path

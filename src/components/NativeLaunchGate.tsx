@@ -95,7 +95,7 @@ function OnboardingGraphic({
         Placeholder
       </span>
       {variant === "vault" ? (
-        <BrandSplashSymbol className="relative h-24 w-[6.5rem]" />
+        <BrandSplashSymbol className="relative" />
       ) : variant === "spreadsheet" ? (
         <SpreadsheetPlaceholderIcon className="relative h-16 w-16 text-white/95" />
       ) : variant === "secure" ? (
@@ -119,10 +119,7 @@ function NativeSplashScreen({ onContinue }: { onContinue: () => void }) {
         if (e.key === "Enter" || e.key === " ") onContinue();
       }}
     >
-      <BrandSplashSymbol
-        className="h-[7.875rem] w-[8.5rem]"
-        aria-label="My Password Vault"
-      />
+      <BrandSplashSymbol aria-label="My Password Vault" />
     </div>
   );
 }
@@ -241,7 +238,7 @@ function NativeGettingStartedScreen({
             {isLastPage ? (
               <button
                 type="button"
-                className="btn-primary w-full justify-center"
+                className="btn-primary w-full"
                 onClick={onContinue}
               >
                 {t("launch.getStarted")}

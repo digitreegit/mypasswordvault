@@ -533,6 +533,28 @@ html.native-app .native-onboard__body {
   color: #42424a;
 }
 
+html.native-app .native-launch--splash .brand-splash-symbol {
+  width: 33.333vw;
+  height: auto;
+  flex-shrink: 0;
+}
+
+html.native-app .native-onboard__art .brand-splash-symbol {
+  width: 33.333%;
+  height: auto;
+  flex-shrink: 0;
+}
+
+html.native-app.native-ios .native-onboard__footer .btn-primary {
+  font-size: var(--btn-font-size) !important;
+  line-height: var(--btn-line-height) !important;
+  font-weight: 500;
+  min-height: var(--btn-min-height) !important;
+  border-radius: var(--btn-radius) !important;
+  padding-left: var(--btn-padding-inline);
+  padding-right: var(--btn-padding-inline);
+}
+
 @media (min-width: 640px) {
   html.native-app .admin-page {
     padding-left: 1.5rem;
@@ -1625,7 +1647,7 @@ html.native-app .native-onboard__body {
   /* Heroicons / inline SVGs without explicit opt-out */
   #root svg[aria-hidden]:not(.ui-icon-fixed):not(.ui-icon-xs):not([data-icon-fixed]):not(
       .app-brand__shield
-    ):not(.modal-close-btn__icon) {
+    ):not(.brand-splash-symbol):not(.modal-close-btn__icon) {
     width: var(--ui-icon-size);
     height: var(--ui-icon-size);
     flex-shrink: 0;
