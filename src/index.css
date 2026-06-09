@@ -574,6 +574,19 @@ html.native-app.native-ios .native-onboard__footer .btn-primary {
   padding-right: var(--btn-padding-inline);
 }
 
+/* Setup passkey — “This device” key icon (2× on iOS native) */
+html.native-app.native-ios .passkey-device-key__badge {
+  width: 4rem !important;
+  height: 4rem !important;
+  min-width: 4rem;
+  min-height: 4rem;
+}
+
+html.native-app.native-ios .passkey-device-key__icon {
+  width: 3rem !important;
+  height: 3rem !important;
+}
+
 @media (min-width: 640px) {
   html.native-app .admin-page {
     padding-left: 1.5rem;
@@ -1666,7 +1679,7 @@ html.native-app.native-ios .native-onboard__footer .btn-primary {
   /* Heroicons / inline SVGs without explicit opt-out */
   #root svg[aria-hidden]:not(.ui-icon-fixed):not(.ui-icon-xs):not([data-icon-fixed]):not(
       .app-brand__shield
-    ):not(.brand-splash-symbol):not(.modal-close-btn__icon) {
+    ):not(.brand-splash-symbol):not(.passkey-device-key__icon):not(.modal-close-btn__icon) {
     width: var(--ui-icon-size);
     height: var(--ui-icon-size);
     flex-shrink: 0;
