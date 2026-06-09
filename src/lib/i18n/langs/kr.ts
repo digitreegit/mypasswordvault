@@ -325,7 +325,7 @@ export const MESSAGES_KR: Record<string, string> = {
     "패스키를 쓸 수 없을 때 사용하는 6자리 백업 코드입니다. Google Authenticator, 1Password, Authy 등을 사용하세요.",
   "settings.securityTotpConfigured": "인증 앱 설정됨",
   "settings.securityTotpNotConfigured":
-    "설정되지 않음 — 초기 설정에서 건너뛰었습니다. 여기서 백업 잠금 해제용으로 추가할 수 있습니다.",
+    "설정되지 않음 - 초기 설정에서 건너뛰었습니다. 여기서 백업 잠금 해제용으로 추가할 수 있습니다.",
   "settings.securityTotpSetup": "인증 앱 설정",
   "settings.securityTotpConfirm": "확인 후 저장",
   "settings.securityTotpConfirming": "저장 중…",

@@ -333,7 +333,7 @@ export const MESSAGES_EN: Record<string, string> = {
     "Backup 6-digit codes when passkeys are unavailable. Use Google Authenticator, 1Password, Authy, or similar.",
   "settings.securityTotpConfigured": "Authenticator app configured",
   "settings.securityTotpNotConfigured":
-    "Not configured — you skipped this during setup. Add it here for backup unlock.",
+    "Not configured - you skipped this during setup. Add it here for backup unlock.",
   "settings.securityTotpSetup": "Set up authenticator app",
   "settings.securityTotpConfirm": "Confirm and save",
   "settings.securityTotpConfirming": "Saving…",

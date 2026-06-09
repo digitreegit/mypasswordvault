@@ -23,6 +23,7 @@ import {
   TOTP_BACKUP_ACCOUNT,
 } from "../lib/totp";
 import { downloadTextFile } from "../lib/downloadTextFile";
+import { isNativeApp } from "../lib/platform";
 import { useVault } from "../lib/vault";
 import { Check, Copy, Download } from "./Icons";
 
@@ -635,9 +636,15 @@ export function SecuritySettingsPanel() {
           </div>
         ) : (
           <>
-            <p className="settings-card-hint text-sm text-orange-700 leading-snug">
-              {t("settings.securityTotpNotConfigured")}
-            </p>
+            {isNativeApp() ? (
+              <p className="security-totp-skipped-banner text-sm leading-snug">
+                {t("settings.securityTotpNotConfigured")}
+              </p>
+            ) : (
+              <p className="settings-card-hint text-sm text-orange-700 leading-snug">
+                {t("settings.securityTotpNotConfigured")}
+              </p>
+            )}
             <SecurityCtaRow
               label={t("settings.securityTotpSetup")}
               disabled={totpBusy}

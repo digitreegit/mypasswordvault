@@ -5,6 +5,7 @@ import { useAuth } from "../lib/auth";
 import {
   ArrowLeftIcon,
   CheckIcon,
+  ChevronLeftIcon,
   ClipboardDocumentIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronDown } from "./Icons";
@@ -29,6 +30,7 @@ import {
   nativeScreenRootClass,
   vaultHomeHref,
 } from "../lib/nativeLayout";
+import { isNativeApp } from "../lib/platform";
 
 export type SettingsSection = "general" | "plan" | "security" | "backup" | "account";
 
@@ -104,6 +106,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const vaultHref = vaultHomeHref();
+  const native = isNativeApp();
   const showAccountSections = Boolean(configured && user);
   const showHeaderUpgrade =
     atEntryLimit && !licensed && !isAdmin && entitlementLoaded;
@@ -479,7 +482,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
   function renderBackup() {
     return (
       <div className="space-y-4">
-        <p className="settings-sync-hint text-orange-700 leading-snug">{t("settings.syncHint")}</p>
+        <p className="settings-sync-hint text-ink-900 leading-snug">{t("settings.syncHint")}</p>
         <div className="card p-5 sm:p-6 space-y-3">
           <h3 className="settings-card-title text-sm font-semibold text-ink-800">
             {t("settings.fileBackupAdvanced")}
@@ -619,58 +622,111 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     }
   }
 
+  function navigateToVault(e: React.MouseEvent) {
+    e.preventDefault();
+    window.location.hash = vaultHref.replace(/^#/, "");
+  }
+
+  function renderSettingsTabList() {
+    return (
+      <div
+        ref={tablistRef}
+        className="settings-mobile-tablist-wrap min-w-0 w-full"
+        onTouchStart={onTabStripTouchStart}
+        onTouchMove={onTabStripTouchMove}
+      >
+        <nav
+          className="settings-mobile-tablist flex flex-nowrap gap-0 border-b border-ink-200"
+          role="tablist"
+          aria-label={t("settings.navAria")}
+        >
+          {navItems.map((item) => (
+            <a
+              key={item.id}
+              id={`settings-tab-${item.id}`}
+              href={settingsHref(item.id)}
+              role="tab"
+              aria-selected={activeSection === item.id}
+              className={settingsTabClass(activeSection === item.id)}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+      </div>
+    );
+  }
+
   return (
     <div className={nativeScreenRootClass("bg-white")}>
       <div className={nativeFixedHeaderClass()}>
-        <NativeTopHeader
-          brandName={t("app.brandName")}
-          trailing={
-            configured && user?.id ? (
-              <>
-                {showHeaderUpgrade ? (
-                  <button
-                    type="button"
-                    className="vault-header-upgrade-btn"
-                    onClick={openPricingDrawer}
-                  >
-                    {t("vault.entryLimitUpgrade")}
-                  </button>
-                ) : null}
-                {entitlementLoaded ? (
-                  <PlanBadge
-                    label={
-                      isAdmin
-                        ? t("vault.licenseBadgeAdmin")
-                        : licensed
-                          ? t("vault.licenseBadgePro")
-                          : t("vault.licenseBadgeFree")
-                    }
-                    href={isAdmin ? "#/admin" : undefined}
-                    ariaLabel={isAdmin ? t("admin.title") : undefined}
-                  />
-                ) : (
-                  <span
-                    className="h-[1.375rem] w-[2.75rem] rounded-full bg-ink-100 animate-pulse shrink-0"
-                    aria-hidden
-                  />
-                )}
-                <UserMenuDropdown triggerClassName={SETTINGS_HEADER_ICON_BTN} />
-              </>
-            ) : null
-          }
-          locale={locale}
-          onLocaleChange={(l) => void setLocale(l)}
-          languageAriaLabel={t("settings.language")}
-        />
+        {native ? (
+          <div className="settings-native-chrome w-full bg-white">
+            <div className={SETTINGS_PAGE}>
+              <a
+                href={vaultHref}
+                className="settings-native-back"
+                onClick={navigateToVault}
+              >
+                <ChevronLeftIcon className="settings-native-back__icon" aria-hidden />
+                {t("account.backToVault")}
+              </a>
+            </div>
+            <div className={SETTINGS_PAGE}>{renderSettingsTabList()}</div>
+          </div>
+        ) : (
+          <NativeTopHeader
+            brandName={t("app.brandName")}
+            trailing={
+              configured && user?.id ? (
+                <>
+                  {showHeaderUpgrade ? (
+                    <button
+                      type="button"
+                      className="vault-header-upgrade-btn"
+                      onClick={openPricingDrawer}
+                    >
+                      {t("vault.entryLimitUpgrade")}
+                    </button>
+                  ) : null}
+                  {entitlementLoaded ? (
+                    <PlanBadge
+                      label={
+                        isAdmin
+                          ? t("vault.licenseBadgeAdmin")
+                          : licensed
+                            ? t("vault.licenseBadgePro")
+                            : t("vault.licenseBadgeFree")
+                      }
+                      href={isAdmin ? "#/admin" : undefined}
+                      ariaLabel={isAdmin ? t("admin.title") : undefined}
+                    />
+                  ) : (
+                    <span
+                      className="h-[1.375rem] w-[2.75rem] rounded-full bg-ink-100 animate-pulse shrink-0"
+                      aria-hidden
+                    />
+                  )}
+                  <UserMenuDropdown triggerClassName={SETTINGS_HEADER_ICON_BTN} />
+                </>
+              ) : null
+            }
+            locale={locale}
+            onLocaleChange={(l) => void setLocale(l)}
+            languageAriaLabel={t("settings.language")}
+          />
+        )}
       </div>
 
       <div
         className={nativeMainScrollClass(
-          `${SETTINGS_PAGE} py-6 sm:py-10 pb-6 sm:pb-10 w-full`,
+          `${SETTINGS_PAGE} ${native ? "pt-4 pb-6" : "py-6 sm:py-10 pb-6 sm:pb-10"} w-full`,
         )}
       >
         <div className="flex flex-col md:flex-row md:gap-6 min-w-0">
-          <aside className="hidden md:block shrink-0 md:w-56 lg:w-60 md:pr-4">
+          <aside
+            className={`${native ? "hidden" : "hidden md:block"} shrink-0 md:w-56 lg:w-60 md:pr-4`}
+          >
             <a
               href={vaultHref}
               className={SETTINGS_BACK_TO_VAULT_CLASS}
@@ -701,48 +757,23 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
           </aside>
 
           <div className="flex-1 min-w-0">
-            <div className="md:hidden min-w-0 w-full space-y-4">
-              <a
-                href={vaultHref}
-                className={SETTINGS_BACK_TO_VAULT_CLASS}
-                onClick={(e) => {
-                  e.preventDefault();
-                  window.location.hash = vaultHref.replace(/^#/, "");
-                }}
-              >
-                <ArrowLeftIcon className="h-3 w-3 shrink-0 ui-icon-fixed" aria-hidden />
-                {t("account.backToVault")}
-              </a>
-
-              <div
-                ref={tablistRef}
-                className="settings-mobile-tablist-wrap min-w-0 w-full"
-                onTouchStart={onTabStripTouchStart}
-                onTouchMove={onTabStripTouchMove}
-              >
-                <nav
-                  className="settings-mobile-tablist flex flex-nowrap gap-0 border-b border-ink-200"
-                  role="tablist"
-                  aria-label={t("settings.navAria")}
+            {!native ? (
+              <div className="md:hidden min-w-0 w-full space-y-4">
+                <a
+                  href={vaultHref}
+                  className={SETTINGS_BACK_TO_VAULT_CLASS}
+                  onClick={navigateToVault}
                 >
-                  {navItems.map((item) => (
-                    <a
-                      key={item.id}
-                      id={`settings-tab-${item.id}`}
-                      href={settingsHref(item.id)}
-                      role="tab"
-                      aria-selected={activeSection === item.id}
-                      className={settingsTabClass(activeSection === item.id)}
-                    >
-                      {item.label}
-                    </a>
-                  ))}
-                </nav>
+                  <ArrowLeftIcon className="h-3 w-3 shrink-0 ui-icon-fixed" aria-hidden />
+                  {t("account.backToVault")}
+                </a>
+
+                {renderSettingsTabList()}
               </div>
-            </div>
+            ) : null}
 
             <div
-              className="w-full max-w-none space-y-6 mt-6 md:mt-0"
+              className={`w-full max-w-none space-y-6 ${native ? "mt-0" : "mt-6 md:mt-0"}`}
               role="tabpanel"
               aria-labelledby={`settings-tab-${activeSection}`}
             >

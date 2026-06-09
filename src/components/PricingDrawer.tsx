@@ -164,9 +164,7 @@ export function PricingDrawer({
             />
           ) : null}
           <header
-            className={`pricing-drawer-header shrink-0 flex items-start justify-between gap-3 border-b border-ink-200 px-4 py-4 sm:px-6 ${
-              native ? "pt-3" : ""
-            }`}
+            className="pricing-drawer-header shrink-0 flex items-start justify-between gap-3 border-b border-ink-200 px-4 py-4 sm:px-6"
           >
             <div className="min-w-0 pr-2">
               <h2
