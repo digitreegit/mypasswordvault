@@ -478,6 +478,15 @@ html.native-app .native-launch {
   padding-right: env(safe-area-inset-right, 0px);
 }
 
+/* Getting started: tint extends behind the status bar; art band adds top inset. */
+html.native-app .native-screen.native-launch--intro {
+  padding-top: 0;
+}
+
+html.native-app .native-launch.native-launch--intro {
+  padding-top: 0;
+}
+
 html.native-app .native-launch__scroll {
   min-height: 0;
 }
@@ -510,6 +519,22 @@ html.native-app .native-onboard__slide {
   flex: 0 0 100%;
   width: 100%;
   max-width: 100%;
+  min-height: 100%;
+}
+
+html.native-app .native-onboard__art-band {
+  width: 100%;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 1.5rem);
+  padding-bottom: 1.25rem;
+}
+
+html.native-app .native-onboard__copy {
+  min-height: 0;
+}
+
+html.native-app .native-onboard__art {
+  margin-inline: auto;
+  max-width: 100%;
 }
 
 html.native-app .native-launch--intro,
@@ -535,12 +560,6 @@ html.native-app .native-onboard__body {
 
 html.native-app .native-launch--splash .brand-splash-symbol {
   width: 33.333vw;
-  height: auto;
-  flex-shrink: 0;
-}
-
-html.native-app .native-onboard__art .brand-splash-symbol {
-  width: 33.333%;
   height: auto;
   flex-shrink: 0;
 }

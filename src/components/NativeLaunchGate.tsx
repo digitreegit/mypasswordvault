@@ -1,4 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import gs01 from "../assets/onboarding/gs01.png";
+import gs02 from "../assets/onboarding/gs02.png";
+import gs03 from "../assets/onboarding/gs03.png";
+import gs04 from "../assets/onboarding/gs04.png";
 import { translate } from "../lib/i18n/bundles";
 import {
   detectBrowserLocale,
@@ -10,50 +14,38 @@ import { subscribeLocaleChanged } from "../lib/appLocale";
 import { nativeScreenRootClass } from "../lib/nativeLayout";
 import { isNativeApp } from "../lib/platform";
 import { BrandSplashSymbol } from "./BrandSplashSymbol";
-import { Globe, Lock, Shield } from "./Icons";
 
 type LaunchPhase = "splash" | "intro" | "done";
 
 const SPLASH_AUTO_MS = 1800;
 const ONBOARDING_PAGE_COUNT = 4;
 
-type OnboardingGraphicVariant = "spreadsheet" | "secure" | "sync" | "vault";
+const ONBOARDING_ART = [gs01, gs02, gs03, gs04] as const;
+
+/** Top illustration band background per slide (bottom stays white). */
+const ONBOARDING_ART_BG = ["#fdf7e9", "#f7fae5", "#eef5fd", "#eee3fb"] as const;
 
 const ONBOARDING_PAGES: {
   titleKey: string;
   bodyKey: string;
-  graphic: OnboardingGraphicVariant;
 }[] = [
   {
     titleKey: "launch.onboard1Title",
     bodyKey: "launch.onboard1Body",
-    graphic: "spreadsheet",
   },
   {
     titleKey: "launch.onboard2Title",
     bodyKey: "launch.onboard2Body",
-    graphic: "secure",
   },
   {
     titleKey: "launch.onboard3Title",
     bodyKey: "launch.onboard3Body",
-    graphic: "sync",
   },
   {
     titleKey: "launch.onboard4Title",
     bodyKey: "launch.onboard4Body",
-    graphic: "vault",
   },
 ];
-
-function SpreadsheetPlaceholderIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} {...props}>
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <path d="M3 9h18M3 14h18M9 4v16M15 4v16" />
-    </svg>
-  );
-}
 
 function useLaunchLocale(): Locale {
   const [locale, setLocale] = useState<Locale>(
@@ -63,46 +55,16 @@ function useLaunchLocale(): Locale {
   return locale;
 }
 
-function OnboardingGraphic({
-  variant,
-  label,
-}: {
-  variant: OnboardingGraphicVariant;
-  label: string;
-}) {
-  const graphicClass: Record<OnboardingGraphicVariant, string> = {
-    spreadsheet: "from-amber-400 to-orange-600",
-    secure: "from-violet-500 to-indigo-700",
-    sync: "from-sky-500 to-blue-700",
-    vault: "from-accent-500 to-accent-700",
-  };
-
+function OnboardingArt({ src, label }: { src: string; label: string }) {
   return (
-    <div
-      className={`native-onboard__art relative mx-auto flex aspect-[4/3] w-full max-w-sm items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br shadow-md ${graphicClass[variant]}`}
-      role="img"
-      aria-label={label}
-    >
-      <div
-        className="absolute inset-0 opacity-20"
-        aria-hidden
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 20% 20%, #fff 0%, transparent 45%), radial-gradient(circle at 80% 80%, #fff 0%, transparent 40%)",
-        }}
+    <div className="native-onboard__art w-full" role="img" aria-label={label}>
+      <img
+        src={src}
+        alt=""
+        className="block h-auto w-full select-none"
+        decoding="async"
+        draggable={false}
       />
-      <span className="absolute left-3 top-3 rounded-md bg-white/20 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider text-white/90">
-        Placeholder
-      </span>
-      {variant === "vault" ? (
-        <BrandSplashSymbol className="relative" />
-      ) : variant === "spreadsheet" ? (
-        <SpreadsheetPlaceholderIcon className="relative h-16 w-16 text-white/95" />
-      ) : variant === "secure" ? (
-        <Shield className="relative h-16 w-16 text-white/95" />
-      ) : (
-        <Globe className="relative h-16 w-16 text-white/95" strokeWidth={1.5} />
-      )}
     </div>
   );
 }
@@ -200,25 +162,32 @@ function NativeGettingStartedScreen({
           {ONBOARDING_PAGES.map((page, index) => (
             <section
               key={page.titleKey}
-              className="native-onboard__slide flex shrink-0 snap-center flex-col px-6 pt-6 pb-4"
+              className="native-onboard__slide flex shrink-0 snap-center flex-col bg-white min-h-full"
               aria-roledescription="slide"
               aria-label={`${index + 1} / ${ONBOARDING_PAGE_COUNT}`}
             >
-              <OnboardingGraphic
-                variant={page.graphic}
-                label={t(`launch.onboard${index + 1}ArtLabel`)}
-              />
-              <h2 className="native-onboard__title mt-8 text-center">
-                {t(page.titleKey)}
-              </h2>
-              <p className="native-onboard__body mt-4 text-center max-w-md mx-auto">
-                {t(page.bodyKey)}
-              </p>
+              <div
+                className="native-onboard__art-band w-full shrink-0 px-6"
+                style={{ backgroundColor: ONBOARDING_ART_BG[index] }}
+              >
+                <OnboardingArt
+                  src={ONBOARDING_ART[index]}
+                  label={t(`launch.onboard${index + 1}ArtLabel`)}
+                />
+              </div>
+              <div className="native-onboard__copy flex flex-1 flex-col bg-white px-6 pt-8 pb-4">
+                <h2 className="native-onboard__title text-center">
+                  {t(page.titleKey)}
+                </h2>
+                <p className="native-onboard__body mt-4 text-center max-w-md mx-auto">
+                  {t(page.bodyKey)}
+                </p>
+              </div>
             </section>
           ))}
         </div>
 
-        <footer className="native-onboard__footer shrink-0 px-6 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <footer className="native-onboard__footer shrink-0 bg-white px-6 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <div
             className="flex items-center justify-center gap-0"
             role="tablist"

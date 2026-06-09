@@ -17,19 +17,19 @@ export const MESSAGES_EN: Record<string, string> = {
   "launch.getStarted": "Get started",
   "launch.onboardCarouselAria": "Getting started",
   "launch.onboardDotsAria": "Onboarding progress",
-  "launch.onboard1ArtLabel": "Spreadsheet illustration placeholder",
+  "launch.onboard1ArtLabel": "Open safe with calendar and password notes",
   "launch.onboard1Title": "Local-first vault like a spreadsheet",
   "launch.onboard1Body":
     "Move off spreadsheets and sticky notes into a vault made for passwords.",
-  "launch.onboard2ArtLabel": "Security illustration placeholder",
+  "launch.onboard2ArtLabel": "Phone lock with shield and security key",
   "launch.onboard2Title": "Encrypted and passkey-ready",
   "launch.onboard2Body":
     "Your data stays encrypted on device. Unlock quickly with a passkey or backup sign-in.",
-  "launch.onboard3ArtLabel": "Sync illustration placeholder",
+  "launch.onboard3ArtLabel": "Laptop and phone syncing through the cloud",
   "launch.onboard3Title": "Sync across web and mobile",
   "launch.onboard3Body":
     "Sign in with the same account on every device. Only encrypted ciphertext syncs to the cloud.",
-  "launch.onboard4ArtLabel": "Vault illustration placeholder",
+  "launch.onboard4ArtLabel": "Vault connected to your online accounts",
   "launch.onboard4Title": "One vault for every password",
   "launch.onboard4Body":
     "Keep logins organized in a single encrypted vault you control — free to start, upgrade when you need more.",
