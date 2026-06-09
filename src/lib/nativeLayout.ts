@@ -21,7 +21,7 @@ export function nativeMainScrollClass(extra = ""): string {
   if (!isNativeApp()) {
     return `flex-1 min-w-0 ${extra}`.trim();
   }
-  return `native-screen__scroll native-scroll ${extra}`.trim();
+  return `native-screen__scroll native-scroll keyboard-scroll-root ${extra}`.trim();
 }
 
 /** Hash route to the unlocked vault list (Capacitor serves the SPA at `/`, not `/app/`). */

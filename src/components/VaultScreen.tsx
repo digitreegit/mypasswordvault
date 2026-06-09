@@ -413,7 +413,7 @@ function CategorySelect({
             className="rounded-lg border border-ink-200 bg-white shadow-lg"
             onMouseDown={(e) => e.stopPropagation()}
           >
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-1">
+            <div className="min-h-0 max-h-60 flex-1 overflow-y-auto overscroll-contain py-1 keyboard-scroll-root">
             <button
               type="button"
               role="option"
@@ -1888,7 +1888,7 @@ function MobileEntryDetail({
           </button>
         </header>
 
-        <div className="mobile-entry-detail__scroll native-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 space-y-4">
+        <div className="mobile-entry-detail__scroll keyboard-scroll-root native-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 space-y-4">
           <div className="space-y-1 w-full">
             <span className="mobile-field-label font-medium text-ink-600 block">
               {t("vault.colSite")}

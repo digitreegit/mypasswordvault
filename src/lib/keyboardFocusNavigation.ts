@@ -1,7 +1,35 @@
 import { scrollFocusedFieldAboveKeyboard } from "./nativeScrollFocus";
 
 export const KEYBOARD_SCROLL_ROOT_SELECTOR =
-  ".native-screen__scroll, .setup-screen__body--fixed, .app-shell__panel, .setup-shell-scroll, .native-scroll, .mobile-entry-detail__scroll, .pricing-drawer-body, .native-launch__scroll";
+  ".native-screen__scroll, .setup-screen__body--fixed, .app-shell__panel, .setup-shell-scroll, .native-scroll, .keyboard-scroll-root, .mobile-entry-detail__scroll, .pricing-drawer-body, .native-launch__scroll";
+
+function isOverflowScrollContainer(el: HTMLElement): boolean {
+  const { overflowY } = window.getComputedStyle(el);
+  return (
+    overflowY === "auto" ||
+    overflowY === "scroll" ||
+    overflowY === "overlay"
+  );
+}
+
+/** Nearest scroll root for keyboard avoidance (explicit class, then overflow-y container). */
+export function findKeyboardScrollRoot(
+  target: HTMLElement,
+): HTMLElement | null {
+  const explicit = target.closest(
+    KEYBOARD_SCROLL_ROOT_SELECTOR,
+  ) as HTMLElement | null;
+  if (explicit) return explicit;
+
+  let el: HTMLElement | null = target.parentElement;
+  let fallback: HTMLElement | null = null;
+  while (el && el !== document.documentElement) {
+    if (el.classList.contains("keyboard-scroll-root")) return el;
+    if (isOverflowScrollContainer(el)) fallback = el;
+    el = el.parentElement;
+  }
+  return fallback;
+}
 
 /** All interactive fields within a scroll root (inputs, selects, buttons, etc.). */
 export const KEYBOARD_FOCUSABLE_SELECTOR =
@@ -71,7 +99,7 @@ export function getActiveScrollRoot(
       ? document.activeElement
       : null);
   if (!anchor) return null;
-  return anchor.closest(KEYBOARD_SCROLL_ROOT_SELECTOR) as HTMLElement | null;
+  return findKeyboardScrollRoot(anchor);
 }
 
 export function getFocusableFields(

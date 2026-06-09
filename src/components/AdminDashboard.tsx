@@ -1253,7 +1253,7 @@ export function AdminDashboard() {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="admin-complaint-title"
-                className="card w-full max-w-md shadow-lg"
+                className="card w-full max-w-md shadow-lg max-h-[85vh] overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="action-modal__header px-5 py-3 border-b border-ink-200">
@@ -1270,7 +1270,7 @@ export function AdminDashboard() {
                     />
                   </div>
                 </div>
-                <div className="px-5 py-4 space-y-4">
+                <div className="px-5 py-4 space-y-4 keyboard-scroll-root min-h-0 flex-1 overflow-y-auto overscroll-contain">
                   <p className="text-sm text-ink-600 break-all">
                     {complaintTarget.email || complaintTarget.userId}
                   </p>

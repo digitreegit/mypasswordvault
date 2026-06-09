@@ -28,7 +28,7 @@ function ModalShell({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40">
       <div
-        className="card w-full max-w-md overflow-hidden flex flex-col shadow-lg"
+        className="card w-full max-w-md max-h-[min(85dvh,85vh)] overflow-hidden flex flex-col shadow-lg"
         role="dialog"
         aria-modal="true"
         aria-labelledby="account-modal-title"
@@ -42,7 +42,9 @@ function ModalShell({
           </h2>
           <ModalCloseButton onClick={onClose} ariaLabel={closeAriaLabel} />
         </div>
-        <div className="px-5 py-4">{children}</div>
+        <div className="px-5 py-4 keyboard-scroll-root min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          {children}
+        </div>
         {footer ? (
           <div className="action-modal__footer px-5 py-3 border-t border-ink-100 flex justify-end gap-2">
             {footer}

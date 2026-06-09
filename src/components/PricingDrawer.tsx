@@ -186,7 +186,7 @@ export function PricingDrawer({
             </button>
           </header>
 
-          <div className="pricing-drawer-body native-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6 sm:py-6 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <div className="pricing-drawer-body keyboard-scroll-root native-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6 sm:py-6 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
             <PricingTiers
               t={t}
               configured={configured}

@@ -243,7 +243,7 @@ export function StripeCheckoutModal({
         </header>
 
         <div className="flex flex-1 min-h-0 flex-col sm:flex-row">
-          <div className="relative flex-1 min-h-0 min-w-0 overflow-y-auto overscroll-contain">
+          <div className="relative flex-1 min-h-0 min-w-0 overflow-y-auto overscroll-contain keyboard-scroll-root">
             <div className="relative min-h-[22rem] w-full">
               {phase === "loading" ? (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white px-6 py-10 text-center">
@@ -266,7 +266,7 @@ export function StripeCheckoutModal({
               <div ref={mountRef} className="min-h-[22rem] w-full" />
             </div>
           </div>
-          <div className="shrink-0 border-t border-ink-200 bg-ink-50/90 px-5 py-5 sm:w-[17.5rem] sm:border-t-0 sm:border-l lg:w-[20rem] lg:px-6 lg:py-6 overflow-y-auto overscroll-contain">
+          <div className="shrink-0 border-t border-ink-200 bg-ink-50/90 px-5 py-5 sm:w-[17.5rem] sm:border-t-0 sm:border-l lg:w-[20rem] lg:px-6 lg:py-6 overflow-y-auto overscroll-contain keyboard-scroll-root">
             <CheckoutProFeatures t={t} />
           </div>
         </div>

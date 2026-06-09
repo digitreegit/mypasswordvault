@@ -2,6 +2,12 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "re
 import { createPortal } from "react-dom";
 import { useVault } from "../lib/vault";
 import { newId, type VaultCategory } from "../lib/storage";
+import {
+  dropPositionFromPointer,
+  setTouchReorderActive,
+  TOUCH_REORDER_HANDLE_CLASS,
+  type ListDropPosition,
+} from "../lib/touchListReorder";
 import { GripVertical, Trash } from "./Icons";
 import { ModalCloseButton } from "./ModalCloseButton";
 function reorderBeforeTarget(
@@ -84,6 +90,11 @@ export function CategoriesDialog({
   } | null>(null);
   const pendingFocusIdRef = useRef<string | null>(null);
   const seededNewRef = useRef(false);
+  const touchDragRef = useRef<{ draggedId: string; pointerId: number } | null>(
+    null,
+  );
+  const dropIndicatorRef = useRef<ListDropPosition | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     if (startWithNewCategory && !seededNewRef.current) {
@@ -102,9 +113,74 @@ export function CategoriesDialog({
   useEffect(
     () => () => {
       seededNewRef.current = false;
+      setTouchReorderActive(false);
     },
     [],
   );
+
+  function applyReorder(
+    draggedId: string,
+    position: ListDropPosition | null,
+  ): void {
+    if (!position || draggedId === position.id) return;
+    setDraft((prev) =>
+      position.position === "after"
+        ? reorderAfterTarget(prev, draggedId, position.id)
+        : reorderBeforeTarget(prev, draggedId, position.id),
+    );
+  }
+
+  function updateDropIndicator(position: ListDropPosition | null): void {
+    dropIndicatorRef.current = position;
+    setDropIndicator(position);
+  }
+
+  function finishTouchReorder(): void {
+    const drag = touchDragRef.current;
+    if (drag) {
+      applyReorder(drag.draggedId, dropIndicatorRef.current);
+    }
+    touchDragRef.current = null;
+    dropIndicatorRef.current = null;
+    setDraggingId(null);
+    setDropIndicator(null);
+    setTouchReorderActive(false);
+  }
+
+  function onGripPointerDown(
+    e: React.PointerEvent<HTMLSpanElement>,
+    id: string,
+  ): void {
+    if (busy || e.pointerType === "mouse") return;
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    touchDragRef.current = { draggedId: id, pointerId: e.pointerId };
+    setDraggingId(id);
+    setTouchReorderActive(true);
+  }
+
+  function onGripPointerMove(e: React.PointerEvent<HTMLSpanElement>): void {
+    const drag = touchDragRef.current;
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    e.preventDefault();
+    updateDropIndicator(
+      dropPositionFromPointer(
+        e.clientY,
+        drag.draggedId,
+        "[data-category-row]",
+      ),
+    );
+  }
+
+  function onGripPointerEnd(e: React.PointerEvent<HTMLSpanElement>): void {
+    const drag = touchDragRef.current;
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    e.preventDefault();
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    finishTouchReorder();
+  }
 
   useLayoutEffect(() => {
     const id = pendingFocusIdRef.current;
@@ -185,10 +261,10 @@ export function CategoriesDialog({
             />
           </div>
         </div>
-        <div className="px-5 py-3 overflow-y-auto flex-1 space-y-2">
+        <div className="px-5 py-3 keyboard-scroll-root min-h-0 overflow-y-auto flex-1 space-y-2 overscroll-contain">
           <p className="text-sm text-ink-600 leading-snug">{t("vault.categoriesHint")}</p>
           <p className="text-xs text-ink-500 leading-snug">{t("vault.dragToReorder")}</p>
-          <ul className="space-y-2">
+          <ul ref={listRef} className="space-y-2">
             {draft.map((c) => {
               const showDropLineBefore =
                 dropIndicator?.id === c.id &&
@@ -203,6 +279,8 @@ export function CategoriesDialog({
               return (
               <li
                 key={c.id}
+                data-category-row
+                data-category-id={c.id}
                 className={[
                   "relative flex items-center gap-1.5 rounded-md border border-transparent px-0.5 py-0.5 transition-colors",
                   draggingId === c.id ? "opacity-50" : "",
@@ -229,11 +307,7 @@ export function CategoriesDialog({
                   setDropIndicator(null);
                   setDraggingId(null);
                   if (!draggedId || draggedId === c.id) return;
-                  setDraft((prev) =>
-                    position === "after"
-                      ? reorderAfterTarget(prev, draggedId, c.id)
-                      : reorderBeforeTarget(prev, draggedId, c.id)
-                  );
+                  applyReorder(draggedId, { id: c.id, position });
                 }}
               >
                 {showDropLineBefore ? (
@@ -249,9 +323,14 @@ export function CategoriesDialog({
                   title={t("vault.dragToReorder")}
                   aria-label={t("vault.dragToReorder")}
                   className={[
-                    "ui-icon-btn shrink-0 cursor-grab touch-none active:cursor-grabbing",
+                    `ui-icon-btn shrink-0 cursor-grab active:cursor-grabbing ${TOUCH_REORDER_HANDLE_CLASS}`,
                     busy ? "cursor-not-allowed opacity-40" : "",
                   ].join(" ")}
+                  style={{ touchAction: "none" }}
+                  onPointerDown={(e) => onGripPointerDown(e, c.id)}
+                  onPointerMove={onGripPointerMove}
+                  onPointerUp={onGripPointerEnd}
+                  onPointerCancel={onGripPointerEnd}
                   onDragStart={(e) => {
                     if (busy) {
                       e.preventDefault();

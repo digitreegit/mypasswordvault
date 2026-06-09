@@ -131,12 +131,6 @@ html.native-app.native-android {
   line-height: 1.45;
 }
 
-html.native-app .settings-backup-content .settings-sync-hint,
-html.native-app .settings-backup-content .card {
-  margin-inline: 1.25rem;
-  width: auto;
-}
-
 /* ── Native Capacitor: fixed viewport, no page bounce/drift ── */
 html.native-app {
   position: fixed;
@@ -217,6 +211,40 @@ html.native-app .native-screen__scroll {
   overscroll-behavior: contain;
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: max(
+    1.25rem,
+    env(safe-area-inset-bottom, 0px),
+    calc(
+      var(--native-keyboard-inset, 0px) + var(--keyboard-accessory-height, 2.75rem) +
+        var(--keyboard-accessory-gap, 0.5rem) + 1rem
+    )
+  );
+}
+
+/* Scroll regions with inputs: extra bottom room when keyboard + accessory bar is open. */
+.keyboard-scroll-root,
+.native-scroll {
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 767px) {
+  .keyboard-scroll-root,
+  .native-scroll {
+    padding-bottom: max(
+      1.25rem,
+      env(safe-area-inset-bottom, 0px),
+      calc(
+        var(--native-keyboard-inset, 0px) + var(--keyboard-accessory-height, 2.75rem) +
+          var(--keyboard-accessory-gap, 0.5rem) + 1rem
+      )
+    );
+  }
+}
+
+html.native-app .keyboard-scroll-root,
+html.native-app .native-scroll {
   padding-bottom: max(
     1.25rem,
     env(safe-area-inset-bottom, 0px),
@@ -328,6 +356,15 @@ html.native-app .settings-page {
 
 html.native-app .vault-top-header {
   padding-top: 0.375rem !important;
+}
+
+html.native-app {
+  --native-top-header-row-min-height: calc(var(--ui-icon-btn-size-compact, 2.375rem) + 0.5rem);
+}
+
+html.native-app .vault-top-header .border-b > .flex.items-center,
+html.native-app .settings-native-header__inner {
+  min-height: var(--native-top-header-row-min-height);
 }
 
 html.native-app .native-top-header-fixed-host.setup-screen__header--fixed {
@@ -1478,10 +1515,6 @@ html.native-app .settings-page {
 html.native-app .settings-native-chrome {
   width: 100%;
   background: #fff;
-}
-
-html.native-app .settings-native-header__inner {
-  min-height: calc(var(--app-brand-shield-size, 2.125rem) + 0.5rem);
 }
 
 html.native-app .settings-native-tabs {

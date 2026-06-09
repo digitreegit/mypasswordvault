@@ -1,10 +1,11 @@
 import { getKeyboardAwareVisibleBand } from "./keyboardInset";
 import {
-  KEYBOARD_SCROLL_ROOT_SELECTOR,
+  findKeyboardScrollRoot,
   isKeyboardFocusableTarget,
   isKeyboardNavLocked,
   setLastKeyboardField,
 } from "./keyboardFocusNavigation";
+import { subscribeKeyboardSession } from "./keyboardSession";
 import { isNativeApp } from "./platform";
 
 let focusedField: HTMLElement | null = null;
@@ -18,9 +19,7 @@ export function scrollFocusedFieldAboveKeyboard(
   target: HTMLElement,
   scrollRoot?: HTMLElement | null,
 ): void {
-  const root =
-    scrollRoot ??
-    (target.closest(KEYBOARD_SCROLL_ROOT_SELECTOR) as HTMLElement | null);
+  const root = scrollRoot ?? findKeyboardScrollRoot(target);
 
   const align = () => {
     const { top: visibleTop, bottom: visibleBottom } =
@@ -63,13 +62,9 @@ export function initNativeScrollFocus(): void {
     if (!(target instanceof HTMLElement)) return;
     if (!isKeyboardFocusableTarget(target)) return;
 
-    const scrollRoot = target.closest(
-      KEYBOARD_SCROLL_ROOT_SELECTOR,
-    ) as HTMLElement | null;
-
     focusedField = target;
     setLastKeyboardField(target);
-    scrollFocusedFieldAboveKeyboard(target, scrollRoot);
+    scrollFocusedFieldAboveKeyboard(target, findKeyboardScrollRoot(target));
   });
 
   document.addEventListener("focusout", (e) => {
@@ -85,4 +80,12 @@ export function initNativeScrollFocus(): void {
     vv.addEventListener("resize", reflowFocusedFieldScroll);
     vv.addEventListener("scroll", reflowFocusedFieldScroll);
   }
+
+  subscribeKeyboardSession(({ open }) => {
+    if (!open) return;
+    reflowFocusedFieldScroll();
+    window.requestAnimationFrame(reflowFocusedFieldScroll);
+    window.setTimeout(reflowFocusedFieldScroll, 100);
+    window.setTimeout(reflowFocusedFieldScroll, 350);
+  });
 }

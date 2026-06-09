@@ -481,7 +481,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
 
   function renderBackup() {
     return (
-      <div className={`space-y-4${native ? " settings-backup-content" : ""}`}>
+      <div className="space-y-4">
         <p className="settings-sync-hint text-ink-900 leading-snug">{t("settings.syncHint")}</p>
         <div className="card p-5 sm:p-6 space-y-3">
           <h3 className="settings-card-title text-sm font-semibold text-ink-800">
