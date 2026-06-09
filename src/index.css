@@ -131,6 +131,12 @@ html.native-app.native-android {
   line-height: 1.45;
 }
 
+html.native-app .settings-backup-content .settings-sync-hint,
+html.native-app .settings-backup-content .card {
+  margin-inline: 1.25rem;
+  width: auto;
+}
+
 /* ── Native Capacitor: fixed viewport, no page bounce/drift ── */
 html.native-app {
   position: fixed;
@@ -595,11 +601,21 @@ html.native-app.native-ios .passkey-device-key__icon {
   height: 3rem !important;
 }
 
-html.native-app.native-ios .modal-close-btn {
+/* Native modals — close (X) aligned to title top + content right edge */
+html.native-app .modal-close-btn {
   align-self: flex-start;
-  margin-top: -0.625rem;
-  margin-right: -1rem;
-  padding: 0.25rem;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 0;
+}
+
+html.native-app .modal-close-btn__icon {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+}
+
+html.native-app .action-modal__header:has(.modal-close-btn) > .flex {
+  align-items: flex-start !important;
 }
 
 @media (min-width: 640px) {
@@ -1464,14 +1480,22 @@ html.native-app .settings-native-chrome {
   background: #fff;
 }
 
+html.native-app .settings-native-header__inner {
+  min-height: calc(var(--app-brand-shield-size, 2.125rem) + 0.5rem);
+}
+
+html.native-app .settings-native-tabs {
+  padding-top: 0.5rem;
+}
+
 html.native-app .settings-native-back {
   display: inline-flex;
   align-items: center;
   gap: 0.125rem;
-  padding: 0.5rem 0 0.625rem;
-  font-size: 1.0625rem;
-  font-weight: 400;
-  line-height: 1.35;
+  padding: 0;
+  font-size: var(--type-sub) !important;
+  font-weight: 500;
+  line-height: var(--leading-sub) !important;
   color: #111827;
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
@@ -1482,9 +1506,9 @@ html.native-app .settings-native-back:active {
 }
 
 html.native-app .settings-native-back__icon {
-  width: 1.375rem !important;
-  height: 1.375rem !important;
-  margin-left: -0.25rem;
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  margin-left: -0.125rem;
   flex-shrink: 0;
 }
 

@@ -481,7 +481,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
 
   function renderBackup() {
     return (
-      <div className="space-y-4">
+      <div className={`space-y-4${native ? " settings-backup-content" : ""}`}>
         <p className="settings-sync-hint text-ink-900 leading-snug">{t("settings.syncHint")}</p>
         <div className="card p-5 sm:p-6 space-y-3">
           <h3 className="settings-card-title text-sm font-semibold text-ink-800">
@@ -662,17 +662,23 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
       <div className={nativeFixedHeaderClass()}>
         {native ? (
           <div className="settings-native-chrome w-full bg-white">
-            <div className={SETTINGS_PAGE}>
-              <a
-                href={vaultHref}
-                className="settings-native-back"
-                onClick={navigateToVault}
+            <div className="settings-native-header vault-top-header border-b border-ink-200">
+              <div
+                className={`${SETTINGS_PAGE} settings-native-header__inner flex items-center py-1 sm:py-1.5`}
               >
-                <ChevronLeftIcon className="settings-native-back__icon" aria-hidden />
-                {t("account.backToVault")}
-              </a>
+                <a
+                  href={vaultHref}
+                  className="settings-native-back"
+                  onClick={navigateToVault}
+                >
+                  <ChevronLeftIcon className="settings-native-back__icon" aria-hidden />
+                  {t("account.backToVault")}
+                </a>
+              </div>
             </div>
-            <div className={SETTINGS_PAGE}>{renderSettingsTabList()}</div>
+            <div className="settings-native-tabs">
+              <div className={SETTINGS_PAGE}>{renderSettingsTabList()}</div>
+            </div>
           </div>
         ) : (
           <NativeTopHeader
