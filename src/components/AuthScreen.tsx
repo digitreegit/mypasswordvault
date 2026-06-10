@@ -464,7 +464,7 @@ export function AuthScreen({
               )}
               <button
                 type="button"
-                className="btn-secondary w-full justify-center border-ink-200 bg-white shadow-sm hover:bg-ink-50"
+                className="auth-google-btn btn-secondary w-full justify-center border-ink-200 bg-white shadow-sm hover:bg-ink-50"
                 onClick={() => void onGoogle()}
                 disabled={busy}
               >

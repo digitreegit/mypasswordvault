@@ -609,6 +609,15 @@ html.native-app .native-onboard__body {
   color: #42424a;
 }
 
+html.native-app .native-onboard__dots {
+  gap: 0.25rem;
+}
+
+html.native-app .auth-google-btn {
+  font-size: var(--type-sub) !important;
+  line-height: var(--leading-sub) !important;
+}
+
 html.native-app .native-launch--splash .brand-splash-symbol {
   width: 33.333vw;
   height: auto;

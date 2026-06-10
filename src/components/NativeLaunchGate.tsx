@@ -101,13 +101,16 @@ function OnboardingDot({
       role="tab"
       aria-selected={active}
       aria-label={`${index + 1} / ${ONBOARDING_PAGE_COUNT}`}
-      className="flex h-2 w-6 items-center justify-center"
+      className={[
+        "flex h-2 items-center justify-center",
+        active ? "w-6" : "w-2",
+      ].join(" ")}
       onClick={() => onSelect(index)}
     >
       <span
         className={[
           "block h-2 rounded-full transition-all duration-200",
-          active ? "w-6 bg-accent-600" : "w-2 bg-ink-300",
+          active ? "w-6 bg-ink-500" : "w-2 bg-ink-200",
         ].join(" ")}
       />
     </button>
@@ -189,7 +192,7 @@ function NativeGettingStartedScreen({
 
         <footer className="native-onboard__footer shrink-0 bg-white px-6 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <div
-            className="flex items-center justify-center gap-0"
+            className="native-onboard__dots flex items-center justify-center"
             role="tablist"
             aria-label={t("launch.onboardDotsAria")}
           >
