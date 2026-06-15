@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.skyface.mypasswordvault",
+      "sha256_cert_fingerprints": [
+        "10:F8:F2:ED:05:8B:3A:D5:9D:AD:07:B5:B8:E6:25:FC:E3:16:54:55:FC:84:D8:26:7A:10:DE:60:08:12:22:3F"
+      ]
+    }
+  }
+]

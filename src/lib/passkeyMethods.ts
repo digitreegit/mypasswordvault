@@ -1,5 +1,4 @@
 import type { PasskeyKind, StoredPasskey } from "./storage";
-import { Capacitor } from "@capacitor/core";
 import { isNativeApp } from "./platform";
 
 /** WebAuthn registration hint groups — one credential per group per setup pass. */
@@ -32,30 +31,30 @@ function detectAppleMobileFaceId(): boolean {
 const PLATFORM_AUTH_PROBE_MS = 2500;
 
 /**
- * WKWebView (Capacitor iOS) often never resolves
- * `isUserVerifyingPlatformAuthenticatorAvailable()` — treat iOS native as available.
+ * WKWebView (Capacitor iOS) and Android WebView often mis-report
+ * `isUserVerifyingPlatformAuthenticatorAvailable()` — trust native shells.
  */
 export async function isPlatformAuthenticatorAvailable(): Promise<boolean> {
   if (typeof PublicKeyCredential === "undefined") return false;
 
-  if (isNativeApp() && Capacitor.getPlatform() === "ios") {
+  if (isNativeApp()) {
     return true;
   }
 
   const probe = PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable;
   if (typeof probe !== "function") {
-    return isNativeApp() && Capacitor.getPlatform() === "android";
+    return false;
   }
 
   try {
     return await Promise.race([
       probe.call(PublicKeyCredential),
       new Promise<boolean>((resolve) => {
-        setTimeout(() => resolve(isNativeApp()), PLATFORM_AUTH_PROBE_MS);
+        setTimeout(() => resolve(false), PLATFORM_AUTH_PROBE_MS);
       }),
     ]);
   } catch {
-    return isNativeApp();
+    return false;
   }
 }
 

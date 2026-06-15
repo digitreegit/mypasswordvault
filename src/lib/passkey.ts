@@ -21,8 +21,10 @@ import { isNativeApp, NATIVE_PASSKEY_HOSTNAME } from "./platform";
 
 export function isPasskeySupported(): boolean {
   if (typeof window === "undefined") return false;
+  if (isNativeApp()) {
+    return typeof window.PublicKeyCredential !== "undefined";
+  }
   if (!window.PublicKeyCredential || !client.isAvailable()) return false;
-  if (isNativeApp()) return true;
   return isPasskeyOriginHost(window.location.hostname);
 }
 
@@ -269,6 +271,14 @@ function registerStrategies(
     ];
   }
   if (isNativeApp() && Capacitor.getPlatform() === "ios") {
+    return [
+      { enablePrf: false, attestation: false },
+      { enablePrf: false, attestation: true },
+      { enablePrf: true, attestation: false },
+      { enablePrf: true, attestation: true },
+    ];
+  }
+  if (isNativeApp() && Capacitor.getPlatform() === "android") {
     return [
       { enablePrf: false, attestation: false },
       { enablePrf: false, attestation: true },
