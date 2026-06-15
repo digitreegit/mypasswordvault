@@ -11,11 +11,11 @@ You do **not** need separate PRs or branches. Commit phases on `main` (or one lo
 | Task | Status |
 |------|--------|
 | Capacitor iOS (`ios/`) | Done |
-| Capacitor Android (`android/`) | `npx cap add android` |
+| Capacitor Android (`android/`) | Done — `npm run cap:android`, see `docs/android-play-store.md` |
 | OAuth deep link `com.skyface.mypasswordvault://auth/callback` | iOS patch script; Android `patch-android-oauth.mjs` |
 | `npm run cap:sync` / `cap:ios` / `cap:android` | package.json |
 | Native: no Stripe card UI (`usesStoreBilling()`) | `src/lib/platform.ts` |
-| Docs | `docs/ios-app-store.md`, this file |
+| Docs | `docs/ios-app-store.md`, `docs/android-play-store.md`, this file |
 
 ### Commands
 
@@ -42,7 +42,7 @@ Production build: set `.env` with `VITE_SUPABASE_*`, then `npm run cap:sync` bef
 | Edge `verify-store-purchase` (JWT) | `supabase/functions/verify-store-purchase/` |
 | Client `src/lib/storePurchase.ts` | Bridge + invoke |
 | Pricing UI (App Store / Play buttons, Restore) | `PricingTiers`, `useProPurchase` |
-| Apple / Google real verification | iOS sandbox: JWS decode; production: App Store Server API when `APPLE_*` secrets set |
+| Apple / Google real verification | iOS: StoreKit JWS + App Store Server API. Android: Play Developer API (`googlePlayVerify.ts`) |
 | Native billing plugin | `capacitor-plugin-cdv-purchase` → `initNativeStoreBridge.ts` |
 
 ### Product ID (both stores)
@@ -75,6 +75,8 @@ Secrets (production):
 `src/lib/initNativeStoreBridge.ts` registers `window.__mpwStoreBridge` on startup (`main.tsx`) using **capacitor-plugin-cdv-purchase** (StoreKit 2 / Play Billing). After `npm install`, run `npm run cap:sync` so Xcode picks up the plugin.
 
 In Xcode, add the **In-App Purchase** capability. Create product `com.skyface.mypasswordvault.pro_lifetime` (non-consumable) in App Store Connect.
+
+**Android:** create the same SKU in Google Play Console (non-consumable). See `docs/android-play-store.md`.
 
 Until `store.initialize` succeeds, pricing UI shows **storeBridgePending** and allows **dev grant** in `import.meta.env.DEV` only.
 

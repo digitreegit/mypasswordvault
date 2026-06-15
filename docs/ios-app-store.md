@@ -92,4 +92,4 @@ The config rewrites that to `http://YOUR_LAN_IP:5173/app/` so the WebView loads 
 npm run cap:android
 ```
 
-Play Console, signing, and IAP: see [mobile.md](./mobile.md).
+Play Console, signing, and IAP: see [android-play-store.md](./android-play-store.md).

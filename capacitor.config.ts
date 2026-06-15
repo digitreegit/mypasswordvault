@@ -38,6 +38,10 @@ const config: CapacitorConfig = {
     scrollEnabled: false,
     scheme: "My Password Vault",
   },
+  android: {
+    backgroundColor: "#ffffff",
+    allowMixedContent: false,
+  },
   plugins: {
     Keyboard: {
       resize: "none",

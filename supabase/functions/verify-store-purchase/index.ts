@@ -6,6 +6,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.8";
 import { grantLicense } from "../_shared/grantEntitlement.ts";
 import { verifyApplePurchase } from "../_shared/appleStoreVerify.ts";
+import { verifyGooglePurchase } from "../_shared/googlePlayVerify.ts";
 
 const cors: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -48,19 +49,6 @@ type Body = {
   transaction_id?: string;
   restore?: boolean;
 };
-
-async function verifyGooglePurchase(
-  _purchaseToken: string,
-  _productId: string,
-): Promise<{ ok: boolean; transactionId: string; error?: string }> {
-  const pkg = Deno.env.get("GOOGLE_PLAY_PACKAGE_NAME")?.trim();
-  const saJson = Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON")?.trim();
-  if (!pkg || !saJson) {
-    return { ok: false, transactionId: "", error: "google_not_configured" };
-  }
-  // TODO: androidpublisher.purchases.products.get
-  return { ok: false, transactionId: "", error: "google_verify_not_implemented" };
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -132,7 +120,7 @@ Deno.serve(async (req) => {
   } else {
     const r = await verifyGooglePurchase(verificationData, productId ?? "");
     if (!r.ok) {
-      return json({ error: r.error ?? "verify_failed" }, 501);
+      return json({ error: r.error ?? "verify_failed" }, 502);
     }
     verifiedTransactionId = r.transactionId;
   }

@@ -96,6 +96,16 @@ html.native-app.native-android {
   --btn-padding-inline: 1.5rem;
   --type-field-label: var(--type-sub);
   --leading-field-label: var(--leading-sub);
+  /* Material 3 surface tokens */
+  --md-surface: #ffffff;
+  --md-surface-container: #f3f3f6;
+  --md-primary: #42424a;
+  --md-on-surface: #121216;
+  --md-on-surface-variant: #42424a;
+  --md-outline: #797983;
+  --md-elevation-1: 0 1px 2px rgb(18 18 22 / 0.06), 0 1px 3px rgb(18 18 22 / 0.04);
+  --md-elevation-2: 0 2px 6px rgb(18 18 22 / 0.08), 0 1px 2px rgb(18 18 22 / 0.04);
+  font-family: Roboto, "Noto Sans KR", ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Narrow mobile web only — do not scale Capacitor icons globally */
@@ -616,6 +626,82 @@ html.native-app .native-onboard__dots {
 html.native-app .auth-google-btn {
   font-size: var(--type-sub) !important;
   line-height: var(--leading-sub) !important;
+}
+
+/* Android Material 3 — filled buttons, tonal surfaces, rounded cards */
+html.native-app.native-android .btn-primary {
+  background-color: var(--md-primary) !important;
+  color: #fff !important;
+  box-shadow: none;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+html.native-app.native-android .btn-primary:active:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+html.native-app.native-android .btn-secondary {
+  background-color: var(--md-surface-container) !important;
+  border-color: rgb(217 217 223 / 0.9) !important;
+  color: var(--md-on-surface) !important;
+}
+
+html.native-app.native-android .btn-ghost {
+  color: var(--md-on-surface-variant) !important;
+}
+
+html.native-app.native-android .card {
+  border-radius: 1rem;
+  border: 1px solid rgb(232 232 236);
+  box-shadow: var(--md-elevation-1);
+}
+
+html.native-app.native-android .input:not(textarea),
+html.native-app.native-android textarea.input {
+  border-radius: 0.25rem !important;
+  border-color: var(--md-outline) !important;
+  background: var(--md-surface) !important;
+}
+
+html.native-app.native-android .input:focus,
+html.native-app.native-android textarea.input:focus {
+  border-color: var(--md-primary) !important;
+  box-shadow: 0 0 0 2px rgb(66 66 74 / 0.15) !important;
+}
+
+html.native-app.native-android .ui-icon-btn {
+  border-radius: 9999px;
+}
+
+html.native-app.native-android .native-onboard__footer .btn-primary {
+  font-size: var(--btn-font-size) !important;
+  line-height: var(--btn-line-height) !important;
+  font-weight: 500;
+  min-height: var(--btn-min-height) !important;
+  border-radius: var(--btn-radius) !important;
+  padding-left: var(--btn-padding-inline);
+  padding-right: var(--btn-padding-inline);
+}
+
+/* Edge-to-edge: respect display cutouts and nav bar on all Android sizes */
+html.native-app.native-android .native-screen,
+html.native-app.native-android .native-launch {
+  padding-left: max(env(safe-area-inset-left, 0px), 0px);
+  padding-right: max(env(safe-area-inset-right, 0px), 0px);
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
+}
+
+html.native-app.native-android .native-onboard__copy,
+html.native-app.native-android .native-onboard__footer,
+html.native-app.native-android .native-onboard__art-band {
+  padding-inline: clamp(1rem, 4vw, 1.5rem);
+}
+
+html.native-app.native-android .action-modal__header,
+html.native-app.native-android .action-modal__footer,
+html.native-app.native-android .keyboard-scroll-root {
+  padding-inline: max(1.25rem, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
 }
 
 html.native-app .native-launch--splash .brand-splash-symbol {
@@ -1258,7 +1344,7 @@ html.native-app .action-modal__header:has(.modal-close-btn) > .flex {
     line-height: 1.35;
   }
 
-  /* Android native (future) — keep separate from iOS */
+  /* Android native — Material 3 typography and controls */
   html.native-android .text-xs,
   html.native-android .vault-page .text-xs,
   html.native-android .settings-page .text-xs,
