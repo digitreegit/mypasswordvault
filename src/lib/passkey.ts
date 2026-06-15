@@ -116,6 +116,9 @@ export function mapPasskeyClientError(
     return new AppError(passkeyCancelledKey(context), detail);
   }
   if (/unexpected clientdata origin|origin:/i.test(msg)) {
+    if (isNativeApp() && Capacitor.getPlatform() === "android") {
+      return new AppError("errors.passkeySetupOriginAndroid", detail);
+    }
     return new AppError(
       context === "setup"
         ? "errors.passkeySetupOrigin"
@@ -147,6 +150,32 @@ function expectedOrigin(): string {
   if (isLocalDevHost(host)) return window.location.origin;
   if (isVercelPreviewHost(host)) return publicSiteOrigin();
   return window.location.origin;
+}
+
+function parseClientDataOrigin(
+  clientDataJSON: string | ArrayBuffer | Uint8Array,
+): string | null {
+  try {
+    const bytes =
+      typeof clientDataJSON === "string"
+        ? decodeBase64Flexible(clientDataJSON)
+        : clientDataJSON instanceof ArrayBuffer
+          ? new Uint8Array(clientDataJSON)
+          : clientDataJSON;
+    const parsed = JSON.parse(new TextDecoder().decode(bytes)) as {
+      origin?: string;
+    };
+    return typeof parsed.origin === "string" ? parsed.origin : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Android WebView may sign a different origin than `window.location.origin`. */
+function originFromClientData(
+  clientDataJSON: string | ArrayBuffer | Uint8Array,
+): string {
+  return parseClientDataOrigin(clientDataJSON) ?? expectedOrigin();
 }
 
 export function newPrfSalt(): string {
@@ -423,11 +452,14 @@ export async function registerVaultPasskey(opts: {
     throw mapPasskeyClientError(lastErr, "setup");
   }
 
+  const registrationOrigin = originFromClientData(
+    registration.response.clientDataJSON,
+  );
   let info;
   try {
     info = await server.verifyRegistration(registration, {
       challenge,
-      origin: expectedOrigin(),
+      origin: registrationOrigin,
       domain: rpId(),
       userVerified: true,
     });
@@ -436,7 +468,7 @@ export async function registerVaultPasskey(opts: {
       try {
         info = await server.verifyRegistration(registration, {
           challenge,
-          origin: expectedOrigin(),
+          origin: registrationOrigin,
           domain: rpId(),
           userVerified: false,
         });
@@ -540,6 +572,9 @@ export async function authenticateVaultPasskey(
   }
   const passkey = passkeys.find((p) => p.id === authentication.id);
   if (!passkey) throw new AppError("errors.passkeyFailed");
+  const authOrigin = originFromClientData(
+    authentication.response.clientDataJSON,
+  );
   const info = await server.verifyAuthentication(
     authentication,
     {
@@ -550,7 +585,7 @@ export async function authenticateVaultPasskey(
     },
     {
       challenge,
-      origin: expectedOrigin(),
+      origin: authOrigin,
       domain: rpId(),
       userVerified: true,
       counter: passkey.counter,

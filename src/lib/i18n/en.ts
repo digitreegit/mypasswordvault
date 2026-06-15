@@ -168,6 +168,8 @@ export const MESSAGES_EN: Record<string, string> = {
     "This creates one passkey on this device. Security keys and other devices can be added later from Settings.",
   "setup.passkeyPrfHint":
     "Some browsers show two prompts: one to create the passkey, and one to enable passwordless unlock.",
+  "setup.passkeyAndroidGooglePinHint":
+    "On Android, Google may ask for a separate 6-digit PIN after fingerprint — this is Google Password Manager’s lock, not your phone unlock code. Complete both prompts.",
   "setup.passkeyMethodAdded": "Added",
   "setup.passkeyPinIncluded":
     "Included automatically — used when biometrics aren’t available on this device.",
@@ -264,6 +266,8 @@ export const MESSAGES_EN: Record<string, string> = {
     "Could not register a passkey in the app. Tap Continue, then approve the Face ID or device passcode prompt when it appears.",
   "errors.passkeySetupOrigin":
     "The browser address does not match where this app is running. Open the vault at the same URL you started setup with (including 127.0.0.1 vs localhost).",
+  "errors.passkeySetupOriginAndroid":
+    "Passkey verification failed after the system prompt. Tap Continue again and finish every Google prompt (fingerprint and any 6-digit Google PIN). If it keeps failing, remove a partial passkey in Google Password Manager (Chrome → Settings → Google Password Manager) and try again.",
   "errors.passkeySetupPrf":
     "Passkey was created but encryption setup failed. Click Continue again and complete the second Touch ID / Face ID prompt, or try Safari. Clear site data for 127.0.0.1 if you keep retrying.",
   "errors.passkeySetupUv":

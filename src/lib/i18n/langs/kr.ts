@@ -166,6 +166,8 @@ export const MESSAGES_KR: Record<string, string> = {
     "이 기기에 패스키 하나를 등록합니다. 보안 키 등 다른 기기는 나중에 설정에서 추가할 수 있습니다.",
   "setup.passkeyPrfHint":
     "일부 브라우저는 안내를 두 번 표시합니다. 패스키 생성 1회, 비밀번호 없이 잠금 해제 설정 1회입니다.",
+  "setup.passkeyAndroidGooglePinHint":
+    "Android에서는 지문 인식 뒤 Google이 6자리 PIN을 추가로 물을 수 있습니다. 휴대폰 잠금 해제 번호가 아니라 Google 비밀번호 관리자용 PIN이니, 안내가 나오면 끝까지 완료하세요.",
   "setup.passkeyMethodAdded": "등록됨",
   "setup.passkeyPinIncluded":
     "자동 포함 — 생체 인식을 사용할 수 없을 때 이 기기 PIN으로 잠금 해제합니다.",
@@ -257,6 +259,8 @@ export const MESSAGES_KR: Record<string, string> = {
     "앱에서 패스키를 등록하지 못했습니다. Continue를 누른 뒤 Face ID 또는 기기 암호 안내가 뜨면 끝까지 완료하세요.",
   "errors.passkeySetupOrigin":
     "브라우저 주소가 이 앱과 맞지 않습니다. 설정을 시작한 것과 같은 URL로 금고를 여세요(127.0.0.1 vs localhost 포함).",
+  "errors.passkeySetupOriginAndroid":
+    "시스템 안내 후 패스키 확인에 실패했습니다. Continue를 다시 누르고 Google 안내(지문·6자리 PIN)를 모두 끝까지 완료하세요. 반복되면 Chrome → Google 비밀번호 관리자에서 mypasswordvault.app 항목을 삭제한 뒤 다시 시도하세요.",
   "errors.passkeySetupPrf":
     "패스키는 만들어졌지만 암호화 연결에 실패했습니다. Continue를 다시 누르고 두 번째 Touch ID / Face ID 안내까지 완료하거나 Safari로 시도해 보세요. 반복하면 127.0.0.1 사이트 데이터를 지운 뒤 다시 시도하세요.",
   "errors.passkeySetupUv":

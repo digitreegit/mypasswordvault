@@ -7,6 +7,7 @@ import {
   type PasskeyMethodId,
   type PasskeyMethodOption,
 } from "../lib/passkeyMethods";
+import { getNativePlatform } from "../lib/platform";
 import { isIpLiteralHost } from "../lib/siteOrigin";
 
 type TFn = (key: string, vars?: Record<string, string | number>) => string;
@@ -59,6 +60,7 @@ export function PasskeySetupPicker({
   );
 
   const hasRegistered = registeredIds.size > 0;
+  const isAndroidNative = getNativePlatform() === "android";
   const canContinue =
     !unsupported &&
     !busy &&
@@ -128,6 +130,11 @@ export function PasskeySetupPicker({
 
       <p className="text-xs text-ink-500 leading-snug">{t("setup.passkeyMethodsHint")}</p>
       <p className="text-xs text-ink-500 leading-snug">{t("setup.passkeyPrfHint")}</p>
+      {isAndroidNative ? (
+        <p className="text-xs text-ink-500 leading-snug">
+          {t("setup.passkeyAndroidGooglePinHint")}
+        </p>
+      ) : null}
 
       {unsupported && !devIpBlocked ? (
         <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-2.5">
