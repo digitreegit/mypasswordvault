@@ -35,11 +35,11 @@ const PLATFORM_AUTH_PROBE_MS = 2500;
  * `isUserVerifyingPlatformAuthenticatorAvailable()` — trust native shells.
  */
 export async function isPlatformAuthenticatorAvailable(): Promise<boolean> {
-  if (typeof PublicKeyCredential === "undefined") return false;
-
   if (isNativeApp()) {
     return true;
   }
+
+  if (typeof PublicKeyCredential === "undefined") return false;
 
   const probe = PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable;
   if (typeof probe !== "function") {

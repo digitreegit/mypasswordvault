@@ -22,6 +22,7 @@ import { isNativeApp, NATIVE_PASSKEY_HOSTNAME } from "./platform";
 export function isPasskeySupported(): boolean {
   if (typeof window === "undefined") return false;
   if (isNativeApp()) {
+    if (Capacitor.getPlatform() === "android") return true;
     return typeof window.PublicKeyCredential !== "undefined";
   }
   if (!window.PublicKeyCredential || !client.isAvailable()) return false;

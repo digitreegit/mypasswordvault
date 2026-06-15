@@ -9,6 +9,11 @@ const root = process.cwd();
 const manifestPath = join(root, "android/app/src/main/AndroidManifest.xml");
 const stylesPath = join(root, "android/app/src/main/res/values/styles.xml");
 const colorsPath = join(root, "android/app/src/main/res/values/colors.xml");
+const buildGradlePath = join(root, "android/app/build.gradle");
+const mainActivityPath = join(
+  root,
+  "android/app/src/main/java/com/skyface/mypasswordvault/MainActivity.java",
+);
 const launcherBgPath = join(
   root,
   "android/app/src/main/res/values/ic_launcher_background.xml",
@@ -105,6 +110,61 @@ function patchManifest() {
   if (changed) writeFileSync(manifestPath, xml);
 }
 
+const mainActivityWebAuthn = `package com.skyface.mypasswordvault;
+
+import android.webkit.WebView;
+import androidx.webkit.WebSettingsCompat;
+import androidx.webkit.WebViewFeature;
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {
+
+    @Override
+    protected void load() {
+        super.load();
+        enableWebAuthn();
+    }
+
+    private void enableWebAuthn() {
+        if (getBridge() == null) return;
+        WebView webView = getBridge().getWebView();
+        if (webView == null) return;
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_AUTHENTICATION)) {
+            WebSettingsCompat.setWebAuthenticationSupport(
+                webView.getSettings(),
+                WebSettingsCompat.WEB_AUTHENTICATION_SUPPORT_FOR_APP
+            );
+        }
+    }
+}
+`;
+
+function patchBuildGradleWebkit() {
+  if (!existsSync(buildGradlePath)) return;
+  let gradle = readFileSync(buildGradlePath, "utf8");
+  if (gradle.includes("androidx.webkit:webkit")) return;
+  const needle =
+    'implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"';
+  if (!gradle.includes(needle)) {
+    console.log("patch-android-shell: build.gradle layout changed — add webkit manually");
+    return;
+  }
+  gradle = gradle.replace(
+    needle,
+    `${needle}\n    implementation "androidx.webkit:webkit:$androidxWebkitVersion"`,
+  );
+  writeFileSync(buildGradlePath, gradle);
+  console.log("patch-android-shell: added androidx.webkit dependency");
+}
+
+function patchMainActivityWebAuthn() {
+  if (!existsSync(mainActivityPath)) return;
+  const current = readFileSync(mainActivityPath, "utf8");
+  if (current.includes("enableWebAuthn")) return;
+  writeFileSync(mainActivityPath, mainActivityWebAuthn);
+  console.log("patch-android-shell: enabled WebAuthn in MainActivity");
+}
+
 if (!existsSync(join(root, "android"))) {
   console.log("patch-android-shell: android/ not found — skip");
   process.exit(0);
@@ -114,3 +174,5 @@ ensureColors();
 ensureStyles();
 patchLauncherBackground();
 patchManifest();
+patchBuildGradleWebkit();
+patchMainActivityWebAuthn();
