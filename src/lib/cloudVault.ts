@@ -13,6 +13,10 @@ import { getSupabase } from "./supabaseClient";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { vaultPasskeysIndicateDifferentAccount } from "./passkey";
 import {
+  clearCloudSyncPending,
+  markCloudSyncPending,
+} from "./cloudSyncPending";
+import {
   clearVaultOwnerUserId,
   resolveVaultOwner,
   setVaultOwnerUserId,
@@ -74,6 +78,26 @@ export async function deleteRemoteVaultBackup(userId: string): Promise<void> {
     .delete()
     .eq("user_id", userId);
   if (error) assertSupabaseVaultOk(error);
+}
+
+/** Push local vault snapshot to Supabase; tracks offline pending state. */
+export async function pushVaultBackupToCloud(userId: string): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return true;
+  const m = await getMeta();
+  if (!m) return true;
+  try {
+    const stamped = stampVaultMetaForUser(m, userId);
+    if (stamped !== m) await putMeta(stamped);
+    const json = buildVaultBackupJson(stamped, await listEntries());
+    await upsertRemoteVaultBackup(userId, json);
+    clearCloudSyncPending(userId);
+    return true;
+  } catch (e) {
+    console.error("Cloud vault push failed", e);
+    markCloudSyncPending(userId);
+    return false;
+  }
 }
 
 async function importVaultSnapshot(

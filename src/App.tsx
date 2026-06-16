@@ -24,6 +24,7 @@ import {
 import { nativeScreenRootClass } from "./lib/nativeLayout";
 import { isNativeApp } from "./lib/platform";
 import { KeyboardAccessoryBar } from "./components/KeyboardAccessoryBar";
+import { CloudSyncNotifier } from "./components/CloudSyncNotifier";
 
 function parseHashPath(): string {
   if (typeof window === "undefined") return "";
@@ -156,6 +157,7 @@ function AuthenticatedApp() {
       userDisplayName={passkeyDisplayName}
     >
       <HtmlLang />
+      <CloudSyncNotifier accountUserId={session.user.id} />
       <AuthenticatedVaultRoutes hashPath={hashPath} />
     </VaultProvider>
   );

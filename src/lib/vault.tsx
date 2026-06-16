@@ -71,9 +71,10 @@ import {
 import { buildVaultBackupJson, parseVaultBackup } from "./vaultBackup";
 import {
   deleteRemoteVaultBackup,
+  pushVaultBackupToCloud,
   reconcileCloudAtStartup,
-  upsertRemoteVaultBackup,
 } from "./cloudVault";
+import { markCloudSyncPending } from "./cloudSyncPending";
 import {
   CHECKOUT_COMPLETE_MESSAGE,
   clearCheckoutPending,
@@ -171,6 +172,8 @@ interface VaultContextValue {
   refreshEntitlements: (opts?: { keepLoaded?: boolean }) => Promise<boolean>;
   /** After Stripe payment — confirms session, applies PRO immediately, refreshes entitlements. */
   finalizePaidCheckout: (sessionId?: string | null) => Promise<boolean>;
+  /** Upload local vault to cloud (returns false when offline / server error). */
+  syncCloudNow: () => Promise<boolean>;
 
   /** Backup TOTP configured (empty when skipped during setup). */
   backupTotpEnabled: boolean;
@@ -341,18 +344,14 @@ export function VaultProvider({
     localeRef.current = locale;
   }, [locale]);
 
+  const syncCloudNow = useCallback(async (): Promise<boolean> => {
+    if (!userId) return true;
+    return pushVaultBackupToCloud(userId);
+  }, [userId]);
+
   const flushCloudPush = useCallback(async () => {
     if (!userId) return;
-    const m = await getMeta();
-    if (!m) return;
-    try {
-      const stamped = stampVaultMetaForUser(m, userId);
-      if (stamped !== m) await putMeta(stamped);
-      const json = buildVaultBackupJson(stamped, await listEntries());
-      await upsertRemoteVaultBackup(userId, json);
-    } catch (e) {
-      console.error("Cloud vault push failed", e);
-    }
+    await pushVaultBackupToCloud(userId);
   }, [userId]);
 
   const scheduleCloudPush = useCallback(() => {
@@ -377,6 +376,9 @@ export function VaultProvider({
         if (userId) await reconcileCloudAtStartup(userId, userEmail);
       } catch (e) {
         console.error("Cloud vault reconcile failed", e);
+        if (userId && (await getMeta())) {
+          markCloudSyncPending(userId);
+        }
       }
       if (cancelled) return;
       const m = await getMeta();
@@ -1354,6 +1356,7 @@ export function VaultProvider({
       freeEntryLimit: FREE_ENTRY_LIMIT,
       refreshEntitlements,
       finalizePaidCheckout,
+      syncCloudNow,
       backupTotpEnabled,
       recoveryCodesRemaining,
       beginBackupTotpSettings,
@@ -1399,6 +1402,7 @@ export function VaultProvider({
       deleteCategory,
       refreshEntitlements,
       finalizePaidCheckout,
+      syncCloudNow,
       backupTotpEnabled,
       recoveryCodesRemaining,
       beginBackupTotpSettings,

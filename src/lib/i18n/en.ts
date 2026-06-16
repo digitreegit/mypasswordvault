@@ -539,6 +539,10 @@ export const MESSAGES_EN: Record<string, string> = {
     "You have reached the free limit of {{limit}} password entries on this account. Upgrade once to add unlimited entries.",
   "vault.entryLimitUpgrade": "Upgrade",
   "vault.checkoutActivating": "Activating your license…",
+  "vault.cloudSyncInProgress": "Syncing your vault to the cloud…",
+  "vault.cloudSyncCompleteTitle": "Sync complete",
+  "vault.cloudSyncCompleteBody":
+    "Your offline changes are saved to your account. They will appear on your other devices when you sign in.",
   "vault.entryLimitBannerDismiss": "Dismiss notification",
   "vault.entryLimitModalTitle": "Entry limit reached",
   "vault.entryLimitModalBody":
