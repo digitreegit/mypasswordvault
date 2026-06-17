@@ -1277,6 +1277,7 @@ export function VaultScreen() {
             onCancelScheduledUnpinEntryRow={cancelScheduledUnpin}
             onRegisterCategoryMenuOpen={registerCategoryMenuOpen}
             onOpenCategoriesAddNew={openCategoriesAddNew}
+            isNewEntry={draftEntryIds.includes(mobileDetailEntry.id)}
             t={t}
           />
         ) : null}
@@ -1755,10 +1756,12 @@ function MobileEntryDetail({
   onCancelScheduledUnpinEntryRow,
   onRegisterCategoryMenuOpen,
   onOpenCategoriesAddNew,
+  isNewEntry = false,
   t,
 }: Omit<RowProps, "expanded" | "onToggleExpand" | "onChange"> & {
   onClose: () => void;
   onSave: (draft: DecryptedEntry) => void | Promise<void>;
+  isNewEntry?: boolean;
   generatorPassword?: string | null;
   onGeneratorPasswordConsumed?: () => void;
 }) {
@@ -1801,12 +1804,20 @@ function MobileEntryDetail({
     setDraft((current) => ({ ...current, ...patch }));
   };
 
+  const finishClose = () => {
+    if (isNewEntry) {
+      onDelete();
+      return;
+    }
+    onClose();
+  };
+
   const requestClose = () => {
     if (isDirty) {
       setDiscardModalOpen(true);
       return;
     }
-    onClose();
+    finishClose();
   };
 
   const handleSave = async () => {
@@ -1856,15 +1867,25 @@ function MobileEntryDetail({
             ) : null}
           <p className="font-semibold text-lg text-ink-900 truncate">{siteLabel}</p>
         </div>
-        <button
-          type="button"
-          className="ui-icon-btn ui-icon-btn--danger shrink-0"
+        {isNewEntry ? (
+          <button
+            type="button"
+            className="btn-ghost shrink-0 px-2 py-1 text-sm font-medium text-ink-600"
+            onClick={requestClose}
+          >
+            {t("common.cancel")}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="ui-icon-btn ui-icon-btn--danger shrink-0"
             onClick={() => setDeleteModalOpen(true)}
             title={t("vault.ttDelete")}
             aria-label={t("vault.ttDelete")}
           >
             <Trash />
           </button>
+        )}
         </header>
 
         <div className="mobile-entry-detail__scroll keyboard-scroll-root native-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 space-y-4">
@@ -2060,7 +2081,7 @@ function MobileEntryDetail({
         onCancel={() => setDiscardModalOpen(false)}
         onConfirm={() => {
           setDiscardModalOpen(false);
-          onClose();
+          finishClose();
         }}
       />
     </>,
