@@ -733,21 +733,72 @@ html.native-app.native-ios .passkey-device-key__icon {
   height: 3rem !important;
 }
 
-/* Native modals — close (X) aligned to title top + content right edge */
+/* Native modals — close (X) in top-right with equal inset from popup corner */
+html.native-app {
+  --modal-close-inset: 1.25rem;
+}
+
+html.native-app .modal-panel {
+  --modal-close-inset: 1rem;
+}
+
+html.native-app .pricing-drawer-sheet {
+  --modal-close-inset: 1rem;
+}
+
+html.native-app .card:has(.modal-close-btn),
+html.native-app .modal-panel:has(.modal-close-btn),
+html.native-app [role="dialog"]:has(.modal-close-btn) {
+  position: relative;
+}
+
+html.native-app .pricing-drawer-header:has(.modal-close-btn) {
+  position: relative;
+}
+
 html.native-app .modal-close-btn {
-  align-self: flex-start;
+  position: absolute;
+  top: var(--modal-close-inset);
+  right: var(--modal-close-inset);
+  z-index: 2;
+  align-self: auto;
   margin: 0 !important;
   padding: 0 !important;
   line-height: 0;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  width: auto;
+  height: auto;
+  border-radius: 0.375rem;
+}
+
+html.native-app .pricing-drawer-header .modal-close-btn {
+  top: var(--modal-close-inset);
+  right: var(--modal-close-inset);
 }
 
 html.native-app .modal-close-btn__icon {
   width: 1.25rem !important;
   height: 1.25rem !important;
+  display: block;
+}
+
+html.native-app .action-modal__header:has(.modal-close-btn) {
+  padding-top: var(--modal-close-inset) !important;
+  padding-right: calc(var(--modal-close-inset) + 1.25rem + 0.5rem) !important;
+  padding-bottom: 0.75rem !important;
 }
 
 html.native-app .action-modal__header:has(.modal-close-btn) > .flex {
   align-items: flex-start !important;
+}
+
+html.native-app .modal-panel:has(.modal-close-btn) > .flex:first-child {
+  padding-right: calc(1.25rem + 0.5rem);
+}
+
+html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
+  padding-right: calc(1.25rem + 0.5rem);
 }
 
 @media (min-width: 640px) {
