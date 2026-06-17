@@ -37,6 +37,7 @@ import {
 } from "./Icons";
 import { PlanBadge } from "./PlanBadge";
 import { CloudSyncButton } from "./CloudSyncButton";
+import { VaultMobileSortMenu } from "./VaultMobileSortMenu";
 import { UserMenuDropdown } from "./UserMenuDropdown";
 import { isAppError } from "../lib/errors";
 import { useAuth } from "../lib/auth";
@@ -1114,48 +1115,23 @@ export function VaultScreen() {
           </div>
           <div className="md:hidden flex w-full min-w-0 flex-col gap-1.5 mb-1.5">
             <div className="flex w-full min-w-0 items-center gap-2">
-              <div className="vault-mobile-sort flex min-w-0 flex-1 items-center gap-1 rounded-xl border border-ink-200 bg-white pl-3 pr-2 shadow-sm min-h-[2.75rem]">
-                <label
-                  className="vault-sort-label shrink-0"
-                  htmlFor="vault-mobile-sort"
-                >
-                  {t("vault.sortBy")}
-                </label>
-                <div className="relative min-w-0 flex-1">
-                  <select
-                    id="vault-mobile-sort"
-                    className="vault-sort-select w-full min-w-0 appearance-none border-0 bg-transparent py-2 pl-0 pr-7 text-ink-800 focus:outline-none focus:ring-0"
-                    value={sortKey}
-                    onChange={(e) => {
-                      const k = e.target.value as SortKey;
-                      editDisplayOrderRef.current = null;
-                      setSortRevision((r) => r + 1);
-                      setSortKey(k);
-                      setSortDir(k === "updatedAt" ? "desc" : "asc");
-                    }}
-                  >
-                    <option value="updatedAt">{t("vault.sortRecent")}</option>
-                    <option value="category">{t("vault.colCategory")}</option>
-                    <option value="site">{t("vault.colSite")}</option>
-                  </select>
-                  <ChevronDownIcon
-                    className="vault-sort-chevron pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-ink-400"
-                    aria-hidden
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="vault-sort-dir-btn inline-flex h-8 w-5 shrink-0 items-center justify-center rounded-md text-ink-500 hover:bg-ink-50 hover:text-ink-800 touch-manipulation"
-                  onClick={() => {
-                    editDisplayOrderRef.current = null;
-                    setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                    setSortRevision((r) => r + 1);
-                  }}
-                  aria-label={sortDir === "asc" ? "Ascending" : "Descending"}
-                >
-                  <ChevronUpDownIcon className="vault-sort-updown" aria-hidden />
-                </button>
-              </div>
+              <VaultMobileSortMenu
+                sortKey={sortKey}
+                sortDir={sortDir}
+                triggerClassName={VAULT_TOOLBAR_BTN_ICON_MOBILE}
+                t={t}
+                onSortKeyChange={(k) => {
+                  editDisplayOrderRef.current = null;
+                  setSortRevision((r) => r + 1);
+                  setSortKey(k);
+                  setSortDir(k === "updatedAt" ? "desc" : "asc");
+                }}
+                onSortDirToggle={() => {
+                  editDisplayOrderRef.current = null;
+                  setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                  setSortRevision((r) => r + 1);
+                }}
+              />
               <CloudSyncButton className={VAULT_TOOLBAR_BTN_ICON_MOBILE} />
               <button
                 type="button"

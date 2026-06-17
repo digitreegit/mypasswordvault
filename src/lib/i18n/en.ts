@@ -554,6 +554,9 @@ export const MESSAGES_EN: Record<string, string> = {
   "vault.summaryUncategorized": "Uncategorized",
   "vault.newEntry": "new entry",
   "vault.sortBy": "Sort by",
+  "vault.sortDirection": "Direction",
+  "vault.sortAscending": "Ascending",
+  "vault.sortDescending": "Descending",
   "vault.sortRecent": "Recently updated",
 
   "vault.phMemo": "Enter memo",
