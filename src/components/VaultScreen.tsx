@@ -1114,7 +1114,7 @@ export function VaultScreen() {
             />
           </div>
           <div className="md:hidden flex w-full min-w-0 flex-col gap-1.5 mb-1.5">
-            <div className="flex w-full min-w-0 items-center justify-end gap-2">
+            <div className="flex w-full min-w-0 items-center justify-end gap-2 mb-2">
               <VaultMobileSortMenu
                 sortKey={sortKey}
                 sortDir={sortDir}
