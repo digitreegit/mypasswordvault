@@ -61,6 +61,19 @@ export function buildVaultBackupJson(meta: VaultMeta, entries: VaultEntry[]): st
   });
 }
 
+/** Latest change time for LWW sync — max of meta and entry timestamps. */
+export function snapshotRevision(meta: VaultMeta, entries: VaultEntry[]): number {
+  let t = meta.updatedAt;
+  for (const e of entries) {
+    if (e.updatedAt > t) t = e.updatedAt;
+  }
+  return t;
+}
+
+export function snapshotRevisionFromPayload(payload: VaultBackupPayload): number {
+  return snapshotRevision(payload.meta, payload.entries);
+}
+
 function sanitizeBackupFilename(filename: string): string {
   const trimmed = filename.trim();
   const safe = trimmed.replace(/[^\w.\-]+/g, "_");

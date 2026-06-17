@@ -8,7 +8,7 @@ import {
   type VaultMeta,
 } from "./storage";
 import { AppError } from "./errors";
-import { buildVaultBackupJson, parseVaultBackup } from "./vaultBackup";
+import { buildVaultBackupJson, parseVaultBackup, snapshotRevision, snapshotRevisionFromPayload } from "./vaultBackup";
 import { getSupabase } from "./supabaseClient";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { vaultPasskeysIndicateDifferentAccount } from "./passkey";
@@ -88,8 +88,14 @@ export async function pushVaultBackupToCloud(userId: string): Promise<boolean> {
   if (!m) return true;
   try {
     const stamped = stampVaultMetaForUser(m, userId);
-    if (stamped !== m) await putMeta(stamped);
-    const json = buildVaultBackupJson(stamped, await listEntries());
+    const entries = await listEntries();
+    const revision = snapshotRevision(stamped, entries);
+    const metaForPush =
+      revision > stamped.updatedAt
+        ? { ...stamped, updatedAt: revision }
+        : stamped;
+    if (metaForPush !== stamped) await putMeta(metaForPush);
+    const json = buildVaultBackupJson(metaForPush, entries);
     await upsertRemoteVaultBackup(userId, json);
     clearCloudSyncPending(userId);
     return true;
@@ -98,6 +104,26 @@ export async function pushVaultBackupToCloud(userId: string): Promise<boolean> {
     markCloudSyncPending(userId);
     return false;
   }
+}
+
+export type CloudReconcileResult =
+  | "remote_applied"
+  | "local_pushed"
+  | "unchanged"
+  | "empty";
+
+function compareVaultSnapshots(
+  remote: ReturnType<typeof parseVaultBackup>,
+  local: ReturnType<typeof parseVaultBackup>,
+): "remote" | "local" | "equal" {
+  const remoteRev = snapshotRevisionFromPayload(remote);
+  const localRev = snapshotRevisionFromPayload(local);
+  if (remoteRev > localRev) return "remote";
+  if (localRev > remoteRev) return "local";
+  if (remote.entries.length !== local.entries.length) {
+    return remote.entries.length > local.entries.length ? "remote" : "local";
+  }
+  return "equal";
 }
 
 async function importVaultSnapshot(
@@ -154,20 +180,20 @@ async function switchLocalVaultToAccount(userId: string): Promise<void> {
 }
 
 /**
- * On sign-in: merge local IndexedDB with cloud snapshot using `meta.updatedAt` (last-write-wins).
+ * Merge local IndexedDB with cloud snapshot (entry-aware last-write-wins).
  * Does not decrypt secrets — only moves ciphertext JSON.
  */
-export async function reconcileCloudAtStartup(
+export async function reconcileCloudVault(
   userId: string,
   userEmail?: string | null,
-): Promise<void> {
+): Promise<CloudReconcileResult> {
   const remote = await fetchRemoteVaultBackup(userId);
   const local = await getMeta();
   const localOwner = resolveVaultOwner(local);
 
   if (local && localOwner && localOwner !== userId) {
     await switchLocalVaultToAccount(userId);
-    return;
+    return "remote_applied";
   }
 
   if (
@@ -176,44 +202,72 @@ export async function reconcileCloudAtStartup(
     vaultPasskeysIndicateDifferentAccount(local.passkeys, userEmail)
   ) {
     await switchLocalVaultToAccount(userId);
-    return;
+    return "remote_applied";
   }
 
-  if (!remote && !local) return;
+  if (!remote && !local) return "empty";
 
   if (!remote && local) {
     const stamped = stampVaultMetaForUser(local, userId);
     if (stamped !== local) await putMeta(stamped);
-    const json = buildVaultBackupJson(stamped, await listEntries());
+    const entries = await listEntries();
+    const revision = snapshotRevision(stamped, entries);
+    const metaForPush =
+      revision > stamped.updatedAt
+        ? { ...stamped, updatedAt: revision }
+        : stamped;
+    if (metaForPush !== stamped) await putMeta(metaForPush);
+    const json = buildVaultBackupJson(metaForPush, entries);
     await upsertRemoteVaultBackup(userId, json);
-    return;
+    clearCloudSyncPending(userId);
+    return "local_pushed";
   }
 
   if (remote && !local) {
     const { meta, entries } = parseVaultBackup(remote);
     await importVaultSnapshot(meta, entries, userId);
-    return;
+    return "remote_applied";
   }
 
   if (remote && local) {
-    const localJson = buildVaultBackupJson(
-      stampVaultMetaForUser(local, userId),
-      await listEntries(),
-    );
-    let remoteTime: number;
-    let localTime: number;
+    const stamped = stampVaultMetaForUser(local, userId);
+    const entries = await listEntries();
+    const revision = snapshotRevision(stamped, entries);
+    const metaForLocal =
+      revision > stamped.updatedAt ? { ...stamped, updatedAt: revision } : stamped;
+    const localJson = buildVaultBackupJson(metaForLocal, entries);
+    let remotePayload: ReturnType<typeof parseVaultBackup>;
+    let localPayload: ReturnType<typeof parseVaultBackup>;
     try {
-      remoteTime = parseVaultBackup(remote).meta.updatedAt;
-      localTime = parseVaultBackup(localJson).meta.updatedAt;
+      remotePayload = parseVaultBackup(remote);
+      localPayload = parseVaultBackup(localJson);
     } catch {
       await upsertRemoteVaultBackup(userId, localJson);
-      return;
+      clearCloudSyncPending(userId);
+      return "local_pushed";
     }
-    if (remoteTime > localTime) {
-      const { meta, entries } = parseVaultBackup(remote);
-      await importVaultSnapshot(meta, entries, userId);
-    } else if (localTime > remoteTime) {
+    const winner = compareVaultSnapshots(remotePayload, localPayload);
+    if (winner === "remote") {
+      const { meta, entries: remoteEntries } = remotePayload;
+      await importVaultSnapshot(meta, remoteEntries, userId);
+      return "remote_applied";
+    }
+    if (winner === "local") {
+      if (metaForLocal !== stamped) await putMeta(metaForLocal);
       await upsertRemoteVaultBackup(userId, localJson);
+      clearCloudSyncPending(userId);
+      return "local_pushed";
     }
+    return "unchanged";
   }
+
+  return "unchanged";
+}
+
+/** @deprecated Use reconcileCloudVault */
+export async function reconcileCloudAtStartup(
+  userId: string,
+  userEmail?: string | null,
+): Promise<void> {
+  await reconcileCloudVault(userId, userEmail);
 }

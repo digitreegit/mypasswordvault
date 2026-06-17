@@ -72,7 +72,7 @@ import { buildVaultBackupJson, parseVaultBackup } from "./vaultBackup";
 import {
   deleteRemoteVaultBackup,
   pushVaultBackupToCloud,
-  reconcileCloudAtStartup,
+  reconcileCloudVault,
 } from "./cloudVault";
 import { markCloudSyncPending } from "./cloudSyncPending";
 import {
@@ -240,6 +240,7 @@ export function VaultProvider({
   const lastActivityRef = useRef<number>(Date.now());
   const localeRef = useRef<Locale>("en");
   const pushDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cloudRefreshInFlightRef = useRef(false);
 
   const [locale, setLocaleState] = useState<Locale>(
     () => readStoredLocale() ?? detectBrowserLocale()
@@ -373,7 +374,7 @@ export function VaultProvider({
     let cancelled = false;
     (async () => {
       try {
-        if (userId) await reconcileCloudAtStartup(userId, userEmail);
+        if (userId) await reconcileCloudVault(userId, userEmail);
       } catch (e) {
         console.error("Cloud vault reconcile failed", e);
         if (userId && (await getMeta())) {
@@ -586,6 +587,67 @@ export function VaultProvider({
     }
     setEntries(decrypted);
   }, []);
+
+  const refreshCloudVault = useCallback(async () => {
+    if (!userId || !isSupabaseConfigured) return;
+    if (typeof navigator !== "undefined" && !navigator.onLine) return;
+    if (cloudRefreshInFlightRef.current) return;
+    cloudRefreshInFlightRef.current = true;
+    try {
+      const result = await reconcileCloudVault(userId, userEmail);
+      if (result === "remote_applied" || result === "local_pushed") {
+        const m = await getMeta();
+        if (m) setMeta(m);
+        const session = sessionRef.current;
+        if (session) await loadEntries(session.key);
+      }
+    } catch (e) {
+      console.error("Cloud vault refresh failed", e);
+      if (userId && (await getMeta())) {
+        markCloudSyncPending(userId);
+      }
+    } finally {
+      cloudRefreshInFlightRef.current = false;
+    }
+  }, [userId, userEmail, loadEntries]);
+
+  const CLOUD_POLL_MS = 30_000;
+
+  useEffect(() => {
+    if (!userId || !isSupabaseConfigured) return;
+
+    const tick = () => {
+      if (typeof navigator !== "undefined" && !navigator.onLine) return;
+      void refreshCloudVault();
+    };
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") tick();
+    };
+    const onOnline = () => tick();
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", onOnline);
+
+    const interval = window.setInterval(tick, CLOUD_POLL_MS);
+
+    let removeAppListener: (() => void) | undefined;
+    if (isNativeApp()) {
+      void import("@capacitor/app").then(({ App }) => {
+        void App.addListener("appStateChange", ({ isActive }) => {
+          if (isActive) tick();
+        }).then((h) => {
+          removeAppListener = () => void h.remove();
+        });
+      });
+    }
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", onOnline);
+      clearInterval(interval);
+      removeAppListener?.();
+    };
+  }, [userId, refreshCloudVault]);
 
   const setup = useCallback(
     async (masterPassword: string, autoLockMinutes: number) => {
@@ -1179,6 +1241,12 @@ export function VaultProvider({
         updatedAt: merged.updatedAt,
       };
       await putEntry(persisted);
+      const m = await getMeta();
+      if (m) {
+        const nextMeta: VaultMeta = { ...m, updatedAt: Date.now() };
+        await putMeta(nextMeta);
+        setMeta(nextMeta);
+      }
       setEntries((prev) => {
         const idx = prev.findIndex((e) => e.id === id);
         if (idx === -1) return [merged, ...prev];
@@ -1194,10 +1262,16 @@ export function VaultProvider({
 
   const removeEntry = useCallback(async (id: string) => {
     await deleteEntry(id);
+    const m = await getMeta();
+    if (m) {
+      const nextMeta: VaultMeta = { ...m, updatedAt: Date.now() };
+      await putMeta(nextMeta);
+      setMeta(nextMeta);
+    }
     setEntries((prev) => prev.filter((e) => e.id !== id));
     lastActivityRef.current = Date.now();
-    await flushCloudPush();
-  }, [flushCloudPush]);
+    scheduleCloudPush();
+  }, [scheduleCloudPush]);
 
   const setCategories = useCallback(
     async (next: VaultCategory[]) => {
