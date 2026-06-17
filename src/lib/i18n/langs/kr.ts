@@ -533,6 +533,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "vault.cloudSyncCompleteTitle": "동기화 완료",
   "vault.cloudSyncCompleteBody":
     "오프라인에서 변경한 내용이 계정에 저장되었습니다. 다른 기기에서 로그인하면 반영됩니다.",
+  "vault.syncNow": "지금 동기화",
+  "vault.syncNowHint": "계정에 저장된 최신 금고를 가져옵니다",
   "vault.entryLimitBannerDismiss": "알림 닫기",
   "vault.entryLimitModalTitle": "항목 한도 도달",
   "vault.entryLimitModalBody":

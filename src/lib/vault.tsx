@@ -90,6 +90,14 @@ import { isNativeApp } from "./platform";
 
 export type VaultStatus = "loading" | "fresh" | "locked" | "unlocked";
 
+export type VaultSyncResult =
+  | "remote_applied"
+  | "local_pushed"
+  | "unchanged"
+  | "empty"
+  | "offline"
+  | "error";
+
 export interface DecryptedEntry {
   id: string;
   categoryId: string;
@@ -174,6 +182,8 @@ interface VaultContextValue {
   finalizePaidCheckout: (sessionId?: string | null) => Promise<boolean>;
   /** Upload local vault to cloud (returns false when offline / server error). */
   syncCloudNow: () => Promise<boolean>;
+  /** Reconcile with cloud now (flush local edits, then pull or push). */
+  syncVaultNow: () => Promise<VaultSyncResult>;
 
   /** Backup TOTP configured (empty when skipped during setup). */
   backupTotpEnabled: boolean;
@@ -361,7 +371,7 @@ export function VaultProvider({
     pushDebounceRef.current = setTimeout(() => {
       pushDebounceRef.current = null;
       void flushCloudPush();
-    }, 700);
+    }, 400);
   }, [userId, flushCloudPush]);
 
   useEffect(() => {
@@ -588,19 +598,47 @@ export function VaultProvider({
     setEntries(decrypted);
   }, []);
 
+  const runCloudVaultSync = useCallback(async (): Promise<VaultSyncResult> => {
+    if (!userId || !isSupabaseConfigured) return "empty";
+    if (typeof navigator !== "undefined" && !navigator.onLine) return "offline";
+
+    if (pushDebounceRef.current) {
+      clearTimeout(pushDebounceRef.current);
+      pushDebounceRef.current = null;
+      await flushCloudPush();
+    }
+
+    const result = await reconcileCloudVault(userId, userEmail);
+    if (result === "remote_applied" || result === "local_pushed") {
+      const m = await getMeta();
+      if (m) setMeta(m);
+      const session = sessionRef.current;
+      if (session) await loadEntries(session.key);
+    }
+    return result;
+  }, [userId, userEmail, loadEntries, flushCloudPush]);
+
+  const syncVaultNow = useCallback(async (): Promise<VaultSyncResult> => {
+    if (cloudRefreshInFlightRef.current) return "unchanged";
+    cloudRefreshInFlightRef.current = true;
+    try {
+      return await runCloudVaultSync();
+    } catch (e) {
+      console.error("Cloud vault sync failed", e);
+      if (userId && (await getMeta())) {
+        markCloudSyncPending(userId);
+      }
+      return "error";
+    } finally {
+      cloudRefreshInFlightRef.current = false;
+    }
+  }, [runCloudVaultSync, userId]);
+
   const refreshCloudVault = useCallback(async () => {
-    if (!userId || !isSupabaseConfigured) return;
-    if (typeof navigator !== "undefined" && !navigator.onLine) return;
     if (cloudRefreshInFlightRef.current) return;
     cloudRefreshInFlightRef.current = true;
     try {
-      const result = await reconcileCloudVault(userId, userEmail);
-      if (result === "remote_applied" || result === "local_pushed") {
-        const m = await getMeta();
-        if (m) setMeta(m);
-        const session = sessionRef.current;
-        if (session) await loadEntries(session.key);
-      }
+      await runCloudVaultSync();
     } catch (e) {
       console.error("Cloud vault refresh failed", e);
       if (userId && (await getMeta())) {
@@ -609,9 +647,9 @@ export function VaultProvider({
     } finally {
       cloudRefreshInFlightRef.current = false;
     }
-  }, [userId, userEmail, loadEntries]);
+  }, [runCloudVaultSync, userId]);
 
-  const CLOUD_POLL_MS = 30_000;
+  const CLOUD_POLL_MS = 15_000;
 
   useEffect(() => {
     if (!userId || !isSupabaseConfigured) return;
@@ -1270,8 +1308,12 @@ export function VaultProvider({
     }
     setEntries((prev) => prev.filter((e) => e.id !== id));
     lastActivityRef.current = Date.now();
-    scheduleCloudPush();
-  }, [scheduleCloudPush]);
+    if (pushDebounceRef.current) {
+      clearTimeout(pushDebounceRef.current);
+      pushDebounceRef.current = null;
+    }
+    await flushCloudPush();
+  }, [flushCloudPush]);
 
   const setCategories = useCallback(
     async (next: VaultCategory[]) => {
@@ -1431,6 +1473,7 @@ export function VaultProvider({
       refreshEntitlements,
       finalizePaidCheckout,
       syncCloudNow,
+      syncVaultNow,
       backupTotpEnabled,
       recoveryCodesRemaining,
       beginBackupTotpSettings,
@@ -1477,6 +1520,7 @@ export function VaultProvider({
       refreshEntitlements,
       finalizePaidCheckout,
       syncCloudNow,
+      syncVaultNow,
       backupTotpEnabled,
       recoveryCodesRemaining,
       beginBackupTotpSettings,

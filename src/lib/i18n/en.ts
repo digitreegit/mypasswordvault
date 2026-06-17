@@ -543,6 +543,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "vault.cloudSyncCompleteTitle": "Sync complete",
   "vault.cloudSyncCompleteBody":
     "Your offline changes are saved to your account. They will appear on your other devices when you sign in.",
+  "vault.syncNow": "Sync now",
+  "vault.syncNowHint": "Pull the latest vault from your account",
   "vault.entryLimitBannerDismiss": "Dismiss notification",
   "vault.entryLimitModalTitle": "Entry limit reached",
   "vault.entryLimitModalBody":

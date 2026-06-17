@@ -36,6 +36,7 @@ import {
   Check,
 } from "./Icons";
 import { PlanBadge } from "./PlanBadge";
+import { CloudSyncButton } from "./CloudSyncButton";
 import { UserMenuDropdown } from "./UserMenuDropdown";
 import { isAppError } from "../lib/errors";
 import { useAuth } from "../lib/auth";
@@ -1070,6 +1071,7 @@ export function VaultScreen() {
                     aria-hidden
                   />
                 )}
+                <CloudSyncButton className={VAULT_HEADER_ICON_BTN} />
                 <UserMenuDropdown triggerClassName={VAULT_HEADER_ICON_BTN} />
               </>
             ) : null
