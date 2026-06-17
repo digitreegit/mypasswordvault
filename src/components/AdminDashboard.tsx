@@ -86,12 +86,16 @@ const ADMIN_HEADER_ICON_BTN =
 
 const ADMIN_BTN =
   "inline-flex items-center justify-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0";
+const ADMIN_BTN_TABLE =
+  "inline-flex items-center justify-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] leading-tight font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0 whitespace-nowrap";
 const ADMIN_BTN_FIELD =
   "inline-flex items-center justify-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0 self-end";
 const ADMIN_BTN_PRIMARY = `${ADMIN_BTN} bg-accent-600 text-white hover:bg-accent-700`;
 const ADMIN_BTN_PRIMARY_FIELD = `${ADMIN_BTN_FIELD} bg-accent-600 text-white hover:bg-accent-700`;
 const ADMIN_BTN_SECONDARY = `${ADMIN_BTN} bg-white text-ink-800 hover:bg-ink-50 border border-ink-200`;
+const ADMIN_BTN_SECONDARY_TABLE = `${ADMIN_BTN_TABLE} bg-white text-ink-800 hover:bg-ink-50 border border-ink-200`;
 const ADMIN_BTN_SECONDARY_DANGER = `${ADMIN_BTN_SECONDARY} text-red-700 border-red-200 hover:bg-red-50`;
+const ADMIN_BTN_SECONDARY_DANGER_TABLE = `${ADMIN_BTN_SECONDARY_TABLE} text-red-700 border-red-200 hover:bg-red-50`;
 
 function formatMoney(cents: number | null, currency: string) {
   if (cents == null) return "—";
@@ -216,6 +220,7 @@ function AdminCustomerActions({
   onRefund,
   onDelete,
   className = "",
+  compact = false,
 }: {
   row: AdminCustomerRow;
   sessionUserId: string | undefined;
@@ -225,15 +230,22 @@ function AdminCustomerActions({
   onRefund: (row: AdminCustomerRow) => void;
   onDelete: (row: AdminCustomerRow) => void;
   className?: string;
+  compact?: boolean;
 }) {
+  const btnSecondary = compact ? ADMIN_BTN_SECONDARY_TABLE : ADMIN_BTN_SECONDARY;
+  const btnDanger = compact ? ADMIN_BTN_SECONDARY_DANGER_TABLE : ADMIN_BTN_SECONDARY_DANGER;
+  const deleteBtnClass = compact
+    ? "inline-flex shrink-0 items-center justify-center rounded-md p-1 text-ink-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+    : "inline-flex shrink-0 items-center justify-center rounded-md p-1.5 text-ink-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:pointer-events-none";
+
   return (
     <div
-      className={`admin-customers-actions flex flex-row flex-nowrap gap-1 justify-end items-center ${className}`.trim()}
+      className={`admin-customers-actions flex flex-row flex-nowrap gap-0.5 justify-end items-center ${className}`.trim()}
     >
       {!row.isAdmin ? (
         <button
           type="button"
-          className={ADMIN_BTN_SECONDARY}
+          className={btnSecondary}
           disabled={busyId === `complaint-${row.userId}`}
           onClick={() => onComplaint(row)}
         >
@@ -243,7 +255,7 @@ function AdminCustomerActions({
       {row.licenseKey && !row.refunded && !row.isAdmin && row.plan === "pro" ? (
         <button
           type="button"
-          className={ADMIN_BTN_SECONDARY_DANGER}
+          className={btnDanger}
           disabled={busyId === row.userId}
           onClick={() => void onRefund(row)}
         >
@@ -252,7 +264,7 @@ function AdminCustomerActions({
       ) : null}
       <button
         type="button"
-        className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+        className={deleteBtnClass}
         disabled={
           busyId === `delete-${row.userId}` || row.userId === sessionUserId
         }
@@ -260,7 +272,7 @@ function AdminCustomerActions({
         aria-label={t("admin.deleteUser")}
         onClick={() => onDelete(row)}
       >
-        <TrashIcon className="h-4 w-4" aria-hidden />
+        <TrashIcon className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} aria-hidden />
       </button>
     </div>
   );
@@ -490,6 +502,8 @@ function AdminPortalDialog({
     document.body,
   );
 }
+
+function AdminSelect({
   id,
   label,
   value,
@@ -709,9 +723,11 @@ export function AdminDashboard() {
   async function submitRefund() {
     if (!refundTarget?.licenseKey || refundTarget.refunded) return;
     const row = refundTarget;
+    const sessionId = row.licenseKey;
+    if (!sessionId) return;
     setRefundError(null);
     setBusyId(row.userId);
-    const r = await adminRefund(row.licenseKey);
+    const r = await adminRefund(sessionId);
     setBusyId(null);
     if (!r.ok) {
       setRefundError(adminErrorLabel(r.error, t));
@@ -1248,14 +1264,14 @@ export function AdminDashboard() {
                         <AdminEmptyMark />
                       )}
                     </td>
-                    <td className="px-4 py-3 align-middle whitespace-nowrap">
+                    <td className="px-4 py-3 align-middle whitespace-nowrap overflow-hidden">
                       <AdminCustomerPlanBadges
                         row={row}
                         planBadge={planBadge}
                         t={t}
                       />
                     </td>
-                    <td className="px-4 py-3 align-middle whitespace-nowrap text-ink-700">
+                    <td className="px-3 py-3 align-middle whitespace-nowrap overflow-hidden text-ink-700">
                       {platformLabel(displayPlatform(row), t) ?? (
                         <AdminEmptyMark />
                       )}
@@ -1289,12 +1305,13 @@ export function AdminDashboard() {
                         <AdminEmptyMark />
                       )}
                     </td>
-                    <td className="px-4 py-3 align-middle text-right whitespace-nowrap w-[1%]">
+                    <td className="admin-customers-actions-cell px-3 py-3 align-middle text-right whitespace-nowrap">
                       <AdminCustomerActions
                         row={row}
                         sessionUserId={session?.user?.id}
                         busyId={busyId}
                         t={t}
+                        compact
                         onComplaint={openComplaintModal}
                         onRefund={handleRefund}
                         onDelete={openDeleteModal}

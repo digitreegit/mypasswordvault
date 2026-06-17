@@ -997,40 +997,6 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
     line-height: 1.38;
   }
 
-  /* Admin customers table — truncate long license keys; keep actions visible */
-  html:not(.native-app) .admin-customers-col-email {
-    width: 22%;
-  }
-
-  html:not(.native-app) .admin-customers-col-plan {
-    width: 10%;
-  }
-
-  html:not(.native-app) .admin-customers-col-platform {
-    width: 7%;
-  }
-
-  html:not(.native-app) .admin-customers-col-purchased {
-    width: 15%;
-  }
-
-  html:not(.native-app) .admin-customers-col-amount {
-    width: 7%;
-  }
-
-  html:not(.native-app) .admin-customers-col-license {
-    width: 12%;
-  }
-
-  html:not(.native-app) .admin-customers-col-actions {
-    width: 27%;
-    min-width: 11.5rem;
-  }
-
-  html:not(.native-app) .admin-customers-actions {
-    flex-wrap: nowrap;
-  }
-
   /* Setup passkey — “This device” key icon (2× base size on desktop web) */
   html:not(.native-app) .passkey-device-key__badge {
     width: 4rem;
@@ -1060,6 +1026,62 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
     min-height: var(--btn-sm-min-height);
     border-radius: var(--btn-sm-radius);
     padding: 0.25rem var(--btn-sm-padding-inline);
+  }
+}
+
+/* Admin customers table — fixed column widths; actions stay on one row */
+@media (min-width: 768px) {
+  .admin-customers-table {
+    table-layout: fixed;
+    width: 100%;
+    min-width: 52rem;
+  }
+
+  .admin-customers-table col.admin-customers-col-email {
+    width: auto;
+  }
+
+  .admin-customers-table col.admin-customers-col-plan {
+    width: 4.75rem;
+  }
+
+  .admin-customers-table col.admin-customers-col-platform {
+    width: 3.75rem;
+  }
+
+  .admin-customers-table col.admin-customers-col-purchased {
+    width: 10.5rem;
+  }
+
+  .admin-customers-table col.admin-customers-col-amount {
+    width: 4.25rem;
+  }
+
+  .admin-customers-table col.admin-customers-col-license {
+    width: 11rem;
+  }
+
+  .admin-customers-table col.admin-customers-col-actions {
+    width: 12.5rem;
+  }
+
+  .admin-customers-table .admin-customers-actions-cell {
+    width: 12.5rem;
+    max-width: 12.5rem;
+  }
+
+  .admin-customers-actions {
+    display: inline-flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.125rem;
+    max-width: 100%;
+    white-space: nowrap;
+  }
+
+  .admin-customers-actions > * {
+    flex: 0 0 auto;
   }
 }
 
