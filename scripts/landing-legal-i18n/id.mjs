@@ -1,9 +1,11 @@
 /** Indonesian legal copy. */
 export default {
   metaTitlePrivacy: "Kebijakan Privasi — My Password Vault",
-  metaDescriptionPrivacy: "Kebijakan Privasi My Password Vault oleh Skyface, LLC.",
+  metaDescriptionPrivacy:
+    "Kebijakan Privasi My Password Vault oleh Skyface, LLC — enkripsi lokal-first, sinkron hanya ciphertext, dan apa yang tidak pernah kami simpan.",
   metaTitleTerms: "Ketentuan Penggunaan — My Password Vault",
-  metaDescriptionTerms: "Ketentuan Penggunaan My Password Vault oleh Skyface, LLC.",
+  metaDescriptionTerms:
+    "Ketentuan Penggunaan My Password Vault oleh Skyface, LLC — akun, pembelian, penggunaan yang dapat diterima, dan tanggung jawab.",
   legalPrivacyEyebrow: "Kebijakan privasi",
   legalPrivacyTitle: "Kebijakan Privasi My Password Vault",
   legalPrivacyIntro_html:

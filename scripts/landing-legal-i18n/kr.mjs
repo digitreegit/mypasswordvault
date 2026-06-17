@@ -1,9 +1,11 @@
 /** Korean legal copy — formal legal register (합니다체). */
 export default {
   metaTitlePrivacy: "개인정보 처리방침 — My Password Vault",
-  metaDescriptionPrivacy: "Skyface, LLC의 My Password Vault 개인정보 처리방침.",
+  metaDescriptionPrivacy:
+    "Skyface, LLC My Password Vault 개인정보 처리방침 — 로컬 우선 암호화, 암호문만 동기화, 저장하지 않는 정보.",
   metaTitleTerms: "이용약관 — My Password Vault",
-  metaDescriptionTerms: "Skyface, LLC의 My Password Vault 이용약관.",
+  metaDescriptionTerms:
+    "Skyface, LLC My Password Vault 이용약관 — 계정, 구매, 허용 사용 및 책임.",
   legalPrivacyEyebrow: "개인정보 처리방침",
   legalPrivacyTitle: "My Password Vault 개인정보 처리방침",
   legalPrivacyIntro_html:

@@ -17,14 +17,29 @@ const LOGO_SVG = `            <svg viewBox="245 346 126 112" fill="currentColor"
               <polygon points="351.93 385.25 344.55 390.18 345.11 381.37 339.16 381.37 339.75 390.18 332.37 385.25 329.37 390.52 337.33 394.39 329.37 398.27 332.37 403.47 339.75 398.54 339.16 407.35 345.11 407.35 344.55 398.54 351.93 403.47 354.87 398.27 346.97 394.39 354.87 390.52 351.93 385.25" />
             </svg>`;
 
-function head(title, desc) {
+function head(title, desc, canonicalPath = "/") {
+  const esc = (s) => s.replace(/"/g, "&quot;").replace(/</g, "");
+  const canonical = `https://mypasswordvault.app${canonicalPath}`;
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="description" content="${desc.replace(/"/g, "&quot;")}" />
-    <title>${title.replace(/</g, "")}</title>
+    <meta name="description" content="${esc(desc)}" />
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="Skyface, LLC" />
+    <title>${esc(title)}</title>
+    <link rel="canonical" href="${canonical}" />
+    <meta property="og:site_name" content="My Password Vault" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="${canonical}" />
+    <meta property="og:title" content="${esc(title)}" />
+    <meta property="og:description" content="${esc(desc)}" />
+    <meta property="og:image" content="https://mypasswordvault.app/favicon.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="${esc(title)}" />
+    <meta name="twitter:description" content="${esc(desc)}" />
+    <meta name="twitter:image" content="https://mypasswordvault.app/favicon.png" />
     <link rel="icon" href="./favicon.png" type="image/png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -243,7 +258,11 @@ const pricingBody = readFileSync(join(root, ".tmp-landing-pricing-body.html"), "
 
 writeFileSync(
   join(pub, "faq.html"),
-  head("FAQ — My Password Vault", "Frequently asked questions — My Password Vault.") +
+  head(
+    "FAQ — My Password Vault Password Manager",
+    "Answers about My Password Vault security, encryption, passkeys, TOTP 2FA, encrypted sync, backups, pricing, and support.",
+    "/faq.html",
+  ) +
     "\n" +
     bodyTop("faq", navFaq) +
     faqBody +
@@ -254,7 +273,11 @@ writeFileSync(
 
 writeFileSync(
   join(pub, "pricing.html"),
-  head("Pricing — My Password Vault", "Plans and pricing — My Password Vault.") +
+  head(
+    "Pricing — My Password Vault PRO License",
+    "My Password Vault pricing: free password manager tier plus a $4.99 one-time PRO lifetime license for unlimited entries and encrypted export.",
+    "/pricing.html",
+  ) +
     "\n" +
     bodyTop("pricing", navPricing) +
     pricingBody +
@@ -269,7 +292,8 @@ writeFileSync(
   join(pub, "privacy.html"),
   head(
     "Privacy Policy — My Password Vault",
-    "Privacy Policy for My Password Vault by Skyface, LLC.",
+    "Privacy Policy for My Password Vault by Skyface, LLC — local-first encryption, ciphertext-only sync, and what we never store.",
+    "/privacy.html",
   ) +
     "\n" +
     bodyTop("privacy", navLegal) +
@@ -281,7 +305,11 @@ writeFileSync(
 
 writeFileSync(
   join(pub, "terms.html"),
-  head("Terms of Use — My Password Vault", "Terms of Use for My Password Vault by Skyface, LLC.") +
+  head(
+    "Terms of Use — My Password Vault",
+    "Terms of Use for My Password Vault by Skyface, LLC — accounts, purchases, acceptable use, and liability.",
+    "/terms.html",
+  ) +
     "\n" +
     bodyTop("terms", navLegal) +
     TERMS_HTML +

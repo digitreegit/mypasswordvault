@@ -5,9 +5,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta
       name="description"
-      content="My Password Vault — local-first password manager. AES-GCM-256, TOTP 2FA, optional encrypted sync. Spreadsheet-simple."
+      content="Local-first password manager with AES-GCM-256 encryption, TOTP 2FA, passkeys, and spreadsheet-simple editing. Optional zero-knowledge sync. Web, iOS &amp; Android."
     />
-    <title>My Password Vault — Secure passwords, zero clutter</title>
+    <meta
+      name="keywords"
+      content="password manager, local-first password vault, encrypted password manager, TOTP 2FA, passkey, zero-knowledge sync, spreadsheet password manager, My Password Vault"
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="Skyface, LLC" />
+    <title>My Password Vault — Local-First Encrypted Password Manager</title>
+    <link rel="canonical" href="https://mypasswordvault.app/" />
+    <meta property="og:site_name" content="My Password Vault" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://mypasswordvault.app/" />
+    <meta
+      property="og:title"
+      content="My Password Vault — Local-First Encrypted Password Manager"
+    />
+    <meta
+      property="og:description"
+      content="Store logins in an encrypted vault on your device. Spreadsheet-simple grid, categories, TOTP 2FA, passkeys, and optional ciphertext-only cloud sync."
+    />
+    <meta property="og:image" content="https://mypasswordvault.app/favicon.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="My Password Vault — Local-First Encrypted Password Manager"
+    />
+    <meta
+      name="twitter:description"
+      content="Store logins in an encrypted vault on your device. Spreadsheet-simple grid, categories, TOTP 2FA, passkeys, and optional ciphertext-only cloud sync."
+    />
+    <meta name="twitter:image" content="https://mypasswordvault.app/favicon.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://mypasswordvault.app/#organization",
+            "name": "Skyface, LLC",
+            "url": "https://mypasswordvault.app/",
+            "logo": "https://mypasswordvault.app/favicon.png"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://mypasswordvault.app/#website",
+            "url": "https://mypasswordvault.app/",
+            "name": "My Password Vault",
+            "publisher": { "@id": "https://mypasswordvault.app/#organization" },
+            "inLanguage": ["en", "ko"]
+          },
+          {
+            "@type": "SoftwareApplication",
+            "@id": "https://mypasswordvault.app/#app",
+            "name": "My Password Vault",
+            "applicationCategory": "SecurityApplication",
+            "operatingSystem": "Web, iOS, Android",
+            "description": "Local-first password manager with AES-GCM-256 encryption, PBKDF2 key stretching, TOTP two-factor authentication, passkeys, and spreadsheet-style entry editing. Optional cloud sync stores ciphertext only.",
+            "offers": [
+              {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD",
+                "description": "Free tier with entry limit"
+              },
+              {
+                "@type": "Offer",
+                "price": "4.99",
+                "priceCurrency": "USD",
+                "description": "One-time PRO lifetime license"
+              }
+            ],
+            "publisher": { "@id": "https://mypasswordvault.app/#organization" },
+            "url": "https://mypasswordvault.app/app/"
+          }
+        ]
+      }
+    </script>
     <link rel="icon" href="./favicon.png" type="image/png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -271,6 +346,18 @@
             <span data-i18n="gsStep4Span">Sites, passwords, categories — save and sync when you’re ready.</span>
           </li>
         </ol>
+      </section>
+
+      <section id="overview" class="seo-overview">
+        <h2 data-i18n="seoOverviewTitle">A password manager built for clarity, not clutter</h2>
+        <p class="section-desc" data-i18n="seoOverviewBody">
+          My Password Vault is a local-first password manager for web, iPhone, and Android. Store site logins in an
+          AES-GCM-256 encrypted vault with PBKDF2 key stretching, unlock with your master password plus passkey or TOTP
+          two-factor authentication, and edit everything in a spreadsheet-style grid with categories, search, and
+          one-click copy. Cloud sync is optional and uploads ciphertext only—we never receive your master password or
+          decrypted secrets. Start free, then upgrade to PRO with a one-time license for unlimited entries and encrypted
+          backup export.
+        </p>
       </section>
 
       <div class="cta-panel" id="cta">

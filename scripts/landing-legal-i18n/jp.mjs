@@ -1,9 +1,11 @@
 /** Japanese legal copy. */
 export default {
   metaTitlePrivacy: "プライバシーポリシー — My Password Vault",
-  metaDescriptionPrivacy: "Skyface, LLC による My Password Vault のプライバシーポリシー。",
+  metaDescriptionPrivacy:
+    "Skyface, LLC による My Password Vault プライバシーポリシー — ローカル優先暗号化、暗号文のみの同期、保存しない情報。",
   metaTitleTerms: "利用規約 — My Password Vault",
-  metaDescriptionTerms: "Skyface, LLC による My Password Vault の利用規約。",
+  metaDescriptionTerms:
+    "Skyface, LLC による My Password Vault 利用規約 — アカウント、購入、許容される利用、責任。",
   legalPrivacyEyebrow: "プライバシーポリシー",
   legalPrivacyTitle: "My Password Vault プライバシーポリシー",
   legalPrivacyIntro_html:

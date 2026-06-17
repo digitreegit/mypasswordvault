@@ -1,9 +1,11 @@
 /** Simplified Chinese legal copy. */
 export default {
   metaTitlePrivacy: "隐私政策 — My Password Vault",
-  metaDescriptionPrivacy: "Skyface, LLC 的 My Password Vault 隐私政策。",
+  metaDescriptionPrivacy:
+    "Skyface, LLC 的 My Password Vault 隐私政策 — 本地优先加密、仅密文同步与我们从不存储的内容。",
   metaTitleTerms: "使用条款 — My Password Vault",
-  metaDescriptionTerms: "Skyface, LLC 的 My Password Vault 使用条款。",
+  metaDescriptionTerms:
+    "Skyface, LLC 的 My Password Vault 使用条款 — 账户、购买、可接受使用与责任。",
   legalPrivacyEyebrow: "隐私政策",
   legalPrivacyTitle: "My Password Vault 隐私政策",
   legalPrivacyIntro_html:

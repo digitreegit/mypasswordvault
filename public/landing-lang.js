@@ -59,18 +59,73 @@
     return str.replace(/\{\{year\}\}/g, year);
   }
 
+  var CANONICAL_BASE = "https://mypasswordvault.app";
+  var CANONICAL_PATHS = {
+    home: "/",
+    faq: "/faq.html",
+    pricing: "/pricing.html",
+    privacy: "/privacy.html",
+    terms: "/terms.html",
+  };
+
+  function upsertMeta(attr, key, value) {
+    if (!value) return;
+    var sel = "meta[" + attr + '="' + key + '"]';
+    var el = document.querySelector(sel);
+    if (!el) {
+      el = document.createElement("meta");
+      el.setAttribute(attr, key);
+      document.head.appendChild(el);
+    }
+    el.setAttribute("content", value);
+  }
+
+  function upsertCanonical(href) {
+    if (!href) return;
+    var el = document.querySelector('link[rel="canonical"]');
+    if (!el) {
+      el = document.createElement("link");
+      el.setAttribute("rel", "canonical");
+      document.head.appendChild(el);
+    }
+    el.setAttribute("href", href);
+  }
+
+  function applySeoMeta(title, desc, page, dict) {
+    upsertMeta("property", "og:title", title);
+    upsertMeta("property", "og:description", desc);
+    upsertMeta("name", "twitter:title", title);
+    upsertMeta("name", "twitter:description", desc);
+    var canonical = CANONICAL_BASE + (CANONICAL_PATHS[page] || "/");
+    upsertMeta("property", "og:url", canonical);
+    upsertCanonical(canonical);
+    var keywords =
+      typeof dict.metaKeywords === "string" && dict.metaKeywords
+        ? dict.metaKeywords
+        : typeof EN.metaKeywords === "string"
+          ? EN.metaKeywords
+          : "";
+    if (keywords) upsertMeta("name", "keywords", keywords);
+  }
+
   var EN = {
-    metaTitle: "My Password Vault — Secure passwords, zero clutter",
+    metaTitle: "My Password Vault — Local-First Encrypted Password Manager",
     metaDescription:
-      "My Password Vault — local-first password manager. AES-GCM-256, TOTP 2FA, optional encrypted sync. Spreadsheet-simple.",
-    metaTitleFaq: "FAQ — My Password Vault",
-    metaDescriptionFaq: "Frequently asked questions about My Password Vault — security, sync, backups, and support.",
-    metaTitlePricing: "Pricing — My Password Vault",
-    metaDescriptionPricing: "Plans and pricing for My Password Vault — free tier and one-time license.",
+      "Password manager with AES-GCM-256 encryption, TOTP 2FA, passkeys, and spreadsheet-simple editing. Your master password never leaves your device. Optional zero-knowledge sync on web, iOS & Android.",
+    metaKeywords:
+      "password manager, encrypted password vault, local-first password manager, TOTP 2FA, passkey login, zero-knowledge sync, spreadsheet password manager, password generator, Skyface",
+    metaTitleFaq: "FAQ — My Password Vault Password Manager",
+    metaDescriptionFaq:
+      "Answers about My Password Vault security, AES-GCM-256 encryption, master password, passkeys, TOTP 2FA, encrypted cloud sync, backups, pricing, and support.",
+    metaTitlePricing: "Pricing — My Password Vault PRO License",
+    metaDescriptionPricing:
+      "My Password Vault pricing: free password manager tier plus a $4.99 one-time PRO lifetime license for unlimited entries, encrypted export, and premium features.",
     metaTitlePrivacy: "Privacy Policy — My Password Vault",
-    metaDescriptionPrivacy: "Privacy Policy for My Password Vault by Skyface, LLC.",
+    metaDescriptionPrivacy:
+      "Privacy Policy for My Password Vault by Skyface, LLC — local-first encryption, ciphertext-only sync, and what we never store.",
     metaTitleTerms: "Terms of Use — My Password Vault",
-    metaDescriptionTerms: "Terms of Use for My Password Vault by Skyface, LLC.",
+    metaDescriptionTerms:
+      "Terms of Use for My Password Vault by Skyface, LLC — accounts, purchases, acceptable use, and liability.",
     logoAria: "My Password Vault home",
     langAria: "Language",
     navHome: "Home",
@@ -194,24 +249,32 @@
     ctaReadyTitle: "Ready when you are",
     ctaReadyLead:
       "Same tool for weekend admins and daily operators: fewer clicks, fewer tabs, more confidence that\n          your credentials never left encryption you control.",
+    seoOverviewTitle: "A password manager built for clarity, not clutter",
+    seoOverviewBody:
+      "My Password Vault is a local-first password manager for web, iPhone, and Android. Store site logins in an AES-GCM-256 encrypted vault with PBKDF2 key stretching, unlock with your master password plus passkey or TOTP two-factor authentication, and edit everything in a spreadsheet-style grid with categories, search, and one-click copy. Cloud sync is optional and uploads ciphertext only—we never receive your master password or decrypted secrets. Start free, then upgrade to PRO with a one-time license for unlimited entries and encrypted backup export.",
     footerPrivacy: "Privacy Policy",
     footerTerms: "Terms of Use",
     footerCopy: "©{{year}} Skyface, LLC. All rights reserved.",
   };
 
   var KO = {
-    metaTitle: "My Password Vault — 안전하고 단순한 비밀번호 관리",
+    metaTitle: "My Password Vault — 로컬 우선 암호화 비밀번호 관리",
     metaDescription:
-      "My Password Vault — 로컬 우선 비밀번호 관리자. AES-GCM-256, TOTP 2FA, 선택형 암호화 동기화. 스프레드시트처럼 간단합니다.",
+      "AES-GCM-256 암호화, TOTP 2FA, 패스키, 스프레드시트형 편집을 갖춘 비밀번호 관리자. 마스터 비밀번호는 기기를 벗어나지 않습니다. 웹·iOS·Android에서 선택형 제로 지식 동기화.",
+    metaKeywords:
+      "비밀번호 관리자, 암호화 비밀번호 금고, 로컬 우선, TOTP 2FA, 패스키, 제로 지식 동기화, 스프레드시트형 비밀번호 관리, My Password Vault",
     metaTitleFaq: "자주 묻는 질문 — My Password Vault",
     metaDescriptionFaq:
-      "My Password Vault에 대한 자주 묻는 질문 — 보안, 동기화, 백업, 지원.",
-    metaTitlePricing: "요금제 — My Password Vault",
-    metaDescriptionPricing: "My Password Vault 요금제 — 무료 한도와 일회성 라이선스.",
+      "My Password Vault 보안, AES-GCM-256 암호화, 마스터 비밀번호, 패스키, TOTP 2FA, 암호화 동기화, 백업, 요금, 지원에 대한 답변.",
+    metaTitlePricing: "요금제 — My Password Vault PRO",
+    metaDescriptionPricing:
+      "My Password Vault 요금: 무료 플랜과 $4.99 일회성 PRO 평생 라이선스(무제한 항목, 암호화 내보내기 등).",
     metaTitlePrivacy: "개인정보 처리방침 — My Password Vault",
-    metaDescriptionPrivacy: "Skyface, LLC의 My Password Vault 개인정보 처리방침.",
+    metaDescriptionPrivacy:
+      "Skyface, LLC My Password Vault 개인정보 처리방침 — 로컬 우선 암호화, 암호문만 동기화, 저장하지 않는 정보.",
     metaTitleTerms: "이용약관 — My Password Vault",
-    metaDescriptionTerms: "Skyface, LLC의 My Password Vault 이용약관.",
+    metaDescriptionTerms:
+      "Skyface, LLC My Password Vault 이용약관 — 계정, 구매, 허용 사용 및 책임.",
     langAria: "언어 선택",
     navHome: "홈",
     navMenu: "메뉴",
@@ -333,6 +396,9 @@
     ctaReadyTitle: "준비되면 시작하세요",
     ctaReadyLead:
       "주말 관리자든 매일 운영하든 같은 도구입니다. 클릭과 탭을 줄이고, 통제 가능한 암호화 안에 자격 증명을 두세요.",
+    seoOverviewTitle: "복잡함 대신 명확함을 위한 비밀번호 관리자",
+    seoOverviewBody:
+      "My Password Vault는 웹, iPhone, Android용 로컬 우선 비밀번호 관리자입니다. 사이트 로그인을 AES-GCM-256 암호화 금고에 PBKDF2 키 스트레칭과 함께 저장하고, 마스터 비밀번호와 패스키 또는 TOTP 2단계 인증으로 잠금을 해제합니다. 카테고리, 검색, 원탭 복사가 있는 스프레드시트형 그리드에서 편집하세요. 클라우드 동기화는 선택 사항이며 암호문만 업로드합니다. 마스터 비밀번호나 복호화된 비밀은 받지 않습니다. 무료로 시작한 뒤, 일회성 PRO 라이선스로 무제한 항목과 암호화 백업 내보내기를 이용하세요.",
     footerPrivacy: "개인정보 처리방침",
     footerTerms: "이용약관",
     footerCopy: "©{{year}} Skyface, LLC. All rights reserved.",
@@ -397,12 +463,11 @@
       return typeof v === "string" && v ? v : fb;
     }
     document.title = pickStr(D, titleKey, pickStr(EN, titleKey, D.metaTitle));
+    var pageTitle = document.title;
+    var pageDesc = pickStr(D, descKey, pickStr(EN, descKey, D.metaDescription));
     var md = document.querySelector('meta[name="description"]');
-    if (md)
-      md.setAttribute(
-        "content",
-        pickStr(D, descKey, pickStr(EN, descKey, D.metaDescription)),
-      );
+    if (md) md.setAttribute("content", pageDesc);
+    applySeoMeta(pageTitle, pageDesc, page, D);
 
     document.querySelectorAll("[data-logo-landing-aria]").forEach(function (a) {
       a.setAttribute("aria-label", D.logoAria || EN.logoAria);

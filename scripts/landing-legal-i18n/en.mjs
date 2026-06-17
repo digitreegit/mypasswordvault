@@ -1,9 +1,11 @@
 /** English legal copy — source of truth for structure and links. */
 export default {
   metaTitlePrivacy: "Privacy Policy — My Password Vault",
-  metaDescriptionPrivacy: "Privacy Policy for My Password Vault by Skyface, LLC.",
+  metaDescriptionPrivacy:
+    "Privacy Policy for My Password Vault by Skyface, LLC — local-first encryption, ciphertext-only sync, and what we never store.",
   metaTitleTerms: "Terms of Use — My Password Vault",
-  metaDescriptionTerms: "Terms of Use for My Password Vault by Skyface, LLC.",
+  metaDescriptionTerms:
+    "Terms of Use for My Password Vault by Skyface, LLC — accounts, purchases, acceptable use, and liability.",
   legalPrivacyEyebrow: "Privacy policy",
   legalPrivacyTitle: "My Password Vault Privacy Policy",
   legalPrivacyIntro_html:
