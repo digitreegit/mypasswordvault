@@ -39,6 +39,24 @@ export function usesStoreBilling(): boolean {
   return isNativeApp();
 }
 
+type StorePricingCopyKey =
+  | "storeBridgeLoading"
+  | "storeBridgeFailed"
+  | "storeBridgeFailedHint";
+
+/** iOS vs Google Play pricing / IAP status copy. */
+export function storePricingMessageKey(part: StorePricingCopyKey): string {
+  return getNativePlatform() === "android"
+    ? `pricing.${part}Android`
+    : `pricing.${part}`;
+}
+
+export function storeBridgeMissingErrorCode(): string {
+  return getNativePlatform() === "android"
+    ? "errors.storeBridgeMissingAndroid"
+    : "errors.storeBridgeMissing";
+}
+
 export function getOAuthRedirectUrl(): string {
   if (isNativeApp()) return NATIVE_AUTH_REDIRECT;
   if (typeof window === "undefined") return canonicalAppUrl();

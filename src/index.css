@@ -53,8 +53,9 @@ body {
   }
 }
 
-/* iOS native — Apple HIG type + icon scale (isolated from web) */
-html.native-app.native-ios {
+/* Native mobile (iOS + Android) — shared typography, icons, and control scale */
+html.native-app.native-ios,
+html.native-app.native-android {
   --type-caption: 0.8125rem; /* 13pt footnote */
   --type-sub: 0.9375rem; /* 15pt subheadline */
   --type-body: 1.0625rem; /* 17pt body */
@@ -77,35 +78,6 @@ html.native-app.native-ios {
   --app-brand-text-size: 1.0625rem;
   --type-field-label: var(--type-sub);
   --leading-field-label: var(--leading-sub);
-}
-
-/* Android native — Material 3: 14sp labels, 40dp height (enable when shell ships) */
-html.native-app.native-android {
-  --type-caption: 0.6875rem;
-  --type-sub: 0.8125rem;
-  --type-body: 0.875rem;
-  --type-title: 1.375rem;
-  --type-headline: 1.75rem;
-  --leading-body: 1.43;
-  --leading-sub: 1.45;
-  --leading-caption: 1.33;
-  --btn-font-size: 0.875rem;
-  --btn-line-height: 1.43;
-  --btn-min-height: 2.5rem;
-  --btn-radius: 1.25rem;
-  --btn-padding-inline: 1.5rem;
-  --type-field-label: var(--type-sub);
-  --leading-field-label: var(--leading-sub);
-  /* Material 3 surface tokens */
-  --md-surface: #ffffff;
-  --md-surface-container: #f3f3f6;
-  --md-primary: #42424a;
-  --md-on-surface: #121216;
-  --md-on-surface-variant: #42424a;
-  --md-outline: #797983;
-  --md-elevation-1: 0 1px 2px rgb(18 18 22 / 0.06), 0 1px 3px rgb(18 18 22 / 0.04);
-  --md-elevation-2: 0 2px 6px rgb(18 18 22 / 0.08), 0 1px 2px rgb(18 18 22 / 0.04);
-  font-family: Roboto, "Noto Sans KR", ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Narrow mobile web only — do not scale Capacitor icons globally */
@@ -694,53 +666,7 @@ html.native-app [data-categories-dialog]:has(input:focus) .keyboard-scroll-root 
   box-shadow: none;
 }
 
-/* Android Material 3 — filled buttons, tonal surfaces, rounded cards */
-html.native-app.native-android .btn-primary {
-  background-color: var(--md-primary) !important;
-  color: #fff !important;
-  box-shadow: none;
-  letter-spacing: 0.01em;
-  text-transform: none;
-}
-
-html.native-app.native-android .btn-primary:active:not(:disabled) {
-  filter: brightness(0.92);
-}
-
-html.native-app.native-android .btn-secondary {
-  background-color: var(--md-surface-container) !important;
-  border-color: rgb(217 217 223 / 0.9) !important;
-  color: var(--md-on-surface) !important;
-}
-
-html.native-app.native-android .btn-ghost {
-  color: var(--md-on-surface-variant) !important;
-}
-
-html.native-app.native-android .card {
-  border-radius: 1rem;
-  border: 1px solid rgb(232 232 236);
-  box-shadow: var(--md-elevation-1);
-}
-
-html.native-app.native-android .input:not(textarea),
-html.native-app.native-android textarea.input {
-  border-radius: 0.25rem !important;
-  border-color: var(--md-outline) !important;
-  background: var(--md-surface) !important;
-}
-
-html.native-app.native-android .input:focus,
-html.native-app.native-android textarea.input:focus {
-  border-color: var(--md-primary) !important;
-  box-shadow: 0 0 0 2px rgb(66 66 74 / 0.15) !important;
-}
-
-html.native-app.native-android .ui-icon-btn {
-  border-radius: 9999px;
-}
-
-html.native-app.native-android .native-onboard__footer .btn-primary {
+html.native-app .native-onboard__footer .btn-primary {
   font-size: var(--btn-font-size) !important;
   line-height: var(--btn-line-height) !important;
   font-weight: 500;
@@ -748,26 +674,6 @@ html.native-app.native-android .native-onboard__footer .btn-primary {
   border-radius: var(--btn-radius) !important;
   padding-left: var(--btn-padding-inline);
   padding-right: var(--btn-padding-inline);
-}
-
-/* Edge-to-edge: respect display cutouts and nav bar on all Android sizes */
-html.native-app.native-android .native-screen,
-html.native-app.native-android .native-launch {
-  padding-left: max(env(safe-area-inset-left, 0px), 0px);
-  padding-right: max(env(safe-area-inset-right, 0px), 0px);
-  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
-}
-
-html.native-app.native-android .native-onboard__copy,
-html.native-app.native-android .native-onboard__footer,
-html.native-app.native-android .native-onboard__art-band {
-  padding-inline: clamp(1rem, 4vw, 1.5rem);
-}
-
-html.native-app.native-android .action-modal__header,
-html.native-app.native-android .action-modal__footer,
-html.native-app.native-android .keyboard-scroll-root {
-  padding-inline: max(1.25rem, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
 }
 
 html.native-app .native-launch--splash .brand-splash-symbol {
@@ -776,25 +682,15 @@ html.native-app .native-launch--splash .brand-splash-symbol {
   flex-shrink: 0;
 }
 
-html.native-app.native-ios .native-onboard__footer .btn-primary {
-  font-size: var(--btn-font-size) !important;
-  line-height: var(--btn-line-height) !important;
-  font-weight: 500;
-  min-height: var(--btn-min-height) !important;
-  border-radius: var(--btn-radius) !important;
-  padding-left: var(--btn-padding-inline);
-  padding-right: var(--btn-padding-inline);
-}
-
-/* Setup passkey — “This device” key icon (2× on iOS native) */
-html.native-app.native-ios .passkey-device-key__badge {
+/* Setup passkey — “This device” key icon (2× on native) */
+html.native-app .passkey-device-key__badge {
   width: 4rem !important;
   height: 4rem !important;
   min-width: 4rem;
   min-height: 4rem;
 }
 
-html.native-app.native-ios .passkey-device-key__icon {
+html.native-app .passkey-device-key__icon {
   width: 3rem !important;
   height: 3rem !important;
 }
@@ -1183,105 +1079,105 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
     --leading-field-label: var(--leading-caption);
   }
 
-  /* ── iOS native: Apple HIG text scale (Capacitor only) ── */
-  html.native-ios .text-xs,
-  html.native-ios .vault-page .text-xs,
-  html.native-ios .settings-page .text-xs,
-  html.native-ios .native-screen .text-xs,
-  html.native-ios .setup-screen__body--fixed .text-xs {
+  /* ── Native mobile: shared text scale (Capacitor iOS + Android) ── */
+  html.native-app .text-xs,
+  html.native-app .vault-page .text-xs,
+  html.native-app .settings-page .text-xs,
+  html.native-app .native-screen .text-xs,
+  html.native-app .setup-screen__body--fixed .text-xs {
     font-size: var(--type-caption) !important;
     line-height: var(--leading-caption);
   }
-  html.native-ios .text-sm,
-  html.native-ios .vault-page .text-sm,
-  html.native-ios .settings-page .text-sm,
-  html.native-ios .native-screen .text-sm,
-  html.native-ios .setup-screen__body--fixed .text-sm {
+  html.native-app .text-sm,
+  html.native-app .vault-page .text-sm,
+  html.native-app .settings-page .text-sm,
+  html.native-app .native-screen .text-sm,
+  html.native-app .setup-screen__body--fixed .text-sm {
     font-size: var(--type-sub) !important;
     line-height: var(--leading-sub);
   }
-  html.native-ios .text-base,
-  html.native-ios .vault-page .text-base,
-  html.native-ios .settings-page .text-base,
-  html.native-ios .native-screen .text-base,
-  html.native-ios .setup-screen__body--fixed .text-base {
+  html.native-app .text-base,
+  html.native-app .vault-page .text-base,
+  html.native-app .settings-page .text-base,
+  html.native-app .native-screen .text-base,
+  html.native-app .setup-screen__body--fixed .text-base {
     font-size: var(--type-body) !important;
     line-height: var(--leading-body);
   }
-  html.native-ios .text-lg,
-  html.native-ios .vault-page .text-lg,
-  html.native-ios .settings-page .text-lg,
-  html.native-ios .native-screen .text-lg,
-  html.native-ios .setup-screen__body--fixed .text-lg {
+  html.native-app .text-lg,
+  html.native-app .vault-page .text-lg,
+  html.native-app .settings-page .text-lg,
+  html.native-app .native-screen .text-lg,
+  html.native-app .setup-screen__body--fixed .text-lg {
     font-size: var(--type-title) !important;
     line-height: 1.35;
   }
-  html.native-ios .text-xl,
-  html.native-ios .vault-page .text-xl,
-  html.native-ios .settings-page .text-xl,
-  html.native-ios .native-screen .text-xl,
-  html.native-ios .setup-screen__body--fixed .text-xl {
+  html.native-app .text-xl,
+  html.native-app .vault-page .text-xl,
+  html.native-app .settings-page .text-xl,
+  html.native-app .native-screen .text-xl,
+  html.native-app .setup-screen__body--fixed .text-xl {
     font-size: var(--type-title) !important;
     line-height: 1.35;
   }
-  html.native-ios .text-2xl,
-  html.native-ios .vault-page .text-2xl,
-  html.native-ios .settings-page .text-2xl,
-  html.native-ios .native-screen .text-2xl,
-  html.native-ios .setup-screen__body--fixed .text-2xl {
+  html.native-app .text-2xl,
+  html.native-app .vault-page .text-2xl,
+  html.native-app .settings-page .text-2xl,
+  html.native-app .native-screen .text-2xl,
+  html.native-app .setup-screen__body--fixed .text-2xl {
     font-size: var(--type-headline) !important;
     line-height: 1.25;
   }
 
-  html.native-ios .web-auth-subtitle,
-  html.native-ios .native-screen .web-auth-subtitle {
+  html.native-app .web-auth-subtitle,
+  html.native-app .native-screen .web-auth-subtitle {
     font-size: var(--type-sub) !important;
     line-height: var(--leading-sub);
     color: #5e5e68;
   }
 
-  html.native-ios .lock-panel-hint,
-  html.native-ios .native-screen .lock-panel-hint {
+  html.native-app .lock-panel-hint,
+  html.native-app .native-screen .lock-panel-hint {
     font-size: var(--type-sub);
     line-height: var(--leading-sub);
     color: #5e5e68;
   }
 
-  html.native-ios .lock-panel-link,
-  html.native-ios .native-screen .lock-panel-link {
+  html.native-app .lock-panel-link,
+  html.native-app .native-screen .lock-panel-link {
     font-size: var(--type-sub);
     line-height: var(--leading-sub);
     color: #5e5e68;
   }
 
-  html.native-ios .type-caption,
-  html.native-ios .text-caption {
+  html.native-app .type-caption,
+  html.native-app .text-caption {
     font-size: var(--type-caption) !important;
     line-height: var(--leading-caption);
   }
 
-  html.native-ios .type-body {
+  html.native-app .type-body {
     font-size: var(--type-body);
     line-height: var(--leading-body);
   }
 
-  html.native-ios .type-sub {
+  html.native-app .type-sub {
     font-size: var(--type-sub);
     line-height: var(--leading-sub);
     color: #5e5e68;
   }
 
-  html.native-ios .vault-page,
-  html.native-ios .settings-page,
-  html.native-ios .native-screen,
-  html.native-ios .native-screen__scroll,
-  html.native-ios .native-launch__scroll,
-  html.native-ios .setup-screen__body--fixed {
+  html.native-app .vault-page,
+  html.native-app .settings-page,
+  html.native-app .native-screen,
+  html.native-app .native-screen__scroll,
+  html.native-app .native-launch__scroll,
+  html.native-app .setup-screen__body--fixed {
     font-size: var(--type-body);
     line-height: var(--leading-body);
   }
 
-  html.native-ios .setup-shell-intro h1 {
+  html.native-app .setup-shell-intro h1 {
     font-size: var(--type-headline);
     line-height: 1.25;
     font-weight: 700;
@@ -1289,47 +1185,47 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
     color: #121216;
   }
 
-  html.native-ios .setup-shell-intro p {
+  html.native-app .setup-shell-intro p {
     font-size: var(--type-sub);
     line-height: var(--leading-sub);
     color: #5e5e68;
   }
 
-  html.native-ios .settings-page h1.settings-section-title,
-  html.native-ios .settings-section-title {
+  html.native-app .settings-page h1.settings-section-title,
+  html.native-app .settings-section-title {
     font-size: var(--type-title) !important;
     line-height: 1.3;
   }
 
-  html.native-ios .screen-page-title {
+  html.native-app .screen-page-title {
     font-size: var(--type-title) !important;
     line-height: 1.35;
   }
 
-  html.native-ios .screen-page-title.text-2xl {
+  html.native-app .screen-page-title.text-2xl {
     font-size: var(--type-headline) !important;
     line-height: 1.25;
   }
 
-  html.native-ios .mobile-swipe-row__content .text-lg,
-  html.native-ios .vault-page .mobile-swipe-row .text-lg {
+  html.native-app .mobile-swipe-row__content .text-lg,
+  html.native-app .vault-page .mobile-swipe-row .text-lg {
     font-size: var(--type-body) !important;
     line-height: var(--leading-body);
   }
 
-  html.native-ios .settings-mobile-tab {
+  html.native-app .settings-mobile-tab {
     font-size: var(--type-sub) !important;
     line-height: var(--leading-sub);
   }
 
-  html.native-ios .settings-section-subtitle {
+  html.native-app .settings-section-subtitle {
     font-size: var(--type-sub) !important;
     line-height: var(--leading-sub);
   }
 
-  html.native-ios .vault-toolbar-icon-btn > svg,
-  html.native-ios .vault-toolbar-icon-btn > .ui-icon,
-  html.native-ios #root .vault-toolbar-icon-btn > svg[aria-hidden] {
+  html.native-app .vault-toolbar-icon-btn > svg,
+  html.native-app .vault-toolbar-icon-btn > .ui-icon,
+  html.native-app #root .vault-toolbar-icon-btn > svg[aria-hidden] {
     width: var(--ui-icon-size);
     height: var(--ui-icon-size);
   }
@@ -1461,36 +1357,12 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
     line-height: 1.35;
   }
 
-  /* Android native — Material 3 typography and controls */
-  html.native-android .text-xs,
-  html.native-android .vault-page .text-xs,
-  html.native-android .settings-page .text-xs,
-  html.native-android .native-screen .text-xs {
-    font-size: var(--type-caption) !important;
-    line-height: var(--leading-caption);
-  }
-  html.native-android .text-sm,
-  html.native-android .vault-page .text-sm,
-  html.native-android .settings-page .text-sm,
-  html.native-android .native-screen .text-sm {
-    font-size: var(--type-sub) !important;
-    line-height: var(--leading-sub);
-  }
-  html.native-android .text-base,
-  html.native-android .vault-page .text-base,
-  html.native-android .settings-page .text-base,
-  html.native-android .native-screen .text-base {
-    font-size: var(--type-body) !important;
-    line-height: var(--leading-body);
-  }
-
   /* Field inputs — global selectors cover portaled overlays (createPortal → body) */
-  html.native-ios .input:not(textarea),
-  html.native-ios .vault-page .input:not(textarea),
-  html.native-ios .settings-page .input:not(textarea),
-  html.native-ios .native-screen .input:not(textarea),
-  html.native-ios .setup-screen__body--fixed .input:not(textarea),
-  html.native-android .input:not(textarea),
+  html.native-app .input:not(textarea),
+  html.native-app .vault-page .input:not(textarea),
+  html.native-app .settings-page .input:not(textarea),
+  html.native-app .native-screen .input:not(textarea),
+  html.native-app .setup-screen__body--fixed .input:not(textarea),
   html:not(.native-app) .input:not(textarea),
   html:not(.native-app) .app-shell__panel .input:not(textarea),
   html:not(.native-app) .vault-page .input:not(textarea),
@@ -1505,12 +1377,11 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
     font-weight: 400;
   }
 
-  html.native-ios textarea.input,
-  html.native-ios .vault-page textarea.input,
-  html.native-ios .settings-page textarea.input,
-  html.native-ios .native-screen textarea.input,
-  html.native-ios .setup-screen__body--fixed textarea.input,
-  html.native-android textarea.input,
+  html.native-app textarea.input,
+  html.native-app .vault-page textarea.input,
+  html.native-app .settings-page textarea.input,
+  html.native-app .native-screen textarea.input,
+  html.native-app .setup-screen__body--fixed textarea.input,
   html:not(.native-app) textarea.input,
   html:not(.native-app) .app-shell__panel textarea.input,
   html:not(.native-app) .vault-page textarea.input,
@@ -1524,34 +1395,18 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
     font-weight: 400;
   }
 
-  html.native-android .input:not(textarea),
-  html.native-android textarea.input {
-    min-height: 3.5rem;
-    border-radius: 0.25rem;
-    padding: 1rem;
-    font-size: var(--type-body) !important;
-    line-height: var(--leading-body) !important;
-    font-weight: 400;
-  }
-
   .vault-mobile-memo {
     min-height: 8rem !important;
   }
 
   /* All mobile .btn-* share token typography (beats Tailwind text-sm on same element).
      Global html:not(.native-app) selectors cover portaled modals (createPortal → body). */
-  html.native-ios .btn,
-  html.native-ios .btn-primary,
-  html.native-ios .btn-secondary,
-  html.native-ios .btn-ghost,
-  html.native-ios .btn-danger,
-  html.native-ios .btn-danger-soft,
-  html.native-android .btn,
-  html.native-android .btn-primary,
-  html.native-android .btn-secondary,
-  html.native-android .btn-ghost,
-  html.native-android .btn-danger,
-  html.native-android .btn-danger-soft,
+  html.native-app .btn,
+  html.native-app .btn-primary,
+  html.native-app .btn-secondary,
+  html.native-app .btn-ghost,
+  html.native-app .btn-danger,
+  html.native-app .btn-danger-soft,
   html:not(.native-app) .btn,
   html:not(.native-app) .btn-primary,
   html:not(.native-app) .btn-secondary,
@@ -1592,14 +1447,10 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
   }
 
   /* Compact inline actions (e.g. security row) keep caption size */
-  html.native-ios .btn.text-xs,
-  html.native-ios .btn-primary.text-xs,
-  html.native-ios .btn-secondary.text-xs,
-  html.native-ios .btn-ghost.text-xs,
-  html.native-android .btn.text-xs,
-  html.native-android .btn-primary.text-xs,
-  html.native-android .btn-secondary.text-xs,
-  html.native-android .btn-ghost.text-xs,
+  html.native-app .btn.text-xs,
+  html.native-app .btn-primary.text-xs,
+  html.native-app .btn-secondary.text-xs,
+  html.native-app .btn-ghost.text-xs,
   html:not(.native-app) .btn.text-xs,
   html:not(.native-app) .btn-primary.text-xs,
   html:not(.native-app) .btn-secondary.text-xs,
@@ -1610,10 +1461,8 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
   }
 
   /* Field labels smaller than inputs; !important beats .label { @apply text-sm } remap */
-  html.native-ios .label,
-  html.native-ios .mobile-field-label,
-  html.native-android .label,
-  html.native-android .mobile-field-label,
+  html.native-app .label,
+  html.native-app .mobile-field-label,
   html:not(.native-app) .label,
   html:not(.native-app) .mobile-field-label,
   html:not(.native-app) .app-shell__panel .label,
@@ -1629,10 +1478,8 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
     font-weight: 500;
   }
 
-  html.native-ios .label.text-xs,
-  html.native-ios .mobile-field-label.text-xs,
-  html.native-android .label.text-xs,
-  html.native-android .mobile-field-label.text-xs,
+  html.native-app .label.text-xs,
+  html.native-app .mobile-field-label.text-xs,
   html:not(.native-app) .label.text-xs,
   html:not(.native-app) .mobile-field-label.text-xs {
     font-size: var(--type-caption) !important;
@@ -1679,12 +1526,12 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
     padding-left: 2.5rem !important;
   }
 
-  html.native-ios .vault-mobile-search,
-  html.native-ios .vault-page .vault-mobile-search.input {
+  html.native-app .vault-mobile-search,
+  html.native-app .vault-page .vault-mobile-search.input {
     padding-left: 2.5rem !important;
   }
 
-  html.native-ios .settings-back-to-vault-btn {
+  html.native-app .settings-back-to-vault-btn {
     min-height: 1.875rem !important;
     padding: 0.25rem 0.625rem !important;
     font-size: 0.8125rem !important;
@@ -1695,11 +1542,11 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
     box-shadow: 0 1px 2px rgb(18 18 22 / 0.04);
   }
 
-  html.native-ios .settings-back-to-vault-btn:active:not(:disabled) {
+  html.native-app .settings-back-to-vault-btn:active:not(:disabled) {
     background: #f7f7f8 !important;
   }
 
-  html.native-ios .settings-back-to-vault-btn svg[aria-hidden] {
+  html.native-app .settings-back-to-vault-btn svg[aria-hidden] {
     width: 0.75rem !important;
     height: 0.75rem !important;
   }
@@ -2154,8 +2001,9 @@ html.native-app .settings-native-chrome .settings-mobile-tablist-wrap {
     margin: 0;
     padding: 0.75rem 1rem;
     border-radius: 0.625rem;
-    background-color: #f97316;
-    color: #fff;
+    background-color: #fef08a;
+    border: 1px solid #fde047;
+    color: #111827;
     font-size: 0.875rem;
     line-height: 1.43;
   }

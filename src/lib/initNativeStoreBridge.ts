@@ -14,6 +14,7 @@ import {
   getNativePlatform,
   isNativeApp,
   STORE_PRO_PRODUCT_ID,
+  storeBridgeMissingErrorCode,
 } from "./platform";
 import type { StorePurchasePayload } from "./storePurchase";
 
@@ -29,10 +30,20 @@ const priceListeners = new Set<(price: string | null) => void>();
 
 function syncProDisplayPrice(): void {
   const product = store.get(STORE_PRO_PRODUCT_ID);
-  const price = product?.pricing?.price?.trim() || null;
+  const price = readProductDisplayPrice(product);
   if (price === proDisplayPrice) return;
   proDisplayPrice = price;
   priceListeners.forEach((fn) => fn(price));
+}
+
+function readProductDisplayPrice(product: Product | undefined): string | null {
+  if (!product) return null;
+  const direct = product.pricing?.price?.trim();
+  if (direct) return direct;
+  const offer = product.getOffer?.();
+  const phasePrice = offer?.pricingPhases?.[0]?.price?.trim();
+  if (phasePrice) return phasePrice;
+  return null;
 }
 
 export function getStoreProDisplayPrice(): string | null {
@@ -95,8 +106,8 @@ function isProProductReady(): boolean {
   if (!product?.id) return false;
   if (store.owned(STORE_PRO_PRODUCT_ID)) return true;
   if (findOwnedTransaction(STORE_PRO_PRODUCT_ID)) return true;
+  if (readProductDisplayPrice(product)) return true;
   if (product.canPurchase && product.getOffer()) return true;
-  // Metadata loaded from App Store — owned non-consumables report canPurchase=false.
   return Boolean(product.title);
 }
 
@@ -220,7 +231,7 @@ async function orderProduct(productId: string): Promise<StorePurchasePayload> {
   const product = store.get(productId);
   const offer = product?.getOffer();
   if (!product || !offer) {
-    throw new AppError("errors.storeBridgeMissing", "product_unavailable");
+    throw new AppError(storeBridgeMissingErrorCode(), "product_unavailable");
   }
 
   if (pendingPurchase) {
@@ -324,6 +335,7 @@ export async function initNativeStoreBridge(options?: {
     }
 
     await store.restorePurchases();
+    await store.update();
     tryMarkReady();
 
     if (window.__mpwStoreBridge) return;

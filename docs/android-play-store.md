@@ -16,7 +16,7 @@ The Android app follows the **same flow as iOS**: splash → Getting Started (4 
 ```bash
 npm install
 npm run app:icons          # regenerate launcher icons from resources/app-icon-1024.png
-npm run cap:sync           # build web assets + sync android/ + patch OAuth + Material shell
+npm run cap:sync           # build web assets + sync android/ + patch OAuth + shell
 npm run cap:android        # open Android Studio
 ```
 
@@ -38,7 +38,7 @@ For release builds you need an upload keystore and Play App Signing — see [Pla
 
 Product ID (one-time / non-consumable): `com.skyface.mypasswordvault.pro_lifetime`
 
-1. **Play Console** → your app → **Monetize → Products → In-app products** → create the product with that ID.
+1. **Play Console** → your app → **Monetize → Products → One-time products** → create product ID `com.skyface.mypasswordvault.pro_lifetime`.
 2. Activate the product and add **License testers** (Play Console → Settings → License testing).
 3. Upload at least one build to **Internal testing** before real purchases work.
 4. On a test device, sign in with a license tester Google account.
@@ -75,14 +75,9 @@ Do not commit `.env`. Build a signed **AAB** only after sync with production val
 3. Fill store listing, privacy policy, Data safety, content rating, screenshots (phone + tablet if supported).
 4. **Encryption**: vault data is encrypted on-device; cloud sync stores ciphertext only.
 
-## UI / Material Design
+## UI
 
-Native Android applies `html.native-android` tokens in `src/index.css`:
-
-- Material 3 typography (Roboto + Noto Sans KR)
-- Pill-shaped primary buttons (`--btn-radius: 1.25rem`)
-- Tonal secondary buttons, elevated cards
-- Safe-area padding for cutouts and gesture nav on all screen sizes
+Native Android uses the same mobile UI tokens as iOS (`html.native-app` in `src/index.css`): Inter / Noto Sans KR, shared typography scale, button radii, input heights, and icon sizes.
 
 Patch script `scripts/patch-android-shell.mjs` runs on every `cap:sync` (transparent system bars, NoActionBar theme, Play Billing permission).
 

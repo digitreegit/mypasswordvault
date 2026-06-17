@@ -293,6 +293,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "errors.storeUnsupported": "이 기기에서는 인앱 결제를 지원하지 않습니다.",
   "errors.storeBridgeMissing":
     "App Store 결제를 사용할 수 없습니다. App Store Connect에 PRO 상품이 있는지 확인한 뒤 앱을 다시 빌드하세요.",
+  "errors.storeBridgeMissingAndroid":
+    "Google Play 결제를 사용할 수 없습니다. Play Console에 PRO 상품을 등록하고, 내부 테스트에 빌드를 올린 뒤 Play 테스트 링크로 설치했는지 확인하세요.",
   "errors.storeVerifyFailed": "스토어 구매를 확인하지 못했습니다. 다시 시도하거나 문의하세요.",
   "errors.storeDevOnly": "개발용 스토어 부여는 개발 빌드에서만 사용할 수 있습니다.",
   "errors.storePurchaseCancelled": "구매가 취소되었습니다.",
@@ -638,10 +640,15 @@ export const MESSAGES_KR: Record<string, string> = {
   "pricing.storeRestoreAppStoreHint":
     "복원은 App Store 구매 전용입니다. 웹 구매는 같은 이메일로 로그인하면 자동으로 적용됩니다.",
   "pricing.storeBridgeLoading": "App Store에 연결하는 중…",
+  "pricing.storeBridgeLoadingAndroid": "Google Play에 연결하는 중…",
   "pricing.storeBridgeFailed":
     "인앱 결제를 위해 App Store에 연결하지 못했습니다.",
+  "pricing.storeBridgeFailedAndroid":
+    "인앱 결제를 위해 Google Play에 연결하지 못했습니다.",
   "pricing.storeBridgeFailedHint":
     "App Store Connect에 com.skyface.mypasswordvault.pro_lifetime(비소모성) 상품을 등록하고, 기기에서 Sandbox Apple ID로 테스트하거나 Xcode Run → Options에서 Products.storekit을 지정하세요.",
+  "pricing.storeBridgeFailedHintAndroid":
+    "Play Console에서 일회성 상품 com.skyface.mypasswordvault.pro_lifetime을 만들고(Monetize → Products → One-time products), 활성화한 뒤 내부 테스트에 빌드를 올리고 라이선스 테스터 계정으로 Play 테스트 링크에서 앱을 설치하세요.",
   "pricing.planTabsAria": "요금제 비교",
   "pricing.storeBridgePending":
     "이 빌드에는 인앱 결제 플러그인이 아직 연결되지 않았습니다. docs/mobile.md를 참고하거나 웹에서 같은 계정으로 구매하세요.",

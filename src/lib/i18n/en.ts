@@ -300,6 +300,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "errors.storeUnsupported": "In-app purchase is not supported on this device.",
   "errors.storeBridgeMissing":
     "App Store billing is not ready. Check that the PRO product exists in App Store Connect, then rebuild the app.",
+  "errors.storeBridgeMissingAndroid":
+    "Google Play billing is not ready. Create product com.skyface.mypasswordvault.pro_lifetime in Play Console, upload to Internal testing, and install from Play (not Android Studio Run alone).",
   "errors.storeVerifyFailed": "Could not verify your store purchase. Try again or contact support.",
   "errors.storeDevOnly": "Dev store grant is only available in development builds.",
   "errors.storePurchaseCancelled": "Purchase was cancelled.",
@@ -652,10 +654,16 @@ export const MESSAGES_EN: Record<string, string> = {
     "Restore is for App Store purchases only. Web purchases sync automatically when you sign in with the same email.",
   "pricing.storeBridgeLoading":
     "Connecting to the App Store…",
+  "pricing.storeBridgeLoadingAndroid":
+    "Connecting to Google Play…",
   "pricing.storeBridgeFailed":
     "Could not connect to the App Store for in-app purchase.",
+  "pricing.storeBridgeFailedAndroid":
+    "Could not connect to Google Play for in-app purchase.",
   "pricing.storeBridgeFailedHint":
     "Set up product com.skyface.mypasswordvault.pro_lifetime in App Store Connect (non-consumable), use a Sandbox Apple ID on device, or in Xcode assign Products.storekit under Run → Options → StoreKit Configuration.",
+  "pricing.storeBridgeFailedHintAndroid":
+    "In Play Console create one-time product com.skyface.mypasswordvault.pro_lifetime (Monetize → Products → One-time products), activate it, upload a build to Internal testing, add License testers, then install the app from the Play testing link on this device.",
   "pricing.planTabsAria": "Compare plans",
   "pricing.storeBridgePending":
     "In-app purchase is not wired in this build yet. Install the native billing plugin (see docs/mobile.md) or buy on the web with the same account.",

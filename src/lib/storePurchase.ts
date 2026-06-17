@@ -4,6 +4,7 @@ import {
   getNativePlatform,
   isNativeApp,
   STORE_PRO_PRODUCT_ID,
+  storeBridgeMissingErrorCode,
   type NativePlatform,
 } from "./platform";
 
@@ -47,7 +48,7 @@ export async function purchaseProViaStore(): Promise<void> {
 
   const bridge = storeBridge();
   if (!bridge?.purchase) {
-    throw new AppError("errors.storeBridgeMissing");
+    throw new AppError(storeBridgeMissingErrorCode());
   }
 
   const payload = await bridge.purchase(STORE_PRO_PRODUCT_ID);
@@ -62,7 +63,7 @@ export async function restoreStorePurchases(): Promise<boolean> {
   if (!isNativeApp()) return false;
   const bridge = storeBridge();
   if (!bridge?.restore) {
-    throw new AppError("errors.storeBridgeMissing");
+    throw new AppError(storeBridgeMissingErrorCode());
   }
   const payload = await bridge.restore();
   if (!payload) return false;

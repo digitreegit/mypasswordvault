@@ -8,7 +8,7 @@ import {
   subscribeStoreProDisplayPrice,
   type StoreBridgeStatus,
 } from "../lib/initNativeStoreBridge";
-import { usesStoreBilling } from "../lib/platform";
+import { usesStoreBilling, storePricingMessageKey } from "../lib/platform";
 import {
   devGrantStoreLicense,
   isStoreBridgeAvailable,
@@ -62,11 +62,8 @@ export function useProPurchase(t: TFn) {
       }
       if (!isStoreBridgeAvailable()) {
         const detail = getStoreBridgeFailureDetail();
-        setErr(
-          detail
-            ? `${t("pricing.storeBridgeFailed")} (${detail})`
-            : t("pricing.storeBridgeFailed"),
-        );
+        const failedMsg = t(storePricingMessageKey("storeBridgeFailed"));
+        setErr(detail ? `${failedMsg} (${detail})` : failedMsg);
         return { ok: false as const };
       }
       await purchaseProViaStore();

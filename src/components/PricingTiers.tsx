@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { StoreBridgeStatus } from "../lib/initNativeStoreBridge";
 import { FREE_ENTRY_LIMIT } from "../lib/entitlements";
-import { getNativePlatform } from "../lib/platform";
+import { getNativePlatform, storePricingMessageKey } from "../lib/platform";
 import { Check } from "./Icons";
 import { PRICING_PAID_FEATURE_KEYS } from "./CheckoutProFeatures";
 
@@ -92,9 +92,9 @@ export function PricingTiers({
   const storeStatusMessage = (() => {
     if (!storeBilling || storeReady) return null;
     if (storeBridgeStatus === "loading" || storeBridgeStatus === "idle") {
-      return t("pricing.storeBridgeLoading");
+      return t(storePricingMessageKey("storeBridgeLoading"));
     }
-    return t("pricing.storeBridgeFailedHint");
+    return t(storePricingMessageKey("storeBridgeFailedHint"));
   })();
 
   const freeSection = (
