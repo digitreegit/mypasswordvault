@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
   CheckIcon,
-  ChevronRightIcon,
   ExclamationTriangleIcon,
   PlusCircleIcon,
   PlusIcon,
@@ -159,58 +158,24 @@ function SecurityCtaRow({
   label,
   disabled,
   onClick,
-  tone = "blue",
-  trailingChevron = false,
 }: {
   label: string;
   disabled?: boolean;
   onClick: () => void;
-  tone?: "blue" | "gray";
-  trailingChevron?: boolean;
 }) {
-  const toneClass =
-    tone === "gray"
-      ? "text-ink-600 hover:text-ink-800"
-      : "text-sky-600 hover:text-sky-700";
-  const sizeClass = trailingChevron
-    ? "text-[0.875rem] leading-[1.43]"
-    : "text-[1rem] leading-normal";
-  const buttonClass = [
-    "inline-flex items-center gap-1 py-0.5 font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 rounded-md",
-    tone === "gray"
-      ? "focus-visible:ring-accent-500/30"
-      : "focus-visible:ring-sky-500/30",
-    sizeClass,
-    toneClass,
-  ].join(" ");
-  const leadingIconClass =
-    tone === "gray"
-      ? "h-4 w-4 shrink-0 text-ink-400"
-      : "h-4 w-4 shrink-0 text-sky-500";
-  const trailingIconClass =
-    tone === "gray"
-      ? "h-4 w-4 shrink-0 text-ink-400"
-      : "h-4 w-4 shrink-0 text-sky-500";
-
   return (
     <div className="border-t border-ink-100 pt-3">
       <button
         type="button"
-        className={buttonClass}
+        className="inline-flex items-center gap-1 py-0.5 text-[1rem] leading-normal font-medium text-sky-600 hover:text-sky-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/30 rounded-md"
         disabled={disabled}
         onClick={onClick}
       >
-        {trailingChevron ? (
-          <>
-            <span>{label}</span>
-            <ChevronRightIcon className={trailingIconClass} aria-hidden />
-          </>
-        ) : (
-          <>
-            <PlusCircleIcon className={leadingIconClass} aria-hidden />
-            <span>{label}</span>
-          </>
-        )}
+        <PlusCircleIcon
+          className="h-4 w-4 shrink-0 text-sky-500"
+          aria-hidden
+        />
+        <span>{label}</span>
       </button>
     </div>
   );
@@ -734,14 +699,14 @@ export function SecuritySettingsPanel() {
             </button>
           </div>
         ) : recoveryConfirm ? (
-          <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-3.5">
-            <p className="text-xs text-amber-900/90 leading-snug">
+          <div className="space-y-4">
+            <p className="text-sm text-ink-600 leading-snug">
               {t("settings.securityRecoveryRegenerateWarn")}
             </p>
             <div className="flex flex-col gap-2 sm:flex-row">
               <button
                 type="button"
-                className="btn-primary flex-1 bg-amber-700 hover:bg-amber-800"
+                className="btn-primary flex-1"
                 disabled={recoveryBusy}
                 onClick={() => void handleRegenerateRecovery()}
               >
@@ -762,8 +727,6 @@ export function SecuritySettingsPanel() {
         ) : (
           <SecurityCtaRow
             label={t("settings.securityRecoveryRegenerate")}
-            tone="gray"
-            trailingChevron
             disabled={recoveryBusy}
             onClick={() => {
               setRecoveryError(null);
