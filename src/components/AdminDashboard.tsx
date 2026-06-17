@@ -1219,25 +1219,25 @@ export function AdminDashboard() {
               </colgroup>
               <thead className="bg-ink-50 text-ink-500 text-xs">
                 <tr>
-                  <th className="px-4 py-2 font-medium text-xs text-ink-500">
+                  <th className="admin-customers-email-cell px-3 py-2 font-medium text-xs text-ink-500">
                     {t("admin.colEmail")}
                   </th>
-                  <th className="px-4 py-2 font-medium text-xs text-ink-500">
+                  <th className="px-3 py-2 font-medium text-xs text-ink-500">
                     {t("admin.colPlan")}
                   </th>
-                  <th className="px-4 py-2 font-medium text-xs text-ink-500">
+                  <th className="px-3 py-2 font-medium text-xs text-ink-500">
                     {t("admin.colPlatform")}
                   </th>
-                  <th className="px-4 py-2 font-medium text-xs text-ink-500">
+                  <th className="px-3 py-2 font-medium text-xs text-ink-500">
                     {t("admin.colPurchased")}
                   </th>
-                  <th className="px-4 py-2 font-medium text-xs text-ink-500">
+                  <th className="px-3 py-2 font-medium text-xs text-ink-500">
                     {t("admin.colAmount")}
                   </th>
-                  <th className="px-4 py-2 font-medium text-xs text-ink-500">
+                  <th className="px-3 py-2 font-medium text-xs text-ink-500">
                     {t("admin.colLicenseKey")}
                   </th>
-                  <th className="px-4 py-2 font-medium text-xs text-ink-500 text-right">
+                  <th className="px-3 py-2 font-medium text-xs text-ink-500 text-right">
                     {t("admin.colActions")}
                   </th>
                 </tr>
@@ -1252,7 +1252,7 @@ export function AdminDashboard() {
                 ) : null}
                 {rows.map((row) => (
                   <tr key={row.userId} className="hover:bg-ink-50/50">
-                    <td className="px-4 py-3 align-middle overflow-hidden">
+                    <td className="admin-customers-email-cell px-3 py-3 align-middle overflow-hidden">
                       {row.email ? (
                         <div
                           className="font-medium text-ink-800 truncate"
@@ -1276,7 +1276,7 @@ export function AdminDashboard() {
                         <AdminEmptyMark />
                       )}
                     </td>
-                    <td className="px-4 py-3 align-middle whitespace-nowrap text-ink-700">
+                    <td className="px-3 py-3 align-middle whitespace-nowrap overflow-hidden text-ink-700">
                       {row.purchasedAt ? (
                         formatDate(row.purchasedAt)
                       ) : (
@@ -1284,7 +1284,7 @@ export function AdminDashboard() {
                       )}
                     </td>
                     <td
-                      className={`px-4 py-3 align-middle whitespace-nowrap tabular-nums ${
+                      className={`px-3 py-3 align-middle whitespace-nowrap tabular-nums ${
                         row.refunded && !row.isAdmin
                           ? "text-red-700 font-medium"
                           : rowAmount(row) != null
@@ -1298,7 +1298,7 @@ export function AdminDashboard() {
                         <AdminEmptyMark />
                       )}
                     </td>
-                    <td className="px-4 py-3 align-middle overflow-hidden">
+                    <td className="px-3 py-3 align-middle overflow-hidden">
                       {row.licenseKey ? (
                         <LicenseKeyCell licenseKey={row.licenseKey} t={t} />
                       ) : (

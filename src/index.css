@@ -1038,31 +1038,36 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
   }
 
   .admin-customers-table col.admin-customers-col-email {
-    width: auto;
+    width: 13rem;
   }
 
   .admin-customers-table col.admin-customers-col-plan {
-    width: 4.75rem;
+    width: 5rem;
   }
 
   .admin-customers-table col.admin-customers-col-platform {
-    width: 3.75rem;
+    width: 4rem;
   }
 
   .admin-customers-table col.admin-customers-col-purchased {
-    width: 10.5rem;
+    width: 11rem;
   }
 
   .admin-customers-table col.admin-customers-col-amount {
-    width: 4.25rem;
+    width: 4.5rem;
   }
 
   .admin-customers-table col.admin-customers-col-license {
-    width: 11rem;
+    width: auto;
   }
 
   .admin-customers-table col.admin-customers-col-actions {
     width: 12.5rem;
+  }
+
+  .admin-customers-table .admin-customers-email-cell {
+    max-width: 13rem;
+    overflow: hidden;
   }
 
   .admin-customers-table .admin-customers-actions-cell {
