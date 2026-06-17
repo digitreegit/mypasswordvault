@@ -1071,7 +1071,6 @@ export function VaultScreen() {
                     aria-hidden
                   />
                 )}
-                <CloudSyncButton className={VAULT_HEADER_ICON_BTN} />
                 <UserMenuDropdown triggerClassName={VAULT_HEADER_ICON_BTN} />
               </>
             ) : null
@@ -1157,6 +1156,7 @@ export function VaultScreen() {
                   <ChevronUpDownIcon className="vault-sort-updown" aria-hidden />
                 </button>
               </div>
+              <CloudSyncButton className={VAULT_TOOLBAR_BTN_ICON_MOBILE} />
               <button
                 type="button"
                 className={VAULT_TOOLBAR_BTN_ICON_MOBILE}
@@ -1197,6 +1197,7 @@ export function VaultScreen() {
             </p>
           </div>
           <div className="hidden md:flex w-full items-center gap-2 ml-auto w-auto justify-end">
+            <CloudSyncButton className={VAULT_TOOLBAR_BTN_ICON} />
             <button
               type="button"
               className={VAULT_TOOLBAR_BTN_ICON}
