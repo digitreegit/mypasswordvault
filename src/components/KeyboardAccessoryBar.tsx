@@ -61,6 +61,10 @@ function resolveActiveField(): HTMLElement | null {
   return getLastKeyboardField();
 }
 
+function suppressesKeyboardAccessory(field: HTMLElement | null): boolean {
+  return !!field?.closest("[data-categories-dialog]");
+}
+
 /** iOS-style floating toolbar above the software keyboard (mobile + native). */
 export function KeyboardAccessoryBar() {
   const enabled = useKeyboardAccessoryEnabled();
@@ -163,6 +167,7 @@ export function KeyboardAccessoryBar() {
   const visible =
     enabled &&
     keyboardOpen &&
+    !suppressesKeyboardAccessory(resolveActiveField()) &&
     (editingField || isKeyboardNavLocked());
 
   const runNav = (direction: "prev" | "next") => {

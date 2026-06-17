@@ -628,6 +628,72 @@ html.native-app .auth-google-btn {
   line-height: var(--leading-sub) !important;
 }
 
+/* Categories dialog — pill keyboard bar while typing; hide modal footer */
+@media (max-width: 767px) {
+  [data-categories-dialog]:has(input:focus) .categories-dialog__footer--keyboard-hidden,
+  [data-categories-dialog]:has(input:focus) .categories-dialog__footer {
+    display: none;
+  }
+
+  [data-categories-dialog]:has(input:focus) .keyboard-scroll-root {
+    padding-bottom: calc(
+      var(--keyboard-accessory-height, 2.75rem) + var(--keyboard-accessory-gap, 0.5rem) +
+        var(--native-keyboard-inset, 0px) + 1rem
+    );
+  }
+}
+
+html.native-app [data-categories-dialog]:has(input:focus) .categories-dialog__footer--keyboard-hidden,
+html.native-app [data-categories-dialog]:has(input:focus) .categories-dialog__footer {
+  display: none;
+}
+
+html.native-app [data-categories-dialog]:has(input:focus) .keyboard-scroll-root {
+  padding-bottom: calc(
+    var(--keyboard-accessory-height, 2.75rem) + var(--keyboard-accessory-gap, 0.5rem) +
+      var(--native-keyboard-inset, 0px) + 1rem
+  );
+}
+
+.categories-keyboard-bar__add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  min-height: 2.625rem;
+  padding: 0 0.875rem;
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  font-size: var(--type-sub);
+  font-weight: 500;
+  line-height: 1;
+  color: #42424a;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.categories-keyboard-bar__add:active:not(:disabled) {
+  background: rgb(238 238 241 / 0.9);
+}
+
+.categories-keyboard-bar__add:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.categories-keyboard-bar__add svg {
+  width: var(--ui-icon-size-sm);
+  height: var(--ui-icon-size-sm);
+  flex-shrink: 0;
+}
+
+.keyboard-accessory-bar__done--disabled {
+  opacity: 0.35;
+  pointer-events: none;
+  box-shadow: none;
+}
+
 /* Android Material 3 — filled buttons, tonal surfaces, rounded cards */
 html.native-app.native-android .btn-primary {
   background-color: var(--md-primary) !important;
@@ -1684,11 +1750,21 @@ html.native-app .settings-native-back:active {
   opacity: 0.65;
 }
 
-html.native-app .settings-native-back__icon {
+.native-back-chevron,
+#root .native-back-chevron[aria-hidden] {
   width: 1.25rem !important;
   height: 1.25rem !important;
-  margin-left: -0.125rem;
   flex-shrink: 0;
+}
+
+html.native-app .settings-native-back .native-back-chevron {
+  margin-left: -0.125rem;
+}
+
+.mobile-list-row-chevron {
+  width: 0.8125rem !important;
+  height: 0.8125rem !important;
+  margin-right: -0.0625rem;
 }
 
 html.native-app .settings-native-chrome .settings-mobile-tablist-wrap {

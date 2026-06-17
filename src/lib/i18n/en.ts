@@ -239,7 +239,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "lock.forget": "Forgot master password? Reset vault.",
   "lock.resetWarn":
     "Resetting will permanently delete all saved passwords. Are you sure you want to continue?",
-  "lock.deleteAll": "Delete everything and start over",
+  "lock.deleteAll": "Delete all and start over",
   "lock.errFailed": "Unlock failed",
 
   "errors.masterTooShort": "Master password must be at least 10 characters.",
@@ -506,7 +506,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "vault.categoriesTitle": "Categories",
   "vault.categoriesHint":
     "Add names here, then assign each row from the Category column. Save applies name changes.",
-  "vault.addCategory": "+ Add Category",
+  "vault.addCategory": "Add",
   "vault.addCategoryMenu": "Add category",
   "vault.deleteCategory": "Remove category",
   "vault.deleteCategoryConfirm":

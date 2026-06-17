@@ -5,16 +5,17 @@ import { useAuth } from "../lib/auth";
 import {
   ArrowLeftIcon,
   CheckIcon,
-  ChevronLeftIcon,
   ClipboardDocumentIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronDown } from "./Icons";
 import { ModalCloseButton } from "./ModalCloseButton";
+import { NativeBackChevronMark } from "./NativeBackButton";
 import { LOCALES, LOCALE_LABELS, type Locale } from "../lib/i18n/locale";
 import { AccountCredentialPanel } from "./AccountCredentialPanel";
 import { PlanBadge } from "./PlanBadge";
 import { UserMenuDropdown } from "./UserMenuDropdown";
 import { NativeTopHeader, NATIVE_HEADER_ICON_BTN } from "./NativeTopHeader";
+import { LanguageMenu } from "./LanguageMenu";
 import {
   SettingsFreeFeatures,
   SettingsFreePlanUpgrade,
@@ -664,16 +665,23 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
           <div className="settings-native-chrome w-full bg-white">
             <div className="settings-native-header vault-top-header border-b border-ink-200">
               <div
-                className={`${SETTINGS_PAGE} settings-native-header__inner flex items-center py-1 sm:py-1.5`}
+                className={`${SETTINGS_PAGE} settings-native-header__inner flex items-center justify-between gap-3 py-1 sm:py-1.5`}
               >
                 <a
                   href={vaultHref}
-                  className="settings-native-back"
+                  className="settings-native-back min-w-0"
                   onClick={navigateToVault}
                 >
-                  <ChevronLeftIcon className="settings-native-back__icon" aria-hidden />
+                  <NativeBackChevronMark />
                   {t("account.backToVault")}
                 </a>
+                <LanguageMenu
+                  value={locale}
+                  onChange={(l) => void setLocale(l)}
+                  ariaLabel={t("settings.language")}
+                  align="right"
+                  triggerClassName={SETTINGS_HEADER_ICON_BTN}
+                />
               </div>
             </div>
             <div className="settings-native-tabs">

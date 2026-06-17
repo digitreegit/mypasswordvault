@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useVault } from "../lib/vault";
 import { newId, type VaultCategory } from "../lib/storage";
@@ -8,8 +8,35 @@ import {
   TOUCH_REORDER_HANDLE_CLASS,
   type ListDropPosition,
 } from "../lib/touchListReorder";
-import { GripVertical, Trash } from "./Icons";
+import {
+  getKeyboardSession,
+  subscribeKeyboardSession,
+  syncKeyboardSessionFromViewport,
+} from "../lib/keyboardSession";
+import { isNativeApp } from "../lib/platform";
+import { Check, GripVertical, Plus, Trash } from "./Icons";
 import { ModalCloseButton } from "./ModalCloseButton";
+
+function useCategoriesFloatingBarEnabled(): boolean {
+  const [enabled, setEnabled] = useState(
+    () => isNativeApp() || window.matchMedia("(max-width: 767px)").matches,
+  );
+
+  useEffect(() => {
+    if (isNativeApp()) return;
+    const mq = window.matchMedia("(max-width: 767px)");
+    const onChange = () => setEnabled(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  return enabled;
+}
+
+function stopToolbarFocus(e: React.SyntheticEvent) {
+  e.preventDefault();
+  e.stopPropagation();
+}
 function reorderBeforeTarget(
   list: VaultCategory[],
   draggedId: string,
@@ -95,6 +122,60 @@ export function CategoriesDialog({
   );
   const dropIndicatorRef = useRef<ListDropPosition | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const floatingBarEnabled = useCategoriesFloatingBarEnabled();
+  const [keyboardOpen, setKeyboardOpen] = useState(
+    () => getKeyboardSession().open,
+  );
+  const [categoryInputFocused, setCategoryInputFocused] = useState(false);
+
+  useEffect(() => subscribeKeyboardSession(({ open }) => setKeyboardOpen(open)), []);
+
+  useEffect(() => {
+    const root = dialogRef.current;
+    if (!root) return;
+
+    const onFocusIn = (e: FocusEvent) => {
+      const target = e.target;
+      if (
+        target instanceof HTMLInputElement &&
+        target.id.startsWith("category-name-")
+      ) {
+        setCategoryInputFocused(true);
+        if (!isNativeApp()) syncKeyboardSessionFromViewport();
+      }
+    };
+
+    const onFocusOut = () => {
+      window.setTimeout(() => {
+        const active = document.activeElement;
+        if (
+          active instanceof HTMLInputElement &&
+          active.id.startsWith("category-name-") &&
+          root.contains(active)
+        ) {
+          return;
+        }
+        setCategoryInputFocused(false);
+      }, 0);
+    };
+
+    root.addEventListener("focusin", onFocusIn);
+    root.addEventListener("focusout", onFocusOut);
+    return () => {
+      root.removeEventListener("focusin", onFocusIn);
+      root.removeEventListener("focusout", onFocusOut);
+    };
+  }, []);
+
+  const showFloatingBar =
+    floatingBarEnabled && keyboardOpen && categoryInputFocused;
+
+  const addCategoryRow = useCallback(() => {
+    const id = newId();
+    pendingFocusIdRef.current = id;
+    setDraft((d) => [...d, { id, name: "" }]);
+  }, []);
 
   useEffect(() => {
     if (startWithNewCategory && !seededNewRef.current) {
@@ -243,9 +324,11 @@ export function CategoriesDialog({
     <>
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/40">
       <div
+        ref={dialogRef}
         className="card w-full max-w-md max-h-[85vh] overflow-hidden flex flex-col shadow-lg"
         role="dialog"
         aria-labelledby="cat-dialog-title"
+        data-categories-dialog
       >
         <div className="action-modal__header px-5 py-3 border-b border-ink-200">
           <div className="flex items-center justify-between gap-2">
@@ -393,17 +476,21 @@ export function CategoriesDialog({
             })}
           </ul>
         </div>
-        <div className="action-modal__footer action-modal__footer--normal-btns px-5 py-3 border-t border-ink-100 flex items-center justify-between gap-2">
+        <div
+          className={[
+            "action-modal__footer action-modal__footer--normal-btns categories-dialog__footer px-5 py-3 border-t border-ink-100 flex items-center justify-between gap-2",
+            showFloatingBar ? "categories-dialog__footer--keyboard-hidden" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
           <button
             type="button"
-            className="btn-secondary shrink-0"
+            className="btn-secondary shrink-0 inline-flex items-center gap-1"
             disabled={busy}
-            onClick={() => {
-              const id = newId();
-              pendingFocusIdRef.current = id;
-              setDraft((d) => [...d, { id, name: "" }]);
-            }}
+            onClick={addCategoryRow}
           >
+            <Plus aria-hidden />
             {t("vault.addCategory")}
           </button>
           <div className="flex justify-end gap-2">
@@ -477,6 +564,50 @@ export function CategoriesDialog({
         </div>
       </div>
     ) : null}
+
+    {showFloatingBar
+      ? createPortal(
+          <div
+            className="keyboard-accessory-bar categories-keyboard-bar"
+            role="toolbar"
+            aria-label={t("vault.categoriesTitle")}
+          >
+            <div className="keyboard-accessory-bar__nav">
+              <button
+                type="button"
+                className="categories-keyboard-bar__add"
+                disabled={busy}
+                onTouchStart={stopToolbarFocus}
+                onMouseDown={stopToolbarFocus}
+                onClick={addCategoryRow}
+              >
+                <Plus aria-hidden />
+                <span>{t("vault.addCategory")}</span>
+              </button>
+            </div>
+            <button
+              type="button"
+              className={[
+                "keyboard-accessory-bar__done",
+                busy || !canSave ? "keyboard-accessory-bar__done--disabled" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              disabled={busy || !canSave}
+              aria-label={t("common.save")}
+              onTouchStart={stopToolbarFocus}
+              onMouseDown={stopToolbarFocus}
+              onClick={() => {
+                if (busy || !canSave) return;
+                void save();
+              }}
+            >
+              <Check aria-hidden strokeWidth={2.5} />
+            </button>
+          </div>,
+          document.body,
+        )
+      : null}
     </>,
     document.body
   );

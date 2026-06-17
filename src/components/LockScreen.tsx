@@ -323,7 +323,7 @@ export function LockScreen() {
                 <div className="text-center">
                   <button
                     type="button"
-                    className="lock-panel-hint hover:text-red-600"
+                    className="lock-panel-hint !text-red-600 hover:!text-red-700"
                     onClick={() => setConfirmReset(true)}
                   >
                     {t("lock.forget")}

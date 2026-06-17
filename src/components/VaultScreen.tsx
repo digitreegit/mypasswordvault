@@ -2,13 +2,14 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { createPortal } from "react-dom";
 import {
   ChevronDownIcon,
-  ChevronLeftIcon,
+  ChevronRightIcon,
   ChevronUpDownIcon,
   InformationCircleIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { NativeTopHeader, NATIVE_HEADER_ICON_BTN } from "./NativeTopHeader";
+import { NativeBackIconButton } from "./NativeBackButton";
 import { useCheckoutReturn } from "../hooks/useCheckoutReturn";
 import {
   clearCheckoutPending,
@@ -441,7 +442,7 @@ function CategorySelect({
             <div className="shrink-0 border-t border-ink-200 bg-white">
             <button
               type="button"
-              className="block w-full whitespace-nowrap px-3 py-2 text-left text-xs font-medium text-ink-600 hover:bg-ink-50"
+              className="block w-full whitespace-nowrap px-3 py-2.5 text-left text-sm font-medium text-ink-600 hover:bg-ink-50"
               onPointerDown={handleAdd}
             >
               {t("vault.addCategoryMenu")}
@@ -1616,7 +1617,7 @@ function MobileSwipeEntryRow({
         >
           <button
             type="button"
-            className="w-full px-4 py-3.5 min-h-[3.25rem] flex items-center gap-3 text-left active:bg-ink-50 touch-manipulation"
+            className="w-full pl-4 pr-3 py-3.5 min-h-[3.25rem] flex items-center gap-2 text-left active:bg-ink-50 touch-manipulation"
             onClick={handleOpen}
           >
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
@@ -1627,6 +1628,10 @@ function MobileSwipeEntryRow({
                 {siteLabel}
               </span>
             </div>
+            <ChevronRightIcon
+              className="mobile-list-row-chevron shrink-0 text-ink-300"
+              aria-hidden
+            />
           </button>
         </div>
       </div>
@@ -1850,23 +1855,20 @@ function MobileEntryDetail({
         onMouseEnter={onRowMouseEnter}
         onMouseLeave={onRowMouseLeave}
       >
-        <header className="shrink-0 flex items-center gap-2 border-b border-ink-200 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))]">
-          <button
-            type="button"
-            className="ui-icon-btn text-ink-600 shrink-0"
+        <header className="shrink-0 flex items-center gap-1 border-b border-ink-200 pl-1 pr-3 pb-2 pt-[max(0.375rem,env(safe-area-inset-top))]">
+          <NativeBackIconButton
+            className="-ml-1"
             onClick={requestClose}
             aria-label={t("vault.mobileBack")}
-          >
-            <ChevronLeftIcon aria-hidden />
-          </button>
-          <div className="min-w-0 flex-1">
+          />
+          <div className="min-w-0 flex-1 -ml-1">
             {draft.categoryId ? (
               <p className="text-xs text-ink-500 truncate">
                 {entryCategoryLabel(draft.categoryId, categories, t)}
               </p>
             ) : null}
-          <p className="font-semibold text-lg text-ink-900 truncate">{siteLabel}</p>
-        </div>
+            <p className="font-semibold text-lg text-ink-900 truncate">{siteLabel}</p>
+          </div>
         {isNewEntry ? (
           <button
             type="button"
@@ -1878,7 +1880,7 @@ function MobileEntryDetail({
         ) : (
           <button
             type="button"
-            className="ui-icon-btn ui-icon-btn--danger shrink-0"
+            className="ui-icon-btn ui-icon-btn--danger shrink-0 -mr-0.5"
             onClick={() => setDeleteModalOpen(true)}
             title={t("vault.ttDelete")}
             aria-label={t("vault.ttDelete")}

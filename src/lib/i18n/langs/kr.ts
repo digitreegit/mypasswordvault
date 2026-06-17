@@ -496,7 +496,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "vault.categoriesTitle": "카테고리",
   "vault.categoriesHint":
     "이름을 추가·수정한 뒤 저장하세요. 표의 카테고리 열에서 항목에 지정할 수 있습니다.",
-  "vault.addCategory": "+ 카테고리 추가",
+  "vault.addCategory": "추가",
   "vault.addCategoryMenu": "카테고리 추가",
   "vault.deleteCategory": "카테고리 삭제",
   "vault.deleteCategoryConfirm":
