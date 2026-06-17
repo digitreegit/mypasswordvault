@@ -999,11 +999,11 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
 
   /* Admin customers table — truncate long license keys; keep actions visible */
   html:not(.native-app) .admin-customers-col-email {
-    width: 20%;
+    width: 22%;
   }
 
   html:not(.native-app) .admin-customers-col-plan {
-    width: 11%;
+    width: 10%;
   }
 
   html:not(.native-app) .admin-customers-col-platform {
@@ -1011,7 +1011,7 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
   }
 
   html:not(.native-app) .admin-customers-col-purchased {
-    width: 16%;
+    width: 15%;
   }
 
   html:not(.native-app) .admin-customers-col-amount {
@@ -1019,11 +1019,16 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
   }
 
   html:not(.native-app) .admin-customers-col-license {
-    width: 24%;
+    width: 12%;
   }
 
   html:not(.native-app) .admin-customers-col-actions {
-    width: 15%;
+    width: 27%;
+    min-width: 11.5rem;
+  }
+
+  html:not(.native-app) .admin-customers-actions {
+    flex-wrap: nowrap;
   }
 
   /* Setup passkey — “This device” key icon (2× base size on desktop web) */

@@ -228,7 +228,7 @@ function AdminCustomerActions({
 }) {
   return (
     <div
-      className={`flex flex-row flex-wrap gap-1 justify-end items-center ${className}`.trim()}
+      className={`admin-customers-actions flex flex-row flex-nowrap gap-1 justify-end items-center ${className}`.trim()}
     >
       {!row.isAdmin ? (
         <button
@@ -418,7 +418,7 @@ function LicenseKeyCell({
   return (
     <div className="admin-license-key-cell flex items-center gap-1 min-w-0 w-full max-w-full overflow-hidden">
       <span
-        className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-ink-700"
+        className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-xs font-mono text-ink-700"
         title={licenseKey}
       >
         {licenseKey}
@@ -440,7 +440,56 @@ function LicenseKeyCell({
   );
 }
 
-function AdminSelect({
+function AdminPortalDialog({
+  titleId,
+  title,
+  closeLabel,
+  onClose,
+  children,
+  footer,
+}: {
+  titleId: string;
+  title: string;
+  closeLabel: string;
+  onClose: () => void;
+  children: React.ReactNode;
+  footer: React.ReactNode;
+}) {
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40"
+      role="presentation"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="card w-full max-w-md shadow-lg max-h-[85vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="action-modal__header px-5 py-3 border-b border-ink-200">
+          <div className="flex items-center justify-between gap-2">
+            <h2
+              id={titleId}
+              className="font-sans text-lg font-semibold text-ink-900 tracking-tight leading-tight"
+            >
+              {title}
+            </h2>
+            <ModalCloseButton onClick={onClose} ariaLabel={closeLabel} />
+          </div>
+        </div>
+        <div className="px-5 py-4 space-y-3 keyboard-scroll-root min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          {children}
+        </div>
+        <div className="action-modal__footer px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+          {footer}
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
   id,
   label,
   value,
@@ -508,8 +557,14 @@ export function AdminDashboard() {
     null,
   );
   const [complaintNote, setComplaintNote] = useState("");
+  const [complaintError, setComplaintError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminCustomerRow | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [refundTarget, setRefundTarget] = useState<AdminCustomerRow | null>(null);
+  const [refundError, setRefundError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ title: string; message: string } | null>(
+    null,
+  );
 
   useEffect(() => subscribeLocaleChanged(setLocale), []);
 
@@ -640,38 +695,52 @@ export function AdminDashboard() {
     [stats],
   );
 
-  async function handleRefund(row: AdminCustomerRow) {
+  function openRefundModal(row: AdminCustomerRow) {
     if (!row.licenseKey || row.refunded) return;
-    const ok = window.confirm(
-      t("admin.refundConfirm", {
-        label: row.email || row.userId,
-        session: row.licenseKey,
-      }),
-    );
-    if (!ok) return;
+    setRefundError(null);
+    setRefundTarget(row);
+  }
+
+  function closeRefundModal() {
+    setRefundTarget(null);
+    setRefundError(null);
+  }
+
+  async function submitRefund() {
+    if (!refundTarget?.licenseKey || refundTarget.refunded) return;
+    const row = refundTarget;
+    setRefundError(null);
     setBusyId(row.userId);
     const r = await adminRefund(row.licenseKey);
     setBusyId(null);
     if (!r.ok) {
-      window.alert(t("admin.refundFailed", { error: adminErrorLabel(r.error, t) }));
+      setRefundError(adminErrorLabel(r.error, t));
       return;
     }
+    closeRefundModal();
     void load();
   }
 
+  async function handleRefund(row: AdminCustomerRow) {
+    openRefundModal(row);
+  }
+
   useEffect(() => {
-    if (!complaintTarget && !deleteTarget) return;
+    if (!complaintTarget && !deleteTarget && !refundTarget && !notice) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        if (deleteTarget) closeDeleteModal();
+        if (notice) setNotice(null);
+        else if (refundTarget) closeRefundModal();
+        else if (deleteTarget) closeDeleteModal();
         else closeComplaintModal();
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [complaintTarget, deleteTarget]);
+  }, [complaintTarget, deleteTarget, refundTarget, notice]);
 
   function openComplaintModal(row: AdminCustomerRow) {
+    setComplaintError(null);
     setComplaintTarget(row);
     setComplaintNote("");
   }
@@ -679,11 +748,13 @@ export function AdminDashboard() {
   function closeComplaintModal() {
     setComplaintTarget(null);
     setComplaintNote("");
+    setComplaintError(null);
   }
 
   async function submitComplaint() {
     if (!complaintTarget) return;
     const row = complaintTarget;
+    setComplaintError(null);
     setBusyId(`complaint-${row.userId}`);
     const r = await adminAddComplaint({
       sessionId: row.licenseKey ?? undefined,
@@ -693,9 +764,7 @@ export function AdminDashboard() {
     });
     setBusyId(null);
     if (!r.ok) {
-      window.alert(
-        t("admin.complaintFailed", { error: adminErrorLabel(r.error, t) }),
-      );
+      setComplaintError(adminErrorLabel(r.error, t));
       return;
     }
     closeComplaintModal();
@@ -733,9 +802,12 @@ export function AdminDashboard() {
     const r = await adminResolveComplaint(id);
     setBusyId(null);
     if (!r.ok) {
-      window.alert(
-        t("admin.resolveFailed", { error: adminErrorLabel(r.error, t) }),
-      );
+      setNotice({
+        title: t("admin.noticeTitle"),
+        message: t("admin.resolveFailed", {
+          error: adminErrorLabel(r.error, t),
+        }),
+      });
       return;
     }
     void load();
@@ -775,11 +847,12 @@ export function AdminDashboard() {
     const r = await adminRevokeComplimentary(id);
     setBusyId(null);
     if (!r.ok) {
-      window.alert(
-        t("admin.complimentaryRevokeFailed", {
+      setNotice({
+        title: t("admin.noticeTitle"),
+        message: t("admin.complimentaryRevokeFailed", {
           error: adminErrorLabel(r.error, t),
         }),
-      );
+      });
       return;
     }
     void load();
@@ -1290,6 +1363,11 @@ export function AdminDashboard() {
                       autoFocus
                     />
                   </div>
+                  {complaintError ? (
+                    <p className="text-sm text-red-800 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                      {t("admin.complaintFailed", { error: complaintError })}
+                    </p>
+                  ) : null}
                 </div>
                 <div className="action-modal__footer px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
                   <button
@@ -1314,6 +1392,77 @@ export function AdminDashboard() {
             document.body,
           )
         : null}
+
+      {refundTarget ? (
+        <AdminPortalDialog
+          titleId="admin-refund-title"
+          title={t("admin.refundModalTitle")}
+          closeLabel={t("common.close")}
+          onClose={closeRefundModal}
+          footer={
+            <>
+              <button
+                type="button"
+                className="btn-secondary text-sm w-full sm:w-auto"
+                onClick={closeRefundModal}
+                disabled={busyId === refundTarget.userId}
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                type="button"
+                className="btn-danger text-sm w-full sm:w-auto"
+                disabled={busyId === refundTarget.userId}
+                onClick={() => void submitRefund()}
+              >
+                {t("admin.refundConfirmAction")}
+              </button>
+            </>
+          }
+        >
+          <p className="text-sm text-ink-700 leading-snug">
+            {t("admin.refundModalBody")}
+          </p>
+          <p className="text-sm font-medium text-ink-900 break-all">
+            {refundTarget.email || refundTarget.userId}
+          </p>
+          <div>
+            <p className="label text-xs mb-1">
+              {t("admin.refundModalSessionLabel")}
+            </p>
+            <p className="text-xs font-mono text-ink-600 break-all rounded-md border border-ink-200 bg-ink-50 px-3 py-2">
+              {refundTarget.licenseKey}
+            </p>
+          </div>
+          {refundError ? (
+            <p className="text-sm text-red-800 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+              {t("admin.refundFailed", { error: refundError })}
+            </p>
+          ) : null}
+        </AdminPortalDialog>
+      ) : null}
+
+      {notice ? (
+        <AdminPortalDialog
+          titleId="admin-notice-title"
+          title={notice.title}
+          closeLabel={t("common.close")}
+          onClose={() => setNotice(null)}
+          footer={
+            <button
+              type="button"
+              className="btn-primary text-sm w-full sm:w-auto"
+              onClick={() => setNotice(null)}
+            >
+              {t("common.confirm")}
+            </button>
+          }
+        >
+          <p className="text-sm text-ink-700 leading-snug whitespace-pre-wrap">
+            {notice.message}
+          </p>
+        </AdminPortalDialog>
+      ) : null}
 
       {deleteTarget
         ? createPortal(

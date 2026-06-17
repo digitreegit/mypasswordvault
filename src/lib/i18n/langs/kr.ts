@@ -748,9 +748,15 @@ export const MESSAGES_KR: Record<string, string> = {
   "admin.complaintSubmit": "등록",
   "admin.refund": "환불",
   "admin.resolved": "해결됨",
+  "admin.refundModalTitle": "환불 처리",
+  "admin.refundModalBody":
+    "Stripe 환불을 진행하고 이 계정의 PRO 라이선스를 해제합니다.",
+  "admin.refundModalSessionLabel": "Checkout 세션",
+  "admin.refundConfirmAction": "환불 진행",
   "admin.refundConfirm":
     "{{label}} — Stripe 환불 후 PRO 라이선스를 해제합니다.\n\n세션: {{session}}\n\n계속할까요?",
   "admin.refundFailed": "환불 실패: {{error}}",
+  "admin.noticeTitle": "알림",
   "admin.complaintPrompt": "컴플레인 메모 (선택):",
   "admin.complaintFailed": "등록 실패: {{error}}",
   "admin.resolveFailed": "처리 실패: {{error}}",

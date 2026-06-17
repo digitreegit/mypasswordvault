@@ -763,9 +763,15 @@ export const MESSAGES_EN: Record<string, string> = {
   "admin.complaintSubmit": "Submit complaint",
   "admin.refund": "Refund",
   "admin.resolved": "Resolved",
+  "admin.refundModalTitle": "Issue refund",
+  "admin.refundModalBody":
+    "Issue a Stripe refund and revoke the PRO license for this account.",
+  "admin.refundModalSessionLabel": "Checkout session",
+  "admin.refundConfirmAction": "Issue refund",
   "admin.refundConfirm":
     "{{label}} — issue a Stripe refund and revoke the PRO license.\n\nSession: {{session}}\n\nContinue?",
   "admin.refundFailed": "Refund failed: {{error}}",
+  "admin.noticeTitle": "Notice",
   "admin.complaintPrompt": "Complaint note (optional):",
   "admin.complaintFailed": "Could not log complaint: {{error}}",
   "admin.resolveFailed": "Could not resolve: {{error}}",
