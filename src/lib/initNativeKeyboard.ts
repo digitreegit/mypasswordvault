@@ -7,7 +7,7 @@ import {
 } from "./keyboardSession";
 import { setKeyboardInsetPx } from "./keyboardInset";
 import { reflowFocusedFieldScroll } from "./nativeScrollFocus";
-import { isNativeApp } from "./platform";
+import { getNativePlatform, isNativeApp } from "./platform";
 
 let initialized = false;
 let pluginKeyboardHeight = 0;
@@ -17,6 +17,36 @@ function pinDocumentScroll(): void {
   window.scrollTo(0, 0);
   document.documentElement.scrollTop = 0;
   document.body.scrollTop = 0;
+}
+
+function readNativeInsetBottomPx(): number {
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(
+    "--native-inset-bottom",
+  );
+  const parsed = Number.parseFloat(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+/** Android WebView: derive nav-bar inset from visualViewport when Java inset is 0. */
+function syncAndroidBottomInset(vvKeyboardInset: number): void {
+  if (getNativePlatform() !== "android") return;
+  if (pluginKeyboardHeight > 0 || vvKeyboardInset >= 40) return;
+
+  const vv = window.visualViewport;
+  if (!vv) return;
+
+  const vvBottomInset = Math.max(0, window.innerHeight - vv.offsetTop - vv.height);
+  const bottomInset = Math.max(readNativeInsetBottomPx(), vvBottomInset);
+  if (bottomInset <= 0) return;
+
+  document.documentElement.style.setProperty(
+    "--native-inset-bottom",
+    `${bottomInset}px`,
+  );
+  document.documentElement.style.setProperty(
+    "--app-safe-bottom",
+    `${bottomInset}px`,
+  );
 }
 
 function syncVisualViewportVars(): void {
@@ -35,6 +65,7 @@ function syncVisualViewportVars(): void {
     window.innerHeight - vv.offsetTop - vv.height,
   );
   setKeyboardInsetPx(Math.max(vvKeyboardInset, pluginKeyboardHeight));
+  syncAndroidBottomInset(vvKeyboardInset);
   if (Math.max(vvKeyboardInset, pluginKeyboardHeight) >= 40) {
     notifyKeyboardShow(Math.max(vvKeyboardInset, pluginKeyboardHeight));
   }
@@ -87,9 +118,8 @@ export async function initNativeKeyboard(): Promise<void> {
         return;
       }
       pluginKeyboardHeight = 0;
-      document.documentElement.style.removeProperty("--native-vv-offset-top");
-      document.documentElement.style.removeProperty("--native-vv-height");
       notifyKeyboardHide();
+      syncVisualViewportVars();
       pinDocumentScroll();
     });
   } catch {

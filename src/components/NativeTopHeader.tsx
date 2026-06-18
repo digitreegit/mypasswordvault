@@ -38,16 +38,13 @@ export function NativeTopHeader({
       className={[
         "vault-top-header w-full bg-white",
         fixedHost ? "vault-top-header--fixed-host" : "",
-        fixedHost
-          ? ""
-          : "pt-[max(0.375rem,env(safe-area-inset-top,0px))]",
       ]
         .filter(Boolean)
         .join(" ")}
     >
       <div className="w-full border-b border-ink-200">
         <div
-          className={`${NATIVE_TOP_HEADER_ROW_CLASS} flex items-center justify-between gap-3 py-1 sm:py-1.5`}
+          className={`${NATIVE_TOP_HEADER_ROW_CLASS} native-top-header-row flex items-center justify-between gap-2 min-h-[2.5rem]`}
         >
           <AppBrand
             name={brandName}

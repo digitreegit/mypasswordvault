@@ -3,5 +3,7 @@
     <color name="colorPrimary">#42424A</color>
     <color name="colorPrimaryDark">#121216</color>
     <color name="colorAccent">#42424A</color>
-    <color name="splashBackground">#FFFFFF</color>
+    <color name="brandGradientTop">#4C85FF</color>
+    <color name="brandGradientBottom">#322793</color>
+    <color name="splashBackground">#4C85FF</color>
 </resources>

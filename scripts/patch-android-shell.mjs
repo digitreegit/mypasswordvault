@@ -26,7 +26,9 @@ const colorsXml = `<?xml version="1.0" encoding="utf-8"?>
     <color name="colorPrimary">#42424A</color>
     <color name="colorPrimaryDark">#121216</color>
     <color name="colorAccent">#42424A</color>
-    <color name="splashBackground">#FFFFFF</color>
+    <color name="brandGradientTop">#4C85FF</color>
+    <color name="brandGradientBottom">#322793</color>
+    <color name="splashBackground">#4C85FF</color>
 </resources>
 `;
 
@@ -41,6 +43,7 @@ const stylesXml = `<?xml version="1.0" encoding="utf-8"?>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
 
     <style name="AppTheme.NoActionBar" parent="AppTheme">
@@ -110,9 +113,14 @@ function patchManifest() {
   if (changed) writeFileSync(manifestPath, xml);
 }
 
-const mainActivityWebAuthn = `package com.skyface.mypasswordvault;
+const mainActivitySource = `package com.skyface.mypasswordvault;
 
+import android.os.Bundle;
 import android.webkit.WebView;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewFeature;
 import com.getcapacitor.BridgeActivity;
@@ -120,9 +128,63 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+    }
+
+    @Override
     protected void load() {
         super.load();
         enableWebAuthn();
+        applySafeAreaInsets();
+    }
+
+    /** Forward system bar / cutout insets to CSS vars (Android WebView env() is often 0). */
+    private void applySafeAreaInsets() {
+        if (getBridge() == null) return;
+        WebView webView = getBridge().getWebView();
+        if (webView == null) return;
+
+        ViewCompat.setOnApplyWindowInsetsListener(webView, (v, windowInsets) -> {
+            Insets bars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets nav = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars());
+            Insets cutout = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout());
+            int top = Math.max(bars.top, cutout.top);
+            int bottom = Math.max(Math.max(bars.bottom, nav.bottom), cutout.bottom);
+            int left = Math.max(bars.left, cutout.left);
+            int right = Math.max(bars.right, cutout.right);
+
+            String js =
+                "document.documentElement.style.setProperty('--native-inset-top','"
+                    + top
+                    + "px');"
+                    + "document.documentElement.style.setProperty('--native-inset-bottom','"
+                    + bottom
+                    + "px');"
+                    + "document.documentElement.style.setProperty('--native-inset-left','"
+                    + left
+                    + "px');"
+                    + "document.documentElement.style.setProperty('--native-inset-right','"
+                    + right
+                    + "px');"
+                    + "document.documentElement.style.setProperty('--app-safe-top','"
+                    + top
+                    + "px');"
+                    + "document.documentElement.style.setProperty('--app-safe-bottom','"
+                    + bottom
+                    + "px');"
+                    + "document.documentElement.style.setProperty('--app-safe-left','"
+                    + left
+                    + "px');"
+                    + "document.documentElement.style.setProperty('--app-safe-right','"
+                    + right
+                    + "px');";
+
+            webView.post(() -> webView.evaluateJavascript(js, null));
+            return windowInsets;
+        });
+        ViewCompat.requestApplyInsets(webView);
     }
 
     private void enableWebAuthn() {
@@ -157,12 +219,12 @@ function patchBuildGradleWebkit() {
   console.log("patch-android-shell: added androidx.webkit dependency");
 }
 
-function patchMainActivityWebAuthn() {
+function patchMainActivity() {
   if (!existsSync(mainActivityPath)) return;
   const current = readFileSync(mainActivityPath, "utf8");
-  if (current.includes("enableWebAuthn")) return;
-  writeFileSync(mainActivityPath, mainActivityWebAuthn);
-  console.log("patch-android-shell: enabled WebAuthn in MainActivity");
+  if (current.includes("applySafeAreaInsets") && current.includes("enableWebAuthn")) return;
+  writeFileSync(mainActivityPath, mainActivitySource);
+  console.log("patch-android-shell: updated MainActivity (WebAuthn + safe area insets)");
 }
 
 if (!existsSync(join(root, "android"))) {
@@ -175,4 +237,4 @@ ensureStyles();
 patchLauncherBackground();
 patchManifest();
 patchBuildGradleWebkit();
-patchMainActivityWebAuthn();
+patchMainActivity();

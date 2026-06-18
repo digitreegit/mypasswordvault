@@ -1851,23 +1851,25 @@ function MobileEntryDetail({
       <div
         ref={rowRef}
         data-vault-entry-id={entry.id}
-        className="fixed inset-0 z-50 flex flex-col bg-white w-full min-w-0 overflow-x-hidden md:hidden"
+        className="mobile-entry-detail flex flex-col bg-white w-full min-w-0 overflow-hidden md:hidden"
         onMouseEnter={onRowMouseEnter}
         onMouseLeave={onRowMouseLeave}
       >
-        <header className="shrink-0 flex items-center gap-1 border-b border-ink-200 pl-1 pr-3 pb-2 pt-[max(0.375rem,env(safe-area-inset-top))]">
+        <header className="mobile-entry-detail__header shrink-0 flex items-center gap-1 border-b border-ink-200 pl-1 pr-3">
           <NativeBackIconButton
             className="-ml-1"
             onClick={requestClose}
             aria-label={t("vault.mobileBack")}
           />
-          <div className="min-w-0 flex-1 -ml-1">
+          <div className="min-w-0 flex-1 -ml-1 flex flex-col justify-center gap-0 leading-none">
             {draft.categoryId ? (
-              <p className="text-xs text-ink-500 truncate">
+              <p className="text-xs text-ink-500 truncate leading-tight">
                 {entryCategoryLabel(draft.categoryId, categories, t)}
               </p>
             ) : null}
-            <p className="font-semibold text-lg text-ink-900 truncate">{siteLabel}</p>
+            <p className="font-semibold text-base leading-tight text-ink-900 truncate">
+              {siteLabel}
+            </p>
           </div>
         {isNewEntry ? (
           <button
@@ -2053,7 +2055,7 @@ function MobileEntryDetail({
           </div>
         </div>
 
-        <footer className="shrink-0 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <footer className="mobile-entry-detail__footer shrink-0 bg-white px-4">
           <button
             type="button"
             className="btn-primary w-full"

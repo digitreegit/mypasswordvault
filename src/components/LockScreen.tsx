@@ -8,7 +8,6 @@ import {
 import { useVault } from "../lib/vault";
 import { LockOpen, Eye, EyeOff } from "./Icons";
 import { ScreenHeader } from "./ScreenHeader";
-import { NativeTopHeader } from "./NativeTopHeader";
 import { AppShell } from "./AppShell";
 import { NativePinnedAppShell } from "./NativePinnedAppShell";
 import { isAppError } from "../lib/errors";
@@ -114,26 +113,18 @@ export function LockScreen() {
     if (!canPasskey) setShowBackup(true);
   }, [canPasskey]);
 
-  const lockHeader = isNativeApp() ? (
-    <NativeTopHeader
-      brandName={t("app.brandName")}
-      locale={locale}
-      onLocaleChange={(l) => void setLocale(l)}
-      languageAriaLabel={t("settings.language")}
-      brandHomeHref={brandHomeHref}
-      brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
-      fixedHost
-    />
-  ) : (
+  const lockHeader = (
     <ScreenHeader
       brandName={t("app.brandName")}
       pageTitle={t("lock.title")}
-      subtitle={t("lock.subtitle")}
+      subtitle={isNativeApp() ? undefined : t("lock.subtitle")}
+      hideTitle={isNativeApp()}
       locale={locale}
       onLocaleChange={(l) => void setLocale(l)}
       languageAriaLabel={t("settings.language")}
       brandHomeHref={brandHomeHref}
       brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
+      className={isNativeApp() ? "mb-0" : undefined}
     />
   );
 
@@ -361,11 +352,7 @@ export function LockScreen() {
 
   if (isNativeApp()) {
     return (
-      <NativePinnedAppShell
-        header={lockHeader}
-        remeasureKey={showBackup}
-        headerClassName="native-top-header-fixed-host"
-      >
+      <NativePinnedAppShell header={lockHeader} remeasureKey={showBackup}>
         <div className="space-y-4">{lockBody}</div>
       </NativePinnedAppShell>
     );

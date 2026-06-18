@@ -54,6 +54,63 @@ body {
 }
 
 /* Native mobile (iOS + Android) — shared typography, icons, and control scale */
+/* Android WebView: env(safe-area-inset-*) is often 0 — MainActivity injects --native-inset-* */
+html.native-app {
+  --app-safe-top: env(safe-area-inset-top, 0px);
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-safe-left: env(safe-area-inset-left, 0px);
+  --app-safe-right: env(safe-area-inset-right, 0px);
+}
+
+html.native-app.native-android {
+  --app-safe-top: max(env(safe-area-inset-top, 0px), var(--native-inset-top, 0px));
+  --app-safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--native-inset-bottom, 0px));
+  --app-safe-left: max(env(safe-area-inset-left, 0px), var(--native-inset-left, 0px));
+  --app-safe-right: max(env(safe-area-inset-right, 0px), var(--native-inset-right, 0px));
+}
+
+html.native-app.native-android .native-screen {
+  padding-top: var(--app-safe-top);
+  padding-bottom: var(--app-safe-bottom);
+  padding-left: var(--app-safe-left);
+  padding-right: var(--app-safe-right);
+}
+
+html.native-app.native-android .app-shell {
+  padding-top: var(--app-safe-top);
+  padding-bottom: var(--app-safe-bottom);
+  padding-left: var(--app-safe-left);
+  padding-right: var(--app-safe-right);
+}
+
+html.native-app.native-android .setup-screen__header--fixed {
+  padding-top: var(--app-safe-top);
+  padding-left: max(1.25rem, var(--app-safe-left));
+  padding-right: max(1.25rem, var(--app-safe-right));
+}
+
+html.native-app.native-android .setup-screen__body--fixed {
+  padding-bottom: max(1.25rem, var(--app-safe-bottom));
+  padding-left: max(1.25rem, var(--app-safe-left));
+  padding-right: max(1.25rem, var(--app-safe-right));
+}
+
+html.native-app.native-android .native-onboard__footer {
+  padding-bottom: max(1.25rem, var(--app-safe-bottom));
+}
+
+html.native-app.native-android .pricing-drawer-body {
+  padding-bottom: max(1.25rem, var(--app-safe-bottom));
+}
+
+html.native-app.native-android .cloud-sync-toast {
+  bottom: calc(1rem + var(--app-safe-bottom));
+}
+
+html.native-app.native-android .vault-entry-limit-banner {
+  padding-top: 0;
+}
+
 html.native-app.native-ios,
 html.native-app.native-android {
   --type-caption: 0.8125rem; /* 13pt footnote */
@@ -182,6 +239,15 @@ html.native-app .native-screen__scroll.settings-page {
 html.native-app .native-screen__header {
   flex: 0 0 auto;
   min-width: 0;
+  box-sizing: border-box;
+  padding-top: var(--app-safe-top, env(safe-area-inset-top, 0px));
+  background: #fff;
+}
+
+/* Header owns the top safe-area inset — drop it from the container to avoid doubling.
+   Scoped to header-bearing screens so onboarding/loading keep their container inset. */
+html.native-app .native-screen:has(> .native-screen__header) {
+  padding-top: 0;
 }
 
 html.native-app .native-screen__scroll {
@@ -336,12 +402,13 @@ html.native-app .settings-page {
   padding-right: 0.75rem !important;
 }
 
-html.native-app .vault-top-header {
-  padding-top: 0.375rem !important;
-}
-
 html.native-app {
   --native-top-header-row-min-height: calc(var(--ui-icon-btn-size-compact, 2.375rem) + 0.5rem);
+}
+
+html.native-app .native-top-header-row,
+html.native-app .setup-screen__header--fixed header.space-y-3 > .flex.items-center {
+  min-height: var(--native-top-header-row-min-height);
 }
 
 html.native-app .vault-top-header .border-b > .flex.items-center,
@@ -349,15 +416,19 @@ html.native-app .settings-native-header__inner {
   min-height: var(--native-top-header-row-min-height);
 }
 
+html.native-app .vault-top-header {
+  padding-top: 0.375rem !important;
+}
+
+html.native-app .vault-top-header--fixed-host {
+  padding-top: 0 !important;
+}
+
 html.native-app .native-top-header-fixed-host.setup-screen__header--fixed {
   padding: 0;
   padding-top: calc(env(safe-area-inset-top, 0px) + 0.375rem);
   border-bottom: none;
   background: #fff;
-}
-
-html.native-app .vault-top-header--fixed-host {
-  padding-top: 0 !important;
 }
 
 html.native-app .pricing-drawer-handle {
@@ -471,12 +542,64 @@ html.native-app .mobile-entry-detail__scroll,
 .mobile-entry-detail__scroll {
   padding-bottom: max(
     1rem,
-    env(safe-area-inset-bottom, 0px),
     calc(
       var(--native-keyboard-inset, 0px) + var(--keyboard-accessory-height, 2.75rem) +
         var(--keyboard-accessory-gap, 0.5rem) + 1rem
     )
   );
+}
+
+/* Portaled to document.body — full-screen editor: inset header, sticky footer above OS nav */
+.mobile-entry-detail {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  padding-left: var(--app-safe-left, env(safe-area-inset-left, 0px));
+  padding-right: var(--app-safe-right, env(safe-area-inset-right, 0px));
+}
+
+/* Native: pin inside the visual viewport; footer carries the bottom inset (nav bar / home indicator). */
+html.native-app .mobile-entry-detail {
+  top: var(--native-vv-offset-top, 0px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: auto;
+}
+
+/* Keyboard open: OS nav bar is hidden — fit to the shrunken visual viewport so the footer rides above the keyboard. */
+html.native-app
+  .mobile-entry-detail:has(.mobile-entry-detail__scroll:focus-within) {
+  bottom: auto;
+  height: var(--native-vv-height, 100dvh);
+}
+
+.mobile-entry-detail__header {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  min-height: calc(3rem + var(--app-safe-top, env(safe-area-inset-top, 0px)));
+  padding-top: var(--app-safe-top, env(safe-area-inset-top, 0px));
+}
+
+.mobile-entry-detail__footer {
+  flex: 0 0 auto;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  padding-bottom: max(0.75rem, var(--app-safe-bottom, env(safe-area-inset-bottom, 0px)));
+  border-top: 1px solid rgb(238 238 241);
+  background: #fff;
+  touch-action: manipulation;
+}
+
+/* Keyboard open: nav bar gone — collapse the footer's bottom inset. */
+html.native-app
+  .mobile-entry-detail:has(.mobile-entry-detail__scroll:focus-within)
+  .mobile-entry-detail__footer {
+  padding-bottom: 0.75rem;
 }
 
 html.native-app .setup-screen {
