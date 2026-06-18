@@ -29,6 +29,8 @@ export type AdminCustomerRow = {
   currency: string;
   licenseKey: string | null;
   purchasePlatform: PurchasePlatform | null;
+  /** First sign-in platform when no purchase yet. */
+  signupPlatform?: PurchasePlatform | null;
   createdAt: string | null;
 };
 

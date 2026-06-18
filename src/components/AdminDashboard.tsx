@@ -124,9 +124,14 @@ function displayPlatform(
   row: AdminCustomerRow,
 ): AdminCustomerRow["purchasePlatform"] {
   if (row.purchasePlatform) return row.purchasePlatform;
+  if (row.signupPlatform) return row.signupPlatform;
   if (row.licenseKey || row.purchasedAt || row.complimentary) return "web";
   if (row.isAdmin || row.plan === "pro") return "web";
   return null;
+}
+
+function displayRowDate(row: AdminCustomerRow): string | null {
+  return row.purchasedAt ?? row.createdAt ?? null;
 }
 
 function formatDate(iso: string | null) {
@@ -321,7 +326,7 @@ function AdminCustomerMobileCard({
 
         <dt className="text-ink-500">{t("admin.colPurchased")}</dt>
         <dd className="text-ink-800 min-w-0">
-          {row.purchasedAt ? formatDate(row.purchasedAt) : <AdminEmptyMark />}
+          {displayRowDate(row) ? formatDate(displayRowDate(row)) : <AdminEmptyMark />}
         </dd>
 
         <dt className="text-ink-500">{t("admin.colAmount")}</dt>
@@ -1277,8 +1282,8 @@ export function AdminDashboard() {
                       )}
                     </td>
                     <td className="px-3 py-3 align-middle whitespace-nowrap overflow-hidden text-ink-700">
-                      {row.purchasedAt ? (
-                        formatDate(row.purchasedAt)
+                      {displayRowDate(row) ? (
+                        formatDate(displayRowDate(row))
                       ) : (
                         <AdminEmptyMark />
                       )}

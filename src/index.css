@@ -54,6 +54,56 @@ body {
 }
 
 /* Native mobile (iOS + Android) — shared typography, icons, and control scale */
+/* Android WebView: env(safe-area-inset-*) is often 0 — MainActivity injects --native-inset-* */
+html.native-app.native-android {
+  --app-safe-top: max(env(safe-area-inset-top, 0px), var(--native-inset-top, 0px));
+  --app-safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--native-inset-bottom, 0px));
+  --app-safe-left: max(env(safe-area-inset-left, 0px), var(--native-inset-left, 0px));
+  --app-safe-right: max(env(safe-area-inset-right, 0px), var(--native-inset-right, 0px));
+}
+
+html.native-app.native-android .native-screen {
+  padding-top: var(--app-safe-top);
+  padding-bottom: var(--app-safe-bottom);
+  padding-left: var(--app-safe-left);
+  padding-right: var(--app-safe-right);
+}
+
+html.native-app.native-android .app-shell {
+  padding-top: var(--app-safe-top);
+  padding-bottom: var(--app-safe-bottom);
+  padding-left: var(--app-safe-left);
+  padding-right: var(--app-safe-right);
+}
+
+html.native-app.native-android .setup-screen__header--fixed {
+  padding-top: var(--app-safe-top);
+  padding-left: max(1.25rem, var(--app-safe-left));
+  padding-right: max(1.25rem, var(--app-safe-right));
+}
+
+html.native-app.native-android .setup-screen__body--fixed {
+  padding-bottom: max(1.25rem, var(--app-safe-bottom));
+  padding-left: max(1.25rem, var(--app-safe-left));
+  padding-right: max(1.25rem, var(--app-safe-right));
+}
+
+html.native-app.native-android .native-onboard__footer {
+  padding-bottom: max(1.25rem, var(--app-safe-bottom));
+}
+
+html.native-app.native-android .pricing-drawer-body {
+  padding-bottom: max(1.25rem, var(--app-safe-bottom));
+}
+
+html.native-app.native-android .cloud-sync-toast {
+  bottom: calc(1rem + var(--app-safe-bottom));
+}
+
+html.native-app.native-android .vault-entry-limit-banner {
+  padding-top: 0;
+}
+
 html.native-app.native-ios,
 html.native-app.native-android {
   --type-caption: 0.8125rem; /* 13pt footnote */

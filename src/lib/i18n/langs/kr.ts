@@ -639,6 +639,12 @@ export const MESSAGES_KR: Record<string, string> = {
   "pricing.storeRestoreAppStore": "App Store에서 결제하셨나요?",
   "pricing.storeRestoreAppStoreHint":
     "복원은 App Store 구매 전용입니다. 웹 구매는 같은 이메일로 로그인하면 자동으로 적용됩니다.",
+  "pricing.storeRestoreTitle": "App Store에서 결제하셨나요?",
+  "pricing.storeRestoreHint":
+    "복원은 App Store 구매 전용입니다. 웹 구매는 같은 이메일로 로그인하면 자동으로 적용됩니다.",
+  "pricing.storeRestoreTitleAndroid": "Google Play에서 결제하셨나요?",
+  "pricing.storeRestoreHintAndroid":
+    "복원은 Google Play 구매 전용입니다. 웹 구매는 같은 이메일로 로그인하면 자동으로 적용됩니다.",
   "pricing.storeBridgeLoading": "App Store에 연결하는 중…",
   "pricing.storeBridgeLoadingAndroid": "Google Play에 연결하는 중…",
   "pricing.storeBridgeFailed":
@@ -719,7 +725,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "admin.colEmail": "이메일",
   "admin.colPlan": "플랜",
   "admin.colPlatform": "플랫폼",
-  "admin.colPurchased": "구매일",
+  "admin.colPurchased": "가입·구매일",
   "admin.colAmount": "금액",
   "admin.colLicenseKey": "라이선스 키",
   "admin.platformWeb": "웹",

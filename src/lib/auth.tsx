@@ -32,6 +32,7 @@ import {
 } from "./accountDeletion";
 import { stripAuthParamsFromUrl } from "./supabaseAuthRedirect";
 import { finalizeSignIn } from "./signInRecord";
+import { recordSignupPlatform } from "./recordSignupPlatform";
 import { getUserSignInMethod, userSupportsEmailPassword } from "./signInMethod";
 
 export { getUserSignInMethod, userSupportsEmailPassword };
@@ -85,6 +86,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then(({ data }) => {
         if (!mounted) return;
         setSession(data.session ?? null);
+        if (data.session?.user?.id) {
+          void recordSignupPlatform(data.session.user.id);
+        }
         setLoading(false);
       })
       .catch((e) => {
@@ -102,6 +106,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setPasswordRecoveryPendingState(true);
       }
       setSession(next);
+      if (next?.user?.id && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
+        void recordSignupPlatform(next.user.id);
+      }
     });
 
     return () => {

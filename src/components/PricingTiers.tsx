@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { StoreBridgeStatus } from "../lib/initNativeStoreBridge";
 import { FREE_ENTRY_LIMIT } from "../lib/entitlements";
-import { getNativePlatform, storePricingMessageKey } from "../lib/platform";
+import { getNativePlatform, storePricingMessageKey, storeRestoreMessageKey } from "../lib/platform";
 import { Check } from "./Icons";
 import { PRICING_PAID_FEATURE_KEYS } from "./CheckoutProFeatures";
 
@@ -26,6 +26,7 @@ export type PricingTiersProps = {
   /** App Store / Play localized price, e.g. ₩7,700 */
   storeProPrice?: string | null;
   onStorePurchase?: () => void;
+  onStoreRestore?: () => void;
   /** `drawer` uses plan tabs (PRO default) instead of side-by-side cards. */
   layout?: "page" | "drawer";
 };
@@ -61,6 +62,7 @@ export function PricingTiers({
   storeBridgeStatus = "idle",
   storeProPrice = null,
   onStorePurchase,
+  onStoreRestore,
   layout = "page",
 }: PricingTiersProps) {
   const isDrawer = layout === "drawer";
@@ -183,6 +185,24 @@ export function PricingTiers({
                   <p className="text-xs text-ink-500 leading-snug">
                     {t("pricing.storeNote")}
                   </p>
+                ) : null}
+                {onStoreRestore ? (
+                  <div className="pt-2 border-t border-ink-100 space-y-1.5">
+                    <p className="text-xs font-medium text-ink-700">
+                      {t(storeRestoreMessageKey("storeRestoreTitle"))}
+                    </p>
+                    <p className="text-xs text-ink-500 leading-snug">
+                      {t(storeRestoreMessageKey("storeRestoreHint"))}
+                    </p>
+                    <button
+                      type="button"
+                      className="btn-secondary w-full justify-center text-sm"
+                      disabled={!configured || busy || loading || !storeReady}
+                      onClick={() => void onStoreRestore()}
+                    >
+                      {busy ? t("app.loading") : t("pricing.storeRestore")}
+                    </button>
+                  </div>
                 ) : null}
               </>
             )}

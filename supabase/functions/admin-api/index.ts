@@ -126,6 +126,7 @@ type EntRow = {
   created_at: string | null;
   complimentary_grant: boolean | null;
   purchase_platform: string | null;
+  signup_platform: string | null;
 };
 
 type PurchasePlatform = "web" | "ios" | "android";
@@ -140,6 +141,14 @@ function resolvePurchasePlatform(r: EntRow): PurchasePlatform | null {
   }
   // Complimentary PRO, ADMIN_EMAILS operators, legacy licensed rows (web-only product).
   if (r.licensed && !r.refunded_at) return "web";
+  return null;
+}
+
+function resolveSignupPlatform(r: EntRow): PurchasePlatform | null {
+  const p = r.signup_platform?.trim().toLowerCase();
+  if (p === "ios") return "ios";
+  if (p === "android") return "android";
+  if (p === "web") return "web";
   return null;
 }
 
@@ -274,6 +283,7 @@ function formatRow(r: EntRow, isAdmin: boolean) {
       currency: r.currency ?? "usd",
       licenseKey: r.stripe_checkout_session_id,
       purchasePlatform: resolvePurchasePlatform(r),
+      signupPlatform: resolveSignupPlatform(r),
       createdAt: r.created_at,
     };
   }
@@ -293,6 +303,7 @@ function formatRow(r: EntRow, isAdmin: boolean) {
     currency: r.currency ?? "usd",
     licenseKey: r.stripe_checkout_session_id,
     purchasePlatform: resolvePurchasePlatform(r),
+    signupPlatform: resolveSignupPlatform(r),
     createdAt: r.created_at,
   };
 }
@@ -589,7 +600,7 @@ Deno.serve(async (req) => {
     let query = admin
       .from("user_entitlements")
       .select(
-        "user_id, licensed, purchased_at, stripe_checkout_session_id, amount_cents, currency, refunded_at, account_email, created_at, complimentary_grant, purchase_platform",
+        "user_id, licensed, purchased_at, stripe_checkout_session_id, amount_cents, currency, refunded_at, account_email, created_at, complimentary_grant, purchase_platform, signup_platform",
         { count: "exact" },
       )
       .order("purchased_at", { ascending: false, nullsFirst: false })

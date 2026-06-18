@@ -38,6 +38,7 @@ export function PricingDrawer({
     bridgeStatus,
     storeProPrice,
     purchaseStore,
+    restoreStore,
   } = useProPurchase(t);
   const busy = storeBilling ? storeBusy : stripeBusy;
 
@@ -122,6 +123,22 @@ export function PricingDrawer({
     t,
   ]);
 
+  const startRestore = useCallback(() => {
+    setErr(null);
+    setStoreErr(null);
+    if (!session) {
+      setErr(t("pricing.errSignIn"));
+      return;
+    }
+    void (async () => {
+      const r = await restoreStore();
+      if (r.ok) {
+        await refreshEntitlements();
+        onClose();
+      }
+    })();
+  }, [session, restoreStore, refreshEntitlements, onClose, setStoreErr, t]);
+
   const sb = getSupabase();
 
   if (!open) return null;
@@ -204,6 +221,7 @@ export function PricingDrawer({
               storeBridgeStatus={bridgeStatus}
               storeProPrice={storeProPrice}
               onStorePurchase={startCheckout}
+              onStoreRestore={storeBilling ? startRestore : undefined}
               layout="drawer"
             />
           </div>

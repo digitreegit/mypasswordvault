@@ -57,6 +57,15 @@ export function storeBridgeMissingErrorCode(): string {
     : "errors.storeBridgeMissing";
 }
 
+type StoreRestoreCopyKey = "storeRestoreTitle" | "storeRestoreHint";
+
+/** iOS App Store vs Google Play restore copy. */
+export function storeRestoreMessageKey(part: StoreRestoreCopyKey): string {
+  return getNativePlatform() === "android"
+    ? `pricing.${part}Android`
+    : `pricing.${part}`;
+}
+
 export function getOAuthRedirectUrl(): string {
   if (isNativeApp()) return NATIVE_AUTH_REDIRECT;
   if (typeof window === "undefined") return canonicalAppUrl();

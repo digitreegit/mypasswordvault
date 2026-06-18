@@ -20,7 +20,12 @@ import {
 } from "../lib/checkoutReturn";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useProPurchase } from "../hooks/useProPurchase";
-import { usesStoreBilling } from "../lib/platform";
+import { usesStoreBilling, isNativeApp } from "../lib/platform";
+import {
+  nativeFixedHeaderClass,
+  nativeMainScrollClass,
+  nativeScreenRootClass,
+} from "../lib/nativeLayout";
 import { PricingTiers } from "./PricingTiers";
 import { StripeCheckoutModal } from "./StripeCheckoutModal";
 
@@ -48,6 +53,7 @@ export function PricingPage() {
     bridgeStatus,
     storeProPrice,
     purchaseStore,
+    restoreStore,
   } = useProPurchase(t);
   const busy = storeBilling ? storeBusy : stripeBusy;
   const uid = session?.user?.id;
@@ -137,7 +143,74 @@ export function PricingPage() {
     setCheckoutModalOpen(true);
   }
 
+  function startRestore() {
+    setErr(null);
+    setStoreErr(null);
+    if (!session) {
+      setErr(t("pricing.errSignIn"));
+      return;
+    }
+    void (async () => {
+      const r = await restoreStore();
+      if (r.ok) await reloadLicense();
+    })();
+  }
+
   const sb = getSupabase();
+  const native = isNativeApp();
+
+  if (native) {
+    return (
+      <div className={nativeScreenRootClass("bg-ink-50 text-ink-800")}>
+        <header
+          className={`${nativeFixedHeaderClass()} border-b border-ink-200 bg-white px-4 py-3 sm:px-6`}
+        >
+          <a
+            href="#/"
+            className="inline-flex items-center gap-1.5 text-[14px] font-medium text-ink-600 hover:text-ink-900 transition-colors"
+            onClick={(e) => {
+              e.preventDefault();
+              window.location.hash = "";
+            }}
+          >
+            <ArrowLeftIcon className="h-4 w-4 shrink-0" aria-hidden />
+            {t("account.backToVault")}
+          </a>
+        </header>
+
+        <main className={nativeMainScrollClass("max-w-5xl w-full mx-auto px-4 py-8")}>
+          <div className="text-center max-w-2xl mx-auto mb-8">
+            <h1 className="text-2xl font-bold text-ink-900 tracking-tight">
+              {t("pricing.title")}
+            </h1>
+            <p className="mt-3 text-ink-600 text-sm leading-relaxed">
+              {t("pricing.subtitle")}
+            </p>
+          </div>
+
+          <PricingTiers
+            t={t}
+            configured={configured}
+            loading={loading}
+            session={session}
+            licensed={licensed}
+            busy={busy}
+            err={err ?? storeErr}
+            checkoutFlash={checkoutFlash}
+            onCheckout={startCheckout}
+            onSignIn={() => void signInWithGoogle()}
+            storeBilling={storeBilling}
+            storeReady={storeReady}
+            storeBridgeStatus={bridgeStatus}
+            storeProPrice={storeProPrice}
+            onStorePurchase={startCheckout}
+            onStoreRestore={storeBilling ? startRestore : undefined}
+            layout="page"
+          />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-ink-50 text-ink-800 flex flex-col">
@@ -181,6 +254,7 @@ export function PricingPage() {
           storeBridgeStatus={bridgeStatus}
           storeProPrice={storeProPrice}
           onStorePurchase={startCheckout}
+          onStoreRestore={storeBilling ? startRestore : undefined}
           layout="page"
         />
 

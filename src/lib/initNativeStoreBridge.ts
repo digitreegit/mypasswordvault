@@ -185,6 +185,31 @@ function registerStoreHandlers(
   });
 }
 
+function googlePlayPurchaseToken(transaction: Transaction): string | null {
+  const gp = transaction as {
+    nativePurchase?: { purchaseToken?: string };
+    parentReceipt?: { purchaseToken?: string };
+  };
+  const fromNative = gp.nativePurchase?.purchaseToken?.trim();
+  if (fromNative) return fromNative;
+
+  try {
+    const receipt = transaction.parentReceipt as { purchaseToken?: string } | undefined;
+    const fromReceipt = receipt?.purchaseToken?.trim();
+    if (fromReceipt) return fromReceipt;
+  } catch {
+    /* parentReceipt unavailable */
+  }
+
+  return null;
+}
+
+function appleVerificationData(transaction: Transaction): string | null {
+  const jws = (transaction as { jwsRepresentation?: string }).jwsRepresentation?.trim();
+  if (jws) return jws;
+  return transaction.transactionId?.trim() || null;
+}
+
 function payloadFromTransaction(
   transaction: Transaction,
   productId: string,
@@ -192,18 +217,27 @@ function payloadFromTransaction(
   const platform = getNativePlatform();
   if (!platform) throw new AppError("errors.storeUnsupported");
 
-  const jws = (transaction as { jwsRepresentation?: string }).jwsRepresentation;
   const verificationData =
-    jws?.trim() || transaction.transactionId?.trim() || "";
+    platform === "android"
+      ? googlePlayPurchaseToken(transaction) ?? ""
+      : appleVerificationData(transaction) ?? "";
+
   if (!verificationData) {
     throw new AppError("errors.storeVerifyFailed", "missing_verification_data");
   }
+
+  const transactionId =
+    platform === "android"
+      ? transaction.transactionId?.trim() ||
+        (transaction.parentReceipt as { orderId?: string } | undefined)?.orderId?.trim() ||
+        verificationData
+      : transaction.transactionId;
 
   return {
     platform,
     productId,
     verificationData,
-    transactionId: transaction.transactionId,
+    transactionId,
     completePurchase: () => transaction.finish(),
   };
 }

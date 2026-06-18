@@ -652,6 +652,12 @@ export const MESSAGES_EN: Record<string, string> = {
   "pricing.storeRestoreAppStore": "Already paid on the App Store?",
   "pricing.storeRestoreAppStoreHint":
     "Restore is for App Store purchases only. Web purchases sync automatically when you sign in with the same email.",
+  "pricing.storeRestoreTitle": "Already paid on the App Store?",
+  "pricing.storeRestoreHint":
+    "Restore is for App Store purchases only. Web purchases sync automatically when you sign in with the same email.",
+  "pricing.storeRestoreTitleAndroid": "Already paid on Google Play?",
+  "pricing.storeRestoreHintAndroid":
+    "Restore is for Google Play purchases only. Web purchases sync automatically when you sign in with the same email.",
   "pricing.storeBridgeLoading":
     "Connecting to the App Store…",
   "pricing.storeBridgeLoadingAndroid":
@@ -734,7 +740,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "admin.colEmail": "Email",
   "admin.colPlan": "Plan",
   "admin.colPlatform": "Platform",
-  "admin.colPurchased": "Purchased",
+  "admin.colPurchased": "Joined / Purchased",
   "admin.colAmount": "Amount",
   "admin.colLicenseKey": "License Key",
   "admin.platformWeb": "Web",
