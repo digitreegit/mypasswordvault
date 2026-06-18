@@ -288,6 +288,8 @@ function prfEvalExtension(prfSaltB64: string) {
 type RegisterStrategy = {
   enablePrf: boolean;
   attestation: boolean;
+  /** Evaluate PRF at creation so the output returns from create() (Android 14+/Chrome) — skips the second ceremony. */
+  prfEvalAtCreate?: boolean;
 };
 
 function registerStrategies(
@@ -309,11 +311,14 @@ function registerStrategies(
     ];
   }
   if (isNativeApp() && Capacitor.getPlatform() === "android") {
+    // PRF-first with eval-at-create: Google Password Manager returns the PRF
+    // output from create(), so we never run a second get() ceremony (which on
+    // Android shows the cross-device / QR "no passkey" sheets right after create).
     return [
-      { enablePrf: false, attestation: false },
-      { enablePrf: false, attestation: true },
+      { enablePrf: true, attestation: false, prfEvalAtCreate: true },
+      { enablePrf: true, attestation: true, prfEvalAtCreate: true },
       { enablePrf: true, attestation: false },
-      { enablePrf: true, attestation: true },
+      { enablePrf: false, attestation: false },
     ];
   }
   if (isLocalDev()) {
@@ -370,6 +375,7 @@ async function createRegistration(
     userName: string;
     userDisplayName: string;
     excludeCredentialIds: string[];
+    prfSaltB64: string;
     hints?: ("client-device" | "security-key" | "hybrid")[];
   },
   strategy: RegisterStrategy,
@@ -382,7 +388,9 @@ async function createRegistration(
     })),
   };
   if (strategy.enablePrf) {
-    customProperties.extensions = prfEnableExtension();
+    customProperties.extensions = strategy.prfEvalAtCreate
+      ? prfEvalExtension(opts.prfSaltB64)
+      : prfEnableExtension();
   }
   // @passwordless-id/webauthn sets authenticatorAttachment to "cross-platform"
   // for hybrid hints, which opens the security-key sheet (not the QR / caBLE flow).
