@@ -664,6 +664,7 @@ html.native-app .native-onboard__scroller {
   touch-action: pan-x pinch-zoom;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
 }
 
 html.native-app .native-onboard__scroller::-webkit-scrollbar {
@@ -676,6 +677,51 @@ html.native-app .native-onboard__slide {
   width: 100%;
   max-width: 100%;
   min-height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* Vault swipe rows — native always uses mobile list (not gated on 767px media). */
+html.native-app .mobile-swipe-row {
+  --mobile-swipe-radius: 0.75rem;
+  border-radius: var(--mobile-swipe-radius);
+  border: 1px solid rgb(217 217 223 / 0.9);
+  box-shadow: 0 1px 2px rgb(18 18 22 / 0.04);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+html.native-app .mobile-swipe-row__delete {
+  min-height: 100%;
+  width: 5.5rem;
+  font-size: var(--type-body);
+  font-weight: 500;
+  border-radius: 0;
+}
+
+html.native-app .mobile-swipe-row:not(.mobile-swipe-row--revealed) .mobile-swipe-row__delete {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+html.native-app .mobile-swipe-row--revealed .mobile-swipe-row__delete {
+  visibility: visible;
+  pointer-events: auto;
+  border-top-right-radius: calc(var(--mobile-swipe-radius) - 1px);
+  border-bottom-right-radius: calc(var(--mobile-swipe-radius) - 1px);
+}
+
+html.native-app .mobile-swipe-row__content {
+  position: relative;
+  z-index: 1;
+  border-radius: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+html.native-app .mobile-swipe-row--revealed .mobile-swipe-row__content {
+  border-top-left-radius: calc(var(--mobile-swipe-radius) - 1px);
+  border-bottom-left-radius: calc(var(--mobile-swipe-radius) - 1px);
 }
 
 html.native-app .native-onboard__art-band {
@@ -1854,7 +1900,8 @@ html.native-app .settings-native-chrome .settings-mobile-tablist-wrap {
   }
 
   .mobile-swipe-row {
-    border-radius: 0.75rem;
+    --mobile-swipe-radius: 0.75rem;
+    border-radius: var(--mobile-swipe-radius);
     border: 1px solid rgb(217 217 223 / 0.9);
     box-shadow: 0 1px 2px rgb(18 18 22 / 0.04);
     overflow: hidden;
@@ -1866,14 +1913,33 @@ html.native-app .settings-native-chrome .settings-mobile-tablist-wrap {
     width: 5.5rem;
     font-size: var(--type-body);
     font-weight: 500;
-    border-top-right-radius: 0.75rem;
-    border-bottom-right-radius: 0.75rem;
+    border-radius: 0;
   }
 
+  .mobile-swipe-row:not(.mobile-swipe-row--revealed) .mobile-swipe-row__delete {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .mobile-swipe-row--revealed .mobile-swipe-row__delete {
+    visibility: visible;
+    pointer-events: auto;
+    border-top-right-radius: calc(var(--mobile-swipe-radius) - 1px);
+    border-bottom-right-radius: calc(var(--mobile-swipe-radius) - 1px);
+  }
+
+  /* Square overlay when closed — parent overflow clips corners (avoids red delete bleed). */
   .mobile-swipe-row__content {
-    border-radius: 0.75rem;
+    position: relative;
+    z-index: 1;
+    border-radius: 0;
     overflow: hidden;
     background: #fff;
+  }
+
+  .mobile-swipe-row--revealed .mobile-swipe-row__content {
+    border-top-left-radius: calc(var(--mobile-swipe-radius) - 1px);
+    border-bottom-left-radius: calc(var(--mobile-swipe-radius) - 1px);
   }
 
   .vault-sort-chevron,

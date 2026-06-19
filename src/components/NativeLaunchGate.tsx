@@ -126,7 +126,21 @@ function NativeGettingStartedScreen({
 }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [activePage, setActivePage] = useState(0);
+  const activePageRef = useRef(0);
+  const touchStartXRef = useRef(0);
   const isLastPage = activePage === ONBOARDING_PAGE_COUNT - 1;
+
+  useEffect(() => {
+    activePageRef.current = activePage;
+  }, [activePage]);
+
+  const scrollToPage = useCallback((index: number, behavior: ScrollBehavior = "smooth") => {
+    const el = scrollerRef.current;
+    if (!el || el.clientWidth <= 0) return;
+    const clamped = Math.min(Math.max(index, 0), ONBOARDING_PAGE_COUNT - 1);
+    el.scrollTo({ left: clamped * el.clientWidth, behavior });
+    setActivePage(clamped);
+  }, []);
 
   const syncActivePageFromScroll = useCallback(() => {
     const el = scrollerRef.current;
@@ -135,19 +149,51 @@ function NativeGettingStartedScreen({
     setActivePage(Math.min(Math.max(index, 0), ONBOARDING_PAGE_COUNT - 1));
   }, []);
 
+  const snapToNearestPage = useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el || el.clientWidth <= 0) return;
+    scrollToPage(Math.round(el.scrollLeft / el.clientWidth));
+  }, [scrollToPage]);
+
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
-    el.addEventListener("scroll", syncActivePageFromScroll, { passive: true });
-    return () => el.removeEventListener("scroll", syncActivePageFromScroll);
-  }, [syncActivePageFromScroll]);
+    let settleTimer: ReturnType<typeof setTimeout> | undefined;
+    const onScroll = () => {
+      syncActivePageFromScroll();
+      if (settleTimer) clearTimeout(settleTimer);
+      settleTimer = setTimeout(snapToNearestPage, 80);
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    el.addEventListener("scrollend", snapToNearestPage);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      el.removeEventListener("scrollend", snapToNearestPage);
+      if (settleTimer) clearTimeout(settleTimer);
+    };
+  }, [syncActivePageFromScroll, snapToNearestPage]);
 
-  function scrollToPage(index: number) {
+  const onScrollerTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    touchStartXRef.current = e.touches[0].clientX;
+    scrollToPage(activePageRef.current, "auto");
+  };
+
+  const onScrollerTouchEnd = (e: React.TouchEvent) => {
     const el = scrollerRef.current;
-    if (!el) return;
-    el.scrollTo({ left: index * el.clientWidth, behavior: "smooth" });
-    setActivePage(index);
-  }
+    if (!el || el.clientWidth <= 0) return;
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+    const dx = touch.clientX - touchStartXRef.current;
+    const threshold = Math.max(36, el.clientWidth * 0.12);
+    let page = activePageRef.current;
+    if (dx <= -threshold) {
+      page = Math.min(page + 1, ONBOARDING_PAGE_COUNT - 1);
+    } else if (dx >= threshold) {
+      page = Math.max(page - 1, 0);
+    }
+    scrollToPage(page);
+  };
 
   return (
     <div
@@ -161,11 +207,14 @@ function NativeGettingStartedScreen({
           className="native-onboard__scroller flex flex-1 min-h-0 min-w-0 overflow-x-auto overflow-y-hidden snap-x snap-mandatory"
           aria-roledescription="carousel"
           aria-label={t("launch.onboardCarouselAria")}
+          onTouchStart={onScrollerTouchStart}
+          onTouchEnd={onScrollerTouchEnd}
+          onTouchCancel={onScrollerTouchEnd}
         >
           {ONBOARDING_PAGES.map((page, index) => (
             <section
               key={page.titleKey}
-              className="native-onboard__slide flex shrink-0 snap-center flex-col bg-white min-h-full"
+              className="native-onboard__slide flex shrink-0 snap-start snap-always flex-col bg-white min-h-full"
               aria-roledescription="slide"
               aria-label={`${index + 1} / ${ONBOARDING_PAGE_COUNT}`}
             >

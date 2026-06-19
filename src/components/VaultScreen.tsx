@@ -1598,7 +1598,12 @@ function MobileSwipeEntryRow({
 
   return (
     <>
-      <div className="mobile-swipe-row relative overflow-hidden bg-white">
+      <div
+        className={[
+          "mobile-swipe-row relative overflow-hidden bg-white",
+          offset < 0 ? "mobile-swipe-row--revealed" : "",
+        ].join(" ")}
+      >
         <button
           type="button"
           className="mobile-swipe-row__delete absolute inset-y-0 right-0 flex items-center justify-center bg-red-600 text-white touch-manipulation"
