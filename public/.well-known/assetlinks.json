@@ -8,7 +8,8 @@
       "namespace": "android_app",
       "package_name": "com.skyface.mypasswordvault",
       "sha256_cert_fingerprints": [
-        "10:F8:F2:ED:05:8B:3A:D5:9D:AD:07:B5:B8:E6:25:FC:E3:16:54:55:FC:84:D8:26:7A:10:DE:60:08:12:22:3F"
+        "10:F8:F2:ED:05:8B:3A:D5:9D:AD:07:B5:B8:E6:25:FC:E3:16:54:55:FC:84:D8:26:7A:10:DE:60:08:12:22:3F",
+        "DF:4A:8D:0E:38:03:3D:4A:7A:28:71:EC:E9:9A:B6:54:24:A3:7F:13:7F:12:6D:89:A8:B0:A3:E5:6A:CC:CD:96"
       ]
     }
   }
