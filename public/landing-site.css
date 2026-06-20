@@ -784,8 +784,6 @@
       }
       .landing-store-badges {
         margin-top: 3.5rem;
-        padding-top: 2rem;
-        border-top: 1px solid var(--line);
         text-align: center;
       }
 
@@ -813,7 +811,7 @@
       .landing-store-badge img {
         display: block;
         width: auto;
-        height: 40px;
+        height: 48px;
       }
 
       footer {
