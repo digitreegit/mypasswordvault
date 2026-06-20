@@ -782,8 +782,42 @@
       .wrap a:not(.btn):not(.logo):hover {
         text-decoration: underline;
       }
+      .landing-store-badges {
+        margin-top: 3.5rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--line);
+        text-align: center;
+      }
+
+      .landing-store-badges-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.85rem 1rem;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .landing-store-badge {
+        display: inline-flex;
+        line-height: 0;
+        border-radius: 6px;
+        transition: transform 0.15s ease, opacity 0.15s ease;
+      }
+
+      .landing-store-badge:hover {
+        transform: translateY(-1px);
+        opacity: 0.92;
+        text-decoration: none;
+      }
+
+      .landing-store-badge img {
+        display: block;
+        width: auto;
+        height: 40px;
+      }
+
       footer {
-        margin-top: 4rem;
+        margin-top: 2rem;
         padding-top: 2rem;
         border-top: 1px solid var(--line);
         text-align: center;

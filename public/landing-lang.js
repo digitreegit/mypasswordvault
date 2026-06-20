@@ -255,6 +255,8 @@
     footerPrivacy: "Privacy Policy",
     footerTerms: "Terms of Use",
     footerCopy: "©{{year}} Skyface, LLC. All rights reserved.",
+    storeBadgeAppStore: "Download on the App Store",
+    storeBadgeGooglePlay: "Get it on Google Play",
   };
 
   var KO = {
@@ -402,6 +404,8 @@
     footerPrivacy: "개인정보 처리방침",
     footerTerms: "이용약관",
     footerCopy: "©{{year}} Skyface, LLC. All rights reserved.",
+    storeBadgeAppStore: "App Store에서 다운로드",
+    storeBadgeGooglePlay: "Google Play에서 받기",
   };
 
   var OVERLAYS = Object.assign(
