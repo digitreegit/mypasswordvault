@@ -240,8 +240,8 @@ const storeBadges = `      <section class="landing-store-badges" aria-label="Dow
             <img
               src="./images/store-badge-app-store.png"
               alt=""
-              width="144"
-              height="48"
+              width="132"
+              height="44"
               loading="lazy"
               decoding="async"
             />
@@ -257,8 +257,8 @@ const storeBadges = `      <section class="landing-store-badges" aria-label="Dow
             <img
               src="./images/store-badge-google-play.png"
               alt=""
-              width="162"
-              height="48"
+              width="148"
+              height="44"
               loading="lazy"
               decoding="async"
             />
