@@ -24,13 +24,19 @@ function LegendItem({
   colorClass,
   label,
   value,
+  muted = false,
 }: {
   colorClass: string;
   label: string;
   value: number;
+  muted?: boolean;
 }) {
   return (
-    <div className="inline-flex items-center gap-1.5 text-xs text-ink-700">
+    <div
+      className={`inline-flex items-center gap-1.5 text-xs ${
+        muted ? "text-ink-400" : "text-ink-700"
+      }`}
+    >
       <span
         className={`h-2.5 w-2.5 shrink-0 rounded-full ${colorClass}`}
         aria-hidden
@@ -171,6 +177,8 @@ export function AdminSalesBarChart({
   );
 }
 
+const UNKNOWN_REGION_COLOR = "bg-ink-300";
+
 const REGION_SEGMENT_COLORS = [
   "bg-amber-500",
   "bg-orange-500",
@@ -205,16 +213,20 @@ export function AdminRegionBarChart({
 }) {
   const total = items.reduce((sum, item) => sum + item.count, 0);
 
-  const segments = useMemo<Segment[]>(
-    () =>
-      items.map((item, index) => ({
-        key: item.country,
-        label: labelForCountry(item.country),
-        value: item.count,
-        colorClass: REGION_SEGMENT_COLORS[index % REGION_SEGMENT_COLORS.length],
-      })),
-    [items, labelForCountry],
-  );
+  const segments = useMemo<Segment[]>(() => {
+    let colorIndex = 0;
+    return items.map((item) => ({
+      key: item.country,
+      label: labelForCountry(item.country),
+      value: item.count,
+      colorClass:
+        item.country === "unknown"
+          ? UNKNOWN_REGION_COLOR
+          : REGION_SEGMENT_COLORS[
+              colorIndex++ % REGION_SEGMENT_COLORS.length
+            ],
+    }));
+  }, [items, labelForCountry]);
 
   if (items.length === 0) return null;
 
@@ -253,6 +265,7 @@ export function AdminRegionBarChart({
             colorClass={seg.colorClass}
             label={seg.label}
             value={seg.value}
+            muted={seg.key === "unknown"}
           />
         ))}
       </div>
