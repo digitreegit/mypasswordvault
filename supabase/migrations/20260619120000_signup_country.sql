@@ -1,16 +1,8 @@
--- Run in Supabase SQL Editor if migrations are applied manually.
--- signup_platform (20260618120000) + signup_country (20260619120000).
-
-alter table public.user_entitlements
-  add column if not exists signup_platform text
-    check (signup_platform is null or signup_platform in ('web', 'ios', 'android'));
+-- Track signup region (ISO 3166-1 alpha-2) separately from purchase_country.
 
 alter table public.user_entitlements
   add column if not exists signup_country text
     check (signup_country is null or signup_country ~ '^[A-Z]{2}$');
-
-comment on column public.user_entitlements.signup_platform is
-  'Client-reported platform at first sign-in (web, ios, android). Distinct from purchase_platform.';
 
 comment on column public.user_entitlements.signup_country is
   'Client-reported ISO 3166-1 alpha-2 region at first sign-in. Distinct from purchase_country.';

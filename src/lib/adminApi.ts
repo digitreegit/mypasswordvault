@@ -11,6 +11,7 @@ export type AdminStats = {
   open_complaints: number;
   sales_by_platform: { web: number; ios: number; android: number };
   sales_by_country: { country: string; count: number }[];
+  signups_by_country: { country: string; count: number }[];
 };
 
 export type PurchasePlatform = "web" | "ios" | "android";

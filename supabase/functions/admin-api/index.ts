@@ -437,6 +437,33 @@ async function fetchPurchaseBreakdownStats(
   return { sales_by_platform: platform, sales_by_country };
 }
 
+async function fetchSignupByCountryStats(
+  admin: ReturnType<typeof createClient>,
+): Promise<{ country: string; count: number }[]> {
+  const { data, error } = await admin
+    .from("user_entitlements")
+    .select("signup_country");
+
+  if (error) {
+    if (!isSchemaGap(error)) {
+      console.error("admin stats signup country", error);
+    }
+    return [];
+  }
+
+  const countryMap = new Map<string, number>();
+  for (const row of (data ?? []) as { signup_country: string | null }[]) {
+    const country =
+      normalizePurchaseCountry(row.signup_country) ?? "unknown";
+    countryMap.set(country, (countryMap.get(country) ?? 0) + 1);
+  }
+
+  return Array.from(countryMap.entries())
+    .map(([country, count]) => ({ country, count }))
+    .sort((a, b) => b.count - a.count || a.country.localeCompare(b.country))
+    .slice(0, 16);
+}
+
 async function fetchDashboardStats(admin: ReturnType<typeof createClient>) {
   const since = utcDayStartIso();
 
@@ -531,6 +558,7 @@ async function fetchDashboardStats(admin: ReturnType<typeof createClient>) {
   }
 
   const breakdown = await fetchPurchaseBreakdownStats(admin);
+  const signups_by_country = await fetchSignupByCountryStats(admin);
 
   return {
     stats: {
@@ -544,6 +572,7 @@ async function fetchDashboardStats(admin: ReturnType<typeof createClient>) {
       open_complaints,
       sales_by_platform: breakdown.sales_by_platform,
       sales_by_country: breakdown.sales_by_country,
+      signups_by_country,
     },
   };
 }

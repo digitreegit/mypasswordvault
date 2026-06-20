@@ -194,11 +194,13 @@ export function AdminRegionBarChart({
   items,
   title,
   labelForCountry,
+  summaryKey = "admin.chartRegionSummary",
   t,
 }: {
   items: { country: string; count: number }[];
   title: string;
   labelForCountry: (country: string) => string;
+  summaryKey?: string;
   t: TFn;
 }) {
   const total = items.reduce((sum, item) => sum + item.count, 0);
@@ -229,7 +231,7 @@ export function AdminRegionBarChart({
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h2 className="text-sm font-semibold text-ink-900">{title}</h2>
         <p className="text-sm text-ink-600 tabular-nums">
-          {t("admin.chartRegionSummary", {
+          {t(summaryKey, {
             total,
             regions: items.length,
           })}

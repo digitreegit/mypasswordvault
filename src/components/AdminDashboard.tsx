@@ -55,6 +55,7 @@ const EMPTY_STATS: AdminStats = {
   open_complaints: 0,
   sales_by_platform: { web: 0, ios: 0, android: 0 },
   sales_by_country: [],
+  signups_by_country: [],
 };
 
 function normalizeAdminStats(raw: Partial<AdminStats>): AdminStats {
@@ -66,7 +67,17 @@ function normalizeAdminStats(raw: Partial<AdminStats>): AdminStats {
       ...(raw.sales_by_platform ?? {}),
     },
     sales_by_country: raw.sales_by_country ?? [],
+    signups_by_country: raw.signups_by_country ?? [],
   };
+}
+
+function signupRegionStatsForDisplay(
+  stats: AdminStats,
+): { country: string; count: number }[] {
+  if (stats.signups_by_country.length > 0) return stats.signups_by_country;
+  const total = (stats.paid_members ?? 0) + (stats.free_members ?? 0);
+  if (total <= 0) return [];
+  return [{ country: "unknown", count: total }];
 }
 
 function regionStatsForDisplay(
@@ -714,6 +725,11 @@ export function AdminDashboard() {
     [stats],
   );
 
+  const signupRegionStats = useMemo(
+    () => (stats ? signupRegionStatsForDisplay(stats) : []),
+    [stats],
+  );
+
   function openRefundModal(row: AdminCustomerRow) {
     if (!row.licenseKey || row.refunded) return;
     setRefundError(null);
@@ -993,6 +1009,15 @@ export function AdminDashboard() {
               <AdminRegionBarChart
                 title={t("admin.statsByRegion")}
                 items={regionStats}
+                labelForCountry={(country) => countryStatLabel(country, locale, t)}
+                t={t}
+              />
+            ) : null}
+            {signupRegionStats.length > 0 ? (
+              <AdminRegionBarChart
+                title={t("admin.statsByRegionSignups")}
+                summaryKey="admin.chartSignupRegionSummary"
+                items={signupRegionStats}
                 labelForCountry={(country) => countryStatLabel(country, locale, t)}
                 t={t}
               />
