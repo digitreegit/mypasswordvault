@@ -95,10 +95,12 @@ export function AdminSalesBarChart({
   stats,
   t,
   formatMoney,
+  variant = "card",
 }: {
   stats: AdminStats;
   t: TFn;
   formatMoney: (cents: number | null, currency: string) => string;
+  variant?: "card" | "embedded";
 }) {
   const total = stats.sales_total ?? 0;
   const platform = stats.sales_by_platform ?? { web: 0, ios: 0, android: 0 };
@@ -131,28 +133,31 @@ export function AdminSalesBarChart({
     .map((s) => `${s.label} ${s.value}`)
     .join(", ");
 
-  return (
-    <section
-      className="rounded-xl border border-ink-200 bg-white p-4 sm:p-5 shadow-sm"
-      aria-label={t("admin.chartSalesTitle")}
-    >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="text-sm font-semibold text-ink-900">
-          {t("admin.statsSalesProTotal")}
-        </h2>
-        <p className="text-sm text-ink-600 tabular-nums">
-          {t("admin.chartSalesSummary", {
-            total,
-            amount: "",
-          }).replace(/\s*·\s*$/, "")}
-          {" · "}
-          <span className="font-medium text-emerald-600">
-            {formatMoney(stats.sales_amount_cents_total ?? 0, "usd")}
-          </span>
+  const chartBody = (
+    <>
+      {variant === "embedded" ? (
+        <p className="text-xs font-semibold text-ink-700">
+          {t("admin.statsByPlatform")}
         </p>
-      </div>
+      ) : (
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h2 className="text-sm font-semibold text-ink-900">
+            {t("admin.statsSalesProTotal")}
+          </h2>
+          <p className="text-sm text-ink-600 tabular-nums">
+            {t("admin.chartSalesSummary", {
+              total,
+              amount: "",
+            }).replace(/\s*·\s*$/, "")}
+            {" · "}
+            <span className="font-medium text-emerald-600">
+              {formatMoney(stats.sales_amount_cents_total ?? 0, "usd")}
+            </span>
+          </p>
+        </div>
+      )}
 
-      <div className="mt-3">
+      <div className={variant === "embedded" ? "mt-2" : "mt-3"}>
         <StackedStorageBar
           segments={segments}
           total={barTotal}
@@ -173,6 +178,23 @@ export function AdminSalesBarChart({
           />
         ))}
       </div>
+    </>
+  );
+
+  if (variant === "embedded") {
+    return (
+      <div className="pt-3" aria-label={t("admin.chartSalesTitle")}>
+        {chartBody}
+      </div>
+    );
+  }
+
+  return (
+    <section
+      className="rounded-xl border border-ink-200 bg-white p-4 sm:p-5 shadow-sm"
+      aria-label={t("admin.chartSalesTitle")}
+    >
+      {chartBody}
     </section>
   );
 }
@@ -204,12 +226,14 @@ export function AdminRegionBarChart({
   labelForCountry,
   summaryKey = "admin.chartRegionSummary",
   t,
+  variant = "card",
 }: {
   items: { country: string; count: number }[];
   title: string;
   labelForCountry: (country: string) => string;
   summaryKey?: string;
   t: TFn;
+  variant?: "card" | "embedded";
 }) {
   const total = items.reduce((sum, item) => sum + item.count, 0);
 
@@ -228,29 +252,40 @@ export function AdminRegionBarChart({
     }));
   }, [items, labelForCountry]);
 
-  if (items.length === 0) return null;
+  if (items.length === 0 && variant !== "embedded") return null;
 
   const ariaLabel = segments
     .filter((s) => s.value > 0)
     .map((s) => `${s.label} ${s.value}`)
     .join(", ");
 
-  return (
-    <section
-      className="rounded-xl border border-ink-200 bg-white p-4 sm:p-5 shadow-sm"
-      aria-label={title}
-    >
+  const chartBody = (
+    <>
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="text-sm font-semibold text-ink-900">{title}</h2>
-        <p className="text-sm text-ink-600 tabular-nums">
-          {t(summaryKey, {
-            total,
-            regions: items.length,
-          })}
-        </p>
+        <h2
+          className={
+            variant === "embedded"
+              ? "text-xs font-semibold text-ink-700"
+              : "text-sm font-semibold text-ink-900"
+          }
+        >
+          {title}
+        </h2>
+        {items.length > 0 ? (
+          <p
+            className={`tabular-nums ${
+              variant === "embedded" ? "text-xs text-ink-500" : "text-sm text-ink-600"
+            }`}
+          >
+            {t(summaryKey, {
+              total,
+              regions: items.length,
+            })}
+          </p>
+        ) : null}
       </div>
 
-      <div className="mt-3">
+      <div className={variant === "embedded" ? "mt-2" : "mt-3"}>
         <StackedStorageBar
           segments={segments}
           total={total}
@@ -258,17 +293,42 @@ export function AdminRegionBarChart({
         />
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
-        {segments.map((seg) => (
-          <LegendItem
-            key={seg.key}
-            colorClass={seg.colorClass}
-            label={seg.label}
-            value={seg.value}
-            muted={seg.key === "unknown"}
-          />
-        ))}
+      {items.length > 0 ? (
+        <div
+          className={`flex flex-wrap gap-x-4 gap-y-2 ${
+            variant === "embedded" ? "mt-2" : "mt-3"
+          }`}
+        >
+          {segments.map((seg) => (
+            <LegendItem
+              key={seg.key}
+              colorClass={seg.colorClass}
+              label={seg.label}
+              value={seg.value}
+              muted={seg.key === "unknown"}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="mt-2 text-xs text-ink-400">{t("admin.chartSalesEmpty")}</p>
+      )}
+    </>
+  );
+
+  if (variant === "embedded") {
+    return (
+      <div className="pt-3" aria-label={title}>
+        {chartBody}
       </div>
+    );
+  }
+
+  return (
+    <section
+      className="rounded-xl border border-ink-200 bg-white p-4 sm:p-5 shadow-sm"
+      aria-label={title}
+    >
+      {chartBody}
     </section>
   );
 }

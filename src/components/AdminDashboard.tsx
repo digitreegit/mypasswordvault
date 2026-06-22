@@ -392,32 +392,70 @@ function adminErrorLabel(
   return code;
 }
 
-function StatBox({
+type AdminStatAccordionKey = "signups" | "salesToday" | "salesTotal";
+
+function AccordionStatBox({
+  panelId,
   label,
   value,
   amount,
   amountClassName = "text-emerald-600",
+  expanded,
+  onToggle,
+  children,
 }: {
+  panelId: string;
   label: string;
   value: string | number;
   amount?: string;
   amountClassName?: string;
+  expanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-ink-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-ink-500">
-        {label}
-      </p>
-      <div className="mt-2 flex items-baseline justify-between gap-3">
-        <p className="text-2xl font-semibold text-ink-900 tabular-nums">{value}</p>
-        {amount ? (
-          <p
-            className={`text-base font-medium tabular-nums shrink-0 ${amountClassName}`}
-          >
-            {amount}
-          </p>
-        ) : null}
-      </div>
+    <div className="rounded-xl border border-ink-200 bg-white shadow-sm overflow-hidden">
+      <button
+        type="button"
+        className="w-full p-4 text-left hover:bg-ink-50/60 transition-colors"
+        aria-expanded={expanded}
+        aria-controls={panelId}
+        onClick={onToggle}
+      >
+        <div className="flex items-start gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wide text-ink-500">
+              {label}
+            </p>
+            <div className="mt-2 flex items-baseline justify-between gap-3">
+              <p className="text-2xl font-semibold text-ink-900 tabular-nums">
+                {value}
+              </p>
+              {amount ? (
+                <p
+                  className={`text-base font-medium tabular-nums shrink-0 ${amountClassName}`}
+                >
+                  {amount}
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <ChevronDownIcon
+            className={`h-5 w-5 shrink-0 text-ink-400 transition-transform duration-200 ${
+              expanded ? "rotate-180" : ""
+            }`}
+            aria-hidden
+          />
+        </div>
+      </button>
+      {expanded ? (
+        <div
+          id={panelId}
+          className="px-4 pb-4 border-t border-ink-100"
+        >
+          {children}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -595,6 +633,18 @@ export function AdminDashboard() {
   const [notice, setNotice] = useState<{ title: string; message: string } | null>(
     null,
   );
+  const [expandedStats, setExpandedStats] = useState<Set<AdminStatAccordionKey>>(
+    () => new Set(),
+  );
+
+  const toggleStatAccordion = useCallback((key: AdminStatAccordionKey) => {
+    setExpandedStats((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
 
   useEffect(() => subscribeLocaleChanged(setLocale), []);
 
@@ -987,41 +1037,54 @@ export function AdminDashboard() {
         ) : null}
 
         {stats ? (
-          <div className="space-y-3 sm:space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-              <StatBox
-                label={t("admin.statsFreeSignupsToday")}
-                value={stats.free_signups_today}
-              />
-              <StatBox
-                label={t("admin.statsSalesProToday")}
-                value={stats.sales_today}
-                amount={formatMoney(stats.sales_amount_cents_today, "usd")}
-              />
-              <StatBox
-                label={t("admin.statsSalesProTotal")}
-                value={stats.sales_total ?? 0}
-                amount={formatMoney(stats.sales_amount_cents_total ?? 0, "usd")}
-              />
-            </div>
-            <AdminSalesBarChart stats={stats} t={t} formatMoney={formatMoney} />
-            {regionStats.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <AccordionStatBox
+              panelId="admin-stat-signups"
+              label={t("admin.statsFreeSignupsToday")}
+              value={stats.free_signups_today}
+              expanded={expandedStats.has("signups")}
+              onToggle={() => toggleStatAccordion("signups")}
+            >
               <AdminRegionBarChart
-                title={t("admin.statsByRegion")}
-                items={regionStats}
-                labelForCountry={(country) => countryStatLabel(country, locale, t)}
-                t={t}
-              />
-            ) : null}
-            {signupRegionStats.length > 0 ? (
-              <AdminRegionBarChart
+                variant="embedded"
                 title={t("admin.statsByRegionSignups")}
                 summaryKey="admin.chartSignupRegionSummary"
                 items={signupRegionStats}
                 labelForCountry={(country) => countryStatLabel(country, locale, t)}
                 t={t}
               />
-            ) : null}
+            </AccordionStatBox>
+            <AccordionStatBox
+              panelId="admin-stat-sales-today"
+              label={t("admin.statsSalesProToday")}
+              value={stats.sales_today}
+              amount={formatMoney(stats.sales_amount_cents_today, "usd")}
+              expanded={expandedStats.has("salesToday")}
+              onToggle={() => toggleStatAccordion("salesToday")}
+            >
+              <AdminRegionBarChart
+                variant="embedded"
+                title={t("admin.statsByRegion")}
+                items={regionStats}
+                labelForCountry={(country) => countryStatLabel(country, locale, t)}
+                t={t}
+              />
+            </AccordionStatBox>
+            <AccordionStatBox
+              panelId="admin-stat-sales-total"
+              label={t("admin.statsSalesProTotal")}
+              value={stats.sales_total ?? 0}
+              amount={formatMoney(stats.sales_amount_cents_total ?? 0, "usd")}
+              expanded={expandedStats.has("salesTotal")}
+              onToggle={() => toggleStatAccordion("salesTotal")}
+            >
+              <AdminSalesBarChart
+                variant="embedded"
+                stats={stats}
+                t={t}
+                formatMoney={formatMoney}
+              />
+            </AccordionStatBox>
           </div>
         ) : null}
 

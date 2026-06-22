@@ -701,6 +701,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "admin.chartSalesSummary": "{{total}}건 · {{amount}}",
   "admin.chartSalesEmpty": "PRO 판매 없음",
   "admin.chartPlatformLegend": "플랫폼 색상",
+  "admin.statsByPlatform": "플랫폼별 판매",
   "admin.chartRegionSummary": "{{total}}건 · {{regions}}개 지역",
   "admin.chartSignupRegionSummary": "가입 {{total}}건 · {{regions}}개 지역",
   "admin.statsByRegion": "지역별 PRO 판매",

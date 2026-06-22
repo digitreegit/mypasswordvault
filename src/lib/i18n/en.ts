@@ -716,6 +716,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "admin.chartSalesSummary": "{{total}} sales · {{amount}}",
   "admin.chartSalesEmpty": "No PRO sales yet",
   "admin.chartPlatformLegend": "Platform colors",
+  "admin.statsByPlatform": "Sales by platform",
   "admin.chartRegionSummary": "{{total}} sales · {{regions}} regions",
   "admin.chartSignupRegionSummary": "{{total}} sign-ups · {{regions}} regions",
   "admin.statsByRegion": "PRO sales by region",
