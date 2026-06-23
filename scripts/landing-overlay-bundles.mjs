@@ -5,7 +5,7 @@ export default {
     metaDescription:
       "AES-GCM-256 加密、TOTP 两步验证、通行密钥与表格化编辑的密码管理器。主密码不离开您的设备。Web、iOS 与 Android 可选仅密文云同步。",
     metaKeywords:
-      "密码管理器, 加密密码库, 本地优先, TOTP 两步验证, 通行密钥, 零知识同步, 表格密码管理, 密码生成器, Skyface",
+      "密码管理器, 加密密码库, 本地优先, TOTP 两步验证, 通行密钥, 加密同步, 表格密码管理, 密码生成器, Skyface",
     metaTitleFaq: "常见问题 — My Password Vault 密码管理器",
     metaDescriptionFaq:
       "My Password Vault 安全性、AES-GCM-256 加密、主密码、通行密钥、TOTP 两步验证、加密云同步、备份、定价与支持的相关解答。",
@@ -30,7 +30,7 @@ export default {
     heroH1Line1: "密码由您掌控。",
     heroH1Line2: "清晰可感的安全。",
     heroLead_html:
-      "这是一款本地优先的保险库，却像表格一样好用：快捷编辑、分类、一键复制，敏感数据始终在设备侧加密。可选同步只把<strong>密文</strong>放进您的数据库；主密码永远不离开您的手。",
+      "这是一款本地优先的保险库，却像表格一样好用：快捷编辑、分类、一键复制，敏感数据始终在设备侧加密。可选同步只把<strong>密文</strong>放进您的数据库；主密码不会发送到我们的服务器。",
     ctaGettingStarted: "快速上手",
     featTitle: "为流畅打造的体验",
     featDesc:
@@ -85,9 +85,9 @@ export default {
     gsStep4Span: "填写网站、密码、分类；需要时再开启同步。",
     faqTitle: "常见问题",
     faqDesc: "关于信任、日常使用、验证器、备份、价格与联系方式的简要说明。",
-    faq1_sum: "我能信任它吗？数据安全吗？",
+    faq1_sum: "My Password Vault 如何保护我的数据？",
     faq1_html:
-      "密码在离开设备前就被加密，服务器只能看到密文；主密码与明文秘密不会以可读形式脱离你的掌控。Google 登录仅用于把加密保险箱绑定到你的账户。",
+      "您的条目在同步前已在设备上加密，因此服务器存储的是密文而非可读密码，并且您的主密码不会发送给我们。Google 或邮箱登录仅用于把加密保险库绑定到您的账户。没有任何软件能承诺绝对的安全，因此强主密码和良好的设备使用习惯在您这一侧同样重要。",
     faq2_sum: "我每天要怎么用？真的简单吗？",
     faq2_html:
       "使用 Google 登录，选择强主密码，扫描一次二维码完成双因素设置，然后解锁即可添加或搜索条目。自动上锁在你暂离时关门；在其它浏览器或手机上登录即可拉取同步。",
@@ -143,7 +143,7 @@ export default {
     metaDescription:
       "AES-GCM-256 暗号化、TOTP 二要素認証、パスキー、表計算のような編集ができるパスワード管理。マスターパスワードは端末から出ません。Web・iOS・Android で任意の暗号文のみ同期。",
     metaKeywords:
-      "パスワード管理, 暗号化パスワード保管, ローカル優先, TOTP 二要素認証, パスキー, ゼロ知識同期, 表計算型パスワード管理, パスワード生成, Skyface",
+      "パスワード管理, 暗号化パスワード保管, ローカル優先, TOTP 二要素認証, パスキー, 暗号化同期, 表計算型パスワード管理, パスワード生成, Skyface",
     metaTitleFaq: "よくある質問 — My Password Vault",
     metaDescriptionFaq:
       "My Password Vault のセキュリティ、AES-GCM-256 暗号化、マスターパスワード、パスキー、TOTP 二要素認証、暗号化クラウド同期、バックアップ、料金、サポートに関する回答。",
@@ -168,7 +168,7 @@ export default {
     heroH1Line1: "自分で握るパスワード。",
     heroH1Line2: "納得感のある運用を。",
     heroLead_html:
-      "ローカル優先の金庫を、まるで表のように扱えます——素早い編集、カテゴリ、ワンタップコピー。秘密はデバイス上で暗号化されたまま。任意の同期はデータベースに<strong>暗号文だけ</strong>を置き、マスターパスワードはあなたの手から離れません。",
+      "ローカル優先の金庫を、まるで表のように扱えます——素早い編集、カテゴリ、ワンタップコピー。秘密はデバイス上で暗号化されたまま。任意の同期はデータベースに<strong>暗号文だけ</strong>を置き、マスターパスワードが当社のサーバーに送信されることはありません。",
     ctaGettingStarted: "はじめに",
     featTitle: "作業の流れに合わせた設計",
     featDesc:
@@ -225,9 +225,9 @@ export default {
     faqTitle: "よくある質問",
     faqDesc:
       "信頼性、日常的な使い方、認証アプリ、バックアップ、料金、問い合わせ先への短い回答です。",
-    faq1_sum: "このアプリを信用して大丈夫？データは安全？",
+    faq1_sum: "My Password Vault はどのようにデータを保護しますか？",
     faq1_html:
-      "同期の前に端末側でパスワードが暗号化されます。サーバーが見られるのは暗号文だけであり、マスターパスワードや平文の秘密が読める形で管理外へ出ることはありません。Google サインインは暗号化された金庫をあなたのアカウントへ紐づけるだけに使います。",
+      "項目は同期の前に端末で暗号化されるため、サーバーには読めるパスワードではなく暗号文が保存され、マスターパスワードが当社へ送信されることはありません。Google またはメールのサインインは、暗号化された金庫をアカウントに紐づけるためだけに使われます。完全な安全を約束できるソフトウェアはありません。強力なマスターパスワードと適切な端末管理は、利用者側でも重要です。",
     faq2_sum: "毎日の使い勝手は？本当に簡単？",
     faq2_html:
       "Google でサインインし強いマスターパスを決めて、QR で二要素認証を設定すれば済みです。解除後はエントリの追加／検索。自動ロックは席を離したとき安心。別ブラウザやスマホでサインインすれば変更が追随します。",
@@ -286,7 +286,7 @@ export default {
     metaDescription:
       "Passwort-Manager mit AES-GCM-256, TOTP-2FA, Passkeys und Tabellen-Editing. Ihr Master-Passwort verlässt nie Ihr Gerät. Optionale Sync nur mit Ciphertext für Web, iOS und Android.",
     metaKeywords:
-      "Passwort-Manager, verschlüsselter Tresor, lokal-first, TOTP 2FA, Passkey, Zero-Knowledge-Sync, Tabellen-Passwort-Manager, Passwort-Generator, Skyface",
+      "Passwort-Manager, verschlüsselter Tresor, lokal-first, TOTP 2FA, Passkey, verschlüsselte Sync, Tabellen-Passwort-Manager, Passwort-Generator, Skyface",
     metaTitleFaq: "FAQ — My Password Vault Passwort-Manager",
     metaDescriptionFaq:
       "Antworten zu My Password Vault: Sicherheit, AES-GCM-256-Verschlüsselung, Master-Passwort, Passkeys, TOTP-2FA, verschlüsselte Cloud-Sync, Backups, Preise und Support.",
@@ -311,7 +311,7 @@ export default {
     heroH1Line1: "Passwörter unter Ihrer Kontrolle.",
     heroH1Line2: "Klarheit, die Sie spüren.",
     heroLead_html:
-      "Ein lokal gedachter Tresor, der sich wie eine Tabelle anfühlt — schnelle Bearbeitung, Kategorien und Kopieren mit einem Tipp — während Geheimnisse auf dem Gerät verschlüsselt bleiben. Optionale Synchronisation speichert in Ihrer Datenbank nur <strong>verschlüsselte Daten</strong>; Ihr Hauptpasswort verlässt nie Ihre Hand.",
+      "Ein lokal gedachter Tresor, der sich wie eine Tabelle anfühlt — schnelle Bearbeitung, Kategorien und Kopieren mit einem Tipp — während Geheimnisse auf dem Gerät verschlüsselt bleiben. Optionale Synchronisation speichert in Ihrer Datenbank nur <strong>verschlüsselte Daten</strong>; Ihr Hauptpasswort wird nie an unsere Server gesendet.",
     ctaGettingStarted: "Erste Schritte",
     featTitle: "Für flüssige Arbeit gebaut",
     featDesc:
@@ -368,9 +368,9 @@ export default {
     faqTitle: "Häufige Fragen",
     faqDesc:
       "Kurze Antworten zu Vertrauen, Alltag, Authenticator-Apps, Backups, Preisen und Kontakt.",
-    faq1_sum: "Kann ich der App vertrauen? Sind meine Daten sicher?",
+    faq1_sum: "Wie schützt My Password Vault meine Daten?",
     faq1_html:
-      "Passwörter werden auf Ihrem Gerät verschlüsselt vor jeder Sync. Server sehen nur Chiffretext; Hauptpasswort und Klartextgeheimnisse verlassen Ihre Kontrolle nicht lesbar. Google verknüpft nur das verschlüsselte Vault mit Ihrem Konto.",
+      "Ihre Einträge werden auf Ihrem Gerät verschlüsselt, bevor etwas synchronisiert wird. Daher speichern die Server Chiffretext statt lesbarer Passwörter, und Ihr Hauptpasswort wird nicht an uns gesendet. Die Anmeldung per Google oder E-Mail dient nur dazu, den verschlüsselten Tresor mit Ihrem Konto zu verknüpfen. Keine Software kann perfekte Sicherheit versprechen; ein starkes Hauptpasswort und ein sorgsamer Umgang mit dem Gerät bleiben auf Ihrer Seite wichtig.",
     faq2_sum: "Wie nutze ich es täglich?",
     faq2_html:
       "Mit Google anmelden, starkes Hauptpasswort wählen, QR für Zwei-Faktor scannen, entsperren und Einträge anlegen oder suchen. Auto-Lock bei Abwesenheit; Sync auf anderen Geräten.",
@@ -429,7 +429,7 @@ export default {
     metaDescription:
       "Gestionnaire avec chiffrement AES-GCM-256, 2FA TOTP, passkeys et édition type tableur. Le mot de passe maître ne quitte jamais votre appareil. Sync optionnelle en texte chiffré sur web, iOS et Android.",
     metaKeywords:
-      "gestionnaire de mots de passe, coffre chiffré, local-first, 2FA TOTP, passkey, sync zero-knowledge, gestionnaire type tableur, générateur de mots de passe, Skyface",
+      "gestionnaire de mots de passe, coffre chiffré, local-first, 2FA TOTP, passkey, sync chiffrée, gestionnaire type tableur, générateur de mots de passe, Skyface",
     metaTitleFaq: "FAQ — My Password Vault",
     metaDescriptionFaq:
       "Réponses sur la sécurité My Password Vault, chiffrement AES-GCM-256, mot de passe maître, passkeys, 2FA TOTP, sync cloud chiffrée, sauvegardes, tarifs et support.",
@@ -454,7 +454,7 @@ export default {
     heroH1Line1: "Des mots de passe que vous maîtrisez.",
     heroH1Line2: "Une clarté tangible.",
     heroLead_html:
-      "Un coffre local qui se comporte comme un tableur — édition rapide, catégories, copie en un geste — pendant que vos secrets restent chiffrés sur l’appareil. La synchro optionnelle ne stocke que du <strong>texte chiffré</strong> dans votre base ; le mot de passe principal ne quitte jamais votre main.",
+      "Un coffre local qui se comporte comme un tableur — édition rapide, catégories, copie en un geste — pendant que vos secrets restent chiffrés sur l’appareil. La synchro optionnelle ne stocke que du <strong>texte chiffré</strong> dans votre base ; le mot de passe principal n’est jamais envoyé à nos serveurs.",
     ctaGettingStarted: "Pour commencer",
     featTitle: "Pensé pour le flux",
     featDesc:
@@ -513,9 +513,9 @@ export default {
     faqTitle: "Questions courantes",
     faqDesc:
       "Confiance, usage quotidien, apps TOTP, sauvegardes, tarifs et contact.",
-    faq1_sum: "Puis-je faire confiance ? Mes données sont-elles en sécurité ?",
+    faq1_sum: "Comment My Password Vault protège-t-il mes données ?",
     faq1_html:
-      "Les mots de passe sont chiffrés localement avant toute synchro. Les serveurs voient uniquement du texte chiffré. Google relie seulement le coffre au compte.",
+      "Vos entrées sont chiffrées sur votre appareil avant toute synchronisation : les serveurs stockent donc du texte chiffré plutôt que des mots de passe lisibles, et votre mot de passe maître ne nous est pas transmis. La connexion via Google ou e-mail sert uniquement à associer le coffre chiffré à votre compte. Aucun logiciel ne peut promettre une sécurité parfaite ; un mot de passe maître robuste et de bonnes habitudes sur votre appareil restent importants de votre côté.",
     faq2_sum: "Utilisation quotidienne ? Simple ?",
     faq2_html:
       "Google, bon mot principal, QR 2FA, déverrouiller et gérer les entrées. Verrouillage auto ; synchro sur d’autres appareils.",
@@ -574,7 +574,7 @@ export default {
     metaDescription:
       "Gestore password con AES-GCM-256, 2FA TOTP, passkey e modifica stile foglio di calcolo. La master password non lascia mai il dispositivo. Sync opzionale solo ciphertext su web, iOS e Android.",
     metaKeywords:
-      "gestore password, cassaforte cifrata, local-first, 2FA TOTP, passkey, sync zero-knowledge, gestore tipo foglio, generatore password, Skyface",
+      "gestore password, cassaforte cifrata, local-first, 2FA TOTP, passkey, sync cifrata, gestore tipo foglio, generatore password, Skyface",
     metaTitleFaq: "FAQ — My Password Vault",
     metaDescriptionFaq:
       "Risposte su sicurezza My Password Vault, cifratura AES-GCM-256, master password, passkey, 2FA TOTP, sync cloud cifrata, backup, prezzi e supporto.",
@@ -599,7 +599,7 @@ export default {
     heroH1Line1: "Password sotto il tuo controllo.",
     heroH1Line2: "Chiarezza che si sente.",
     heroLead_html:
-      "Un vault priorità locale che si usa come una tabella — modifiche rapide, cartelle e copia al tocco mentre i segreti restano cifrati sul dispositivo. La sync opzionale salva nel database solo <strong>testo cifrato</strong>; la password principale non lascia le tue mani.",
+      "Un vault priorità locale che si usa come una tabella — modifiche rapide, cartelle e copia al tocco mentre i segreti restano cifrati sul dispositivo. La sync opzionale salva nel database solo <strong>testo cifrato</strong>; la password principale non viene mai inviata ai nostri server.",
     ctaGettingStarted: "Per iniziare",
     featTitle: "Costruito per scorrere",
     featDesc:
@@ -659,9 +659,9 @@ export default {
     faqTitle: "Domande frequenti",
     faqDesc:
       "Breve sintesi di fiducia, uso quotidiano, authenticator app, backup, pricing e dove scriverci.",
-    faq1_sum: "Posso fidarmi? I dati sono al sicuro?",
+    faq1_sum: "Come protegge i miei dati My Password Vault?",
     faq1_html:
-      "Le password vengono cifrate sul dispositivo prima di qualsiasi sincronizzazione. I server ricevono soltanto ciphertext: master password e segreti in chiaro non lasciano il tuo controllo in modo leggibile. Google serve unicamente per legare il vault cifrato al tuo account.",
+      "Le tue voci vengono cifrate sul dispositivo prima di qualsiasi sincronizzazione, quindi i server memorizzano testo cifrato anziché password leggibili e la tua master password non viene inviata a noi. L'accesso con Google o e-mail serve solo a collegare il vault cifrato al tuo account. Nessun software può promettere una sicurezza perfetta: una master password robusta e una buona cura del dispositivo restano importanti dalla tua parte.",
     faq2_sum: "Come lo uso giorno dopo giorno? Resta chiaro?",
     faq2_html:
       "Entra con Google, imposta una master password forte, scannerizza una volta il QR della 2FA, sblocca e aggiungi o cerca voce dopo voce. L’auto-blocco chiude il vault mentre ti assenti brevemente; accedendo da un altro browser o telefono la sync riallinea gli aggiornamenti.",
@@ -720,7 +720,7 @@ export default {
     metaDescription:
       "Pengelola kata sandi dengan AES-GCM-256, TOTP 2FA, passkey, dan edit seperti spreadsheet. Kata sandi utama tidak pernah meninggalkan perangkat. Sinkron opsional hanya ciphertext di web, iOS, dan Android.",
     metaKeywords:
-      "pengelola kata sandi, brankas terenkripsi, lokal-first, TOTP 2FA, passkey, sync zero-knowledge, pengelola spreadsheet, generator kata sandi, Skyface",
+      "pengelola kata sandi, brankas terenkripsi, lokal-first, TOTP 2FA, passkey, sinkronisasi terenkripsi, pengelola spreadsheet, generator kata sandi, Skyface",
     metaTitleFaq: "FAQ — My Password Vault",
     metaDescriptionFaq:
       "Jawaban tentang keamanan My Password Vault, enkripsi AES-GCM-256, kata sandi utama, passkey, TOTP 2FA, sinkron cloud terenkripsi, cadangan, harga, dan dukungan.",
@@ -745,7 +745,7 @@ export default {
     heroH1Line1: "Kata sandi di tangan Anda.",
     heroH1Line2: "Kejelasan yang terasa nyata.",
     heroLead_html:
-      "Brankas lokal yang berjalan seperti spreadsheet — edit cepat, kategori, salin sekali ketuk — rahasia tetap terenkripsi di perangkat. Sinkron opsional hanya menyimpan <strong>teks terenkripsi</strong> di basis data; kata sandi utama tidak pernah meninggalkan kendali Anda.",
+      "Brankas lokal yang berjalan seperti spreadsheet — edit cepat, kategori, salin sekali ketuk — rahasia tetap terenkripsi di perangkat. Sinkron opsional hanya menyimpan <strong>teks terenkripsi</strong> di basis data; kata sandi utama tidak pernah dikirim ke server kami.",
     ctaGettingStarted: "Memulai",
     featTitle: "Dibuat untuk alur lancar",
     featDesc:
@@ -805,9 +805,9 @@ export default {
     faqTitle: "Pertanyaan umum",
     faqDesc:
       "Kepercayaan, pemakaian harian, aplikasi autentikator, cadangan, harga, kontak.",
-    faq1_sum: "Apakah aman?",
+    faq1_sum: "Bagaimana My Password Vault melindungi data saya?",
     faq1_html:
-      "Kata sandi dienkripsi di perangkat sebelum sync. Server hanya melihat ciphertext. Google hanya menautkan brankas terenkripsi ke akun.",
+      "Entri Anda dienkripsi di perangkat sebelum disinkronkan, sehingga server menyimpan teks terenkripsi alih-alih kata sandi yang terbaca, dan kata sandi utama Anda tidak dikirim ke kami. Masuk dengan Google atau email hanya untuk mengaitkan brankas terenkripsi ke akun Anda. Tidak ada perangkat lunak yang dapat menjamin keamanan sempurna, jadi kata sandi utama yang kuat dan kebiasaan perangkat yang baik tetap penting di sisi Anda.",
     faq2_sum: "Apakah mudah dipakai tiap hari?",
     faq2_html:
       "Masuk Google, kata sandi utama kuat, QR 2FA, buka brankas, tambah/cari entri. Kunci otomatis; sinkron di perangkat lain.",
