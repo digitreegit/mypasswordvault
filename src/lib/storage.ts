@@ -58,8 +58,14 @@ export interface VaultMeta {
   totpLabel: string;
   // app settings
   autoLockMinutes: number;
-  /** Optional folder labels for entries (`VaultEntry.categoryId`). */
+  /**
+   * Optional folder labels for entries (`VaultEntry.categoryId`).
+   * In-memory (after unlock) this holds plaintext names; at rest / in the cloud
+   * snapshot the names are encrypted into `categoriesEnc` instead.
+   */
   categories?: VaultCategory[];
+  /** AES-GCM blob (base64) of the categories array — encrypted-at-rest form. */
+  categoriesEnc?: string;
   /** UI language (plaintext; not secret). */
   locale?: Locale;
   /** Supabase user id that owns this vault snapshot (cloud sync + account switch). */
@@ -70,17 +76,24 @@ export interface VaultMeta {
 
 export interface VaultEntry {
   id: string;
-  /** References `VaultMeta.categories[].id`; empty = uncategorized. */
-  categoryId: string;
-  site: string;
-  url: string;
-  username: string;
-  // base64 (AES-GCM) encrypted password
-  passwordEnc: string;
-  notes: string;
-  /** Long-form notes; shown in expanded accordion (distinct from short `notes`). */
-  memo: string;
   updatedAt: number;
+  /**
+   * New format: AES-GCM blob (base64) of the full secret payload
+   * (categoryId, site, url, username, password, notes, memo). When present,
+   * the legacy plaintext fields below are unused.
+   */
+  enc?: string;
+  // ---- Legacy plaintext format (read-only fallback until migrated) ----
+  /** References `VaultMeta.categories[].id`; empty = uncategorized. */
+  categoryId?: string;
+  site?: string;
+  url?: string;
+  username?: string;
+  /** base64 (AES-GCM) encrypted password (legacy: only this field was encrypted). */
+  passwordEnc?: string;
+  notes?: string;
+  /** Long-form notes; shown in expanded accordion (distinct from short `notes`). */
+  memo?: string;
 }
 
 let _db: IDBPDatabase | null = null;

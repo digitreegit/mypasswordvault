@@ -111,9 +111,9 @@
   var EN = {
     metaTitle: "My Password Vault — Local-First Encrypted Password Manager",
     metaDescription:
-      "Password manager with AES-GCM-256 encryption, TOTP 2FA, passkeys, and spreadsheet-simple editing. Your master password never leaves your device. Optional zero-knowledge sync on web, iOS & Android.",
+      "Password manager with AES-GCM-256 encryption, TOTP 2FA, passkeys, and spreadsheet-simple editing. Your master password is not sent to our servers. Optional encrypted, ciphertext-only sync on web, iOS & Android.",
     metaKeywords:
-      "password manager, encrypted password vault, local-first password manager, TOTP 2FA, passkey login, zero-knowledge sync, spreadsheet password manager, password generator, Skyface",
+      "password manager, encrypted password vault, local-first password manager, TOTP 2FA, passkey login, encrypted sync, spreadsheet password manager, password generator, Skyface",
     metaTitleFaq: "FAQ — My Password Vault Password Manager",
     metaDescriptionFaq:
       "Answers about My Password Vault security, AES-GCM-256 encryption, master password, passkeys, TOTP 2FA, encrypted cloud sync, backups, pricing, and support.",
@@ -142,7 +142,7 @@
     heroH1Line1: "Passwords you control.",
     heroH1Line2: "Clarity you feel.",
     heroLead_html:
-      "A local-first vault that works like a spreadsheet — fast edits, categories, one-tap copy — while\n          your secrets stay encrypted on-device. Optional sync stores <strong>only ciphertext</strong> in\n          your database; your master password never leaves your hands.",
+      "A local-first vault that works like a spreadsheet — fast edits, categories, one-tap copy — while\n          your secrets stay encrypted on-device. Optional sync stores <strong>only ciphertext</strong> in\n          your database; your master password is never sent to our servers.",
     ctaGettingStarted: "Getting started",
     featTitle: "Built for flow",
     featDesc:
@@ -222,9 +222,9 @@
     faqTitle: "Common questions",
     faqDesc:
       "Quick answers about trust, day-to-day use, passkeys, backups, pricing, and how to reach us.",
-    faq1_sum: "Can I trust this app? Is my data safe?",
+    faq1_sum: "How does My Password Vault protect my data?",
     faq1_html:
-      "Your passwords are encrypted on your device before anything is synced. Servers only ever see\n              ciphertext—your master password and plain-text secrets never leave your control in readable form.\n              Google or email sign-in is only used to tie the encrypted vault to your account.",
+      "Your entries are encrypted on your device before anything is synced, so the servers store ciphertext\n              rather than readable passwords, and your master password is not sent to us. Google or email sign-in is\n              used only to tie the encrypted vault to your account. No software can promise perfect security, so a strong\n              master password and good device hygiene remain important on your side.",
     faq2_sum: "How do I use it? Will it feel simple day to day?",
     faq2_html:
       "Sign in with Google or email, set a master password, register a passkey, then save a backup authenticator and recovery codes. Day to day, unlock with Touch ID, Face ID, or device PIN—no typing passwords or OTP codes.",
@@ -262,9 +262,9 @@
   var KO = {
     metaTitle: "My Password Vault — 로컬 우선 암호화 비밀번호 관리",
     metaDescription:
-      "AES-GCM-256 암호화, TOTP 2FA, 패스키, 스프레드시트형 편집을 갖춘 비밀번호 관리자. 마스터 비밀번호는 기기를 벗어나지 않습니다. 웹·iOS·Android에서 선택형 제로 지식 동기화.",
+      "AES-GCM-256 암호화, TOTP 2FA, 패스키, 스프레드시트형 편집을 갖춘 비밀번호 관리자. 마스터 비밀번호는 당사 서버로 전송되지 않습니다. 웹·iOS·Android에서 선택형 암호문 전용 동기화.",
     metaKeywords:
-      "비밀번호 관리자, 암호화 비밀번호 금고, 로컬 우선, TOTP 2FA, 패스키, 제로 지식 동기화, 스프레드시트형 비밀번호 관리, My Password Vault",
+      "비밀번호 관리자, 암호화 비밀번호 금고, 로컬 우선, TOTP 2FA, 패스키, 암호화 동기화, 스프레드시트형 비밀번호 관리, My Password Vault",
     metaTitleFaq: "자주 묻는 질문 — My Password Vault",
     metaDescriptionFaq:
       "My Password Vault 보안, AES-GCM-256 암호화, 마스터 비밀번호, 패스키, TOTP 2FA, 암호화 동기화, 백업, 요금, 지원에 대한 답변.",
@@ -292,7 +292,7 @@
     heroH1Line1: "통제하는 비밀번호.",
     heroH1Line2: "더 맑아지는 일상 보안.",
     heroLead_html:
-      "로컬 우선 금고를 스프레드시트처럼 씁니다. 빠른 편집, 카테고리, 원탭 복사 — 비밀은 기기 안에서만 암호화됩니다. 선택한 동기화는 데이터베이스에 <strong>암호문만</strong> 저장합니다. 마스터 비밀번호는 손안을 떠나지 않습니다.",
+      "로컬 우선 금고를 스프레드시트처럼 씁니다. 빠른 편집, 카테고리, 원탭 복사 — 비밀은 기기 안에서만 암호화됩니다. 선택한 동기화는 데이터베이스에 <strong>암호문만</strong> 저장합니다. 마스터 비밀번호는 당사 서버로 전송되지 않습니다.",
     ctaGettingStarted: "시작하기",
     featTitle: "흐름에 맞춘 설계",
     featDesc:
@@ -371,9 +371,9 @@
     faqTitle: "자주 묻는 질문",
     faqDesc:
       "신뢰, 일상적인 사용법, 패스키, 백업, 가격, 연락처에 대한 짧은 답변입니다.",
-    faq1_sum: "믿어도 되나요? 내 데이터는 안전한가요?",
+    faq1_sum: "My Password Vault는 내 데이터를 어떻게 보호하나요?",
     faq1_html:
-      "비밀번호는 동기화되기 전에 기기에서 암호화됩니다. 서버에는 암호문만 보입니다. 마스터 비밀번호와 평문 비밀은 읽히는 형태로 통제 범위를 벗어나지 않습니다. Google 또는 이메일 로그인은 암호화 금고를 계정과 연결하는 용도입니다.",
+      "항목은 동기화되기 전에 기기에서 암호화되므로 서버에는 읽을 수 있는 비밀번호가 아니라 암호문만 저장되며, 마스터 비밀번호는 당사로 전송되지 않습니다. Google 또는 이메일 로그인은 암호화 금고를 계정과 연결하는 용도로만 사용됩니다. 완벽한 보안을 보장할 수 있는 소프트웨어는 없으므로, 강력한 마스터 비밀번호와 안전한 기기 관리는 사용자 측에서도 중요합니다.",
     faq2_sum: "어떻게 쓰나요? 매일 쓰기 부담스럽지 않나요?",
     faq2_html:
       "Google 또는 이메일로 로그인 → 마스터 비밀번호 설정 → 패스키 등록 → 백업 인증 앱·복구 코드 저장. 평소에는 Face ID·Touch ID·기기 PIN으로 잠금을 해제하므로 비밀번호나 OTP 코드를 입력할 필요가 없습니다.",

@@ -138,6 +138,10 @@ async function importVaultSnapshot(
   );
   await putMeta(metaNorm);
   for (const e of entries) {
+    if (typeof e.enc === "string" && e.enc.length > 0) {
+      await putEntry({ id: e.id, updatedAt: e.updatedAt, enc: e.enc });
+      continue;
+    }
     const row: VaultEntry = {
       ...e,
       categoryId: typeof e.categoryId === "string" ? e.categoryId : "",

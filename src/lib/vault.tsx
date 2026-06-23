@@ -34,6 +34,14 @@ import {
   resolvePasskeyUserIdentity,
   syncPasskeyWebAuthnNamesToEmail,
 } from "./passkey";
+import {
+  buildEncryptedEntryRow,
+  decryptCategories,
+  decryptEntry,
+  encryptCategories,
+  isEncryptedEntry,
+  type EntrySecret,
+} from "./entryCrypto";
 import { stampVaultMetaForUser } from "./vaultOwner";
 import { resolvePasskeyKind } from "./passkeyMethods";
 import {
@@ -44,11 +52,11 @@ import {
 import { TOTP_BACKUP_ACCOUNT } from "./totp";
 import {
   deleteEntry,
-  getMeta,
+  getMeta as getMetaRaw,
   listEntries,
   newId,
   putEntry,
-  putMeta,
+  putMeta as putMetaRaw,
   type VaultCategory,
   type VaultEntry,
   type StoredPasskey,
@@ -380,6 +388,58 @@ export function VaultProvider({
     };
   }, []);
 
+  // ---- Meta storage boundary: encrypt category names at rest, decrypt on read ----
+  // `id`/`updatedAt`/`salt`/etc. stay plaintext; only folder labels are protected,
+  // matching the all-fields encryption used for entries.
+  const encryptMetaForStorage = useCallback(
+    async (m: VaultMeta, keyOverride?: CryptoKey): Promise<VaultMeta> => {
+      const key = keyOverride ?? sessionRef.current?.key;
+      if (!key) {
+        // Locked: cannot encrypt names. Preserve existing ciphertext and never
+        // persist plaintext names alongside it.
+        if (typeof m.categoriesEnc === "string") {
+          const { categories: _drop, ...rest } = m;
+          return rest;
+        }
+        return m;
+      }
+      const categoriesEnc = await encryptCategories(key, m.categories ?? []);
+      const { categories: _drop, ...rest } = m;
+      return { ...rest, categoriesEnc };
+    },
+    []
+  );
+
+  const decryptMetaFromStorage = useCallback(
+    async (m: VaultMeta, keyOverride?: CryptoKey): Promise<VaultMeta> => {
+      const key = keyOverride ?? sessionRef.current?.key;
+      if (typeof m.categoriesEnc === "string" && m.categoriesEnc.length > 0) {
+        if (!key) return { ...m, categories: [] };
+        const categories = await decryptCategories(key, m.categoriesEnc);
+        const { categoriesEnc: _drop, ...rest } = m;
+        return { ...rest, categories };
+      }
+      return m;
+    },
+    []
+  );
+
+  const writeMeta = useCallback(
+    async (m: VaultMeta, keyOverride?: CryptoKey): Promise<void> => {
+      await putMetaRaw(await encryptMetaForStorage(m, keyOverride));
+    },
+    [encryptMetaForStorage]
+  );
+
+  const readMeta = useCallback(
+    async (keyOverride?: CryptoKey): Promise<VaultMeta | undefined> => {
+      const m = await getMetaRaw();
+      if (!m) return m;
+      return decryptMetaFromStorage(m, keyOverride);
+    },
+    [decryptMetaFromStorage]
+  );
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -387,12 +447,12 @@ export function VaultProvider({
         if (userId) await reconcileCloudVault(userId, userEmail);
       } catch (e) {
         console.error("Cloud vault reconcile failed", e);
-        if (userId && (await getMeta())) {
+        if (userId && (await readMeta())) {
           markCloudSyncPending(userId);
         }
       }
       if (cancelled) return;
-      const m = await getMeta();
+      const m = await readMeta();
       if (!m) {
         setStatus("fresh");
         setMeta(null);
@@ -407,12 +467,12 @@ export function VaultProvider({
             { ...m, passkeys: syncedPasskeys, updatedAt: Date.now() },
             userId,
           );
-          await putMeta(activeMeta);
+          await writeMeta(activeMeta);
         } else if (userId) {
           const stamped = stampVaultMetaForUser(m, userId);
           if (stamped !== m) {
             activeMeta = stamped;
-            await putMeta(activeMeta);
+            await writeMeta(activeMeta);
           }
         }
         setMeta(activeMeta);
@@ -556,10 +616,10 @@ export function VaultProvider({
     setLocaleState(L);
     persistStoredLocale(L);
     notifyLocaleChanged(L);
-    const m = await getMeta();
+    const m = await readMeta();
     if (m) {
       const updated: VaultMeta = { ...m, locale: L, updatedAt: Date.now() };
-      await putMeta(updated);
+      await writeMeta(updated);
       setMeta(updated);
       await flushCloudPush();
     }
@@ -575,28 +635,42 @@ export function VaultProvider({
     const raw = await listEntries();
     const decrypted: DecryptedEntry[] = [];
     for (const e of raw) {
-      let password = "";
-      if (e.passwordEnc) {
-        try {
-          password = await decryptString(key, e.passwordEnc);
-        } catch {
-          password = "";
-        }
-      }
+      const secret = await decryptEntry(key, e);
       decrypted.push({
         id: e.id,
-        categoryId: typeof e.categoryId === "string" ? e.categoryId : "",
-        site: e.site,
-        url: e.url,
-        username: e.username,
-        password,
-        notes: e.notes,
-        memo: typeof e.memo === "string" ? e.memo : "",
+        categoryId: secret.categoryId,
+        site: secret.site,
+        url: secret.url,
+        username: secret.username,
+        password: secret.password,
+        notes: secret.notes,
+        memo: secret.memo,
         updatedAt: e.updatedAt,
       });
     }
     setEntries(decrypted);
   }, []);
+
+  /**
+   * Re-encrypt any legacy plaintext rows into the all-fields-encrypted format.
+   * One-time per device; bumps updatedAt so the encrypted copy wins LWW sync and
+   * upgrades the cloud snapshot too. Returns true if anything was migrated.
+   */
+  const migrateLegacyEntries = useCallback(
+    async (key: CryptoKey): Promise<boolean> => {
+      const raw = await listEntries();
+      let migrated = false;
+      for (const e of raw) {
+        if (isEncryptedEntry(e)) continue;
+        const secret = await decryptEntry(key, e);
+        const row = await buildEncryptedEntryRow(key, e.id, Date.now(), secret);
+        await putEntry(row);
+        migrated = true;
+      }
+      return migrated;
+    },
+    []
+  );
 
   const runCloudVaultSync = useCallback(async (): Promise<VaultSyncResult> => {
     if (!userId || !isSupabaseConfigured) return "empty";
@@ -610,7 +684,7 @@ export function VaultProvider({
 
     const result = await reconcileCloudVault(userId, userEmail);
     if (result === "remote_applied" || result === "local_pushed") {
-      const m = await getMeta();
+      const m = await readMeta();
       if (m) setMeta(m);
       const session = sessionRef.current;
       if (session) await loadEntries(session.key);
@@ -625,7 +699,7 @@ export function VaultProvider({
       return await runCloudVaultSync();
     } catch (e) {
       console.error("Cloud vault sync failed", e);
-      if (userId && (await getMeta())) {
+      if (userId && (await readMeta())) {
         markCloudSyncPending(userId);
       }
       return "error";
@@ -641,7 +715,7 @@ export function VaultProvider({
       await runCloudVaultSync();
     } catch (e) {
       console.error("Cloud vault refresh failed", e);
-      if (userId && (await getMeta())) {
+      if (userId && (await readMeta())) {
         markCloudSyncPending(userId);
       }
     } finally {
@@ -762,7 +836,7 @@ export function VaultProvider({
   const completePasskeyPrf = useCallback(
     async (credentialId: string) => {
       if (status !== "unlocked") throw new AppError("errors.locked");
-      const m = meta ?? (await getMeta());
+      const m = meta ?? (await readMeta());
       if (!m || !isAuthV2(m)) throw new AppError("errors.passkeyNoPasswordless");
       if (!m.prfSalt || !m.passkeyDataKeyWrap) {
         throw new AppError("errors.passkeyNoPasswordless");
@@ -801,7 +875,7 @@ export function VaultProvider({
         p.id === credentialId ? { ...p, prfVerified: true } : p,
       );
       const updated: VaultMeta = { ...m, passkeys: linked, updatedAt: Date.now() };
-      await putMeta(updated);
+      await writeMeta(updated);
       setMeta(updated);
       await flushCloudPush();
     },
@@ -815,7 +889,7 @@ export function VaultProvider({
       kind?: PasskeyKind;
     }) => {
       if (status !== "unlocked") throw new AppError("errors.locked");
-      const m = meta ?? (await getMeta());
+      const m = meta ?? (await readMeta());
       if (!m || !isAuthV2(m)) throw new AppError("errors.passkeyNoPasswordless");
       if (!m.prfSalt || !m.passkeyDataKeyWrap) {
         throw new AppError("errors.passkeyNoPasswordless");
@@ -861,7 +935,7 @@ export function VaultProvider({
           err.code === "errors.passkeyInvalidState" &&
           opts.hints?.includes("hybrid")
         ) {
-          const fresh = meta ?? (await getMeta());
+          const fresh = meta ?? (await readMeta());
           const orphan = fresh?.passkeys?.find(
             (p) =>
               resolvePasskeyKind(p) === "hybrid" && p.prfVerified === false,
@@ -881,7 +955,7 @@ export function VaultProvider({
         passkeyRpId: currentPasskeyRpId(),
         updatedAt: Date.now(),
       };
-      await putMeta(withPending);
+      await writeMeta(withPending);
       setMeta(withPending);
 
       let prfBytes = regPrf;
@@ -919,7 +993,7 @@ export function VaultProvider({
         passkeys: linked,
         updatedAt: Date.now(),
       };
-      await putMeta(updated);
+      await writeMeta(updated);
       setMeta(updated);
       await flushCloudPush();
     },
@@ -929,7 +1003,7 @@ export function VaultProvider({
   const removePasskey = useCallback(
     async (credentialId: string) => {
       if (status !== "unlocked") throw new AppError("errors.locked");
-      const m = meta ?? (await getMeta());
+      const m = meta ?? (await readMeta());
       if (!m || !isAuthV2(m)) throw new AppError("errors.passkeyNoPasswordless");
       const existing = m.passkeys ?? [];
       if (existing.length <= 1) {
@@ -944,7 +1018,7 @@ export function VaultProvider({
         passkeys: next,
         updatedAt: Date.now(),
       };
-      await putMeta(updated);
+      await writeMeta(updated);
       setMeta(updated);
       await flushCloudPush();
     },
@@ -978,7 +1052,7 @@ export function VaultProvider({
       if (!verifyTotp(pending, code)) {
         throw new AppError("errors.invalidOtp");
       }
-      const m = meta ?? (await getMeta());
+      const m = meta ?? (await readMeta());
       if (!m) throw new AppError("errors.notInitialized");
       const totpEnc = await encryptString(sessionRef.current.key, pending);
       const updated: VaultMeta = {
@@ -986,7 +1060,7 @@ export function VaultProvider({
         totpSecret: totpEnc,
         updatedAt: Date.now(),
       };
-      await putMeta(updated);
+      await writeMeta(updated);
       sessionRef.current.totpSecret = pending;
       settingsTotpPendingRef.current = null;
       setBackupTotpEnabled(true);
@@ -1000,7 +1074,7 @@ export function VaultProvider({
     if (status !== "unlocked" || !sessionRef.current) {
       throw new AppError("errors.locked");
     }
-    const m = meta ?? (await getMeta());
+    const m = meta ?? (await readMeta());
     if (!m) throw new AppError("errors.notInitialized");
     const recoveryCodes = generateRecoveryCodes();
     const recoveryCodeHashes = await hashRecoveryCodes(recoveryCodes);
@@ -1009,7 +1083,7 @@ export function VaultProvider({
       recoveryCodeHashes,
       updatedAt: Date.now(),
     };
-    await putMeta(updated);
+    await writeMeta(updated);
     setMeta(updated);
     await flushCloudPush();
     return { recoveryCodes };
@@ -1078,7 +1152,7 @@ export function VaultProvider({
       },
       userId,
     );
-    await putMeta(m);
+    await writeMeta(m, pending.dataKey);
     sessionRef.current = {
       key: pending.dataKey,
       totpSecret: pending.totpSecret,
@@ -1109,27 +1183,52 @@ export function VaultProvider({
           { ...m, passkeys: syncedPasskeys, updatedAt: Date.now() },
           userId,
         );
-        await putMeta(activeMeta);
+        await writeMeta(activeMeta);
       } else if (userId) {
         const stamped = stampVaultMetaForUser(m, userId);
         if (stamped !== m) {
           activeMeta = stamped;
-          await putMeta(activeMeta);
+          await writeMeta(activeMeta);
         }
       }
       sessionRef.current = { key: dataKey, totpSecret };
       setBackupTotpEnabled(totpSecret.length > 0);
-      setMeta(activeMeta);
       lastActivityRef.current = Date.now();
+      const migratedEntries = await migrateLegacyEntries(dataKey);
+      // Now that the key is available, surface plaintext category names and
+      // migrate any legacy plaintext categories to encrypted-at-rest form.
+      const needCategoryMigration = typeof activeMeta.categoriesEnc !== "string";
+      const decryptedMeta = await decryptMetaFromStorage(activeMeta, dataKey);
+      let finalMeta = decryptedMeta;
+      if (migratedEntries || needCategoryMigration) {
+        finalMeta = stampVaultMetaForUser(
+          { ...decryptedMeta, updatedAt: Date.now() },
+          userId
+        );
+        await writeMeta(finalMeta, dataKey);
+      }
+      setMeta(finalMeta);
       await loadEntries(dataKey);
       setStatus("unlocked");
+      if (migratedEntries || needCategoryMigration) {
+        await flushCloudPush();
+      }
       void refreshEntitlements();
     },
-    [loadEntries, refreshEntitlements, userEmail, userId]
+    [
+      loadEntries,
+      migrateLegacyEntries,
+      decryptMetaFromStorage,
+      writeMeta,
+      flushCloudPush,
+      refreshEntitlements,
+      userEmail,
+      userId,
+    ]
   );
 
   const unlockWithPasskey = useCallback(async () => {
-    const m = await getMeta();
+    const m = await readMeta();
     if (!m || !isAuthV2(m)) throw new AppError("errors.passkeyNoPasswordless");
     if (!m.passkeys?.length || !m.prfSalt) {
       throw new AppError("errors.noPasskeyRegistered");
@@ -1166,7 +1265,7 @@ export function VaultProvider({
       ),
       updatedAt: Date.now(),
     };
-    await putMeta(updated);
+    await writeMeta(updated);
     await finishUnlock(updated, dataKey, totpSecret);
     await flushCloudPush();
   }, [finishUnlock, flushCloudPush]);
@@ -1177,7 +1276,7 @@ export function VaultProvider({
       secondFactor: string,
       mode: "totp" | "recovery"
     ) => {
-      const m = await getMeta();
+      const m = await readMeta();
       if (!m) throw new AppError("errors.notInitialized");
       const dataKey = await assertMasterPassword(m, masterPassword);
       const totpSecret = await decryptString(dataKey, m.totpSecret);
@@ -1196,7 +1295,7 @@ export function VaultProvider({
           recoveryCodeHashes: nextHashes,
           updatedAt: Date.now(),
         };
-        await putMeta(updated);
+        await writeMeta(updated);
         await finishUnlock(updated, dataKey, totpSecret);
         await flushCloudPush();
         return;
@@ -1230,7 +1329,7 @@ export function VaultProvider({
         autoLockMinutes: mins,
         updatedAt: Date.now(),
       };
-      await putMeta(next);
+      await writeMeta(next);
       setMeta(next);
       await flushCloudPush();
     },
@@ -1264,25 +1363,26 @@ export function VaultProvider({
         memo: partial.memo ?? existing?.memo ?? "",
         updatedAt: Date.now(),
       };
-      const passwordEnc = merged.password
-        ? await encryptString(session.key, merged.password)
-        : "";
-      const persisted: VaultEntry = {
-        id: merged.id,
+      const secret: EntrySecret = {
         categoryId: merged.categoryId,
         site: merged.site,
         url: merged.url,
         username: merged.username,
-        passwordEnc,
+        password: merged.password,
         notes: merged.notes,
         memo: merged.memo,
-        updatedAt: merged.updatedAt,
       };
+      const persisted = await buildEncryptedEntryRow(
+        session.key,
+        merged.id,
+        merged.updatedAt,
+        secret
+      );
       await putEntry(persisted);
-      const m = await getMeta();
+      const m = await readMeta();
       if (m) {
         const nextMeta: VaultMeta = { ...m, updatedAt: Date.now() };
-        await putMeta(nextMeta);
+        await writeMeta(nextMeta);
         setMeta(nextMeta);
       }
       setEntries((prev) => {
@@ -1300,10 +1400,10 @@ export function VaultProvider({
 
   const removeEntry = useCallback(async (id: string) => {
     await deleteEntry(id);
-    const m = await getMeta();
+    const m = await readMeta();
     if (m) {
       const nextMeta: VaultMeta = { ...m, updatedAt: Date.now() };
-      await putMeta(nextMeta);
+      await writeMeta(nextMeta);
       setMeta(nextMeta);
     }
     setEntries((prev) => prev.filter((e) => e.id !== id));
@@ -1317,14 +1417,14 @@ export function VaultProvider({
 
   const setCategories = useCallback(
     async (next: VaultCategory[]) => {
-      const m = await getMeta();
+      const m = await readMeta();
       if (!m) return;
       const updated: VaultMeta = {
         ...m,
         categories: next,
         updatedAt: Date.now(),
       };
-      await putMeta(updated);
+      await writeMeta(updated);
       setMeta(updated);
       scheduleCloudPush();
     },
@@ -1334,7 +1434,7 @@ export function VaultProvider({
   const deleteCategory = useCallback(
     async (id: string) => {
       const session = sessionRef.current;
-      const m = await getMeta();
+      const m = await readMeta();
       if (!m || !session) return;
       const cats = m.categories ?? [];
       const updated: VaultMeta = {
@@ -1342,16 +1442,19 @@ export function VaultProvider({
         categories: cats.filter((c) => c.id !== id),
         updatedAt: Date.now(),
       };
-      await putMeta(updated);
+      await writeMeta(updated);
       setMeta(updated);
       const raw = await listEntries();
       for (const e of raw) {
-        if (e.categoryId === id) {
-          await putEntry({
-            ...e,
-            categoryId: "",
-            updatedAt: Date.now(),
-          });
+        const secret = await decryptEntry(session.key, e);
+        if (secret.categoryId === id) {
+          const row = await buildEncryptedEntryRow(
+            session.key,
+            e.id,
+            Date.now(),
+            { ...secret, categoryId: "" }
+          );
+          await putEntry(row);
         }
       }
       await loadEntries(session.key);
@@ -1362,7 +1465,9 @@ export function VaultProvider({
   );
 
   const exportBackup = useCallback(async () => {
-    const m = await getMeta();
+    // Use the encrypted-at-rest meta so exported backups never contain plaintext
+    // category names.
+    const m = await getMetaRaw();
     if (!m) throw new AppError("errors.notInitialized");
     const raw = await listEntries();
     return buildVaultBackupJson(m, raw);
@@ -1384,8 +1489,12 @@ export function VaultProvider({
       ...meta,
       categories: meta.categories ?? [],
     };
-    await putMeta(metaNorm);
+    await writeMeta(metaNorm);
     for (const e of parsedEntries) {
+      if (isEncryptedEntry(e)) {
+        await putEntry({ id: e.id, updatedAt: e.updatedAt, enc: e.enc });
+        continue;
+      }
       const row: VaultEntry = {
         ...e,
         categoryId: typeof e.categoryId === "string" ? e.categoryId : "",
