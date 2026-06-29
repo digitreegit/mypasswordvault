@@ -246,6 +246,9 @@
     faq8_sum: "Who do I contact if something goes wrong?",
     faq8_html:
       'Email\n              <a href="mailto:contact@skyface.com">contact@skyface.com</a>\n              for questions, bug reports, or feedback—we read incoming mail.',
+    faq9_sum: "How do I sync the iOS app with my web vault?",
+    faq9_html:
+      "Cloud sync is tied to your <strong>sign-in account</strong>, not your device. On iOS, if you use\n              <strong>Sign in with Apple</strong> and want the same vault as on the web, you must choose\n              <strong>Share My Email</strong> when Apple asks—not <strong>Hide My Email</strong>. Hide My Email\n              creates a private relay address and a <strong>separate account</strong> that will not match a web\n              vault signed in with Google or your normal email. Easiest if you already use the web: tap\n              <strong>Continue with Google</strong> on iOS with the <strong>same email</strong>. If you prefer\n              Apple on iOS, pick Share My Email so your real address matches your web login. Already chose Hide My\n              Email? Turn off My Password Vault under Settings → Apple ID → iCloud → Hide My Email (or at\n              appleid.apple.com → Apps Using Apple ID), sign out in the app, and sign in again.",
     ctaReadyTitle: "Ready when you are",
     ctaReadyLead:
       "Same tool for weekend admins and daily operators: fewer clicks, fewer tabs, more confidence that\n          your credentials never left encryption you control.",
@@ -395,6 +398,9 @@
     faq8_sum: "문제가 생기면 어디로 연락하나요?",
     faq8_html:
       '문의·버그·제안은 <a href="mailto:contact@skyface.com">contact@skyface.com</a>으로 보내 주세요.',
+    faq9_sum: "iOS 앱과 웹 금고를 어떻게 동기화하나요?",
+    faq9_html:
+      "클라우드 동기화는 기기가 아니라 <strong>로그인 계정</strong>에 묶입니다. iOS에서 <strong>Apple로 로그인</strong>을 쓰면서 웹과 같은 금고를 쓰려면, Apple이 물을 때 <strong>이메일 공유(Share My Email)</strong>를 선택해야 합니다—<strong>이메일 가리기(Hide My Email)는 선택하지 마세요</strong>. Hide My Email은 릴레이 주소로 <strong>별도 계정</strong>이 만들어져 Google이나 일반 이메일로 웹에 로그인한 금고와 맞지 않습니다. 이미 웹을 쓰는 경우 가장 쉬운 방법: iOS에서 <strong>Google로 계속하기</strong>를 누르고 <strong>같은 이메일</strong>로 로그인하세요. iOS에서 Apple을 쓰려면 Share My Email로 실제 주소가 웹 계정과 같게 하세요. 이미 Hide My Email을 선택했다면, 설정 → Apple ID → iCloud → Hide My Email(또는 appleid.apple.com → Apps Using Apple ID)에서 My Password Vault 연결을 끊고, 앱에서 로그아웃한 뒤 다시 로그인하세요.",
     ctaReadyTitle: "준비되면 시작하세요",
     ctaReadyLead:
       "주말 관리자든 매일 운영하든 같은 도구입니다. 클릭과 탭을 줄이고, 통제 가능한 암호화 안에 자격 증명을 두세요.",

@@ -109,6 +109,9 @@ export default {
     faq8_sum: "遇到问题该联系谁？",
     faq8_html:
       '请发送邮件至\n              <a href="mailto:contact@skyface.com">contact@skyface.com</a>\n              ，我们会查阅来信。',
+    faq9_sum: "如何让 iOS 应用与网页保险库同步？",
+    faq9_html:
+      "云同步绑定的是您的<strong>登录账户</strong>，而非设备。在 iOS 上若使用<strong>通过 Apple 登录</strong>且要与网页使用同一保险库，请在 Apple 询问时选择<strong>共享我的电子邮件</strong>——<strong>不要选择隐藏邮件地址</strong>。隐藏邮件会生成 relay 地址并创建<strong>独立账户</strong>，无法与通过 Google 或常用邮箱登录的网页保险库匹配。若您已在网页使用：在 iOS 点<strong>使用 Google 继续</strong>并用<strong>相同邮箱</strong>登录最简单。若坚持用 Apple，请选择共享邮件。若已选隐藏邮件？请在 设置 → Apple ID → iCloud → 隐藏邮件地址（或 appleid.apple.com）中断开 My Password Vault，退出应用后重新登录。",
     ctaReadyTitle: "准备好就开始",
     ctaReadyLead:
       "无论周末帮忙维护还是日常值守，同一套工具帮你减少点击与标签堆叠，并让凭据始终留在你可控的加密边界内。",
@@ -249,6 +252,9 @@ export default {
     faq8_sum: "不具合はどこへ連絡？",
     faq8_html:
       'ご質問・不具合・ご意見は\n              <a href="mailto:contact@skyface.com">contact@skyface.com</a>\n              までご連絡ください。',
+    faq9_sum: "iOSアプリとWebのVaultを同期するには？",
+    faq9_html:
+      "クラウド同期は端末ではなく<strong>サインインアカウント</strong>に紐づきます。iOSで<strong>Appleでサインイン</strong>を使いWebと同じVaultにしたい場合、Appleの質問では<strong>メールを共有</strong>を選び、<strong>メールを非公開</strong>は選ばないでください。非公開にするとリレーアドレスの<strong>別アカウント</strong>になり、Googleや通常メールでWebにログインしたVaultと一致しません。Web利用中なら最も簡単なのは、iOSで<strong>Googleで続行</strong>し<strong>同じメール</strong>でログインすることです。Appleを使う場合はメールを共有してください。すでに非公開を選んだ場合は、設定 → Apple ID → iCloud → メールを非公開（または appleid.apple.com）で My Password Vault を解除し、サインアウト後に再ログインしてください。",
     ctaReadyTitle: "準備できたら、すぐさま",
     ctaReadyLead:
       "趣味のインフラ手伝いにも本番運用にも同じ画面。クリックやタブ切り替えを減らし、自分が握る暗号の内側へ資格情報を置き続けられます。",
@@ -392,6 +398,9 @@ export default {
     faq8_sum: "Kontakt bei Problemen?",
     faq8_html:
       'Schreiben Sie an\n              <a href="mailto:contact@skyface.com">contact@skyface.com</a>\n              für Fragen oder Feedback.',
+    faq9_sum: "iOS-App mit Web-Tresor synchronisieren?",
+    faq9_html:
+      "Cloud-Sync hängt am <strong>Anmeldekonto</strong>, nicht am Gerät. Nutzen Sie auf iOS <strong>Mit Apple anmelden</strong> und wollen denselben Tresor wie im Web, wählen Sie bei Apple <strong>E-Mail teilen</strong>—<strong>nicht E-Mail verbergen</strong>. Verbergen erzeugt eine Relay-Adresse und ein <strong>separates Konto</strong>, das nicht zum Web-Tresor mit Google oder Ihrer normalen E-Mail passt. Am einfachsten, wenn Sie das Web schon nutzen: auf iOS <strong>Mit Google fortfahren</strong> mit derselben E-Mail. Bevorzugen Sie Apple, wählen Sie E-Mail teilen. Bereits verborgen? My Password Vault unter Einstellungen → Apple-ID → iCloud → E-Mail verbergen (oder appleid.apple.com) trennen, abmelden und erneut anmelden.",
     ctaReadyTitle: "Bereit, wenn Sie es sind",
     ctaReadyLead:
       "Gleiches Werkzeug für Gelegenheits-Admins und Profis: weniger Klicks, mehr Kontrolle über Ihre Verschlüsselung.",
@@ -537,6 +546,9 @@ export default {
     faq8_sum: "Qui contacter ?",
     faq8_html:
       'Écrivez à\n              <a href="mailto:contact@skyface.com">contact@skyface.com</a>\n              pour aide ou feedback.',
+    faq9_sum: "Synchroniser l’app iOS avec le coffre web ?",
+    faq9_html:
+      "La sync cloud est liée au <strong>compte de connexion</strong>, pas à l’appareil. Sur iOS, si vous utilisez <strong>Se connecter avec Apple</strong> et voulez le même coffre que sur le web, choisissez <strong>Partager mon e-mail</strong>—<strong>pas Masquer mon e-mail</strong>. Masquer crée une adresse relais et un <strong>compte séparé</strong>, incompatible avec un coffre web connecté via Google ou votre e-mail habituel. Le plus simple si vous utilisez déjà le web : <strong>Continuer avec Google</strong> sur iOS avec le <strong>même e-mail</strong>. Si vous préférez Apple, choisissez Partager mon e-mail. Déjà masqué ? Désactivez My Password Vault dans Réglages → Apple ID → iCloud → Masquer mon e-mail (ou appleid.apple.com), déconnectez-vous et reconnectez-vous.",
     ctaReadyTitle: "Prêt quand vous l’êtes",
     ctaReadyLead:
       "Moins de clics, la certitude que vos identifiants restent dans un chiffrement que vous maîtrisez.",
@@ -683,6 +695,9 @@ export default {
     faq8_sum: "Come vi contatto?",
     faq8_html:
       'Scrivi a\n              <a href="mailto:contact@skyface.com">contact@skyface.com</a>\n              per dubbi, segnalazioni bug o idee.',
+    faq9_sum: "Sincronizzare l’app iOS con il vault web?",
+    faq9_html:
+      "La sync cloud è legata all’<strong>account di accesso</strong>, non al dispositivo. Su iOS, se usi <strong>Accedi con Apple</strong> e vuoi lo stesso vault del web, scegli <strong>Condividi la mia e-mail</strong>—<strong>non Nascondi la mia e-mail</strong>. Nascondi crea un indirizzo relay e un <strong>account separato</strong>, non allineato al vault web con Google o la tua e-mail abituale. Più semplice se usi già il web: <strong>Continua con Google</strong> su iOS con la <strong>stessa e-mail</strong>. Se preferisci Apple, scegli Condividi. Già scelto Nascondi? Disattiva My Password Vault in Impostazioni → ID Apple → iCloud → Nascondi e-mail (o appleid.apple.com), esci e accedi di nuovo.",
     ctaReadyTitle: "Parti quando ti senti pronto",
     ctaReadyLead:
       "Stesso workspace sia per gli admin del weekend sia per gli operatori quotidiani: meno clic meno rischi e la certezza che le credenziali restano nel cifrato che controlli tu.",
@@ -829,6 +844,9 @@ export default {
     faq8_sum: "Siapa dihubungi?",
     faq8_html:
       'Email\n              <a href="mailto:contact@skyface.com">contact@skyface.com</a>\n              untuk pertanyaan atau laporan.',
+    faq9_sum: "Sinkronkan app iOS dengan brankas web?",
+    faq9_html:
+      "Sinkron cloud terikat ke <strong>akun masuk</strong>, bukan perangkat. Di iOS, jika memakai <strong>Sign in with Apple</strong> dan ingin brankas yang sama dengan web, pilih <strong>Bagikan Email Saya</strong>—<strong>bukan Sembunyikan Email Saya</strong>. Sembunyikan membuat alamat relay dan <strong>akun terpisah</strong> yang tidak cocok dengan brankas web via Google atau email biasa Anda. Paling mudah jika sudah pakai web: ketuk <strong>Lanjutkan dengan Google</strong> di iOS dengan <strong>email yang sama</strong>. Jika lebih suka Apple, pilih Bagikan Email. Sudah pilih Sembunyikan? Nonaktifkan My Password Vault di Pengaturan → Apple ID → iCloud → Sembunyikan Email (atau appleid.apple.com), keluar, lalu masuk lagi.",
     ctaReadyTitle: "Siap ketika Anda siap",
     ctaReadyLead:
       "Lebih sedikit klik dan tab — keyakinan kredensial tetap dalam enkripsi yang Anda pegang.",

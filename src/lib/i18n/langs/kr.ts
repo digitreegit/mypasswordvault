@@ -47,6 +47,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "auth.brandHomeAria": "소개 페이지로 이동",
   "auth.subtitle": "계정에 로그인하세요",
   "auth.google": "Google로 계속하기",
+  "auth.apple": "Apple로 로그인",
   "auth.lastUsed": "최근 사용",
   "auth.or": "또는",
   "auth.email": "이메일",
@@ -443,6 +444,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "account.savePassword": "비밀번호 업데이트",
   "account.passwordUpdated": "로그인 비밀번호가 변경되었습니다.",
   "account.signInMethod.google": "Google",
+  "account.signInMethod.apple": "Apple",
   "account.signInMethod.email": "이메일",
   "account.signInMethod.unknown": "로그인",
 

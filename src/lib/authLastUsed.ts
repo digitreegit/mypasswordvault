@@ -1,6 +1,6 @@
 import type { Session } from "@supabase/supabase-js";
 
-export type AuthLastMethod = "google" | "email";
+export type AuthLastMethod = "google" | "apple" | "email";
 
 export type PendingAuthMethod = {
   method: AuthLastMethod;
@@ -19,6 +19,10 @@ export const AUTH_LAST_METHOD_CHANGED = "mpv-auth-last-method-changed";
 const PENDING_MAX_AGE_MS = 30 * 60 * 1000;
 const JUST_COMPLETED_MAX_AGE_MS = 60 * 1000;
 
+export function isAuthLastMethod(value: string): value is AuthLastMethod {
+  return value === "google" || value === "apple" || value === "email";
+}
+
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
@@ -35,7 +39,7 @@ function readMethodMap(): Record<string, AuthLastMethod> {
     /* ignore */
   }
   const legacy = window.localStorage.getItem(STORAGE_KEY);
-  if (legacy === "google" || legacy === "email") {
+  if (legacy && isAuthLastMethod(legacy)) {
     return { __legacy__: legacy };
   }
   return {};
@@ -74,10 +78,10 @@ function readPendingRaw(maxAgeMs: number): PendingAuthMethod | null {
       at?: number;
       email?: string;
     };
-    if (parsed?.method !== "google" && parsed?.method !== "email") return null;
+    if (!isAuthLastMethod(parsed?.method ?? "")) return null;
     if (!Number.isFinite(parsed.at) || Date.now() - parsed.at! > maxAgeMs) return null;
     return {
-      method: parsed.method,
+      method: parsed.method as AuthLastMethod,
       email: parsed.email?.trim() ? normalizeEmail(parsed.email) : undefined,
     };
   } catch {
@@ -88,7 +92,7 @@ function readPendingRaw(maxAgeMs: number): PendingAuthMethod | null {
   if (sep < 0) return null;
   const method = raw.slice(0, sep);
   const ts = Number(raw.slice(sep + 1));
-  if (method !== "google" && method !== "email") return null;
+  if (!isAuthLastMethod(method)) return null;
   if (!Number.isFinite(ts) || Date.now() - ts > maxAgeMs) return null;
   return { method };
 }
@@ -96,18 +100,18 @@ function readPendingRaw(maxAgeMs: number): PendingAuthMethod | null {
 export function getAuthLastMethod(userId?: string): AuthLastMethod | null {
   if (typeof window === "undefined") return null;
   const map = readMethodMap();
-  if (userId && (map[userId] === "google" || map[userId] === "email")) {
+  if (userId && isAuthLastMethod(map[userId] ?? "")) {
     return map[userId];
   }
-  if (map.__legacy__ === "google" || map.__legacy__ === "email") return map.__legacy__;
+  if (isAuthLastMethod(map.__legacy__ ?? "")) return map.__legacy__;
   const legacy = window.localStorage.getItem(STORAGE_KEY);
-  return legacy === "google" || legacy === "email" ? legacy : null;
+  return legacy && isAuthLastMethod(legacy) ? legacy : null;
 }
 
 export function getAuthLastMethodForEmail(email: string): AuthLastMethod | null {
   if (typeof window === "undefined" || !email.trim()) return null;
   const method = readEmailMethodMap()[normalizeEmail(email)];
-  return method === "google" || method === "email" ? method : null;
+  return isAuthLastMethod(method ?? "") ? method : null;
 }
 
 export function getAuthLastEmail(): string | null {
@@ -186,11 +190,11 @@ export function takeSignInAttempt(
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as { method?: string; at?: number };
-    if (parsed.method !== "google" && parsed.method !== "email") return null;
+    if (!isAuthLastMethod(parsed.method ?? "")) return null;
     if (!Number.isFinite(parsed.at) || Date.now() - parsed.at! > maxAgeMs) {
       return null;
     }
-    return parsed.method;
+    return parsed.method as AuthLastMethod;
   } catch {
     return null;
   }
@@ -204,11 +208,11 @@ export function peekSignInAttempt(
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as { method?: string; at?: number };
-    if (parsed.method !== "google" && parsed.method !== "email") return null;
+    if (!isAuthLastMethod(parsed.method ?? "")) return null;
     if (!Number.isFinite(parsed.at) || Date.now() - parsed.at! > maxAgeMs) {
       return null;
     }
-    return parsed.method;
+    return parsed.method as AuthLastMethod;
   } catch {
     return null;
   }

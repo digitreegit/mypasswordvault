@@ -52,7 +52,7 @@ masterPassword + salt
 
 ### 인증 이메일 · Resend (선택)
 
-Supabase + Resend 설정은 **[docs/auth-email-resend.md](./docs/auth-email-resend.md)** 를 참고하세요. 로그인 화면은 Google OAuth와 이메일/비밀번호를 지원합니다. 비밀번호 재설정은 `send-password-reset` Edge Function(Resend)을 사용합니다.
+Supabase + Resend 설정은 **[docs/auth-email-resend.md](./docs/auth-email-resend.md)** 를 참고하세요. 로그인 화면은 Google OAuth와 이메일/비밀번호를 지원합니다. **iOS 앱(App Store)** 은 Guideline 4.8 때문에 **Sign in with Apple** 버튼도 표시합니다(웹/Android는 Google만). 설정 → **[docs/apple-sign-in-ios.md](./docs/apple-sign-in-ios.md)**. 비밀번호 재설정은 `send-password-reset` Edge Function(Resend)을 사용합니다.
 
 동기화는 `meta.updatedAt` 기준으로 **더 최근 스냅샷이 이깁니다**(로그인 직후 로컬과 클라우드가 모두 있을 때). 오프라인에서 여러 기기를 오래 각각 수정하면 나중에 한쪽이 덮어쓰일 수 있습니다.
 

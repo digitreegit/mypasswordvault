@@ -8,8 +8,12 @@ import React, {
 } from "react";
 import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 import { getSupabase, isSupabaseConfigured } from "./supabaseClient";
-import { getOAuthRedirectUrl } from "./platform";
-import { isNativeApp, signInWithGoogleNative } from "./nativeAuth";
+import { getNativePlatform, getOAuthRedirectUrl } from "./platform";
+import {
+  isNativeApp,
+  signInWithAppleNative,
+  signInWithGoogleNative,
+} from "./nativeAuth";
 import {
   AuthEmailTakenError,
   isAuthEmailTakenError,
@@ -44,6 +48,7 @@ interface AuthContextValue {
   session: Session | null;
   user: User | null;
   signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
@@ -136,6 +141,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) {
       clearSignInAttempt();
       throw error;
+    }
+  }, []);
+
+  const signInWithApple = useCallback(async () => {
+    if (getNativePlatform() !== "ios") {
+      throw new Error("Sign in with Apple is only available on iOS");
+    }
+    markSignInAttempt("apple");
+    try {
+      await signInWithAppleNative();
+    } catch (e) {
+      clearSignInAttempt();
+      throw e;
     }
   }, []);
 
@@ -246,6 +264,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session,
       user: session?.user ?? null,
       signInWithGoogle,
+      signInWithApple,
       signInWithEmail,
       signUpWithEmail,
       updateEmail,
@@ -258,6 +277,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       passwordRecoveryPending,
       session,
       signInWithGoogle,
+      signInWithApple,
       signInWithEmail,
       signUpWithEmail,
       updateEmail,

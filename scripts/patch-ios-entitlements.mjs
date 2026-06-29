@@ -1,5 +1,5 @@
 /**
- * Ensures Associated Domains entitlements are linked for passkeys (webcredentials).
+ * Ensures Associated Domains + Sign in with Apple entitlements are present.
  */
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
@@ -12,11 +12,33 @@ if (!existsSync(pbxPath) || !existsSync(entitlementsPath)) {
   process.exit(0);
 }
 
+let entitlements = readFileSync(entitlementsPath, "utf8");
+let entitlementsChanged = false;
+
+if (!entitlements.includes("com.apple.developer.applesignin")) {
+  entitlements = entitlements.replace(
+    "<dict>",
+    `<dict>
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>`
+  );
+  entitlementsChanged = true;
+}
+
+if (entitlementsChanged) {
+  writeFileSync(entitlementsPath, entitlements);
+  console.log("patch-ios-entitlements: added Sign in with Apple entitlement");
+}
+
 let pbx = readFileSync(pbxPath, "utf8");
 const needle = "CODE_SIGN_ENTITLEMENTS = App/App.entitlements;";
 
 if (pbx.includes(needle)) {
-  console.log("patch-ios-entitlements: already linked");
+  if (!entitlementsChanged) {
+    console.log("patch-ios-entitlements: already linked");
+  }
   process.exit(0);
 }
 
@@ -30,7 +52,7 @@ if (replaced === pbx) {
   process.exit(1);
 }
 
-let next = replaced.replace(
+const next = replaced.replace(
   /(504EC3181FED79650016851F \/\* Release \*\/[\s\S]*?buildSettings = \{[\s\S]*?)(CODE_SIGN_STYLE = Automatic;)/,
   "$1CODE_SIGN_ENTITLEMENTS = App/App.entitlements;\n\t\t\t\t$2"
 );

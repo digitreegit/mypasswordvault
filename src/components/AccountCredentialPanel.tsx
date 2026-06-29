@@ -8,7 +8,7 @@ import { ModalCloseButton } from "./ModalCloseButton";
 import { AUTH_LAST_METHOD_CHANGED } from "../lib/authLastUsed";
 import { getUserSignInMethod, useAuth } from "../lib/auth";
 import { isAppError } from "../lib/errors";
-import { Eye, EyeOff, GoogleIcon } from "./Icons";
+import { Eye, EyeOff, AppleIcon, GoogleIcon } from "./Icons";
 
 type TFn = (key: string, vars?: Record<string, string | number>) => string;
 
@@ -198,9 +198,11 @@ export function AccountCredentialPanel({
   const methodLabel =
     signInMethod === "google"
       ? t("account.signInMethod.google")
-      : signInMethod === "email"
-        ? t("account.signInMethod.email")
-        : t("account.signInMethod.unknown");
+      : signInMethod === "apple"
+        ? t("account.signInMethod.apple")
+        : signInMethod === "email"
+          ? t("account.signInMethod.email")
+          : t("account.signInMethod.unknown");
 
   const passwordFormReady =
     currentPw.trim().length > 0 && newPw.trim().length > 0;
@@ -213,6 +215,8 @@ export function AccountCredentialPanel({
           <div className="flex items-center gap-3 min-w-0">
             {signInMethod === "google" ? (
               <GoogleIcon className="h-5 w-5 shrink-0" />
+            ) : signInMethod === "apple" ? (
+              <AppleIcon className="h-5 w-5 shrink-0 text-ink-900" />
             ) : (
               <EnvelopeIcon className="h-5 w-5 shrink-0 text-ink-500" aria-hidden />
             )}

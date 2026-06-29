@@ -55,4 +55,21 @@ export async function signInWithGoogleNative(): Promise<void> {
   await Browser.open({ url: data.url });
 }
 
+export async function signInWithAppleNative(): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase not configured");
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "apple",
+    options: {
+      redirectTo: NATIVE_AUTH_REDIRECT,
+      skipBrowserRedirect: true,
+      scopes: "name email",
+    },
+  });
+  if (error) throw error;
+  if (!data?.url) throw new Error("No OAuth URL returned");
+  await Browser.open({ url: data.url });
+}
+
 export { isNativeApp };

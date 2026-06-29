@@ -2,10 +2,13 @@ import type { User, UserIdentity } from "@supabase/supabase-js";
 import {
   getAuthLastMethod,
   getAuthLastMethodForEmail,
+  isAuthLastMethod,
   type AuthLastMethod,
 } from "./authLastUsed";
 
-export type UserSignInMethod = "google" | "email" | "unknown";
+export type UserSignInMethod = "google" | "apple" | "email" | "unknown";
+
+type OAuthProvider = "google" | "apple";
 
 /** Last-used method from local storage (same sources as the sign-in screen badge). */
 export function resolveStoredSignInMethod(user: User): AuthLastMethod | null {
@@ -24,17 +27,31 @@ function identitySignedInAt(identity?: UserIdentity): number {
   return Number.isFinite(ms) ? ms : -1;
 }
 
-function preferredProviderWhenBothLinked(
+function preferredOAuthWhenLinked(
   google?: UserIdentity,
-  email?: UserIdentity
-): UserSignInMethod | null {
+  apple?: UserIdentity
+): OAuthProvider | null {
   const gAt = identitySignedInAt(google);
-  const eAt = identitySignedInAt(email);
-  if (gAt < 0 && eAt < 0) return null;
-  return gAt >= eAt ? "google" : "email";
+  const aAt = identitySignedInAt(apple);
+  if (gAt < 0 && aAt < 0) return null;
+  return gAt >= aAt ? "google" : "apple";
 }
 
-/** True when the account can sign in with email + password (not Google-only). */
+function preferredProviderWhenBothLinked(
+  google?: UserIdentity,
+  apple?: UserIdentity,
+  email?: UserIdentity
+): UserSignInMethod | null {
+  const oauth = preferredOAuthWhenLinked(google, apple);
+  const eAt = identitySignedInAt(email);
+  if (!oauth) {
+    return eAt >= 0 ? "email" : null;
+  }
+  const oAt = oauth === "google" ? identitySignedInAt(google) : identitySignedInAt(apple);
+  return oAt >= eAt ? oauth : "email";
+}
+
+/** True when the account can sign in with email + password (not OAuth-only). */
 export function userSupportsEmailPassword(user: User): boolean {
   if (resolveStoredSignInMethod(user) === "email") return true;
 
@@ -54,35 +71,57 @@ export function signInMethodFromUser(
 ): UserSignInMethod {
   const identities = user.identities ?? [];
   const googleIdentity = identities.find((i) => i.provider === "google");
+  const appleIdentity = identities.find((i) => i.provider === "apple");
   const emailIdentity = identities.find((i) => i.provider === "email");
   const hasGoogle = Boolean(googleIdentity);
+  const hasApple = Boolean(appleIdentity);
   const hasEmail = Boolean(emailIdentity);
 
-  if (lastUsed === "google" || lastUsed === "email") return lastUsed;
+  if (lastUsed === "google" || lastUsed === "apple" || lastUsed === "email") {
+    return lastUsed;
+  }
 
-  if (hasGoogle && !hasEmail) return "google";
-  if (hasEmail && !hasGoogle) return "email";
+  if (hasEmail && !hasGoogle && !hasApple) return "email";
+  if (hasGoogle && !hasApple && !hasEmail) return "google";
+  if (hasApple && !hasGoogle && !hasEmail) return "apple";
 
-  const preferred = preferredProviderWhenBothLinked(googleIdentity, emailIdentity);
+  const preferred = preferredProviderWhenBothLinked(
+    googleIdentity,
+    appleIdentity,
+    emailIdentity
+  );
   if (preferred) return preferred;
 
   const providers = user.app_metadata?.providers;
   if (Array.isArray(providers)) {
-    if (providers.includes("google") && !providers.includes("email")) return "google";
-    if (providers.includes("email") && !providers.includes("google")) return "email";
+    const oauthOnly = providers.filter((p) => p === "google" || p === "apple");
+    if (oauthOnly.length === 1 && !providers.includes("email")) {
+      return oauthOnly[0] as OAuthProvider;
+    }
+    if (providers.includes("email") && !providers.includes("google") && !providers.includes("apple")) {
+      return "email";
+    }
   }
 
   const primary = user.app_metadata?.provider;
-  if (primary === "google" || primary === "email") return primary;
+  if (primary === "google" || primary === "apple" || primary === "email") {
+    return primary;
+  }
 
-  if (hasGoogle && !userSupportsEmailPassword(user)) return "google";
+  if (!userSupportsEmailPassword(user)) {
+    const oauth = preferredOAuthWhenLinked(googleIdentity, appleIdentity);
+    if (oauth) return oauth;
+    if (hasApple) return "apple";
+    if (hasGoogle) return "google";
+  }
   if (userSupportsEmailPassword(user)) return "email";
+  if (hasApple) return "apple";
   if (hasGoogle) return "google";
   return "unknown";
 }
 
 export function getUserSignInMethod(user: User): UserSignInMethod {
   const stored = resolveStoredSignInMethod(user);
-  if (stored === "google" || stored === "email") return stored;
+  if (stored) return stored;
   return signInMethodFromUser(user, null);
 }

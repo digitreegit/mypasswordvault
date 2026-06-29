@@ -45,6 +45,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "auth.brandHomeAria": "Go to homepage",
   "auth.subtitle": "Sign in to your account",
   "auth.google": "Continue with Google",
+  "auth.apple": "Sign in with Apple",
   "auth.lastUsed": "LAST USED",
   "auth.or": "or",
   "auth.email": "Email",
@@ -453,6 +454,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "account.sidebarSection": "Account settings",
   "account.preferencesSubtitle": "Update your profile email and sign-in password.",
   "account.signInMethod.google": "Google",
+  "account.signInMethod.apple": "Apple",
   "account.signInMethod.email": "Email",
   "account.signInMethod.unknown": "Sign-in",
 
