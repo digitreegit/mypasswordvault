@@ -676,6 +676,7 @@ html.native-app .native-onboard__scroller {
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
 }
 
 html.native-app .native-onboard__scroller::-webkit-scrollbar {
@@ -689,7 +690,7 @@ html.native-app .native-onboard__slide {
   max-width: 100%;
   min-height: 100%;
   scroll-snap-align: start;
-  scroll-snap-stop: always;
+  scroll-snap-stop: normal;
 }
 
 /* Vault swipe rows — native always uses mobile list (not gated on 767px media). */
@@ -775,9 +776,20 @@ html.native-app .native-onboard__dots {
   gap: 0.25rem;
 }
 
-html.native-app .auth-google-btn {
+html.native-app .auth-google-btn,
+html.native-app .auth-apple-btn {
   font-size: var(--type-sub) !important;
   line-height: var(--leading-sub) !important;
+}
+
+html.native-app .auth-apple-btn svg[aria-hidden] {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.auth-apple-btn svg[aria-hidden] {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 /* Categories dialog — pill keyboard bar while typing; hide modal footer */

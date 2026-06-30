@@ -54,11 +54,7 @@ export function initNativeViewportLock(): void {
       }
 
       const horizontalHost = target?.closest(HORIZONTAL_SCROLL_SELECTOR);
-      if (
-        horizontalHost &&
-        isHorizontallyScrollable(horizontalHost) &&
-        Math.abs(dx) > Math.abs(dy)
-      ) {
+      if (horizontalHost && isHorizontallyScrollable(horizontalHost)) {
         return;
       }
 

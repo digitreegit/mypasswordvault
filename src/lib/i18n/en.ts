@@ -45,7 +45,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "auth.brandHomeAria": "Go to homepage",
   "auth.subtitle": "Sign in to your account",
   "auth.google": "Continue with Google",
-  "auth.apple": "Sign in with Apple",
+  "auth.apple": "Continue with Apple",
   "auth.lastUsed": "LAST USED",
   "auth.or": "or",
   "auth.email": "Email",
@@ -100,6 +100,9 @@ export const MESSAGES_EN: Record<string, string> = {
     "What are the backup options (authenticator and recovery codes)?",
   "auth.faqAuthenticatorA":
     "If you lose your passkey device, use backup sign-in: your master password plus either a code from your authenticator app (TOTP backup) or a one-time recovery code you saved during setup. Each recovery code works once. You can also restore from your account and re-register a passkey after verifying your master password.",
+  "auth.faqIosSyncQ": "How do I sync the iOS app with my web vault?",
+  "auth.faqIosSyncA":
+    "Cloud sync is tied to your <strong>sign-in account</strong>, not your device. On iOS, if you use <strong>Continue with Apple</strong> and want the same vault as on the web, you must choose <strong>Share My Email</strong> when Apple asks—not <strong>Hide My Email</strong>. Hide My Email creates a private relay address and a <strong>separate account</strong> that will not match a web vault signed in with Google or your normal email. Easiest if you already use the web: tap <strong>Continue with Google</strong> on iOS with the <strong>same email</strong>. If you prefer Apple on iOS, pick Share My Email so your real address matches your web login. Already chose Hide My Email? Turn off My Password Vault under Settings → Apple ID → iCloud → Hide My Email (or at appleid.apple.com → Apps Using Apple ID), sign out in the app, and sign in again.",
   "auth.faqPricingQ": "Is this free or paid?",
   "auth.faqPricingA":
     "You can save up to 25 password entries for free. A one-time $4.99 purchase unlocks unlimited entries on your account forever. Open __PRICING_LINK__ from the app for checkout.",

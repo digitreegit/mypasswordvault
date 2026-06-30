@@ -21,6 +21,7 @@ export const AUTH_ES: Record<string, string> = {
   "auth.brandHomeAria": "Ir a la página de inicio",
   "auth.subtitle": "Inicia sesión en tu cuenta",
   "auth.google": "Continuar con Google",
+  "auth.apple": "Continuar con Apple",
   "auth.lastUsed": "USADO RECIENTEMENTE",
   "auth.or": "o",
   "auth.email": "Correo electrónico",
@@ -57,6 +58,9 @@ export const AUTH_ES: Record<string, string> = {
   "auth.notConfiguredTitle": "Supabase no está configurado",
   "auth.notConfiguredBody":
     "Añade VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en un archivo .env en la raíz del proyecto y reinicia el servidor de desarrollo. Consulta README.md para crear la tabla y activar el inicio de sesión con Google.",
+  "auth.faqIosSyncQ": "¿Cómo sincronizo la app iOS con mi caja fuerte web?",
+  "auth.faqIosSyncA":
+    "La sync en la nube va ligada a tu <strong>cuenta de inicio de sesión</strong>, no al dispositivo. En iOS, si usas <strong>Continuar con Apple</strong> y quieres la misma caja fuerte que en la web, debes elegir <strong>Compartir mi correo</strong> cuando Apple pregunte—<strong>no Ocultar mi correo</strong>. Ocultar mi correo crea una dirección relay y una <strong>cuenta separada</strong> que no coincide con una caja fuerte web iniciada con Google o tu correo habitual. Lo más fácil si ya usas la web: pulsa <strong>Continuar con Google</strong> en iOS con el <strong>mismo correo</strong>. Si prefieres Apple en iOS, elige Compartir mi correo. ¿Ya elegiste Ocultar mi correo? Desactiva My Password Vault en Ajustes → Apple ID → iCloud → Ocultar mi correo (o en appleid.apple.com), cierra sesión en la app e inicia de nuevo.",
 };
 
 export const AUTH_DE: Record<string, string> = {
@@ -74,6 +78,7 @@ export const AUTH_DE: Record<string, string> = {
   "auth.brandHomeAria": "Zur Startseite",
   "auth.subtitle": "Melde dich in deinem Konto an",
   "auth.google": "Mit Google fortfahren",
+  "auth.apple": "Mit Apple fortfahren",
   "auth.lastUsed": "ZULETZT GENUTZT",
   "auth.or": "oder",
   "auth.email": "E-Mail",
@@ -110,6 +115,9 @@ export const AUTH_DE: Record<string, string> = {
   "auth.notConfiguredTitle": "Supabase ist nicht konfiguriert",
   "auth.notConfiguredBody":
     "Trage VITE_SUPABASE_URL und VITE_SUPABASE_ANON_KEY in eine .env-Datei im Projektroot ein und starte den Dev-Server neu. Siehe README.md für Datenbanktabelle und Google-Anmeldung.",
+  "auth.faqIosSyncQ": "iOS-App mit Web-Tresor synchronisieren?",
+  "auth.faqIosSyncA":
+    "Cloud-Sync hängt am <strong>Anmeldekonto</strong>, nicht am Gerät. Nutzen Sie auf iOS <strong>Mit Apple fortfahren</strong> und wollen denselben Tresor wie im Web, wählen Sie bei Apple <strong>E-Mail teilen</strong>—<strong>nicht E-Mail verbergen</strong>. Verbergen erzeugt eine Relay-Adresse und ein <strong>separates Konto</strong>, das nicht zum Web-Tresor mit Google oder Ihrer normalen E-Mail passt. Am einfachsten, wenn Sie das Web schon nutzen: auf iOS <strong>Mit Google fortfahren</strong> mit derselben E-Mail. Bevorzugen Sie Apple, wählen Sie E-Mail teilen. Bereits verborgen? My Password Vault unter Einstellungen → Apple-ID → iCloud → E-Mail verbergen (oder appleid.apple.com) trennen, abmelden und erneut anmelden.",
 };
 
 export const AUTH_FR: Record<string, string> = {
@@ -127,6 +135,7 @@ export const AUTH_FR: Record<string, string> = {
   "auth.brandHomeAria": "Aller à la page d'accueil",
   "auth.subtitle": "Connectez-vous à votre compte",
   "auth.google": "Continuer avec Google",
+  "auth.apple": "Continuer avec Apple",
   "auth.lastUsed": "UTILISÉ RÉCEMMENT",
   "auth.or": "ou",
   "auth.email": "E-mail",
@@ -163,6 +172,9 @@ export const AUTH_FR: Record<string, string> = {
   "auth.notConfiguredTitle": "Supabase n'est pas configuré",
   "auth.notConfiguredBody":
     "Ajoutez VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY dans un fichier .env à la racine du projet, puis redémarrez le serveur de développement. Voir README.md pour la table et la connexion Google.",
+  "auth.faqIosSyncQ": "Synchroniser l'app iOS avec le coffre web ?",
+  "auth.faqIosSyncA":
+    "La sync cloud est liée au <strong>compte de connexion</strong>, pas à l'appareil. Sur iOS, si vous utilisez <strong>Continuer avec Apple</strong> et voulez le même coffre que sur le web, choisissez <strong>Partager mon e-mail</strong>—<strong>pas Masquer mon e-mail</strong>. Masquer crée une adresse relais et un <strong>compte séparé</strong>, incompatible avec un coffre web connecté via Google ou votre e-mail habituel. Le plus simple si vous utilisez déjà le web : <strong>Continuer avec Google</strong> sur iOS avec le <strong>même e-mail</strong>. Si vous préférez Apple, choisissez Partager mon e-mail. Déjà masqué ? Désactivez My Password Vault dans Réglages → Apple ID → iCloud → Masquer mon e-mail (ou appleid.apple.com), déconnectez-vous et reconnectez-vous.",
 };
 
 export const AUTH_IT: Record<string, string> = {
@@ -180,6 +192,7 @@ export const AUTH_IT: Record<string, string> = {
   "auth.brandHomeAria": "Vai alla home page",
   "auth.subtitle": "Accedi al tuo account",
   "auth.google": "Continua con Google",
+  "auth.apple": "Continua con Apple",
   "auth.lastUsed": "USATO DI RECENTE",
   "auth.or": "oppure",
   "auth.email": "E-mail",
@@ -216,6 +229,9 @@ export const AUTH_IT: Record<string, string> = {
   "auth.notConfiguredTitle": "Supabase non è configurato",
   "auth.notConfiguredBody":
     "Aggiungi VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY in un file .env nella root del progetto e riavvia il server di sviluppo. Vedi README.md per la tabella e l'accesso con Google.",
+  "auth.faqIosSyncQ": "Sincronizzare l'app iOS con il vault web?",
+  "auth.faqIosSyncA":
+    "La sync cloud è legata all'<strong>account di accesso</strong>, non al dispositivo. Su iOS, se usi <strong>Continua con Apple</strong> e vuoi lo stesso vault del web, scegli <strong>Condividi la mia e-mail</strong>—<strong>non Nascondi la mia e-mail</strong>. Nascondi crea un indirizzo relay e un <strong>account separato</strong>, non allineato al vault web con Google o la tua e-mail abituale. Più semplice se usi già il web: <strong>Continua con Google</strong> su iOS con la <strong>stessa e-mail</strong>. Se preferisci Apple, scegli Condividi. Già scelto Nascondi? Disattiva My Password Vault in Impostazioni → ID Apple → iCloud → Nascondi e-mail (o appleid.apple.com), esci e accedi di nuovo.",
 };
 
 export const AUTH_CN: Record<string, string> = {
@@ -232,6 +248,7 @@ export const AUTH_CN: Record<string, string> = {
   "auth.brandHomeAria": "前往首页",
   "auth.subtitle": "登录你的账号",
   "auth.google": "使用 Google 继续",
+  "auth.apple": "通过 Apple 继续",
   "auth.lastUsed": "最近使用",
   "auth.or": "或",
   "auth.email": "电子邮箱",
@@ -266,6 +283,9 @@ export const AUTH_CN: Record<string, string> = {
   "auth.notConfiguredTitle": "尚未配置 Supabase",
   "auth.notConfiguredBody":
     "请在项目根目录的 .env 文件中填写 VITE_SUPABASE_URL 和 VITE_SUPABASE_ANON_KEY，然后重启开发服务器。数据库表与 Google 登录说明见 README.md。",
+  "auth.faqIosSyncQ": "如何让 iOS 应用与网页保险库同步？",
+  "auth.faqIosSyncA":
+    "云同步绑定的是您的<strong>登录账户</strong>，而非设备。在 iOS 上若使用<strong>通过 Apple 继续</strong>且要与网页使用同一保险库，请在 Apple 询问时选择<strong>共享我的电子邮件</strong>——<strong>不要选择隐藏邮件地址</strong>。隐藏邮件会生成 relay 地址并创建<strong>独立账户</strong>，无法与通过 Google 或常用邮箱登录的网页保险库匹配。若您已在网页使用：在 iOS 点<strong>使用 Google 继续</strong>并用<strong>相同邮箱</strong>登录最简单。若坚持用 Apple，请选择共享邮件。若已选隐藏邮件？请在 设置 → Apple ID → iCloud → 隐藏邮件地址（或 appleid.apple.com）中断开 My Password Vault，退出应用后重新登录。",
 };
 
 export const AUTH_JP: Record<string, string> = {
@@ -283,6 +303,7 @@ export const AUTH_JP: Record<string, string> = {
   "auth.brandHomeAria": "ホームページへ",
   "auth.subtitle": "アカウントにサインイン",
   "auth.google": "Google で続行",
+  "auth.apple": "Apple で続行",
   "auth.lastUsed": "最近の利用",
   "auth.or": "または",
   "auth.email": "メールアドレス",
@@ -319,6 +340,9 @@ export const AUTH_JP: Record<string, string> = {
   "auth.notConfiguredTitle": "Supabase が設定されていません",
   "auth.notConfiguredBody":
     "プロジェクトルートの .env に VITE_SUPABASE_URL と VITE_SUPABASE_ANON_KEY を追加し、開発サーバーを再起動してください。テーブル作成と Google ログインは README.md を参照してください。",
+  "auth.faqIosSyncQ": "iOSアプリとWebのVaultを同期するには？",
+  "auth.faqIosSyncA":
+    "クラウド同期は端末ではなく<strong>サインインアカウント</strong>に紐づきます。iOSで<strong>Appleで続行</strong>を使いWebと同じVaultにしたい場合、Appleの質問では<strong>メールを共有</strong>を選び、<strong>メールを非公開</strong>は選ばないでください。非公開にするとリレーアドレスの<strong>別アカウント</strong>になり、Googleや通常メールでWebにログインしたVaultと一致しません。Web利用中なら最も簡単なのは、iOSで<strong>Googleで続行</strong>し<strong>同じメール</strong>でログインすることです。Appleを使う場合はメールを共有してください。すでに非公開を選んだ場合は、設定 → Apple ID → iCloud → メールを非公開（または appleid.apple.com）で My Password Vault を解除し、サインアウト後に再ログインしてください。",
 };
 
 export const AUTH_ID: Record<string, string> = {
@@ -336,6 +360,7 @@ export const AUTH_ID: Record<string, string> = {
   "auth.brandHomeAria": "Ke beranda",
   "auth.subtitle": "Masuk ke akun Anda",
   "auth.google": "Lanjutkan dengan Google",
+  "auth.apple": "Lanjutkan dengan Apple",
   "auth.lastUsed": "TERAKHIR DIGUNAKAN",
   "auth.or": "atau",
   "auth.email": "Email",
@@ -372,4 +397,7 @@ export const AUTH_ID: Record<string, string> = {
   "auth.notConfiguredTitle": "Supabase belum dikonfigurasi",
   "auth.notConfiguredBody":
     "Tambahkan VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY ke file .env di root proyek, lalu mulai ulang server dev. Lihat README.md untuk tabel database dan masuk dengan Google.",
+  "auth.faqIosSyncQ": "Sinkronkan app iOS dengan brankas web?",
+  "auth.faqIosSyncA":
+    "Sinkron cloud terikat ke <strong>akun masuk</strong>, bukan perangkat. Di iOS, jika memakai <strong>Lanjutkan dengan Apple</strong> dan ingin brankas yang sama dengan web, pilih <strong>Bagikan Email Saya</strong>—<strong>bukan Sembunyikan Email Saya</strong>. Sembunyikan membuat alamat relay dan <strong>akun terpisah</strong> yang tidak cocok dengan brankas web via Google atau email biasa Anda. Paling mudah jika sudah pakai web: ketuk <strong>Lanjutkan dengan Google</strong> di iOS dengan <strong>email yang sama</strong>. Jika lebih suka Apple, pilih Bagikan Email. Sudah pilih Sembunyikan? Nonaktifkan My Password Vault di Pengaturan → Apple ID → iCloud → Sembunyikan Email (atau appleid.apple.com), keluar, lalu masuk lagi.",
 };

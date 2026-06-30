@@ -47,7 +47,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "auth.brandHomeAria": "소개 페이지로 이동",
   "auth.subtitle": "계정에 로그인하세요",
   "auth.google": "Google로 계속하기",
-  "auth.apple": "Apple로 로그인",
+  "auth.apple": "Apple로 계속하기",
   "auth.lastUsed": "최근 사용",
   "auth.or": "또는",
   "auth.email": "이메일",
@@ -100,6 +100,9 @@ export const MESSAGES_KR: Record<string, string> = {
   "auth.faqAuthenticatorQ": "백업(인증 앱·복구 코드)은 무엇인가요?",
   "auth.faqAuthenticatorA":
     "패스키 기기를 잃었을 때는 마스터 비밀번호 + 백업 인증 앱(TOTP) 또는 일회용 복구 코드로 잠금 해제할 수 있습니다. 복구 코드는 설정 시 한 번만 표시되니 안전한 곳에 보관하세요.",
+  "auth.faqIosSyncQ": "iOS 앱과 웹 금고를 어떻게 동기화하나요?",
+  "auth.faqIosSyncA":
+    "클라우드 동기화는 기기가 아니라 <strong>로그인 계정</strong>에 묶입니다. iOS에서 <strong>Apple로 계속하기</strong>를 쓰면서 웹과 같은 금고를 쓰려면, Apple이 물을 때 <strong>이메일 공유(Share My Email)</strong>를 선택해야 합니다—<strong>이메일 가리기(Hide My Email)는 선택하지 마세요</strong>. Hide My Email은 릴레이 주소로 <strong>별도 계정</strong>이 만들어져 Google이나 일반 이메일로 웹에 로그인한 금고와 맞지 않습니다. 이미 웹을 쓰는 경우 가장 쉬운 방법: iOS에서 <strong>Google로 계속하기</strong>를 누르고 <strong>같은 이메일</strong>로 로그인하세요. iOS에서 Apple을 쓰려면 Share My Email로 실제 주소가 웹 계정과 같게 하세요. 이미 Hide My Email을 선택했다면, 설정 → Apple ID → iCloud → Hide My Email(또는 appleid.apple.com → Apps Using Apple ID)에서 My Password Vault 연결을 끊고, 앱에서 로그아웃한 뒤 다시 로그인하세요.",
   "auth.faqPricingQ": "유료인가요, 무료인가요?",
   "auth.faqPricingA":
     "비밀번호 항목은 무료로 최대 25개까지 저장할 수 있습니다. $4.99를 한 번만 결제하면 이 계정에서 항목 수 제한 없이 계속 쓸 수 있습니다. 앱에서 __PRICING_LINK__를 열어 결제할 수 있습니다.",

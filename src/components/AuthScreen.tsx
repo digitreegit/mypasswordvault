@@ -474,25 +474,6 @@ export function AuthScreen({
 
         {showSignInSignUp && (
           <div className="space-y-4">
-            {showAppleSignIn ? (
-              <div className="relative pt-2">
-                {view === "signin" && lastUsed === "apple" && (
-                  <LastUsedBadge label={t("auth.lastUsed")} />
-                )}
-                <button
-                  type="button"
-                  className="auth-apple-btn w-full justify-center rounded-md border border-black bg-black px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:opacity-60 flex items-center"
-                  onClick={() => void onApple()}
-                  disabled={busy}
-                >
-                  <span className="flex w-full items-center justify-center gap-2">
-                    <AppleGlyph />
-                    {t("auth.apple")}
-                  </span>
-                </button>
-              </div>
-            ) : null}
-
             <div className="relative pt-2">
               {view === "signin" && lastUsed === "google" && (
                 <LastUsedBadge label={t("auth.lastUsed")} />
@@ -509,6 +490,25 @@ export function AuthScreen({
                 </span>
               </button>
             </div>
+
+            {showAppleSignIn ? (
+              <div className="relative pt-2">
+                {view === "signin" && lastUsed === "apple" && (
+                  <LastUsedBadge label={t("auth.lastUsed")} />
+                )}
+                <button
+                  type="button"
+                  className="auth-apple-btn btn w-full justify-center border border-black bg-black text-white shadow-sm hover:bg-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:opacity-60"
+                  onClick={() => void onApple()}
+                  disabled={busy}
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <AppleGlyph />
+                    {t("auth.apple")}
+                  </span>
+                </button>
+              </div>
+            ) : null}
 
             <OrDivider text={t("auth.or")} />
 
@@ -801,7 +801,7 @@ function PasswordField({
 
 function AppleGlyph() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden className="shrink-0">
+    <svg viewBox="0 0 24 24" aria-hidden className="auth-apple-glyph shrink-0">
       <path
         fill="currentColor"
         d="M16.365 12.682c-.02-2.186 1.786-3.233 1.865-3.285-1.015-1.485-2.595-1.687-3.156-1.71-1.343-.136-2.62.79-3.3.79-.68 0-1.73-.77-2.845-.75-1.463.02-2.81.85-3.56 2.16-1.518 2.63-.388 6.52 1.09 8.66.723 1.04 1.584 2.21 2.715 2.17 1.09-.044 1.5-.705 2.815-.705 1.315 0 1.684.705 2.835.683 1.17-.022 1.915-1.06 2.628-2.105.827-1.21 1.168-2.38 1.188-2.44-.026-.012-2.28-.875-2.302-3.47zM13.922 6.48c.595-.72 1-1.72.89-2.72-.86.035-1.9.574-2.52 1.29-.55.635-1.03 1.655-.9 2.63.95.073 1.92-.483 2.53-1.2z"
