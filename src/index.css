@@ -782,16 +782,6 @@ html.native-app .auth-apple-btn {
   line-height: var(--leading-sub) !important;
 }
 
-html.native-app .auth-apple-btn svg[aria-hidden] {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-.auth-apple-btn svg[aria-hidden] {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
 /* Categories dialog — pill keyboard bar while typing; hide modal footer */
 @media (max-width: 767px) {
   [data-categories-dialog]:has(input:focus) .categories-dialog__footer--keyboard-hidden,
@@ -2097,9 +2087,17 @@ html.native-app .settings-native-chrome .settings-mobile-tablist-wrap {
   /* Heroicons / inline SVGs without explicit opt-out */
   #root svg[aria-hidden]:not(.ui-icon-fixed):not(.ui-icon-xs):not([data-icon-fixed]):not(
       .app-brand__shield
-    ):not(.brand-splash-symbol):not(.passkey-device-key__icon):not(.modal-close-btn__icon) {
+    ):not(.brand-splash-symbol):not(.passkey-device-key__icon):not(.modal-close-btn__icon):not(
+      .auth-apple-glyph
+    ) {
     width: var(--ui-icon-size);
     height: var(--ui-icon-size);
+    flex-shrink: 0;
+  }
+
+  #root .auth-apple-btn svg.auth-apple-glyph {
+    width: 1.75rem;
+    height: 1.75rem;
     flex-shrink: 0;
   }
 
