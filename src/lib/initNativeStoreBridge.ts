@@ -368,7 +368,9 @@ export async function initNativeStoreBridge(options?: {
       return;
     }
 
-    await store.restorePurchases();
+    // Load product catalog only. Do NOT restorePurchases() here — on iOS that
+    // refreshes the App Store receipt and prompts every user for Apple ID sign-in.
+    // Restore runs only when the user taps "Restore purchases" in pricing UI.
     await store.update();
     tryMarkReady();
 
