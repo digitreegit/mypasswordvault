@@ -32,6 +32,11 @@ if (!playStoreUrl) {
     "https://play.google.com/store/apps/details?id=com.skyface.mypasswordvault";
 }
 
+if (!appStoreUrl) {
+  appStoreUrl =
+    "https://apps.apple.com/us/app/my-password-vault/id6776333649";
+}
+
 const out = join(root, "public/landing-config.js");
 writeFileSync(
   out,

@@ -1,1 +1,1 @@
-window.__MPV_LANDING_CONFIG__={"url":"https://auth.mypasswordvault.app","anonKey":"sb_publishable_GHKEzYn5lrDDutQMjgdiTA_Pj37IOr-","playStoreUrl":"https://play.google.com/store/apps/details?id=com.skyface.mypasswordvault","appStoreUrl":""};
+window.__MPV_LANDING_CONFIG__={"url":"https://auth.mypasswordvault.app","anonKey":"sb_publishable_GHKEzYn5lrDDutQMjgdiTA_Pj37IOr-","playStoreUrl":"https://play.google.com/store/apps/details?id=com.skyface.mypasswordvault","appStoreUrl":"https://apps.apple.com/us/app/my-password-vault/id6776333649"};
