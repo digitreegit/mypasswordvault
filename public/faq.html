@@ -13,11 +13,15 @@
     <meta property="og:url" content="https://mypasswordvault.app/faq.html" />
     <meta property="og:title" content="FAQ — My Password Vault Password Manager" />
     <meta property="og:description" content="Answers about My Password Vault security, encryption, passkeys, TOTP 2FA, encrypted sync, backups, pricing, and support." />
-    <meta property="og:image" content="https://mypasswordvault.app/favicon.png" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="https://mypasswordvault.app/images/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="My Password Vault — local-first encrypted password manager for web, iOS, and Android" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="FAQ — My Password Vault Password Manager" />
     <meta name="twitter:description" content="Answers about My Password Vault security, encryption, passkeys, TOTP 2FA, encrypted sync, backups, pricing, and support." />
-    <meta name="twitter:image" content="https://mypasswordvault.app/favicon.png" />
+    <meta name="twitter:image" content="https://mypasswordvault.app/images/og-image.png" />
+    <meta name="twitter:image:alt" content="My Password Vault — local-first encrypted password manager for web, iOS, and Android" />
     <link rel="icon" href="./favicon.png" type="image/png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -26,6 +30,86 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./landing-site.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How does My Password Vault protect my data?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Your entries are encrypted on your device before anything is synced, so the servers store ciphertext rather than readable passwords, and your master password is not sent to us. Google sign-in is used only to tie the encrypted vault to your account. No software can promise perfect security, so a strong master password and good device hygiene remain important on your side."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do I use it? Will it feel simple day to day?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Sign in with Google, choose a strong master password, scan one QR code for two-factor authentication, then unlock to add or search entries. Auto-lock keeps the vault closed when you step away; sync picks up changes when you sign in on another browser or phone."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is an authenticator app, what does it do, and which one should I use?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "An authenticator app is an app on your phone or computer that generates short-lived numeric codes—usually six digits—for two-factor authentication. After set-up it shares a secret with your vault via the QR scan; unlocking requires your master password plus a fresh code so a stolen password alone is not enough. Use any reputable time-based OTP (TOTP) app compatible with Authenticator/Google-style setups, such as Google Authenticator, Microsoft Authenticator, Authy, FreeOTP, 1Password OTP, Bitwarden, or compatible built-in Authenticator modes—pick one from a publisher you trust and keep it updated."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What if my authenticator app breaks, I lose my phone, or codes stop working?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Your encrypted vault remains in your account. On a new or reset device: sign in, download the latest vault from Devices and backup, enter your master password, then follow the prompts to scan a new QR code and link a replacement authenticator. After you confirm, old time-based codes stop working—that is expected—but your encrypted data was not erased. If you still have access to your previous authenticator, you can often unlock normally without resetting it."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do I sync the iOS app with my web vault?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Cloud sync is tied to your sign-in account, not your device. On iOS, if you use Sign in with Apple and want the same vault as on the web, you must choose Share My Email when Apple asks—not Hide My Email. Hide My Email creates a private relay address and a separate account that will not match a web vault signed in with Google or your normal email. Easiest if you already use the web: tap Continue with Google on iOS with the same email. If you prefer Apple on iOS, pick Share My Email so your real address matches your web login."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is this free or paid?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Up to 25 password entries are free. A one-time $4.99 payment unlocks unlimited entries on your account — no subscription. See Plans and pricing for checkout."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What if I forget my master password?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Nobody (including us) can recover your passwords without your master password. If you lose it you must reset the vault and lose existing entries on that device. Cloud restore and encrypted backup files always require the same master password used when those backups were made."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I keep an offline backup?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. After you unlock, open Settings → Offline JSON file (advanced) to download an encrypted export. Store it somewhere safe; you will still need the master password from the time of export to open it."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Who do I contact if something goes wrong?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Email contact@skyface.com for questions, bug reports, or feedback—we read incoming mail."
+            }
+          }
+        ]
+      }
+    </script>
   </head>
   <body data-landing-page="faq">
     <div id="file-protocol-banner" class="file-protocol-banner" role="alert">
@@ -103,7 +187,7 @@
         <div class="faq-list">
           <details class="faq-item">
             <summary>
-              <span class="faq-sum-text" data-i18n="faq1_sum">How does My Password Vault protect my data?</span>
+              <span class="faq-sum-text" data-i18n="faq1_sum">Can I trust this app? Is my data safe?</span>
               <span class="faq-chevron" aria-hidden="true">
                 <svg class="faq-chevron-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path
@@ -117,10 +201,9 @@
               </span>
             </summary>
             <p class="faq-a" data-i18n="faq1_html" data-i18n-html>
-              Your entries are encrypted on your device before anything is synced, so the servers store
-              ciphertext rather than readable passwords, and your master password is not sent to us. Google
-              sign-in is used only to tie the encrypted vault to your account. No software can promise perfect
-              security, so a strong master password and good device hygiene remain important on your side.
+              Your passwords are encrypted on your device before anything is synced. Servers only ever see
+              ciphertext—your master password and plain-text secrets never leave your control in readable form.
+              Google sign-in is only used to tie the encrypted vault to your account.
             </p>
           </details>
           <details class="faq-item">
@@ -197,33 +280,6 @@
           </details>
           <details class="faq-item">
             <summary>
-              <span class="faq-sum-text" data-i18n="faq9_sum">How do I sync the iOS app with my web vault?</span>
-              <span class="faq-chevron" aria-hidden="true">
-                <svg class="faq-chevron-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="1.5"
-                    d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                  />
-                </svg>
-              </span>
-            </summary>
-            <p class="faq-a" data-i18n="faq9_html" data-i18n-html>
-              Cloud sync is tied to your <strong>sign-in account</strong>, not your device. On iOS, if you use
-              <strong>Sign in with Apple</strong> and want the same vault as on the web, you must choose
-              <strong>Share My Email</strong> when Apple asks—not <strong>Hide My Email</strong>. Hide My Email
-              creates a private relay address and a <strong>separate account</strong> that will not match a web
-              vault signed in with Google or your normal email. Easiest if you already use the web: tap
-              <strong>Continue with Google</strong> on iOS with the <strong>same email</strong>. If you prefer
-              Apple on iOS, pick Share My Email so your real address matches your web login. Already chose Hide My
-              Email? Turn off My Password Vault under Settings → Apple ID → iCloud → Hide My Email (or at
-              appleid.apple.com → Apps Using Apple ID), sign out in the app, and sign in again.
-            </p>
-          </details>
-          <details class="faq-item">
-            <summary>
               <span class="faq-sum-text" data-i18n="faq5_sum">Is this free or paid?</span>
               <span class="faq-chevron" aria-hidden="true">
                 <svg class="faq-chevron-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -238,8 +294,8 @@
               </span>
             </summary>
             <p class="faq-a" data-i18n="faq5_html" data-i18n-html>
-              The service is free to use for now. If that ever changes, we will announce pricing clearly
-              beforehand.
+              Up to 25 password entries are free. A one-time $4.99 payment unlocks unlimited entries on your
+              account — no subscription. See <a href="./pricing.html">Plans &amp; pricing</a> for checkout.
             </p>
           </details>
           <details class="faq-item">

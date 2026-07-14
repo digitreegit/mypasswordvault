@@ -5,6 +5,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildFaqPageSchemaScript, buildLandingHead } from "./landing-seo.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
@@ -17,38 +18,8 @@ const LOGO_SVG = `            <svg viewBox="245 346 126 112" fill="currentColor"
               <polygon points="351.93 385.25 344.55 390.18 345.11 381.37 339.16 381.37 339.75 390.18 332.37 385.25 329.37 390.52 337.33 394.39 329.37 398.27 332.37 403.47 339.75 398.54 339.16 407.35 345.11 407.35 344.55 398.54 351.93 403.47 354.87 398.27 346.97 394.39 354.87 390.52 351.93 385.25" />
             </svg>`;
 
-function head(title, desc, canonicalPath = "/") {
-  const esc = (s) => s.replace(/"/g, "&quot;").replace(/</g, "");
-  const canonical = `https://mypasswordvault.app${canonicalPath}`;
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="description" content="${esc(desc)}" />
-    <meta name="robots" content="index, follow" />
-    <meta name="author" content="Skyface, LLC" />
-    <title>${esc(title)}</title>
-    <link rel="canonical" href="${canonical}" />
-    <meta property="og:site_name" content="My Password Vault" />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="${canonical}" />
-    <meta property="og:title" content="${esc(title)}" />
-    <meta property="og:description" content="${esc(desc)}" />
-    <meta property="og:image" content="https://mypasswordvault.app/favicon.png" />
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="${esc(title)}" />
-    <meta name="twitter:description" content="${esc(desc)}" />
-    <meta name="twitter:image" content="https://mypasswordvault.app/favicon.png" />
-    <link rel="icon" href="./favicon.png" type="image/png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="./landing-site.css" />
-  </head>`;
+function head(title, desc, canonicalPath = "/", extraHead = "") {
+  return buildLandingHead({ title, description: desc, canonicalPath, extraHead });
 }
 
 const bodyTop = (page, navInner) => `  <body data-landing-page="${page}">
@@ -304,6 +275,7 @@ writeFileSync(
     "FAQ — My Password Vault Password Manager",
     "Answers about My Password Vault security, encryption, passkeys, TOTP 2FA, encrypted sync, backups, pricing, and support.",
     "/faq.html",
+    `${buildFaqPageSchemaScript()}\n`,
   ) +
     "\n" +
     bodyTop("faq", navFaq) +

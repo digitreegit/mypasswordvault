@@ -27,3 +27,9 @@ const cfg = spawnSync("node", ["scripts/write-landing-config.mjs"], {
   stdio: "inherit",
 });
 if (cfg.status !== 0) process.exit(cfg.status ?? 1);
+
+const seo = spawnSync("node", ["scripts/generate-sitemap.mjs"], {
+  cwd: new URL("../", import.meta.url).pathname,
+  stdio: "inherit",
+});
+if (seo.status !== 0) process.exit(seo.status ?? 1);
