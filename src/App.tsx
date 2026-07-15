@@ -25,6 +25,7 @@ import { nativeScreenRootClass } from "./lib/nativeLayout";
 import { isNativeApp } from "./lib/platform";
 import { KeyboardAccessoryBar } from "./components/KeyboardAccessoryBar";
 import { CloudSyncNotifier } from "./components/CloudSyncNotifier";
+import { Analytics } from "@vercel/analytics/react";
 
 function parseHashPath(): string {
   if (typeof window === "undefined") return "";
@@ -173,5 +174,10 @@ export default function App() {
   if (isNativeApp()) {
     return <div className="native-app-root">{tree}</div>;
   }
-  return tree;
+  return (
+    <>
+      {tree}
+      <Analytics />
+    </>
+  );
 }

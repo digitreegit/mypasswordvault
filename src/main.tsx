@@ -23,8 +23,15 @@ import { initNativeScrollFocus } from "./lib/nativeScrollFocus";
 import { initNativeViewportLock } from "./lib/nativeViewportLock";
 import { initNativeStoreBridge } from "./lib/initNativeStoreBridge";
 import { initNativeKeyboard } from "./lib/initNativeKeyboard";
+import {
+  captureMarketingAttributionFromUrl,
+} from "./lib/marketingAttribution";
 
 initNativeScrollFocus();
+
+if (!isNativeApp()) {
+  captureMarketingAttributionFromUrl();
+}
 
 if (isNativeApp()) {
   document.documentElement.classList.add("native-app");

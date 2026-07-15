@@ -10,7 +10,14 @@
   function appPath(path) {
     var base = "";
     if (location.protocol === "file:") base = "http://127.0.0.1:5173";
-    return base + path;
+    var href = base + path;
+    if (window.MPV_APPEND_UTM) {
+      return window.MPV_APPEND_UTM(href, {
+        utm_source: "web",
+        utm_medium: "landing_auth",
+      });
+    }
+    return href;
   }
 
   function applyAuthI18n() {

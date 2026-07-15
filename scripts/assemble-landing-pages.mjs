@@ -203,6 +203,8 @@ const storeBadges = `      <section class="landing-store-badges" aria-label="Dow
           <a
             class="landing-store-badge"
             data-store="apple"
+            data-mpv-track="Store Badge Click"
+            data-mpv-store="apple"
             href="#"
             target="_blank"
             rel="noopener noreferrer"
@@ -220,6 +222,8 @@ const storeBadges = `      <section class="landing-store-badges" aria-label="Dow
           <a
             class="landing-store-badge"
             data-store="google"
+            data-mpv-track="Store Badge Click"
+            data-mpv-store="google_play"
             href="#"
             target="_blank"
             rel="noopener noreferrer"
@@ -255,7 +259,9 @@ ${storeBadges}      <footer>
       </footer>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./vercel-analytics-init.js" defer></script>
     <script src="./landing-config.js"></script>
+    <script src="./landing-analytics.js"></script>
     <script src="./landing-store-badges.js"></script>
     <script src="./landing-overlays.js"></script>
     <script src="./landing-nav.js"></script>
