@@ -1,19 +1,19 @@
 PODS:
-  - Capacitor (7.6.5):
+  - Capacitor (8.4.2):
     - CapacitorCordova
-  - CapacitorApp (7.1.2):
+  - CapacitorApp (8.1.1):
     - Capacitor
-  - CapacitorBrowser (7.0.5):
+  - CapacitorBrowser (8.0.4):
     - Capacitor
-  - CapacitorCordova (7.6.5)
-  - CapacitorFilesystem (7.1.8):
+  - CapacitorCordova (8.4.2)
+  - CapacitorFilesystem (8.1.2):
     - Capacitor
     - IONFilesystemLib (~> 1.1.1)
-  - CapacitorKeyboard (7.0.6):
+  - CapacitorKeyboard (8.0.5):
     - Capacitor
   - CapacitorPluginCdvPurchase (13.16.1):
     - Capacitor
-  - CapacitorShare (7.0.4):
+  - CapacitorShare (8.0.1):
     - Capacitor
   - IONFilesystemLib (1.1.2)
 
@@ -50,16 +50,16 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/share"
 
 SPEC CHECKSUMS:
-  Capacitor: e9708b186e71dc45f9b2ee72e826b7389fb79ff2
-  CapacitorApp: f01a913211780e0718dae9750442c3e23f96e106
-  CapacitorBrowser: 6d09f59655e89aede71654ef08b98de55cf032b6
-  CapacitorCordova: 2b36392a7292c3c451dcae154185ee8804d7b6b3
-  CapacitorFilesystem: c63fc54df41e5a6761785a7f3c49dc696c22e296
-  CapacitorKeyboard: a2e0869edd229490ce36aed2549c0d6b95e27ee8
+  Capacitor: 52f999235b8bd6a7d01694753f4f4d54d182e3a3
+  CapacitorApp: 305bd13c44f6f9d164e2ee66a4faa956ed8c0e06
+  CapacitorBrowser: 752e0208aa07c7aa63d1f7cde895a3e9519b2656
+  CapacitorCordova: 345eacdc4c8282415446aea4acd8c77d82480bd4
+  CapacitorFilesystem: 2db285a1ac6e475cc27cae2e1bea999000f9e2be
+  CapacitorKeyboard: b6b0744890cdb1d9a96e2cafcc9253fdcc55de3b
   CapacitorPluginCdvPurchase: bd78fbc5fa4a72c5cb1fcb81c40721915aeea6f7
-  CapacitorShare: 25f7fc5dd0e4edbde5d6801c6de5d14a8b450a41
+  CapacitorShare: 0c58305114538568059bfc07111f22dcb9cb2a82
   IONFilesystemLib: 21a63377696b2d8fab5632ecfb7d2ac67bddb68a
 
-PODFILE CHECKSUM: bd6c6b2174c8cf7b59b6d5cf9fede58e84ec4c65
+PODFILE CHECKSUM: 5dd5acfe55d6879a48cbdbb3736b935792ea01d8
 
 COCOAPODS: 1.16.2

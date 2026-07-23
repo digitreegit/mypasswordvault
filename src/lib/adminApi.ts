@@ -6,12 +6,20 @@ export type AdminStats = {
   sales_total: number;
   sales_amount_cents_total: number;
   free_signups_today: number;
+  /** All-time account rows in user_entitlements (signed-up users). */
+  signups_total: number;
   paid_members: number;
   free_members: number;
   open_complaints: number;
   sales_by_platform: { web: number; ios: number; android: number };
   sales_by_country: { country: string; count: number }[];
   signups_by_country: { country: string; count: number }[];
+  signups_by_platform: {
+    web: number;
+    ios: number;
+    android: number;
+    unknown: number;
+  };
 };
 
 export type PurchasePlatform = "web" | "ios" | "android";
@@ -141,7 +149,7 @@ export async function fetchAdminCustomers(opts: {
     q: opts.q ?? "",
     plan: opts.plan ?? "all",
     refunded: opts.refunded ?? "all",
-    limit: opts.limit ?? 50,
+    limit: opts.limit ?? 10,
     offset: opts.offset ?? 0,
   });
 }

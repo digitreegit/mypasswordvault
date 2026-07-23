@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowPathIcon,
@@ -50,12 +50,14 @@ const EMPTY_STATS: AdminStats = {
   sales_total: 0,
   sales_amount_cents_total: 0,
   free_signups_today: 0,
+  signups_total: 0,
   paid_members: 0,
   free_members: 0,
   open_complaints: 0,
   sales_by_platform: { web: 0, ios: 0, android: 0 },
   sales_by_country: [],
   signups_by_country: [],
+  signups_by_platform: { web: 0, ios: 0, android: 0, unknown: 0 },
 };
 
 function normalizeAdminStats(raw: Partial<AdminStats>): AdminStats {
@@ -65,6 +67,10 @@ function normalizeAdminStats(raw: Partial<AdminStats>): AdminStats {
     sales_by_platform: {
       ...EMPTY_STATS.sales_by_platform,
       ...(raw.sales_by_platform ?? {}),
+    },
+    signups_by_platform: {
+      ...EMPTY_STATS.signups_by_platform,
+      ...(raw.signups_by_platform ?? {}),
     },
     sales_by_country: raw.sales_by_country ?? [],
     signups_by_country: raw.signups_by_country ?? [],
@@ -90,7 +96,7 @@ function regionStatsForDisplay(
 }
 
 const LICENSE_AMOUNT_CENTS = 499;
-const CUSTOMERS_PAGE_SIZE = 100;
+const CUSTOMERS_PAGE_SIZE = 10;
 
 const ADMIN_HEADER_ICON_BTN =
   "inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-600 hover:bg-ink-50 transition-colors shrink-0";
@@ -392,7 +398,11 @@ function adminErrorLabel(
   return code;
 }
 
-type AdminStatAccordionKey = "signups" | "salesToday" | "salesTotal";
+type AdminStatAccordionKey =
+  | "signups"
+  | "salesToday"
+  | "salesTotal"
+  | "salesTotalExtra";
 
 function AccordionStatBox({
   panelId,
@@ -400,6 +410,7 @@ function AccordionStatBox({
   value,
   amount,
   amountClassName = "text-emerald-600",
+  hint,
   expanded,
   onToggle,
   children,
@@ -409,6 +420,7 @@ function AccordionStatBox({
   value: string | number;
   amount?: string;
   amountClassName?: string;
+  hint?: string;
   expanded: boolean;
   onToggle: () => void;
   children: React.ReactNode;
@@ -439,6 +451,9 @@ function AccordionStatBox({
                 </p>
               ) : null}
             </div>
+            {hint ? (
+              <p className="mt-1.5 text-xs text-ink-500 leading-snug">{hint}</p>
+            ) : null}
           </div>
           <ChevronDownIcon
             className={`h-5 w-5 shrink-0 text-ink-400 transition-transform duration-200 ${
@@ -606,11 +621,11 @@ export function AdminDashboard() {
   );
 
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [rows, setRows] = useState<AdminCustomerRow[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
   const [complaints, setComplaints] = useState<AdminComplaint[]>([]);
   const [grants, setGrants] = useState<AdminComplimentaryGrant[]>([]);
   const [grantEmail, setGrantEmail] = useState("");
@@ -657,7 +672,6 @@ export function AdminDashboard() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    setLoadingMore(false);
     setError(null);
 
     const [statsR, listR, compR, grantsR] = await Promise.all([
@@ -667,7 +681,7 @@ export function AdminDashboard() {
         plan,
         refunded,
         limit: CUSTOMERS_PAGE_SIZE,
-        offset: 0,
+        offset: page * CUSTOMERS_PAGE_SIZE,
       }),
       fetchAdminComplaints(),
       fetchComplimentaryGrants(),
@@ -702,6 +716,11 @@ export function AdminDashboard() {
     if (listR.ok) {
       setRows(listR.data.rows);
       setTotal(listR.data.total);
+      const maxPage = Math.max(
+        0,
+        Math.ceil(listR.data.total / CUSTOMERS_PAGE_SIZE) - 1,
+      );
+      if (page > maxPage) setPage(maxPage);
     } else errors.push(adminErrorLabel(listR.error, t));
 
     if (compR.ok) setComplaints(compR.data.complaints);
@@ -709,54 +728,11 @@ export function AdminDashboard() {
 
     setError(errors.length ? errors.join(" · ") : null);
     setLoading(false);
-  }, [q, plan, refunded, t]);
+  }, [q, plan, refunded, page, t]);
 
-  const loadMore = useCallback(async () => {
-    if (loading || loadingMore) return;
-    setLoadingMore(true);
-    setError(null);
-
-    const listR = await fetchAdminCustomers({
-      q,
-      plan,
-      refunded,
-      limit: CUSTOMERS_PAGE_SIZE,
-      offset: rows.length,
-    });
-
-    if (!listR.ok) {
-      setError(adminErrorLabel(listR.error, t));
-      setLoadingMore(false);
-      return;
-    }
-
-    setRows((prev) => [...prev, ...listR.data.rows]);
-    setTotal(listR.data.total);
-    setLoadingMore(false);
-  }, [loading, loadingMore, q, plan, refunded, rows.length, t]);
-
-  const hasMore = rows.length < total;
-  const listSentinelEl = useRef<HTMLElement | null>(null);
-  const setListSentinelRef = useCallback((el: HTMLLIElement | HTMLTableRowElement | null) => {
-    listSentinelEl.current = el;
-  }, []);
-  const loadMoreRef = useRef(loadMore);
-  loadMoreRef.current = loadMore;
-
-  useEffect(() => {
-    if (!hasMore || loading || loadingMore) return;
-    const el = listSentinelEl.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) void loadMoreRef.current();
-      },
-      { root: null, rootMargin: "240px", threshold: 0 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasMore, loading, loadingMore, rows.length]);
+  const pageCount = Math.max(1, Math.ceil(total / CUSTOMERS_PAGE_SIZE) || 1);
+  const rangeFrom = total === 0 ? 0 : page * CUSTOMERS_PAGE_SIZE + 1;
+  const rangeTo = Math.min(total, (page + 1) * CUSTOMERS_PAGE_SIZE);
 
   useEffect(() => {
     void load();
@@ -1037,30 +1013,78 @@ export function AdminDashboard() {
         ) : null}
 
         {stats ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <AccordionStatBox
-              panelId="admin-stat-signups"
-              label={t("admin.statsFreeSignupsToday")}
-              value={stats.free_signups_today}
+              panelId="admin-stat-signups-total"
+              label={t("admin.statsSignupsTotal")}
+              value={stats.signups_total ?? stats.free_members + stats.paid_members}
+              hint={t("admin.statsSignupsPlatformHint", {
+                ios: stats.signups_by_platform?.ios ?? 0,
+                android: stats.signups_by_platform?.android ?? 0,
+                web: stats.signups_by_platform?.web ?? 0,
+              })}
               expanded={expandedStats.has("signups")}
               onToggle={() => toggleStatAccordion("signups")}
             >
-              <AdminRegionBarChart
-                variant="embedded"
-                title={t("admin.statsByRegionSignups")}
-                summaryKey="admin.chartSignupRegionSummary"
-                items={signupRegionStats}
-                labelForCountry={(country) => countryStatLabel(country, locale, t)}
-                t={t}
-              />
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-lg bg-ink-50 px-2 py-2">
+                    <p className="text-[10px] uppercase tracking-wide text-ink-500">
+                      {t("admin.platformIos")}
+                    </p>
+                    <p className="mt-1 text-lg font-semibold tabular-nums text-ink-900">
+                      {stats.signups_by_platform?.ios ?? 0}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-ink-50 px-2 py-2">
+                    <p className="text-[10px] uppercase tracking-wide text-ink-500">
+                      {t("admin.platformAndroid")}
+                    </p>
+                    <p className="mt-1 text-lg font-semibold tabular-nums text-ink-900">
+                      {stats.signups_by_platform?.android ?? 0}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-ink-50 px-2 py-2">
+                    <p className="text-[10px] uppercase tracking-wide text-ink-500">
+                      {t("admin.platformWeb")}
+                    </p>
+                    <p className="mt-1 text-lg font-semibold tabular-nums text-ink-900">
+                      {stats.signups_by_platform?.web ?? 0}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-[11px] text-ink-500 leading-snug">
+                  {t("admin.statsDownloadsVsSignupsHint")}
+                </p>
+                <AdminRegionBarChart
+                  variant="embedded"
+                  title={t("admin.statsByRegionSignups")}
+                  summaryKey="admin.chartSignupRegionSummary"
+                  items={signupRegionStats}
+                  labelForCountry={(country) => countryStatLabel(country, locale, t)}
+                  t={t}
+                />
+              </div>
+            </AccordionStatBox>
+            <AccordionStatBox
+              panelId="admin-stat-signups-today"
+              label={t("admin.statsFreeSignupsToday")}
+              value={stats.free_signups_today}
+              hint={t("admin.statsSignupsTodayHint")}
+              expanded={expandedStats.has("salesToday")}
+              onToggle={() => toggleStatAccordion("salesToday")}
+            >
+              <p className="text-xs text-ink-600 leading-relaxed">
+                {t("admin.statsSignupsTodayDetail")}
+              </p>
             </AccordionStatBox>
             <AccordionStatBox
               panelId="admin-stat-sales-today"
               label={t("admin.statsSalesProToday")}
               value={stats.sales_today}
               amount={formatMoney(stats.sales_amount_cents_today, "usd")}
-              expanded={expandedStats.has("salesToday")}
-              onToggle={() => toggleStatAccordion("salesToday")}
+              expanded={expandedStats.has("salesTotal")}
+              onToggle={() => toggleStatAccordion("salesTotal")}
             >
               <AdminRegionBarChart
                 variant="embedded"
@@ -1075,8 +1099,8 @@ export function AdminDashboard() {
               label={t("admin.statsSalesProTotal")}
               value={stats.sales_total ?? 0}
               amount={formatMoney(stats.sales_amount_cents_total ?? 0, "usd")}
-              expanded={expandedStats.has("salesTotal")}
-              onToggle={() => toggleStatAccordion("salesTotal")}
+              expanded={expandedStats.has("salesTotalExtra")}
+              onToggle={() => toggleStatAccordion("salesTotalExtra")}
             >
               <AdminSalesBarChart
                 variant="embedded"
@@ -1238,7 +1262,10 @@ export function AdminDashboard() {
                 id="admin-plan"
                 label={t("admin.planLabel")}
                 value={plan}
-                onChange={(v) => setPlan(v as typeof plan)}
+                onChange={(v) => {
+                  setPlan(v as typeof plan);
+                  setPage(0);
+                }}
               >
                 <option value="all">{t("admin.filterAll")}</option>
                 <option value="pro">{t("admin.filterPro")}</option>
@@ -1248,7 +1275,10 @@ export function AdminDashboard() {
                 id="admin-refunded"
                 label={t("admin.refundFilterLabel")}
                 value={refunded}
-                onChange={(v) => setRefunded(v as typeof refunded)}
+                onChange={(v) => {
+                  setRefunded(v as typeof refunded);
+                  setPage(0);
+                }}
               >
                 <option value="all">{t("admin.filterAll")}</option>
                 <option value="no">{t("admin.filterNotRefunded")}</option>
@@ -1257,8 +1287,10 @@ export function AdminDashboard() {
               <button
                 type="button"
                 className={ADMIN_BTN_PRIMARY_FIELD}
-                disabled={!q.trim()}
-                onClick={() => void load()}
+                onClick={() => {
+                  setPage(0);
+                  void load();
+                }}
               >
                 {t("admin.apply")}
               </button>
@@ -1266,7 +1298,14 @@ export function AdminDashboard() {
             <p className="text-xs text-ink-500">
               {loading
                 ? t("admin.loading")
-                : t("admin.totalCount", { total, shown: rows.length })}
+                : t("admin.totalCount", {
+                    total,
+                    shown: rows.length,
+                    from: rangeFrom,
+                    to: rangeTo,
+                    page: page + 1,
+                    pages: pageCount,
+                  })}
             </p>
           </div>
 
@@ -1289,14 +1328,6 @@ export function AdminDashboard() {
                 onDelete={openDeleteModal}
               />
             ))}
-            {hasMore ? (
-              <li
-                ref={setListSentinelRef}
-                className="px-4 py-4 text-center text-xs text-ink-500"
-              >
-                {loadingMore ? t("admin.loadingMore") : t("admin.scrollForMore")}
-              </li>
-            ) : null}
           </ul>
 
           <div className="hidden md:block overflow-x-auto overscroll-x-contain">
@@ -1412,16 +1443,44 @@ export function AdminDashboard() {
                     </td>
                   </tr>
                 ))}
-                {hasMore ? (
-                  <tr ref={setListSentinelRef}>
-                    <td colSpan={7} className="px-4 py-4 text-center text-xs text-ink-500">
-                      {loadingMore ? t("admin.loadingMore") : t("admin.scrollForMore")}
-                    </td>
-                  </tr>
-                ) : null}
               </tbody>
             </table>
           </div>
+
+          {total > 0 ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-100 px-4 py-3">
+              <p className="text-xs text-ink-500">
+                {t("admin.pageRange", {
+                  from: rangeFrom,
+                  to: rangeTo,
+                  total,
+                })}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className={ADMIN_BTN_SECONDARY}
+                  disabled={loading || page <= 0}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                >
+                  {t("admin.prevPage")}
+                </button>
+                <span className="text-xs tabular-nums text-ink-600 px-1">
+                  {t("admin.pageOf", { page: page + 1, pages: pageCount })}
+                </span>
+                <button
+                  type="button"
+                  className={ADMIN_BTN_SECONDARY}
+                  disabled={loading || page + 1 >= pageCount}
+                  onClick={() =>
+                    setPage((p) => Math.min(pageCount - 1, p + 1))
+                  }
+                >
+                  {t("admin.nextPage")}
+                </button>
+              </div>
+            </div>
+          ) : null}
         </section>
       </main>
 

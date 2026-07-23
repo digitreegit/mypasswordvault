@@ -464,6 +464,31 @@ async function fetchSignupByCountryStats(
     .slice(0, 16);
 }
 
+async function fetchSignupByPlatformStats(
+  admin: ReturnType<typeof createClient>,
+): Promise<{ web: number; ios: number; android: number; unknown: number }> {
+  const counts = { web: 0, ios: 0, android: 0, unknown: 0 };
+  const { data, error } = await admin
+    .from("user_entitlements")
+    .select("signup_platform");
+
+  if (error) {
+    if (!isSchemaGap(error)) {
+      console.error("admin stats signup platform", error);
+    }
+    return counts;
+  }
+
+  for (const row of (data ?? []) as { signup_platform: string | null }[]) {
+    const p = row.signup_platform?.trim().toLowerCase();
+    if (p === "ios") counts.ios += 1;
+    else if (p === "android") counts.android += 1;
+    else if (p === "web") counts.web += 1;
+    else counts.unknown += 1;
+  }
+  return counts;
+}
+
 async function fetchDashboardStats(admin: ReturnType<typeof createClient>) {
   const since = utcDayStartIso();
 
@@ -537,6 +562,9 @@ async function fetchDashboardStats(admin: ReturnType<typeof createClient>) {
     else if (!isSchemaGap(error)) console.error("admin stats signups", error);
   }
 
+  const signups_total = await countEntitlements(admin, (q) => q);
+  const signups_by_platform = await fetchSignupByPlatformStats(admin);
+
   const paid_members = await countEntitlements(admin, (q, useRefundFilter) => {
     let next = q.eq("licensed", true);
     if (useRefundFilter) next = next.is("refunded_at", null);
@@ -567,12 +595,14 @@ async function fetchDashboardStats(admin: ReturnType<typeof createClient>) {
       sales_total,
       sales_amount_cents_total,
       free_signups_today,
+      signups_total,
       paid_members,
       free_members,
       open_complaints,
       sales_by_platform: breakdown.sales_by_platform,
       sales_by_country: breakdown.sales_by_country,
       signups_by_country,
+      signups_by_platform,
     },
   };
 }
