@@ -786,6 +786,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "admin.complaintFailed": "등록 실패: {{error}}",
   "admin.resolveFailed": "처리 실패: {{error}}",
   "admin.complimentaryTitle": "무료 PRO (친구·지인)",
+  "admin.complimentaryButton": "무료 PRO",
   "admin.complimentaryHint":
     "결제 없이 친구·지인에게 무제한 PRO를 부여합니다. 기존 계정은 즉시 적용되고, 해당 이메일로 가입하면 자동 적용됩니다.",
   "admin.complimentaryEmailLabel": "이메일",

@@ -399,10 +399,49 @@ function adminErrorLabel(
 }
 
 type AdminStatAccordionKey =
-  | "signups"
   | "salesToday"
   | "salesTotal"
   | "salesTotalExtra";
+
+function StatBox({
+  label,
+  value,
+  amount,
+  amountClassName = "text-emerald-600",
+  hint,
+  children,
+}: {
+  label: string;
+  value: string | number;
+  amount?: string;
+  amountClassName?: string;
+  hint?: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-ink-200 bg-white shadow-sm p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-ink-500">
+        {label}
+      </p>
+      <div className="mt-2 flex items-baseline justify-between gap-3">
+        <p className="text-2xl font-semibold text-ink-900 tabular-nums">
+          {value}
+        </p>
+        {amount ? (
+          <p
+            className={`text-base font-medium tabular-nums shrink-0 ${amountClassName}`}
+          >
+            {amount}
+          </p>
+        ) : null}
+      </div>
+      {hint ? (
+        <p className="mt-1.5 text-xs text-ink-500 leading-snug">{hint}</p>
+      ) : null}
+      {children ? <div className="mt-3">{children}</div> : null}
+    </div>
+  );
+}
 
 function AccordionStatBox({
   panelId,
@@ -528,6 +567,7 @@ function AdminPortalDialog({
   onClose,
   children,
   footer,
+  size = "md",
 }: {
   titleId: string;
   title: string;
@@ -535,6 +575,7 @@ function AdminPortalDialog({
   onClose: () => void;
   children: React.ReactNode;
   footer: React.ReactNode;
+  size?: "md" | "lg";
 }) {
   return createPortal(
     <div
@@ -546,7 +587,9 @@ function AdminPortalDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="card w-full max-w-md shadow-lg max-h-[85vh] overflow-hidden flex flex-col"
+        className={`card w-full shadow-lg max-h-[85vh] overflow-hidden flex flex-col ${
+          size === "lg" ? "max-w-lg" : "max-w-md"
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="action-modal__header px-5 py-3 border-b border-ink-200">
@@ -631,6 +674,7 @@ export function AdminDashboard() {
   const [grantEmail, setGrantEmail] = useState("");
   const [grantNote, setGrantNote] = useState("");
   const [grantMsg, setGrantMsg] = useState<string | null>(null);
+  const [complimentaryOpen, setComplimentaryOpen] = useState(false);
 
   const [q, setQ] = useState("");
   const [plan, setPlan] = useState<"all" | "pro" | "free">("all");
@@ -789,10 +833,19 @@ export function AdminDashboard() {
   }
 
   useEffect(() => {
-    if (!complaintTarget && !deleteTarget && !refundTarget && !notice) return;
+    if (
+      !complaintTarget &&
+      !deleteTarget &&
+      !refundTarget &&
+      !notice &&
+      !complimentaryOpen
+    ) {
+      return;
+    }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (notice) setNotice(null);
+        else if (complimentaryOpen) closeComplimentaryModal();
         else if (refundTarget) closeRefundModal();
         else if (deleteTarget) closeDeleteModal();
         else closeComplaintModal();
@@ -800,7 +853,17 @@ export function AdminDashboard() {
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [complaintTarget, deleteTarget, refundTarget, notice]);
+  }, [complaintTarget, deleteTarget, refundTarget, notice, complimentaryOpen]);
+
+  function openComplimentaryModal() {
+    setGrantMsg(null);
+    setComplimentaryOpen(true);
+  }
+
+  function closeComplimentaryModal() {
+    setComplimentaryOpen(false);
+    setGrantMsg(null);
+  }
 
   function openComplaintModal(row: AdminCustomerRow) {
     setComplaintError(null);
@@ -980,6 +1043,18 @@ export function AdminDashboard() {
             >
               <ArrowPathIcon className="h-5 w-5" aria-hidden />
             </button>
+            <button
+              type="button"
+              className="btn-secondary text-sm"
+              onClick={openComplimentaryModal}
+            >
+              {t("admin.complimentaryButton")}
+              {grants.length > 0 ? (
+                <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-violet-800">
+                  {grants.length}
+                </span>
+              ) : null}
+            </button>
             <a href="#/" className="btn-primary text-sm">
               {t("admin.app")}
             </a>
@@ -1013,20 +1088,20 @@ export function AdminDashboard() {
         ) : null}
 
         {stats ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <AccordionStatBox
-              panelId="admin-stat-signups-total"
-              label={t("admin.statsSignupsTotal")}
-              value={stats.signups_total ?? stats.free_members + stats.paid_members}
-              hint={t("admin.statsSignupsPlatformHint", {
-                ios: stats.signups_by_platform?.ios ?? 0,
-                android: stats.signups_by_platform?.android ?? 0,
-                web: stats.signups_by_platform?.web ?? 0,
-              })}
-              expanded={expandedStats.has("signups")}
-              onToggle={() => toggleStatAccordion("signups")}
-            >
-              <div className="space-y-3">
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <StatBox
+                label={t("admin.statsSignupsTotal")}
+                value={
+                  stats.signups_total ??
+                  stats.free_members + stats.paid_members
+                }
+                hint={t("admin.statsSignupsPlatformHint", {
+                  ios: stats.signups_by_platform?.ios ?? 0,
+                  android: stats.signups_by_platform?.android ?? 0,
+                  web: stats.signups_by_platform?.web ?? 0,
+                })}
+              >
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-lg bg-ink-50 px-2 py-2">
                     <p className="text-[10px] uppercase tracking-wide text-ink-500">
@@ -1053,159 +1128,69 @@ export function AdminDashboard() {
                     </p>
                   </div>
                 </div>
-                <p className="text-[11px] text-ink-500 leading-snug">
+                <p className="mt-2 text-[11px] text-ink-500 leading-snug">
                   {t("admin.statsDownloadsVsSignupsHint")}
                 </p>
+              </StatBox>
+              <AccordionStatBox
+                panelId="admin-stat-signups-today"
+                label={t("admin.statsFreeSignupsToday")}
+                value={stats.free_signups_today}
+                hint={t("admin.statsSignupsTodayHint")}
+                expanded={expandedStats.has("salesToday")}
+                onToggle={() => toggleStatAccordion("salesToday")}
+              >
+                <p className="text-xs text-ink-600 leading-relaxed">
+                  {t("admin.statsSignupsTodayDetail")}
+                </p>
+              </AccordionStatBox>
+              <AccordionStatBox
+                panelId="admin-stat-sales-today"
+                label={t("admin.statsSalesProToday")}
+                value={stats.sales_today}
+                amount={formatMoney(stats.sales_amount_cents_today, "usd")}
+                expanded={expandedStats.has("salesTotal")}
+                onToggle={() => toggleStatAccordion("salesTotal")}
+              >
                 <AdminRegionBarChart
                   variant="embedded"
-                  title={t("admin.statsByRegionSignups")}
-                  summaryKey="admin.chartSignupRegionSummary"
-                  items={signupRegionStats}
-                  labelForCountry={(country) => countryStatLabel(country, locale, t)}
+                  title={t("admin.statsByRegion")}
+                  items={regionStats}
+                  labelForCountry={(country) =>
+                    countryStatLabel(country, locale, t)
+                  }
                   t={t}
                 />
-              </div>
-            </AccordionStatBox>
-            <AccordionStatBox
-              panelId="admin-stat-signups-today"
-              label={t("admin.statsFreeSignupsToday")}
-              value={stats.free_signups_today}
-              hint={t("admin.statsSignupsTodayHint")}
-              expanded={expandedStats.has("salesToday")}
-              onToggle={() => toggleStatAccordion("salesToday")}
-            >
-              <p className="text-xs text-ink-600 leading-relaxed">
-                {t("admin.statsSignupsTodayDetail")}
-              </p>
-            </AccordionStatBox>
-            <AccordionStatBox
-              panelId="admin-stat-sales-today"
-              label={t("admin.statsSalesProToday")}
-              value={stats.sales_today}
-              amount={formatMoney(stats.sales_amount_cents_today, "usd")}
-              expanded={expandedStats.has("salesTotal")}
-              onToggle={() => toggleStatAccordion("salesTotal")}
-            >
-              <AdminRegionBarChart
-                variant="embedded"
-                title={t("admin.statsByRegion")}
-                items={regionStats}
-                labelForCountry={(country) => countryStatLabel(country, locale, t)}
-                t={t}
-              />
-            </AccordionStatBox>
-            <AccordionStatBox
-              panelId="admin-stat-sales-total"
-              label={t("admin.statsSalesProTotal")}
-              value={stats.sales_total ?? 0}
-              amount={formatMoney(stats.sales_amount_cents_total ?? 0, "usd")}
-              expanded={expandedStats.has("salesTotalExtra")}
-              onToggle={() => toggleStatAccordion("salesTotalExtra")}
-            >
-              <AdminSalesBarChart
-                variant="embedded"
-                stats={stats}
-                t={t}
-                formatMoney={formatMoney}
-              />
-            </AccordionStatBox>
+              </AccordionStatBox>
+              <AccordionStatBox
+                panelId="admin-stat-sales-total"
+                label={t("admin.statsSalesProTotal")}
+                value={stats.sales_total ?? 0}
+                amount={formatMoney(stats.sales_amount_cents_total ?? 0, "usd")}
+                expanded={expandedStats.has("salesTotalExtra")}
+                onToggle={() => toggleStatAccordion("salesTotalExtra")}
+              >
+                <AdminSalesBarChart
+                  variant="embedded"
+                  stats={stats}
+                  t={t}
+                  formatMoney={formatMoney}
+                />
+              </AccordionStatBox>
+            </div>
+
+            <AdminRegionBarChart
+              variant="ranking"
+              title={t("admin.statsByRegionSignups")}
+              summaryKey="admin.chartSignupRegionSummary"
+              items={signupRegionStats}
+              labelForCountry={(country) =>
+                countryStatLabel(country, locale, t)
+              }
+              t={t}
+            />
           </div>
         ) : null}
-
-        <section className="rounded-xl border border-violet-200 bg-violet-50/60 p-4 sm:p-5">
-          <h2 className="text-sm font-semibold text-violet-900">
-            {t("admin.complimentaryTitle")}
-          </h2>
-          <p className="text-xs text-violet-800/80 mt-1 leading-snug">
-            {t("admin.complimentaryHint")}
-          </p>
-
-          <form
-            className="mt-4 flex flex-wrap items-end gap-3"
-            onSubmit={(e) => void handleGrantComplimentary(e)}
-          >
-            <div className="flex-1 min-w-[12rem]">
-              <label className="label text-xs" htmlFor="admin-grant-email">
-                {t("admin.complimentaryEmailLabel")}
-              </label>
-              <input
-                id="admin-grant-email"
-                type="email"
-                className="input w-full text-sm bg-white"
-                value={grantEmail}
-                onChange={(e) => setGrantEmail(e.target.value)}
-                placeholder={t("admin.complimentaryEmailPlaceholder")}
-                required
-              />
-            </div>
-            <div className="flex-1 min-w-[10rem]">
-              <label className="label text-xs" htmlFor="admin-grant-note">
-                {t("admin.complimentaryNoteLabel")}
-              </label>
-              <input
-                id="admin-grant-note"
-                className="input w-full text-sm bg-white"
-                value={grantNote}
-                onChange={(e) => setGrantNote(e.target.value)}
-                placeholder={t("admin.complimentaryNotePlaceholder")}
-              />
-            </div>
-            <button
-              type="submit"
-              className={ADMIN_BTN_PRIMARY_FIELD}
-              disabled={
-                !grantEmail.trim() || busyId === "grant-complimentary"
-              }
-            >
-              {t("admin.complimentaryGrant")}
-            </button>
-          </form>
-
-          {grantMsg ? (
-            <p className="mt-3 text-xs text-violet-900">{grantMsg}</p>
-          ) : null}
-
-          {grants.length > 0 ? (
-            <ul className="mt-4 space-y-2">
-              {grants.map((g) => {
-                const hasAccount = grantEmailsWithAccount.has(
-                  g.email.trim().toLowerCase(),
-                );
-                return (
-                  <li
-                    key={g.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white/90 px-3 py-2 text-sm border border-violet-100"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-medium text-ink-800 break-all">
-                        {g.email}
-                      </p>
-                      {g.note ? (
-                        <p className="text-ink-600 text-xs mt-0.5">{g.note}</p>
-                      ) : null}
-                      <p className="text-ink-400 text-xs mt-1">
-                        {formatDate(g.granted_at)}
-                        {!hasAccount ? (
-                          <span className="ml-2 text-violet-600">
-                            · {t("admin.complimentaryPending")}
-                          </span>
-                        ) : null}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      className={ADMIN_BTN_SECONDARY_DANGER}
-                      disabled={busyId === `revoke-grant-${g.id}`}
-                      onClick={() => void handleRevokeComplimentary(g.id)}
-                    >
-                      {t("admin.complimentaryRevoke")}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : null}
-        </section>
 
         {complaints.length > 0 ? (
           <section className="rounded-xl border border-amber-200 bg-amber-50/80 p-4 sm:p-5">
@@ -1483,6 +1468,118 @@ export function AdminDashboard() {
           ) : null}
         </section>
       </main>
+
+      {complimentaryOpen ? (
+        <AdminPortalDialog
+          titleId="admin-complimentary-title"
+          title={t("admin.complimentaryTitle")}
+          closeLabel={t("common.close")}
+          onClose={closeComplimentaryModal}
+          size="lg"
+          footer={
+            <button
+              type="button"
+              className="btn-secondary text-sm w-full sm:w-auto"
+              onClick={closeComplimentaryModal}
+            >
+              {t("common.close")}
+            </button>
+          }
+        >
+          <p className="text-sm text-ink-600 leading-snug">
+            {t("admin.complimentaryHint")}
+          </p>
+
+          <form
+            className="space-y-3"
+            onSubmit={(e) => void handleGrantComplimentary(e)}
+          >
+            <div>
+              <label className="label text-xs" htmlFor="admin-grant-email">
+                {t("admin.complimentaryEmailLabel")}
+              </label>
+              <input
+                id="admin-grant-email"
+                type="email"
+                className="input w-full text-sm"
+                value={grantEmail}
+                onChange={(e) => setGrantEmail(e.target.value)}
+                placeholder={t("admin.complimentaryEmailPlaceholder")}
+                required
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="label text-xs" htmlFor="admin-grant-note">
+                {t("admin.complimentaryNoteLabel")}
+              </label>
+              <input
+                id="admin-grant-note"
+                className="input w-full text-sm"
+                value={grantNote}
+                onChange={(e) => setGrantNote(e.target.value)}
+                placeholder={t("admin.complimentaryNotePlaceholder")}
+              />
+            </div>
+            <button
+              type="submit"
+              className="btn-primary text-sm w-full sm:w-auto"
+              disabled={
+                !grantEmail.trim() || busyId === "grant-complimentary"
+              }
+            >
+              {t("admin.complimentaryGrant")}
+            </button>
+          </form>
+
+          {grantMsg ? (
+            <p className="text-sm text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
+              {grantMsg}
+            </p>
+          ) : null}
+
+          {grants.length > 0 ? (
+            <ul className="space-y-2 border-t border-ink-100 pt-3">
+              {grants.map((g) => {
+                const hasAccount = grantEmailsWithAccount.has(
+                  g.email.trim().toLowerCase(),
+                );
+                return (
+                  <li
+                    key={g.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-ink-50 px-3 py-2 text-sm border border-ink-100"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium text-ink-800 break-all">
+                        {g.email}
+                      </p>
+                      {g.note ? (
+                        <p className="text-ink-600 text-xs mt-0.5">{g.note}</p>
+                      ) : null}
+                      <p className="text-ink-400 text-xs mt-1">
+                        {formatDate(g.granted_at)}
+                        {!hasAccount ? (
+                          <span className="ml-2 text-violet-600">
+                            · {t("admin.complimentaryPending")}
+                          </span>
+                        ) : null}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className={ADMIN_BTN_SECONDARY_DANGER}
+                      disabled={busyId === `revoke-grant-${g.id}`}
+                      onClick={() => void handleRevokeComplimentary(g.id)}
+                    >
+                      {t("admin.complimentaryRevoke")}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </AdminPortalDialog>
+      ) : null}
 
       {complaintTarget
         ? createPortal(

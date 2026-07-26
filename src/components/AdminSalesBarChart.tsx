@@ -233,9 +233,10 @@ export function AdminRegionBarChart({
   labelForCountry: (country: string) => string;
   summaryKey?: string;
   t: TFn;
-  variant?: "card" | "embedded";
+  variant?: "card" | "embedded" | "ranking";
 }) {
   const total = items.reduce((sum, item) => sum + item.count, 0);
+  const max = Math.max(1, ...items.map((item) => item.count));
 
   const segments = useMemo<Segment[]>(() => {
     let colorIndex = 0;
@@ -252,12 +253,77 @@ export function AdminRegionBarChart({
     }));
   }, [items, labelForCountry]);
 
-  if (items.length === 0 && variant !== "embedded") return null;
+  if (items.length === 0 && variant !== "embedded" && variant !== "ranking") {
+    return null;
+  }
 
   const ariaLabel = segments
     .filter((s) => s.value > 0)
     .map((s) => `${s.label} ${s.value}`)
     .join(", ");
+
+  if (variant === "ranking") {
+    return (
+      <section
+        className="rounded-xl border border-ink-200 bg-white p-4 sm:p-5 shadow-sm"
+        aria-label={title}
+      >
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h2 className="text-base font-semibold text-ink-900">{title}</h2>
+          {items.length > 0 ? (
+            <p className="text-sm tabular-nums text-ink-600">
+              {t(summaryKey, {
+                total,
+                regions: items.length,
+              })}
+            </p>
+          ) : null}
+        </div>
+
+        {items.length === 0 ? (
+          <p className="mt-4 text-sm text-ink-400">{t("admin.chartSalesEmpty")}</p>
+        ) : (
+          <ul className="mt-4 space-y-3" role="list">
+            {segments.map((seg) => {
+              const pct = Math.max(6, (seg.value / max) * 100);
+              return (
+                <li key={seg.key}>
+                  <div className="flex items-center justify-between gap-3 mb-1.5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className={`h-2.5 w-2.5 shrink-0 rounded-full ${seg.colorClass}`}
+                        aria-hidden
+                      />
+                      <span
+                        className={`text-sm truncate ${
+                          seg.key === "unknown" ? "text-ink-500" : "text-ink-800"
+                        }`}
+                      >
+                        {seg.label}
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold tabular-nums text-ink-900 shrink-0">
+                      {seg.value}
+                    </span>
+                  </div>
+                  <div
+                    className="h-3 w-full overflow-hidden rounded-full bg-ink-100"
+                    role="img"
+                    aria-label={`${seg.label}: ${seg.value}`}
+                  >
+                    <div
+                      className={`h-full rounded-full ${seg.colorClass}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    );
+  }
 
   const chartBody = (
     <>

@@ -801,6 +801,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "admin.complaintFailed": "Could not log complaint: {{error}}",
   "admin.resolveFailed": "Could not resolve: {{error}}",
   "admin.complimentaryTitle": "Complimentary PRO",
+  "admin.complimentaryButton": "Comp PRO",
   "admin.complimentaryHint":
     "Grant unlimited PRO to friends and family without payment—applies immediately to existing accounts and automatically to new signups with this email.",
   "admin.complimentaryEmailLabel": "Email",
