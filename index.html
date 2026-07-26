@@ -177,6 +177,7 @@
         </p>
         <div class="hero-cta">
           <a class="btn btn-primary" href="#get-started" data-i18n="ctaGettingStarted">Getting started</a>
+          <a class="btn btn-ghost" href="#privacy-model" data-i18n="ctaPrivacyModel">Are passwords on the server?</a>
           <a class="btn btn-ghost" href="/app/" data-i18n="navSignIn">Sign In</a>
         </div>
       </section>
@@ -227,6 +228,47 @@
             </p>
           </article>
         </div>
+      </section>
+
+      <section id="privacy-model">
+        <h2 data-i18n="zkTitle">Are passwords stored on our servers?</h2>
+        <p class="section-desc" data-i18n="zkLead">
+          No. My Password Vault is zero-knowledge: we never receive your master password or readable vault
+          secrets. Encryption happens on your device first.
+        </p>
+        <ol class="steps">
+          <li>
+            <strong data-i18n="zkStep1Strong">Your master password stays on your device</strong>
+            <span data-i18n="zkStep1Span"
+              >It is used only locally to create an encryption key. It is never uploaded.</span
+            >
+          </li>
+          <li>
+            <strong data-i18n="zkStep2Strong">Encryption happens before anything leaves</strong>
+            <span data-i18n="zkStep2Span"
+              >Every entry password and TOTP secret is sealed with AES-256-GCM on your device first.</span
+            >
+          </li>
+          <li>
+            <strong data-i18n="zkStep3Strong">The cloud only sees ciphertext</strong>
+            <span data-i18n="zkStep3Span"
+              >Optional sync stores encrypted blobs. To us — and to anyone who breached the server — they are
+              unreadable noise.</span
+            >
+          </li>
+          <li>
+            <strong data-i18n="zkStep4Strong">Unlock happens only on your devices</strong>
+            <span data-i18n="zkStep4Span"
+              >Another phone or browser downloads the blob, then you unlock locally with your master password
+              or passkey.</span
+            >
+          </li>
+        </ol>
+        <p class="zk-note" data-i18n="zkNote_html" data-i18n-html>
+          <strong>Trade-off:</strong> If you forget your master password and lose your recovery options, we
+          cannot reset the vault for you — because we never held the key. Save your recovery codes somewhere
+          safe.
+        </p>
       </section>
 
       <section id="security">

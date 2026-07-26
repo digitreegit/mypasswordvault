@@ -21,6 +21,11 @@ export const SITEMAP_PAGES = [
 /** English FAQ pairs for FAQPage JSON-LD (default HTML before i18n overlay). */
 export const FAQ_SCHEMA_ENTRIES = [
   {
+    question: "Are my passwords stored on your servers?",
+    answer:
+      "No. Your master password never leaves your device. Entries are encrypted on-device with AES-256-GCM before optional sync, so our servers only ever store ciphertext we cannot read. Google or email sign-in only identifies your account — it does not unlock your vault. If you lose your master password and recovery options, we cannot restore your data, because we never held the key.",
+  },
+  {
     question: "How does My Password Vault protect my data?",
     answer:
       "Your entries are encrypted on your device before anything is synced, so the servers store ciphertext rather than readable passwords, and your master password is not sent to us. Google sign-in is used only to tie the encrypted vault to your account. No software can promise perfect security, so a strong master password and good device hygiene remain important on your side.",

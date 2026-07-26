@@ -692,6 +692,21 @@
         color: var(--muted);
         font-size: 0.92rem;
       }
+      .zk-note {
+        margin: 1.75rem 0 0;
+        padding: 1rem 1.15rem;
+        border-radius: 0.85rem;
+        border: 1px solid var(--line);
+        background: rgba(99, 102, 241, 0.08);
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1.55;
+        max-width: 40rem;
+      }
+      .zk-note strong {
+        color: var(--ink);
+        font-weight: 600;
+      }
       .cta-panel {
         margin-top: 4.5rem;
         padding: 2.25rem 1.75rem;

@@ -144,6 +144,7 @@
     heroLead_html:
       "A local-first vault that works like a spreadsheet — fast edits, categories, one-tap copy — while\n          your secrets stay encrypted on-device. Optional sync stores <strong>only ciphertext</strong> in\n          your database; your master password is never sent to our servers.",
     ctaGettingStarted: "Getting started",
+    ctaPrivacyModel: "Are passwords on the server?",
     featTitle: "Built for flow",
     featDesc:
       "No vault-inside-vault navigation. One grid: site, URL, username, password, notes — edit inline,\n          expand rows for URL & memo, filter and sort. Categories keep teams and life buckets tidy.",
@@ -156,6 +157,22 @@
     featCard3Title: "Strong passwords, fast",
     featCard3Body:
       "Built-in generator with length and character-class controls, CSPRNG-backed generation, and\n              bias-mitigated modulo — then drop the result straight into the row.",
+    zkTitle: "Are passwords stored on our servers?",
+    zkLead:
+      "No. My Password Vault is zero-knowledge: we never receive your master password or readable vault secrets. Encryption happens on your device first.",
+    zkStep1Strong: "Your master password stays on your device",
+    zkStep1Span: "It is used only locally to create an encryption key. It is never uploaded.",
+    zkStep2Strong: "Encryption happens before anything leaves",
+    zkStep2Span:
+      "Every entry password and TOTP secret is sealed with AES-256-GCM on your device first.",
+    zkStep3Strong: "The cloud only sees ciphertext",
+    zkStep3Span:
+      "Optional sync stores encrypted blobs. To us — and to anyone who breached the server — they are unreadable noise.",
+    zkStep4Strong: "Unlock happens only on your devices",
+    zkStep4Span:
+      "Another phone or browser downloads the blob, then you unlock locally with your master password or passkey.",
+    zkNote_html:
+      "<strong>Trade-off:</strong> If you forget your master password and lose your recovery options, we cannot reset the vault for you — because we never held the key. Save your recovery codes somewhere safe.",
     secTitle: 'Security that earns the name "vault"',
     secDesc:
       "Cryptography runs in your browser via the Web Crypto API. Data at rest in IndexedDB is encrypted;\n          the key material derived from your master password exists in memory only while unlocked.",
@@ -222,6 +239,9 @@
     faqTitle: "Common questions",
     faqDesc:
       "Quick answers about trust, day-to-day use, passkeys, backups, pricing, and how to reach us.",
+    faqZk_sum: "Are my passwords stored on your servers?",
+    faqZk_html:
+      "No. Your master password never leaves your device. Entries are encrypted on-device with AES-256-GCM before optional sync, so our servers only ever store ciphertext we cannot read. Google or email sign-in only identifies your account — it does not unlock your vault. If you lose your master password and recovery options, we cannot restore your data, because we never held the key.",
     faq1_sum: "How does My Password Vault protect my data?",
     faq1_html:
       "Your entries are encrypted on your device before anything is synced, so the servers store ciphertext\n              rather than readable passwords, and your master password is not sent to us. Google or email sign-in is\n              used only to tie the encrypted vault to your account. No software can promise perfect security, so a strong\n              master password and good device hygiene remain important on your side.",
@@ -297,6 +317,7 @@
     heroLead_html:
       "로컬 우선 금고를 스프레드시트처럼 씁니다. 빠른 편집, 카테고리, 원탭 복사 — 비밀은 기기 안에서만 암호화됩니다. 선택한 동기화는 데이터베이스에 <strong>암호문만</strong> 저장합니다. 마스터 비밀번호는 당사 서버로 전송되지 않습니다.",
     ctaGettingStarted: "시작하기",
+    ctaPrivacyModel: "비밀번호가 서버에 저장되나요?",
     featTitle: "흐름에 맞춘 설계",
     featDesc:
       "금고 속의 금고 같은 이동이 없습니다. 한 그리드에 사이트, URL, 사용자명, 비밀번호, 메모까지 — 인라인 편집, URL·메모 확장 행, 필터·정렬. 카테고리로 일과 생활을 정리합니다.",
@@ -309,6 +330,22 @@
     featCard3Title: "강한 비밀번호, 빠르게",
     featCard3Body:
       "길이·문자 종류를 조절하는 생성기, CSPRNG·편향 완화 모듈로 만든 다음 바로 줄에 넣습니다.",
+    zkTitle: "비밀번호가 서버에 저장되나요?",
+    zkLead:
+      "아니요. My Password Vault는 제로 널리지(zero-knowledge) 구조입니다. 마스터 비밀번호와 읽을 수 있는 금고 비밀은 저희가 받지 않으며, 암호화는 기기에서 먼저 이뤄집니다.",
+    zkStep1Strong: "마스터 비밀번호는 기기에만 남습니다",
+    zkStep1Span: "암호화 키를 만드는 데만 쓰이며, 서버로 업로드되지 않습니다.",
+    zkStep2Strong: "나가기 전에 기기에서 암호화합니다",
+    zkStep2Span:
+      "항목 비밀번호와 TOTP 비밀은 AES-256-GCM으로 기기에서 먼저 봉인됩니다.",
+    zkStep3Strong: "클라우드에는 암호문만 올라갑니다",
+    zkStep3Span:
+      "선택적 동기화는 암호화된 덩어리만 저장합니다. 저희에게 — 그리고 서버가 뚫려도 — 읽을 수 없는 난수입니다.",
+    zkStep4Strong: "잠금 해제는 기기에서만 됩니다",
+    zkStep4Span:
+      "다른 폰·브라우저가 암호문을 내려받은 뒤, 마스터 비밀번호나 패스키로 그 기기에서 엽니다.",
+    zkNote_html:
+      "<strong>트레이드오프:</strong> 마스터 비밀번호를 잊고 복구 수단도 잃으면, 저희가 금고를 대신 열어 드릴 수 없습니다 — 키를 갖고 있지 않기 때문입니다. 복구 코드를 안전한 곳에 보관하세요.",
     secTitle: "‘금고’라는 이름에 걸맞은 보안",
     secDesc:
       "암호화는 브라우저 Web Crypto API에서 동작합니다. IndexedDB 저장 데이터는 암호화되고, 마스터 비밀번호에서 파생한 키 자료는 잠금 해제 중에만 메모리에 존재합니다.",
@@ -374,6 +411,9 @@
     faqTitle: "자주 묻는 질문",
     faqDesc:
       "신뢰, 일상적인 사용법, 패스키, 백업, 가격, 연락처에 대한 짧은 답변입니다.",
+    faqZk_sum: "비밀번호가 서버에 저장되나요?",
+    faqZk_html:
+      "아니요. 마스터 비밀번호는 기기를 떠나지 않습니다. 항목은 선택적 동기화 전에 기기에서 AES-256-GCM으로 암호화되므로, 서버에는 저희가 읽을 수 없는 암호문만 저장됩니다. Google 또는 이메일 로그인은 계정 식별용일 뿐 금고를 열지 않습니다. 마스터 비밀번호와 복구 수단을 모두 잃으면 키를 갖고 있지 않아 데이터를 복구해 드릴 수 없습니다.",
     faq1_sum: "My Password Vault는 내 데이터를 어떻게 보호하나요?",
     faq1_html:
       "항목은 동기화되기 전에 기기에서 암호화되므로 서버에는 읽을 수 있는 비밀번호가 아니라 암호문만 저장되며, 마스터 비밀번호는 당사로 전송되지 않습니다. Google 또는 이메일 로그인은 암호화 금고를 계정과 연결하는 용도로만 사용됩니다. 완벽한 보안을 보장할 수 있는 소프트웨어는 없으므로, 강력한 마스터 비밀번호와 안전한 기기 관리는 사용자 측에서도 중요합니다.",
