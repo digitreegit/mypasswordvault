@@ -116,16 +116,19 @@ function entryCategoryLabel(
 function filterEntriesByQuery(
   entries: DecryptedEntry[],
   query: string,
-  categories: VaultCategory[]
+  categories: VaultCategory[],
+  alwaysIncludeIds: string[] = []
 ): DecryptedEntry[] {
   const q = query.trim().toLowerCase();
   if (!q) return entries;
+  const keep = new Set(alwaysIncludeIds);
   const entryCategoryLabel = (e: DecryptedEntry): string => {
     if (!e.categoryId) return "";
     return categories.find((c) => c.id === e.categoryId)?.name ?? "";
   };
   return entries.filter(
     (e) =>
+      keep.has(e.id) ||
       e.site.toLowerCase().includes(q) ||
       e.url.toLowerCase().includes(q) ||
       e.username.toLowerCase().includes(q) ||
@@ -145,7 +148,7 @@ function sortVaultEntries(
   pinEntryIds: string[] = [],
   pinSnapshots?: Map<string, DecryptedEntry>
 ): DecryptedEntry[] {
-  const arr = filterEntriesByQuery(entries, query, categories);
+  const arr = filterEntriesByQuery(entries, query, categories, draftEntryIds);
   const sortBucket = (e: DecryptedEntry): string => {
     if (!e.categoryId) return "";
     return categories.find((c) => c.id === e.categoryId)?.name ?? "\uFFFF";
@@ -540,7 +543,7 @@ export function VaultScreen() {
     () => readEntryLimitBannerDismissed(user?.id)
   );
   const [entryLimitBannerEntered, setEntryLimitBannerEntered] = useState(false);
-  /** Entry ids still being created — kept at top until edit session ends. */
+  /** Entry ids still being created — kept at top until Save (or Cancel/delete). */
   const [draftEntryIds, setDraftEntryIds] = useState<string[]>([]);
   /** Rows being edited — sort position frozen until pointer leaves and delay elapses. */
   const [pinEntryIds, setPinEntryIds] = useState<string[]>([]);
@@ -613,8 +616,7 @@ export function VaultScreen() {
   const unpinEntry = useCallback(
     (id: string) => {
       const wasPinned = pinEntryIdsRef.current.includes(id);
-      const wasDraft = draftEntryIdsRef.current.includes(id);
-      if (!wasPinned && !wasDraft && !editDisplayOrderRef.current) return;
+      if (!wasPinned && !editDisplayOrderRef.current) return;
 
       if (wasPinned) {
         const next = pinEntryIdsRef.current.filter((x) => x !== id);
@@ -626,13 +628,9 @@ export function VaultScreen() {
         setPinEntryIds(next);
       }
 
-      const nextDraft = draftEntryIdsRef.current.filter((x) => x !== id);
-      if (nextDraft.length !== draftEntryIdsRef.current.length) {
-        draftEntryIdsRef.current = nextDraft;
-        setDraftEntryIds(nextDraft);
-      }
-
+      // New drafts stay pinned at top until explicit Save/Cancel — do not clear draftEntryIds here.
       const remainingPins = pinEntryIdsRef.current;
+      const drafts = draftEntryIdsRef.current;
       const anchor = editDisplayOrderRef.current;
 
       if (remainingPins.length > 0 && anchor) {
@@ -642,7 +640,7 @@ export function VaultScreen() {
           sortKey,
           sortDir,
           categories,
-          nextDraft,
+          drafts,
           remainingPins,
           anchor
         );
@@ -653,6 +651,32 @@ export function VaultScreen() {
       setSortRevision((r) => r + 1);
     },
     [query, sortKey, sortDir, categories]
+  );
+
+  const clearDraftFlag = useCallback((id: string) => {
+    const nextDraft = draftEntryIdsRef.current.filter((x) => x !== id);
+    if (nextDraft.length === draftEntryIdsRef.current.length) return;
+    draftEntryIdsRef.current = nextDraft;
+    setDraftEntryIds(nextDraft);
+  }, []);
+
+  /** Finish creating an entry: leave the top draft slot and re-sort into the list. */
+  const commitDraftEntry = useCallback(
+    (id: string) => {
+      cancelScheduledUnpin(id);
+      clearDraftFlag(id);
+      const wasPinned = pinEntryIdsRef.current.includes(id);
+      if (wasPinned) {
+        const next = pinEntryIdsRef.current.filter((x) => x !== id);
+        pinEntryIdsRef.current = next;
+        pinSortSnapshotsRef.current.delete(id);
+        if (next.length === 0) pinSortSnapshotsRef.current.clear();
+        setPinEntryIds(next);
+      }
+      editDisplayOrderRef.current = null;
+      setSortRevision((r) => r + 1);
+    },
+    [cancelScheduledUnpin, clearDraftFlag]
   );
 
   const pinEntryRow = useCallback(
@@ -692,7 +716,7 @@ export function VaultScreen() {
   }, []);
 
   const filtered = useMemo(() => {
-    const arr = filterEntriesByQuery(entries, query, categories);
+    const arr = filterEntriesByQuery(entries, query, categories, draftEntryIds);
     const hasActivePins = pinEntryIdsRef.current.length > 0;
 
     if (hasActivePins) {
@@ -823,6 +847,17 @@ export function VaultScreen() {
     const nextDraft = [id, ...draftEntryIdsRef.current.filter((x) => x !== id)];
     draftEntryIdsRef.current = nextDraft;
     setDraftEntryIds(nextDraft);
+    if (editDisplayOrderRef.current) {
+      editDisplayOrderRef.current = [
+        id,
+        ...editDisplayOrderRef.current.filter((x) => x !== id),
+      ];
+    }
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
     if (isMobileVaultLayout()) {
       setMobileDetailId(id);
     }
@@ -838,10 +873,17 @@ export function VaultScreen() {
         memo: "",
       });
       pinEntryRow(id);
+      setSortRevision((r) => r + 1);
     } catch (e) {
       const without = draftEntryIdsRef.current.filter((x) => x !== id);
       draftEntryIdsRef.current = without;
       setDraftEntryIds(without);
+      setExpandedIds((prev) => {
+        if (!prev.has(id)) return prev;
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
       setMobileDetailId((cur) => (cur === id ? null : cur));
       if (isAppError(e) && e.code === "errors.entryLimitReached") {
         setEntryLimitModalOpen(true);
@@ -852,13 +894,27 @@ export function VaultScreen() {
   }
 
   async function handleRemoveEntry(id: string) {
-    const without = draftEntryIdsRef.current.filter((x) => x !== id);
-    draftEntryIdsRef.current = without;
-    setDraftEntryIds(without);
+    clearDraftFlag(id);
+    setExpandedIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
     setMobileDetailId((cur) => (cur === id ? null : cur));
     cancelScheduledUnpin(id);
     unpinEntry(id);
     await removeEntry(id);
+  }
+
+  function handleSaveDraftEntry(id: string) {
+    commitDraftEntry(id);
+    setExpandedIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
   }
 
   function toggleSort(k: SortKey) {
@@ -1255,8 +1311,8 @@ export function VaultScreen() {
             }}
             revealed={showAll || revealed.has(mobileDetailEntry.id)}
             toggleReveal={() => toggleReveal(mobileDetailEntry.id)}
-            onSave={(draft) =>
-              upsertEntry({
+            onSave={async (draft) => {
+              await upsertEntry({
                 id: draft.id,
                 site: draft.site,
                 categoryId: draft.categoryId,
@@ -1264,8 +1320,11 @@ export function VaultScreen() {
                 password: draft.password,
                 url: draft.url,
                 memo: draft.memo,
-              })
-            }
+              });
+              if (draftEntryIds.includes(draft.id)) {
+                commitDraftEntry(draft.id);
+              }
+            }}
             onDelete={() => void handleRemoveEntry(mobileDetailEntry.id)}
             onGenerate={() => openPasswordGenerator(mobileDetailEntry.id)}
             generatorPassword={mobileGeneratorPassword}
@@ -1340,12 +1399,17 @@ export function VaultScreen() {
                   <Row
                     key={e.id}
                     entry={e}
-                    expanded={expandedIds.has(e.id)}
+                    isDraft={draftEntryIds.includes(e.id)}
+                    expanded={
+                      draftEntryIds.includes(e.id) || expandedIds.has(e.id)
+                    }
                     onToggleExpand={() => toggleExpanded(e.id)}
                     revealed={showAll || revealed.has(e.id)}
                     toggleReveal={() => toggleReveal(e.id)}
                     onChange={(patch) => upsertEntry({ id: e.id, ...patch })}
                     onDelete={() => void handleRemoveEntry(e.id)}
+                    onSaveDraft={() => handleSaveDraftEntry(e.id)}
+                    onCancelDraft={() => void handleRemoveEntry(e.id)}
                     onGenerate={() => openPasswordGenerator(e.id)}
                     onCopy={copyText}
                     copiedKey={copiedKey}
@@ -1460,6 +1524,10 @@ interface RowProps {
   toggleReveal: () => void;
   onChange: (patch: Partial<DecryptedEntry>) => void;
   onDelete: () => void;
+  /** New row awaiting Save — stays at top of the list. */
+  isDraft?: boolean;
+  onSaveDraft?: () => void;
+  onCancelDraft?: () => void;
   onGenerate: () => void;
   onCopy: (text: string, key: string) => void;
   copiedKey: string | null;
@@ -2222,6 +2290,9 @@ function Row({
   toggleReveal,
   onChange,
   onDelete,
+  isDraft = false,
+  onSaveDraft,
+  onCancelDraft,
   onGenerate,
   onCopy,
   copiedKey,
@@ -2248,6 +2319,8 @@ function Row({
     onCancelScheduledUnpinEntryRow,
     onRegisterCategoryMenuOpen
   );
+
+  const showExpanded = isDraft || expanded;
 
   return (
     <tbody
@@ -2344,7 +2417,26 @@ function Row({
         </td>
         <td className="w-[1%] whitespace-nowrap pl-2 pr-3 sm:pr-4 py-1 align-middle">
           <div className="flex w-full flex-nowrap items-center justify-end gap-2.5">
-            {!confirmDel ? (
+            {isDraft ? (
+              <>
+                <button
+                  type="button"
+                  className="shrink-0 whitespace-nowrap rounded-md bg-accent-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-accent-700 touch-manipulation"
+                  onClick={onSaveDraft}
+                  title={t("common.save")}
+                >
+                  {t("common.save")}
+                </button>
+                <button
+                  type="button"
+                  className="shrink-0 whitespace-nowrap rounded-md border border-ink-200 bg-white px-2.5 py-1 text-xs font-medium text-ink-700 hover:bg-ink-50 touch-manipulation"
+                  onClick={onCancelDraft}
+                  title={t("common.cancel")}
+                >
+                  {t("common.cancel")}
+                </button>
+              </>
+            ) : !confirmDel ? (
               <>
                 <span
                   className="h-5 w-px bg-ink-100 shrink-0 self-center"
@@ -2377,19 +2469,23 @@ function Row({
                 </button>
               </div>
             )}
-            <button
-              type="button"
-              className="inline-flex shrink-0 items-center justify-center leading-none text-ink-500 hover:text-ink-800 p-2 sm:p-1 rounded-md hover:bg-ink-100 touch-manipulation min-w-8 min-h-8"
-              onClick={onToggleExpand}
-              aria-expanded={expanded}
-              title={expanded ? t("vault.ttCollapseRow") : t("vault.ttExpandRow")}
-            >
-              {expanded ? <ChevronUp /> : <ChevronDown />}
-            </button>
+            {!isDraft ? (
+              <button
+                type="button"
+                className="inline-flex shrink-0 items-center justify-center leading-none text-ink-500 hover:text-ink-800 p-2 sm:p-1 rounded-md hover:bg-ink-100 touch-manipulation min-w-8 min-h-8"
+                onClick={onToggleExpand}
+                aria-expanded={expanded}
+                title={
+                  expanded ? t("vault.ttCollapseRow") : t("vault.ttExpandRow")
+                }
+              >
+                {expanded ? <ChevronUp /> : <ChevronDown />}
+              </button>
+            ) : null}
           </div>
         </td>
       </tr>
-      {expanded ? (
+      {showExpanded ? (
         <tr className="bg-ink-50/90 border-t border-ink-100">
           <td colSpan={5} className="px-3 py-3 sm:px-4 sm:py-3 align-top">
             <div className="space-y-3">
