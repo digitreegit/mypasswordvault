@@ -743,27 +743,6 @@ export function VaultScreen() {
     );
   }, [entries, query, sortKey, sortDir, categories, draftEntryIds, pinEntryIds, sortRevision]);
 
-  const categorySummaryParts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const e of filtered) {
-      const validId =
-        e.categoryId && categories.some((c) => c.id === e.categoryId)
-          ? e.categoryId
-          : "";
-      counts.set(validId, (counts.get(validId) ?? 0) + 1);
-    }
-    const parts: string[] = [];
-    for (const c of categories) {
-      const n = counts.get(c.id) ?? 0;
-      if (n > 0) parts.push(`${c.name}: ${n}`);
-    }
-    const unc = counts.get("") ?? 0;
-    if (unc > 0) {
-      parts.push(`${t("vault.summaryUncategorized")}: ${unc}`);
-    }
-    return parts;
-  }, [filtered, categories, t]);
-
   const mobileDetailEntry = useMemo(() => {
     if (!mobileDetailId) return null;
     const found = entries.find((e) => e.id === mobileDetailId);
@@ -1224,9 +1203,6 @@ export function VaultScreen() {
             </div>
             <p className="mb-1 w-full min-w-0 text-left text-caption text-ink-500 tabular-nums leading-snug break-words">
               {t("vault.totalItems", { count: filtered.length })}
-              {categorySummaryParts.length > 0 && (
-                <span>{` (${categorySummaryParts.join(", ")})`}</span>
-              )}
             </p>
           </div>
           <div className="hidden md:flex w-full items-center gap-2 ml-auto w-auto justify-end">
@@ -1276,9 +1252,6 @@ export function VaultScreen() {
         </div>
         <p className="hidden md:block mt-2 sm:mt-2.5 mb-1 text-right text-xs text-ink-500 tabular-nums leading-snug">
           {t("vault.totalItems", { count: filtered.length })}
-          {categorySummaryParts.length > 0 && (
-            <span>{` (${categorySummaryParts.join(", ")})`}</span>
-          )}
         </p>
 
         <ul className="md:hidden mobile-list-group list-none p-0 m-0 flex flex-col gap-2">
