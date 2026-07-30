@@ -22,6 +22,7 @@ import { newId, type VaultCategory } from "../lib/storage";
 import { PasswordGenerator } from "./PasswordGenerator";
 import { CategoriesDialog } from "./CategoriesDialog";
 import { PricingDrawer } from "./PricingDrawer";
+import { ModalCloseButton } from "./ModalCloseButton";
 import {
   ChevronDown,
   ChevronUp,
@@ -525,6 +526,8 @@ export function VaultScreen() {
 
   const [query, setQuery] = useState("");
   const [mobileDetailId, setMobileDetailId] = useState<string | null>(null);
+  /** Desktop: new-entry form opens in a modal instead of an inline table row. */
+  const [desktopAddEntryId, setDesktopAddEntryId] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -743,9 +746,15 @@ export function VaultScreen() {
     );
   }, [entries, query, sortKey, sortDir, categories, draftEntryIds, pinEntryIds, sortRevision]);
 
+  /** Draft rows are edited in a modal / mobile detail — keep them out of the list UI. */
+  const displayEntries = useMemo(
+    () => filtered.filter((e) => !draftEntryIds.includes(e.id)),
+    [filtered, draftEntryIds],
+  );
+
   const categorySummaryParts = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const e of filtered) {
+    for (const e of displayEntries) {
       const validId =
         e.categoryId && categories.some((c) => c.id === e.categoryId)
           ? e.categoryId
@@ -762,7 +771,7 @@ export function VaultScreen() {
       parts.push(`${t("vault.summaryUncategorized")}: ${unc}`);
     }
     return parts;
-  }, [filtered, categories, t]);
+  }, [displayEntries, categories, t]);
 
   const mobileDetailEntry = useMemo(() => {
     if (!mobileDetailId) return null;
@@ -773,6 +782,16 @@ export function VaultScreen() {
     }
     return null;
   }, [entries, mobileDetailId, draftEntryIds]);
+
+  const desktopAddEntry = useMemo(() => {
+    if (!desktopAddEntryId) return null;
+    const found = entries.find((e) => e.id === desktopAddEntryId);
+    if (found) return found;
+    if (draftEntryIds.includes(desktopAddEntryId)) {
+      return emptyDraftEntry(desktopAddEntryId);
+    }
+    return null;
+  }, [entries, desktopAddEntryId, draftEntryIds]);
 
   useEffect(() => {
     if (
@@ -785,13 +804,23 @@ export function VaultScreen() {
   }, [entries, mobileDetailId, draftEntryIds]);
 
   useEffect(() => {
-    if (!mobileDetailId) return;
+    if (
+      desktopAddEntryId &&
+      !entries.some((e) => e.id === desktopAddEntryId) &&
+      !draftEntryIds.includes(desktopAddEntryId)
+    ) {
+      setDesktopAddEntryId(null);
+    }
+  }, [entries, desktopAddEntryId, draftEntryIds]);
+
+  useEffect(() => {
+    if (!mobileDetailId && !desktopAddEntryId) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
     };
-  }, [mobileDetailId]);
+  }, [mobileDetailId, desktopAddEntryId]);
 
   function toggleReveal(id: string) {
     setRevealed((prev) => {
@@ -853,13 +882,11 @@ export function VaultScreen() {
         ...editDisplayOrderRef.current.filter((x) => x !== id),
       ];
     }
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      next.add(id);
-      return next;
-    });
-    if (isMobileVaultLayout()) {
+    const mobile = isMobileVaultLayout();
+    if (mobile) {
       setMobileDetailId(id);
+    } else {
+      setDesktopAddEntryId(id);
     }
     try {
       await upsertEntry({
@@ -878,13 +905,8 @@ export function VaultScreen() {
       const without = draftEntryIdsRef.current.filter((x) => x !== id);
       draftEntryIdsRef.current = without;
       setDraftEntryIds(without);
-      setExpandedIds((prev) => {
-        if (!prev.has(id)) return prev;
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
       setMobileDetailId((cur) => (cur === id ? null : cur));
+      setDesktopAddEntryId((cur) => (cur === id ? null : cur));
       if (isAppError(e) && e.code === "errors.entryLimitReached") {
         setEntryLimitModalOpen(true);
         return;
@@ -902,6 +924,7 @@ export function VaultScreen() {
       return next;
     });
     setMobileDetailId((cur) => (cur === id ? null : cur));
+    setDesktopAddEntryId((cur) => (cur === id ? null : cur));
     cancelScheduledUnpin(id);
     unpinEntry(id);
     await removeEntry(id);
@@ -909,12 +932,7 @@ export function VaultScreen() {
 
   function handleSaveDraftEntry(id: string) {
     commitDraftEntry(id);
-    setExpandedIds((prev) => {
-      if (!prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
+    setDesktopAddEntryId((cur) => (cur === id ? null : cur));
   }
 
   function toggleSort(k: SortKey) {
@@ -1223,7 +1241,7 @@ export function VaultScreen() {
               </button>
             </div>
             <p className="mb-1 w-full min-w-0 text-left text-caption text-ink-500 tabular-nums leading-snug break-words">
-              {t("vault.totalItems", { count: filtered.length })}
+              {t("vault.totalItems", { count: displayEntries.length })}
               {categorySummaryParts.length > 0 && (
                 <span>{` (${categorySummaryParts.join(", ")})`}</span>
               )}
@@ -1275,19 +1293,19 @@ export function VaultScreen() {
           </div>
         </div>
         <p className="hidden md:block mt-2 sm:mt-2.5 mb-1 text-right text-xs text-ink-500 tabular-nums leading-snug">
-          {t("vault.totalItems", { count: filtered.length })}
+          {t("vault.totalItems", { count: displayEntries.length })}
           {categorySummaryParts.length > 0 && (
             <span>{` (${categorySummaryParts.join(", ")})`}</span>
           )}
         </p>
 
         <ul className="md:hidden mobile-list-group list-none p-0 m-0 flex flex-col gap-2">
-          {filtered.length === 0 ? (
+          {displayEntries.length === 0 ? (
             <li className="p-8 text-center text-ink-500 text-base">
               {t("vault.empty")}
             </li>
           ) : (
-            filtered.map((e) => (
+            displayEntries.map((e) => (
               <li key={e.id}>
                 <MobileSwipeEntryRow
                   entry={e}
@@ -1383,7 +1401,7 @@ export function VaultScreen() {
                   </th>
                 </tr>
               </thead>
-              {filtered.length === 0 ? (
+              {displayEntries.length === 0 ? (
                 <tbody className="text-sm">
                   <tr>
                     <td
@@ -1395,21 +1413,16 @@ export function VaultScreen() {
                   </tr>
                 </tbody>
               ) : (
-                filtered.map((e) => (
+                displayEntries.map((e) => (
                   <Row
                     key={e.id}
                     entry={e}
-                    isDraft={draftEntryIds.includes(e.id)}
-                    expanded={
-                      draftEntryIds.includes(e.id) || expandedIds.has(e.id)
-                    }
+                    expanded={expandedIds.has(e.id)}
                     onToggleExpand={() => toggleExpanded(e.id)}
                     revealed={showAll || revealed.has(e.id)}
                     toggleReveal={() => toggleReveal(e.id)}
                     onChange={(patch) => upsertEntry({ id: e.id, ...patch })}
                     onDelete={() => void handleRemoveEntry(e.id)}
-                    onSaveDraft={() => handleSaveDraftEntry(e.id)}
-                    onCancelDraft={() => void handleRemoveEntry(e.id)}
                     onGenerate={() => openPasswordGenerator(e.id)}
                     onCopy={copyText}
                     copiedKey={copiedKey}
@@ -1427,6 +1440,33 @@ export function VaultScreen() {
           </div>
         </div>
 
+        {desktopAddEntry ? (
+          <AddEntryModal
+            entry={desktopAddEntry}
+            categories={categories}
+            revealed={showAll || revealed.has(desktopAddEntry.id)}
+            toggleReveal={() => toggleReveal(desktopAddEntry.id)}
+            onGenerate={() => openPasswordGenerator(desktopAddEntry.id)}
+            generatorPassword={mobileGeneratorPassword}
+            onGeneratorPasswordConsumed={() => setMobileGeneratorPassword(null)}
+            onOpenCategoriesAddNew={openCategoriesAddNew}
+            onSave={async (draft) => {
+              await upsertEntry({
+                id: draft.id,
+                site: draft.site,
+                categoryId: draft.categoryId,
+                username: draft.username,
+                password: draft.password,
+                url: draft.url,
+                memo: draft.memo,
+              });
+              handleSaveDraftEntry(draft.id);
+            }}
+            onCancel={() => void handleRemoveEntry(desktopAddEntry.id)}
+            t={t}
+          />
+        ) : null}
+
         <p className="vault-security-footer w-full min-w-0 break-words text-left text-ink-400 leading-normal mt-2 sm:mt-4">
           {t("vault.footer")}
         </p>
@@ -1439,7 +1479,10 @@ export function VaultScreen() {
           onUse={async (pw) => {
             const entryId = generatorFor;
             if (!entryId) return;
-            if (isMobileVaultLayout() && mobileDetailId === entryId) {
+            if (
+              (isMobileVaultLayout() && mobileDetailId === entryId) ||
+              desktopAddEntryId === entryId
+            ) {
               setMobileGeneratorPassword(pw);
             } else {
               await upsertEntry({ id: entryId, password: pw });
@@ -1524,10 +1567,6 @@ interface RowProps {
   toggleReveal: () => void;
   onChange: (patch: Partial<DecryptedEntry>) => void;
   onDelete: () => void;
-  /** New row awaiting Save — stays at top of the list. */
-  isDraft?: boolean;
-  onSaveDraft?: () => void;
-  onCancelDraft?: () => void;
   onGenerate: () => void;
   onCopy: (text: string, key: string) => void;
   copiedKey: string | null;
@@ -1746,6 +1785,272 @@ function mobileEntryDraftDirty(a: DecryptedEntry, b: DecryptedEntry): boolean {
     a.username !== b.username ||
     a.password !== b.password ||
     a.memo !== b.memo
+  );
+}
+
+function AddEntryModal({
+  entry,
+  categories,
+  revealed,
+  toggleReveal,
+  onSave,
+  onCancel,
+  onGenerate,
+  generatorPassword,
+  onGeneratorPasswordConsumed,
+  onOpenCategoriesAddNew,
+  t,
+}: {
+  entry: DecryptedEntry;
+  categories: VaultCategory[];
+  revealed: boolean;
+  toggleReveal: () => void;
+  onSave: (draft: DecryptedEntry) => void | Promise<void>;
+  onCancel: () => void;
+  onGenerate: () => void;
+  generatorPassword?: string | null;
+  onGeneratorPasswordConsumed?: () => void;
+  onOpenCategoriesAddNew: () => void;
+  t: TFn;
+}) {
+  const [draft, setDraft] = useState(() => mobileEntryDraftFrom(entry));
+  const [baseline] = useState(() => mobileEntryDraftFrom(entry));
+  const [saving, setSaving] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const [passwordRevealed, setPasswordRevealed] = useState(revealed);
+
+  useEffect(() => {
+    setPasswordRevealed(revealed);
+  }, [revealed]);
+
+  useEffect(() => {
+    if (generatorPassword == null) return;
+    setDraft((current) => ({ ...current, password: generatorPassword }));
+    onGeneratorPasswordConsumed?.();
+  }, [generatorPassword, onGeneratorPasswordConsumed]);
+
+  const isDirty = mobileEntryDraftDirty(draft, baseline);
+  const patchDraft = (patch: Partial<DecryptedEntry>) => {
+    setDraft((current) => ({ ...current, ...patch }));
+  };
+
+  const finishCancel = () => {
+    onCancel();
+  };
+
+  const requestClose = () => {
+    if (isDirty) {
+      setDiscardOpen(true);
+      return;
+    }
+    finishCancel();
+  };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      requestClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  });
+
+  const handleSave = async () => {
+    if (saving) return;
+    const normalized: DecryptedEntry = {
+      ...draft,
+      site: cellCommitValue(draft.site, t("vault.newEntry")),
+    };
+    setSaving(true);
+    try {
+      await onSave(normalized);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const fieldBox =
+    "w-full rounded-lg border border-ink-200 bg-white px-3 py-2.5 text-sm text-ink-900 shadow-sm placeholder:text-ink-400 focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500/20";
+
+  return createPortal(
+    <>
+      <div
+        className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40"
+        role="presentation"
+        onClick={requestClose}
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="vault-add-entry-title"
+          className="card w-full max-w-lg shadow-lg max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="action-modal__header px-5 py-3 border-b border-ink-200">
+            <div className="flex items-center justify-between gap-2">
+              <h2
+                id="vault-add-entry-title"
+                className="font-sans text-lg font-semibold text-ink-900 tracking-tight leading-tight"
+              >
+                {t("vault.addRow")}
+              </h2>
+              <ModalCloseButton
+                onClick={requestClose}
+                ariaLabel={t("common.close")}
+              />
+            </div>
+          </div>
+
+          <div className="px-5 py-4 space-y-4 keyboard-scroll-root min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="space-y-1.5">
+              <label className="label text-xs" htmlFor={`add-site-${entry.id}`}>
+                {t("vault.colSite")}
+              </label>
+              <input
+                id={`add-site-${entry.id}`}
+                className={fieldBox}
+                value={cellDisplayValue(draft.site, t("vault.newEntry"))}
+                placeholder={t("vault.newEntry")}
+                autoFocus
+                onChange={(e) => patchDraft({ site: e.target.value })}
+                onBlur={() =>
+                  patchDraft({
+                    site: cellCommitValue(draft.site, t("vault.newEntry")),
+                  })
+                }
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="label text-xs">{t("vault.colCategory")}</span>
+              <CategorySelect
+                className={`${fieldBox} cursor-pointer appearance-none`}
+                value={draft.categoryId}
+                categories={categories}
+                onChange={(categoryId) => patchDraft({ categoryId })}
+                onAddCategory={onOpenCategoriesAddNew}
+                t={t}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="label text-xs" htmlFor={`add-user-${entry.id}`}>
+                {t("vault.colUser")}
+              </label>
+              <input
+                id={`add-user-${entry.id}`}
+                className={fieldBox}
+                value={draft.username}
+                placeholder={t("vault.phUser")}
+                autoComplete="off"
+                onChange={(e) => patchDraft({ username: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="label text-xs" htmlFor={`add-pass-${entry.id}`}>
+                {t("vault.colPass")}
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="relative min-w-0 flex-1">
+                  <input
+                    id={`add-pass-${entry.id}`}
+                    className={`${fieldBox} pr-10`}
+                    type={passwordRevealed ? "text" : "password"}
+                    value={draft.password}
+                    placeholder={t("vault.phPass")}
+                    spellCheck={false}
+                    autoComplete="new-password"
+                    onChange={(e) => patchDraft({ password: e.target.value })}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 text-ink-400 hover:text-accent-600"
+                    onClick={() => {
+                      setPasswordRevealed((v) => !v);
+                      toggleReveal();
+                    }}
+                    title={t("vault.ttPasswords")}
+                  >
+                    {passwordRevealed ? <EyeOff /> : <Eye />}
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  className="inline-flex shrink-0 items-center justify-center rounded-lg border border-ink-200 bg-white p-2.5 text-ink-500 hover:bg-ink-50 hover:text-accent-600"
+                  onClick={onGenerate}
+                  title={t("vault.ttGenPass")}
+                >
+                  <Refresh />
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="label text-xs" htmlFor={`add-url-${entry.id}`}>
+                {t("vault.colUrl")}
+              </label>
+              <input
+                id={`add-url-${entry.id}`}
+                className={fieldBox}
+                value={draft.url}
+                placeholder={t("vault.phUrl")}
+                inputMode="url"
+                autoComplete="url"
+                onChange={(e) => patchDraft({ url: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="label text-xs" htmlFor={`add-memo-${entry.id}`}>
+                {t("vault.colMemo")}
+              </label>
+              <textarea
+                id={`add-memo-${entry.id}`}
+                className={`${fieldBox} min-h-[5.5rem] resize-y`}
+                value={draft.memo}
+                placeholder={t("vault.phMemo")}
+                onChange={(e) => patchDraft({ memo: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="action-modal__footer px-5 py-3 border-t border-ink-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+            <button
+              type="button"
+              className="btn-secondary text-sm w-full sm:w-auto"
+              onClick={requestClose}
+              disabled={saving}
+            >
+              {t("common.cancel")}
+            </button>
+            <button
+              type="button"
+              className="btn-primary text-sm w-full sm:w-auto"
+              onClick={() => void handleSave()}
+              disabled={saving}
+            >
+              {saving ? t("app.loading") : t("common.save")}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <MobileActionModal
+        open={discardOpen}
+        title={t("vault.addRow")}
+        body={t("vault.mobileDiscardModalBody")}
+        cancelLabel={t("common.cancel")}
+        confirmLabel={t("vault.mobileDiscardConfirm")}
+        onCancel={() => setDiscardOpen(false)}
+        onConfirm={() => {
+          setDiscardOpen(false);
+          finishCancel();
+        }}
+      />
+    </>,
+    document.body,
   );
 }
 
@@ -2290,9 +2595,6 @@ function Row({
   toggleReveal,
   onChange,
   onDelete,
-  isDraft = false,
-  onSaveDraft,
-  onCancelDraft,
   onGenerate,
   onCopy,
   copiedKey,
@@ -2319,8 +2621,6 @@ function Row({
     onCancelScheduledUnpinEntryRow,
     onRegisterCategoryMenuOpen
   );
-
-  const showExpanded = isDraft || expanded;
 
   return (
     <tbody
@@ -2417,26 +2717,7 @@ function Row({
         </td>
         <td className="w-[1%] whitespace-nowrap pl-2 pr-3 sm:pr-4 py-1 align-middle">
           <div className="flex w-full flex-nowrap items-center justify-end gap-2.5">
-            {isDraft ? (
-              <>
-                <button
-                  type="button"
-                  className="shrink-0 whitespace-nowrap rounded-md bg-accent-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-accent-700 touch-manipulation"
-                  onClick={onSaveDraft}
-                  title={t("common.save")}
-                >
-                  {t("common.save")}
-                </button>
-                <button
-                  type="button"
-                  className="shrink-0 whitespace-nowrap rounded-md border border-ink-200 bg-white px-2.5 py-1 text-xs font-medium text-ink-700 hover:bg-ink-50 touch-manipulation"
-                  onClick={onCancelDraft}
-                  title={t("common.cancel")}
-                >
-                  {t("common.cancel")}
-                </button>
-              </>
-            ) : !confirmDel ? (
+            {!confirmDel ? (
               <>
                 <span
                   className="h-5 w-px bg-ink-100 shrink-0 self-center"
@@ -2469,23 +2750,21 @@ function Row({
                 </button>
               </div>
             )}
-            {!isDraft ? (
-              <button
-                type="button"
-                className="inline-flex shrink-0 items-center justify-center leading-none text-ink-500 hover:text-ink-800 p-2 sm:p-1 rounded-md hover:bg-ink-100 touch-manipulation min-w-8 min-h-8"
-                onClick={onToggleExpand}
-                aria-expanded={expanded}
-                title={
-                  expanded ? t("vault.ttCollapseRow") : t("vault.ttExpandRow")
-                }
-              >
-                {expanded ? <ChevronUp /> : <ChevronDown />}
-              </button>
-            ) : null}
+            <button
+              type="button"
+              className="inline-flex shrink-0 items-center justify-center leading-none text-ink-500 hover:text-ink-800 p-2 sm:p-1 rounded-md hover:bg-ink-100 touch-manipulation min-w-8 min-h-8"
+              onClick={onToggleExpand}
+              aria-expanded={expanded}
+              title={
+                expanded ? t("vault.ttCollapseRow") : t("vault.ttExpandRow")
+              }
+            >
+              {expanded ? <ChevronUp /> : <ChevronDown />}
+            </button>
           </div>
         </td>
       </tr>
-      {showExpanded ? (
+      {expanded ? (
         <tr className="bg-ink-50/90 border-t border-ink-100">
           <td colSpan={5} className="px-3 py-3 sm:px-4 sm:py-3 align-top">
             <div className="space-y-3">
