@@ -2362,7 +2362,7 @@ function MobileEntryDetail({
               <div className="relative min-w-0 flex-1 w-0 vault-password-field">
                 <BlurInput
                   id={`m-pass-${entry.id}`}
-                  className="input min-w-0 w-full"
+                  className="input min-w-0 w-full pr-14"
                   type={revealed ? "text" : "password"}
                   value={draft.password}
                   placeholder={t("vault.phPass")}
@@ -2375,7 +2375,7 @@ function MobileEntryDetail({
                 />
                 <button
                   type="button"
-                  className="vault-password-toggle absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-ink-500 hover:text-ink-700 active:text-ink-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30"
+                  className="vault-password-toggle absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex items-center justify-center p-2 rounded-md text-ink-500 hover:text-ink-700 active:text-ink-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30 touch-manipulation"
                   onClick={toggleReveal}
                   title={revealed ? t("vault.hide") : t("vault.show")}
                   aria-label={revealed ? t("vault.hide") : t("vault.show")}

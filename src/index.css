@@ -1705,19 +1705,28 @@ html.native-app .pricing-drawer-header:has(.modal-close-btn) .min-w-0 {
     line-height: var(--leading-body);
   }
 
-  html:not(.native-app) .vault-password-field .input {
-    padding-right: 2.75rem !important;
+  /* Keep password dots/text clear of the in-field reveal control (web + native). */
+  .vault-password-field .input,
+  html.native-app .vault-password-field .input,
+  html.native-app .mobile-entry-detail .vault-password-field .input,
+  html:not(.native-app) .vault-password-field .input,
+  html:not(.native-app) .mobile-entry-detail .vault-password-field .input {
+    padding-right: 3.25rem !important;
   }
 
+  .vault-password-toggle,
+  html.native-app .vault-password-toggle,
   html:not(.native-app) .vault-password-toggle {
     z-index: 2;
-    background: rgb(255 255 255 / 0.92);
+    background: rgb(255 255 255 / 0.96);
     pointer-events: auto;
   }
 
+  .vault-password-toggle svg[aria-hidden],
+  html.native-app .vault-password-toggle svg[aria-hidden],
   html:not(.native-app) .vault-password-toggle svg[aria-hidden] {
-    width: 1.25rem !important;
-    height: 1.25rem !important;
+    width: var(--ui-icon-size-sm, 1.25rem) !important;
+    height: var(--ui-icon-size-sm, 1.25rem) !important;
   }
 
   .mobile-list-group {
