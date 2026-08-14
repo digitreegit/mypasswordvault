@@ -1336,12 +1336,12 @@ export function VaultScreen() {
 
         <div className="overflow-hidden rounded-lg border border-ink-200 bg-white shadow-sm hidden md:block">
           <div className="overflow-x-auto overscroll-x-contain">
-            <table className="w-full min-w-[48rem]">
+            <table className="w-full min-w-[48rem] table-fixed">
               <colgroup>
                 <col style={{ width: "10%" }} />
-                <col style={{ width: "20%" }} />
                 <col style={{ width: "24%" }} />
-                <col style={{ width: "34%" }} />
+                <col style={{ width: "28%" }} />
+                <col style={{ width: "26%" }} />
                 <col style={{ width: "12%" }} />
               </colgroup>
               <thead className="border-b border-ink-200 bg-white text-ink-400 text-xs">
