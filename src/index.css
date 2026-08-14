@@ -16,6 +16,13 @@ body {
   @apply font-sans;
 }
 
+/* Capacitor WebView: pin Latin UI to Geist (same stack as web vault). */
+html.native-app,
+html.native-app body,
+html.native-app #root {
+  font-family: "Geist Sans", "Noto Sans KR", ui-sans-serif, system-ui, sans-serif;
+}
+
 /* ── Global icon scale (mobile 24px / desktop 16px) ── */
 :root {
   --ui-icon-size: 1rem;
