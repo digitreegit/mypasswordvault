@@ -555,6 +555,9 @@ export const MESSAGES_EN: Record<string, string> = {
   "vault.footer":
     "Passwords are encrypted with AES-GCM-256. When signed in, ciphertext syncs to your account; the server cannot read your secrets. Copied passwords are cleared from the clipboard after 20 seconds.",
   "vault.totalItems": "Total: {{count}} items",
+  "vault.listProgressAria":
+    "Viewing about {{seen}} of {{total}} items. Click to scroll to top.",
+  "vault.listProgressTitle": "{{seen}} / {{total}} – back to top",
   "vault.entryLimitBanner":
     "You have reached the free limit of {{limit}} password entries on this account. Upgrade once to add unlimited entries.",
   "vault.entryLimitUpgrade": "Upgrade",

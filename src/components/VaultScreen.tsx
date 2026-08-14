@@ -41,6 +41,7 @@ import { PlanBadge } from "./PlanBadge";
 import { CloudSyncButton } from "./CloudSyncButton";
 import { VaultMobileSortMenu } from "./VaultMobileSortMenu";
 import { UserMenuDropdown } from "./UserMenuDropdown";
+import { VaultListProgressAnchor } from "./ListProgressRing";
 import { isAppError } from "../lib/errors";
 import { useAuth } from "../lib/auth";
 import {
@@ -528,6 +529,7 @@ export function VaultScreen() {
   const [mobileDetailId, setMobileDetailId] = useState<string | null>(null);
   /** Desktop: new-entry form opens in a modal instead of an inline table row. */
   const [desktopAddEntryId, setDesktopAddEntryId] = useState<string | null>(null);
+  const listRegionRef = useRef<HTMLDivElement>(null);
   const [showAll, setShowAll] = useState(false);
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -1299,14 +1301,27 @@ export function VaultScreen() {
           )}
         </p>
 
+        <div ref={listRegionRef} className="relative">
+          <VaultListProgressAnchor
+            listRef={listRegionRef}
+            total={displayEntries.length}
+            itemCount={displayEntries.length}
+            ariaLabel={(seen, total) =>
+              t("vault.listProgressAria", { seen, total })
+            }
+            title={(seen, total) =>
+              t("vault.listProgressTitle", { seen, total })
+            }
+          />
+
         <ul className="md:hidden mobile-list-group list-none p-0 m-0 flex flex-col gap-2">
           {displayEntries.length === 0 ? (
             <li className="p-8 text-center text-ink-500 text-base">
               {t("vault.empty")}
             </li>
           ) : (
-            displayEntries.map((e) => (
-              <li key={e.id}>
+            displayEntries.map((e, index) => (
+              <li key={e.id} data-vault-entry-index={index}>
                 <MobileSwipeEntryRow
                   entry={e}
                   categories={categories}
@@ -1318,47 +1333,6 @@ export function VaultScreen() {
             ))
           )}
         </ul>
-
-        {mobileDetailEntry ? (
-          <MobileEntryDetail
-            entry={mobileDetailEntry}
-            onClose={() => {
-              cancelScheduledUnpin(mobileDetailEntry.id);
-              unpinEntry(mobileDetailEntry.id);
-              setMobileDetailId(null);
-            }}
-            revealed={showAll || revealed.has(mobileDetailEntry.id)}
-            toggleReveal={() => toggleReveal(mobileDetailEntry.id)}
-            onSave={async (draft) => {
-              await upsertEntry({
-                id: draft.id,
-                site: draft.site,
-                categoryId: draft.categoryId,
-                username: draft.username,
-                password: draft.password,
-                url: draft.url,
-                memo: draft.memo,
-              });
-              if (draftEntryIds.includes(draft.id)) {
-                commitDraftEntry(draft.id);
-              }
-            }}
-            onDelete={() => void handleRemoveEntry(mobileDetailEntry.id)}
-            onGenerate={() => openPasswordGenerator(mobileDetailEntry.id)}
-            generatorPassword={mobileGeneratorPassword}
-            onGeneratorPasswordConsumed={() => setMobileGeneratorPassword(null)}
-            onCopy={copyText}
-            copiedKey={copiedKey}
-            categories={categories}
-            onPinEntryRow={pinEntryRow}
-            onScheduleUnpinEntryRow={scheduleUnpinRow}
-            onCancelScheduledUnpinEntryRow={cancelScheduledUnpin}
-            onRegisterCategoryMenuOpen={registerCategoryMenuOpen}
-            onOpenCategoriesAddNew={openCategoriesAddNew}
-            isNewEntry={draftEntryIds.includes(mobileDetailEntry.id)}
-            t={t}
-          />
-        ) : null}
 
         <div className="overflow-hidden rounded-lg border border-ink-200 bg-white shadow-sm hidden md:block">
           <div className="overflow-x-auto overscroll-x-contain">
@@ -1413,10 +1387,11 @@ export function VaultScreen() {
                   </tr>
                 </tbody>
               ) : (
-                displayEntries.map((e) => (
+                displayEntries.map((e, index) => (
                   <Row
                     key={e.id}
                     entry={e}
+                    listIndex={index}
                     expanded={expandedIds.has(e.id)}
                     onToggleExpand={() => toggleExpanded(e.id)}
                     revealed={showAll || revealed.has(e.id)}
@@ -1439,6 +1414,48 @@ export function VaultScreen() {
             </table>
           </div>
         </div>
+        </div>
+
+        {mobileDetailEntry ? (
+          <MobileEntryDetail
+            entry={mobileDetailEntry}
+            onClose={() => {
+              cancelScheduledUnpin(mobileDetailEntry.id);
+              unpinEntry(mobileDetailEntry.id);
+              setMobileDetailId(null);
+            }}
+            revealed={showAll || revealed.has(mobileDetailEntry.id)}
+            toggleReveal={() => toggleReveal(mobileDetailEntry.id)}
+            onSave={async (draft) => {
+              await upsertEntry({
+                id: draft.id,
+                site: draft.site,
+                categoryId: draft.categoryId,
+                username: draft.username,
+                password: draft.password,
+                url: draft.url,
+                memo: draft.memo,
+              });
+              if (draftEntryIds.includes(draft.id)) {
+                commitDraftEntry(draft.id);
+              }
+            }}
+            onDelete={() => void handleRemoveEntry(mobileDetailEntry.id)}
+            onGenerate={() => openPasswordGenerator(mobileDetailEntry.id)}
+            generatorPassword={mobileGeneratorPassword}
+            onGeneratorPasswordConsumed={() => setMobileGeneratorPassword(null)}
+            onCopy={copyText}
+            copiedKey={copiedKey}
+            categories={categories}
+            onPinEntryRow={pinEntryRow}
+            onScheduleUnpinEntryRow={scheduleUnpinRow}
+            onCancelScheduledUnpinEntryRow={cancelScheduledUnpin}
+            onRegisterCategoryMenuOpen={registerCategoryMenuOpen}
+            onOpenCategoriesAddNew={openCategoriesAddNew}
+            isNewEntry={draftEntryIds.includes(mobileDetailEntry.id)}
+            t={t}
+          />
+        ) : null}
 
         {desktopAddEntry ? (
           <AddEntryModal
@@ -1560,6 +1577,7 @@ export function VaultScreen() {
 
 interface RowProps {
   entry: DecryptedEntry;
+  listIndex: number;
   categories: VaultCategory[];
   expanded: boolean;
   onToggleExpand: () => void;
@@ -2141,7 +2159,7 @@ function MobileEntryDetail({
   onOpenCategoriesAddNew,
   isNewEntry = false,
   t,
-}: Omit<RowProps, "expanded" | "onToggleExpand" | "onChange"> & {
+}: Omit<RowProps, "expanded" | "onToggleExpand" | "onChange" | "listIndex"> & {
   onClose: () => void;
   onSave: (draft: DecryptedEntry) => void | Promise<void>;
   isNewEntry?: boolean;
@@ -2588,6 +2606,7 @@ function Th({
 
 function Row({
   entry,
+  listIndex,
   categories,
   expanded,
   onToggleExpand,
@@ -2626,6 +2645,7 @@ function Row({
     <tbody
       ref={rowRef}
       data-vault-entry-id={entry.id}
+      data-vault-entry-index={listIndex}
       className="group text-sm"
       onMouseEnter={onRowMouseEnter}
       onMouseLeave={onRowMouseLeave}
