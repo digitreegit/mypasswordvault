@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { isNativeApp } from "../lib/platform";
 
-const RING_SIZE = 40;
-const RING_STROKE = 2;
+/** Match Iris ID resource list ring (40px). */
+const RING_SIZE = 48;
+const RING_STROKE = 2.5;
 
 export function ListProgressRing({
   progress,
@@ -31,8 +33,8 @@ export function ListProgressRing({
     <button
       type="button"
       onClick={onClick}
-      className="relative flex cursor-pointer items-center justify-center overflow-visible rounded-full bg-transparent transition hover:opacity-80"
-      style={{ width: size, height: size }}
+      className="vault-list-progress-ring relative flex cursor-pointer items-center justify-center overflow-visible rounded-full bg-transparent p-0 transition hover:opacity-80"
+      style={{ width: size, height: size, minWidth: size, minHeight: size }}
       aria-valuemin={0}
       aria-valuemax={total}
       aria-valuenow={label}
@@ -43,7 +45,7 @@ export function ListProgressRing({
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
-        className="-rotate-90 overflow-visible"
+        className="-rotate-90 overflow-visible shrink-0"
         aria-hidden
       >
         <circle cx={size / 2} cy={size / 2} r={radius} fill="#ffffff" />
@@ -69,7 +71,7 @@ export function ListProgressRing({
           className="text-ink-800"
         />
       </svg>
-      <span className="pointer-events-none absolute text-[8px] font-medium tabular-nums tracking-tight text-ink-500">
+      <span className="pointer-events-none absolute text-[10px] font-medium tabular-nums tracking-tight text-ink-500 leading-none">
         {label}
       </span>
     </button>
@@ -93,7 +95,10 @@ function scrollRootToTop(root: HTMLElement | Window) {
   root.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-/** Sticky circular list progress — same behavior as Iris ID resource lists. */
+/**
+ * Fixed circular list progress (Iris ID news-media pattern):
+ * hidden at list top → appears after scrolling down → fixed viewport top-right.
+ */
 export function VaultListProgressAnchor({
   listRef,
   total,
@@ -103,7 +108,6 @@ export function VaultListProgressAnchor({
 }: {
   listRef: React.RefObject<HTMLElement | null>;
   total: number;
-  /** Remount/recompute when filtered list length changes. */
   itemCount: number;
   ariaLabel: (seen: number, total: number) => string;
   title: (seen: number, total: number) => string;
@@ -126,12 +130,11 @@ export function VaultListProgressAnchor({
       const rect = list.getBoundingClientRect();
       const viewport = window.innerHeight;
       const headerOffset = 96;
-      // Show while any part of the list is on screen (including short lists that
-      // never scroll under the header — Iris news hides until scrolled).
-      const listOnScreen =
-        rect.bottom > headerOffset + 40 && rect.top < viewport - 40;
-      setRingVisible(listOnScreen);
-      if (!listOnScreen) return;
+      // Iris ID: hide until the list has scrolled up under the header.
+      const scrolledIntoList = rect.top < headerOffset + 24;
+      const stillInList = rect.bottom > headerOffset + 80;
+      setRingVisible(scrolledIntoList && stillInList);
+      if (!scrolledIntoList || !stillInList) return;
 
       const readingLine = Math.min(viewport * 0.35, headerOffset + 64);
       const nodes = Array.from(
@@ -139,17 +142,8 @@ export function VaultListProgressAnchor({
       ).filter((node) => node.getBoundingClientRect().height > 0);
 
       if (nodes.length === 0) {
-        setSeen(0);
+        setSeen(1);
         setProgress(0);
-        return;
-      }
-
-      // Short list fully on screen: treat as fully viewed.
-      const listFitsInView =
-        rect.top >= headerOffset - 8 && rect.bottom <= viewport - 8;
-      if (listFitsInView) {
-        setSeen(total);
-        setProgress(1);
         return;
       }
 
@@ -163,9 +157,10 @@ export function VaultListProgressAnchor({
         }
       }
 
-      const active = nodes.find(
-        (n) => Number(n.dataset.vaultEntryIndex ?? -1) === currentIndex,
-      ) ?? nodes[Math.min(currentIndex, nodes.length - 1)];
+      const active =
+        nodes.find(
+          (n) => Number(n.dataset.vaultEntryIndex ?? -1) === currentIndex,
+        ) ?? nodes[Math.min(currentIndex, nodes.length - 1)];
       let fraction = 0;
       if (active) {
         const r = active.getBoundingClientRect();
@@ -182,7 +177,7 @@ export function VaultListProgressAnchor({
         Math.max(0, Math.round(continuous * total)),
       );
 
-      setSeen(Math.max(displaySeen, continuous > 0 ? 1 : 0));
+      setSeen(Math.max(displaySeen, 1));
       setProgress(continuous);
     };
 
@@ -206,25 +201,26 @@ export function VaultListProgressAnchor({
     scrollRootToTop(getVaultScrollRoot());
   }, []);
 
-  if (total <= 0) return null;
+  if (total <= 0 || typeof document === "undefined") return null;
 
-  return (
-    <div className="pointer-events-none absolute right-0 top-0 z-20 h-full">
-      <div
-        className={[
-          "sticky top-24 flex justify-end pt-2 pr-1 transition-opacity duration-150 ease-out md:top-24",
-          ringVisible ? "pointer-events-auto opacity-100" : "opacity-0",
-        ].join(" ")}
-      >
-        <ListProgressRing
-          progress={progress}
-          seen={seen}
-          total={total}
-          onClick={scrollToTop}
-          ariaLabel={ariaLabel(seen, total)}
-          title={title(seen, total)}
-        />
-      </div>
-    </div>
+  return createPortal(
+    <div
+      className={[
+        "vault-list-progress-fixed pointer-events-none fixed z-[45] transition-opacity duration-150 ease-out",
+        "top-[max(5.5rem,calc(env(safe-area-inset-top,0px)+4.5rem))] right-[max(1rem,env(safe-area-inset-right,0px))]",
+        ringVisible ? "pointer-events-auto opacity-100" : "opacity-0",
+      ].join(" ")}
+      aria-hidden={!ringVisible}
+    >
+      <ListProgressRing
+        progress={progress}
+        seen={seen}
+        total={total}
+        onClick={scrollToTop}
+        ariaLabel={ariaLabel(seen, total)}
+        title={title(seen, total)}
+      />
+    </div>,
+    document.body,
   );
 }
