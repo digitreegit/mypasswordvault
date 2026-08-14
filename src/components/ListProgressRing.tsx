@@ -126,15 +126,32 @@ export function VaultListProgressAnchor({
       const rect = list.getBoundingClientRect();
       const viewport = window.innerHeight;
       const headerOffset = 96;
-      const scrolledIntoList = rect.top < headerOffset + 24;
-      const stillInList = rect.bottom > headerOffset + 80;
-      setRingVisible(scrolledIntoList && stillInList);
-      if (!scrolledIntoList || !stillInList) return;
+      // Show while any part of the list is on screen (including short lists that
+      // never scroll under the header — Iris news hides until scrolled).
+      const listOnScreen =
+        rect.bottom > headerOffset + 40 && rect.top < viewport - 40;
+      setRingVisible(listOnScreen);
+      if (!listOnScreen) return;
 
       const readingLine = Math.min(viewport * 0.35, headerOffset + 64);
       const nodes = Array.from(
         list.querySelectorAll<HTMLElement>("[data-vault-entry-index]"),
       ).filter((node) => node.getBoundingClientRect().height > 0);
+
+      if (nodes.length === 0) {
+        setSeen(0);
+        setProgress(0);
+        return;
+      }
+
+      // Short list fully on screen: treat as fully viewed.
+      const listFitsInView =
+        rect.top >= headerOffset - 8 && rect.bottom <= viewport - 8;
+      if (listFitsInView) {
+        setSeen(total);
+        setProgress(1);
+        return;
+      }
 
       let currentIndex = 0;
       for (let i = 0; i < nodes.length; i += 1) {
@@ -146,7 +163,9 @@ export function VaultListProgressAnchor({
         }
       }
 
-      const active = nodes[currentIndex];
+      const active = nodes.find(
+        (n) => Number(n.dataset.vaultEntryIndex ?? -1) === currentIndex,
+      ) ?? nodes[Math.min(currentIndex, nodes.length - 1)];
       let fraction = 0;
       if (active) {
         const r = active.getBoundingClientRect();
@@ -190,10 +209,10 @@ export function VaultListProgressAnchor({
   if (total <= 0) return null;
 
   return (
-    <div className="pointer-events-none absolute right-0 top-0 z-20 hidden h-full md:block">
+    <div className="pointer-events-none absolute right-0 top-0 z-20 h-full">
       <div
         className={[
-          "sticky top-24 flex justify-end pt-2 transition-opacity duration-150 ease-out",
+          "sticky top-24 flex justify-end pt-2 pr-1 transition-opacity duration-150 ease-out md:top-24",
           ringVisible ? "pointer-events-auto opacity-100" : "opacity-0",
         ].join(" ")}
       >
