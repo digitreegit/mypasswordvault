@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { isNativeApp } from "../lib/platform";
 
-/** Match Iris ID resource list ring (40px). */
-const RING_SIZE = 48;
-const RING_STROKE = 2.5;
+/** Same as Iris ID `ResourceInfiniteList` ring. */
+const RING_SIZE = 40;
+const RING_STROKE = 2;
 
 export function ListProgressRing({
   progress,
@@ -71,7 +70,7 @@ export function ListProgressRing({
           className="text-ink-800"
         />
       </svg>
-      <span className="pointer-events-none absolute text-[10px] font-medium tabular-nums tracking-tight text-ink-500 leading-none">
+      <span className="pointer-events-none absolute text-[8px] font-medium tabular-nums tracking-tight text-ink-500 leading-none">
         {label}
       </span>
     </button>
@@ -96,8 +95,8 @@ function scrollRootToTop(root: HTMLElement | Window) {
 }
 
 /**
- * Fixed circular list progress (Iris ID news-media pattern):
- * hidden at list top → appears after scrolling down → fixed viewport top-right.
+ * Iris ID news-media pattern: 40px ring, sticky at list column right edge,
+ * hidden until the list scrolls under the header.
  */
 export function VaultListProgressAnchor({
   listRef,
@@ -130,7 +129,6 @@ export function VaultListProgressAnchor({
       const rect = list.getBoundingClientRect();
       const viewport = window.innerHeight;
       const headerOffset = 96;
-      // Iris ID: hide until the list has scrolled up under the header.
       const scrolledIntoList = rect.top < headerOffset + 24;
       const stillInList = rect.bottom > headerOffset + 80;
       setRingVisible(scrolledIntoList && stillInList);
@@ -201,26 +199,26 @@ export function VaultListProgressAnchor({
     scrollRootToTop(getVaultScrollRoot());
   }, []);
 
-  if (total <= 0 || typeof document === "undefined") return null;
+  if (total <= 0) return null;
 
-  return createPortal(
-    <div
-      className={[
-        "vault-list-progress-fixed pointer-events-none fixed z-[45] transition-opacity duration-150 ease-out",
-        "top-[max(5.5rem,calc(env(safe-area-inset-top,0px)+4.5rem))] right-[max(1rem,env(safe-area-inset-right,0px))]",
-        ringVisible ? "pointer-events-auto opacity-100" : "opacity-0",
-      ].join(" ")}
-      aria-hidden={!ringVisible}
-    >
-      <ListProgressRing
-        progress={progress}
-        seen={seen}
-        total={total}
-        onClick={scrollToTop}
-        ariaLabel={ariaLabel(seen, total)}
-        title={title(seen, total)}
-      />
-    </div>,
-    document.body,
+  return (
+    <div className="pointer-events-none absolute right-0 top-0 z-20 hidden h-full md:block">
+      <div
+        className={[
+          "sticky top-24 flex justify-end pt-2 transition-opacity duration-150 ease-out",
+          ringVisible ? "pointer-events-auto opacity-100" : "opacity-0",
+        ].join(" ")}
+      >
+        {/* Flush to list/table right edge — same as Iris ID content column. */}
+        <ListProgressRing
+          progress={progress}
+          seen={seen}
+          total={total}
+          onClick={scrollToTop}
+          ariaLabel={ariaLabel(seen, total)}
+          title={title(seen, total)}
+        />
+      </div>
+    </div>
   );
 }
