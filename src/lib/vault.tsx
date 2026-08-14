@@ -78,6 +78,10 @@ import {
 } from "./i18n/locale";
 import { buildVaultBackupJson, parseVaultBackup } from "./vaultBackup";
 import {
+  buildSpreadsheetCsv,
+  parseSpreadsheetCsv,
+} from "./vaultSpreadsheet";
+import {
   deleteRemoteVaultBackup,
   pushVaultBackupToCloud,
   reconcileCloudVault,
@@ -165,6 +169,10 @@ interface VaultContextValue {
   exportBackup: () => Promise<string>;
   /** Replace local vault with backup; locks the app. */
   importBackup: (jsonText: string) => Promise<void>;
+  /** Plaintext CSV for spreadsheet apps (Excel, Sheets). Vault must be unlocked. */
+  exportSpreadsheet: () => Promise<string>;
+  /** Replace all entries from a spreadsheet CSV; stays unlocked. */
+  importSpreadsheet: (csvText: string) => Promise<void>;
 
   upsertEntry: (
     partial: Partial<DecryptedEntry> & { id?: string }
@@ -1517,6 +1525,105 @@ export function VaultProvider({
     await flushCloudPush();
   }, [flushCloudPush]);
 
+  const exportSpreadsheet = useCallback(async () => {
+    const session = sessionRef.current;
+    if (!session) throw new AppError("errors.locked");
+    const cats = meta?.categories ?? [];
+    const nameById = new Map(cats.map((c) => [c.id, c.name]));
+    const rows = entries.map((e) => ({
+      category: e.categoryId ? (nameById.get(e.categoryId) ?? "") : "",
+      site: e.site,
+      username: e.username,
+      password: e.password,
+      url: e.url,
+      memo: e.memo,
+    }));
+    return buildSpreadsheetCsv(rows);
+  }, [entries, meta?.categories]);
+
+  const importSpreadsheet = useCallback(
+    async (csvText: string) => {
+      const session = sessionRef.current;
+      if (!session) throw new AppError("errors.locked");
+      const rows = parseSpreadsheetCsv(csvText);
+      if (isSupabaseConfigured) {
+        const { loaded, licensed: lic, isAdmin: admin } = entitlementRef.current;
+        const treatAsUnlicensed = loaded ? !(lic || admin) : true;
+        if (treatAsUnlicensed && rows.length > FREE_ENTRY_LIMIT) {
+          throw new AppError("errors.importExceedsEntryLimit");
+        }
+      }
+
+      const byName = new Map<string, VaultCategory>();
+      const nextCats: VaultCategory[] = [];
+      const resolveCategoryId = (name: string): string => {
+        const trimmed = name.trim();
+        if (!trimmed) return "";
+        const key = trimmed.toLowerCase();
+        const found = byName.get(key);
+        if (found) return found.id;
+        const existing = (meta?.categories ?? []).find(
+          (c) => c.name.trim().toLowerCase() === key,
+        );
+        const created: VaultCategory = existing ?? {
+          id: newId(),
+          name: trimmed,
+        };
+        byName.set(key, created);
+        nextCats.push(created);
+        return created.id;
+      };
+
+      const now = Date.now();
+      const nextEntries: DecryptedEntry[] = [];
+      for (const row of rows) {
+        const id = newId();
+        const secret: EntrySecret = {
+          categoryId: resolveCategoryId(row.category),
+          site: row.site,
+          url: row.url,
+          username: row.username,
+          password: row.password,
+          notes: "",
+          memo: row.memo,
+        };
+        const persisted = await buildEncryptedEntryRow(
+          session.key,
+          id,
+          now,
+          secret,
+        );
+        nextEntries.push({
+          id,
+          ...secret,
+          updatedAt: now,
+        });
+        await putEntry(persisted);
+      }
+
+      const oldIds = entries.map((e) => e.id);
+      for (const id of oldIds) {
+        if (!nextEntries.some((e) => e.id === id)) {
+          await deleteEntry(id);
+        }
+      }
+
+      const m = await readMeta();
+      if (!m) throw new AppError("errors.notInitialized");
+      const updated: VaultMeta = {
+        ...m,
+        categories: nextCats,
+        updatedAt: Date.now(),
+      };
+      await writeMeta(updated);
+      setMeta(updated);
+      setEntries(nextEntries);
+      lastActivityRef.current = Date.now();
+      scheduleCloudPush();
+    },
+    [entries, meta?.categories, scheduleCloudPush],
+  );
+
   const atEntryLimit = useMemo(
     () =>
       isSupabaseConfigured &&
@@ -1567,6 +1674,8 @@ export function VaultProvider({
       t,
       exportBackup,
       importBackup,
+      exportSpreadsheet,
+      importSpreadsheet,
       upsertEntry,
       removeEntry,
       touchActivity,
@@ -1621,6 +1730,8 @@ export function VaultProvider({
       t,
       exportBackup,
       importBackup,
+      exportSpreadsheet,
+      importSpreadsheet,
       upsertEntry,
       removeEntry,
       touchActivity,

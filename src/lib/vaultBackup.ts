@@ -74,14 +74,20 @@ export function snapshotRevisionFromPayload(payload: VaultBackupPayload): number
   return snapshotRevision(payload.meta, payload.entries);
 }
 
-function sanitizeBackupFilename(filename: string): string {
+function sanitizeDownloadFilename(filename: string, fallbackExt: string): string {
   const trimmed = filename.trim();
   const safe = trimmed.replace(/[^\w.\-]+/g, "_");
-  return safe.endsWith(".json") ? safe : `${safe || "vault-backup"}.json`;
+  const ext = fallbackExt.startsWith(".") ? fallbackExt : `.${fallbackExt}`;
+  if (safe.toLowerCase().endsWith(ext.toLowerCase())) return safe;
+  return `${safe || "vault-backup"}${ext}`;
 }
 
-function downloadJsonViaAnchor(filename: string, json: string): void {
-  const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+function downloadTextViaAnchor(
+  filename: string,
+  text: string,
+  mimeType: string,
+): void {
+  const blob = new Blob([text], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -93,14 +99,16 @@ function downloadJsonViaAnchor(filename: string, json: string): void {
   URL.revokeObjectURL(url);
 }
 
-async function tryWebShareJson(filename: string, json: string): Promise<boolean> {
+async function tryWebShareText(
+  filename: string,
+  text: string,
+  mimeType: string,
+): Promise<boolean> {
   if (typeof navigator === "undefined" || typeof navigator.share !== "function") {
     return false;
   }
   try {
-    const file = new File([json], filename, {
-      type: "application/json;charset=utf-8",
-    });
+    const file = new File([text], filename, { type: mimeType });
     const data: ShareData = { files: [file], title: filename };
     if (typeof navigator.canShare === "function" && !navigator.canShare(data)) {
       return false;
@@ -113,13 +121,13 @@ async function tryWebShareJson(filename: string, json: string): Promise<boolean>
   }
 }
 
-async function shareJsonViaCapacitor(filename: string, json: string): Promise<void> {
+async function shareTextViaCapacitor(filename: string, text: string): Promise<void> {
   const { Directory, Encoding, Filesystem } = await import("@capacitor/filesystem");
   const { Share } = await import("@capacitor/share");
 
   await Filesystem.writeFile({
     path: filename,
-    data: json,
+    data: text,
     directory: Directory.Cache,
     encoding: Encoding.UTF8,
     recursive: true,
@@ -137,18 +145,37 @@ async function shareJsonViaCapacitor(filename: string, json: string): Promise<vo
 }
 
 /** Web: browser download. Native: system share sheet (Save to Files, AirDrop, etc.). */
-export async function downloadJsonFile(filename: string, json: string): Promise<void> {
-  const safeName = sanitizeBackupFilename(filename);
+export async function downloadTextFile(
+  filename: string,
+  text: string,
+  opts: { extension: string; mimeType: string },
+): Promise<void> {
+  const safeName = sanitizeDownloadFilename(filename, opts.extension);
 
   if (isNativeApp()) {
-    if (await tryWebShareJson(safeName, json)) return;
+    if (await tryWebShareText(safeName, text, opts.mimeType)) return;
     try {
-      await shareJsonViaCapacitor(safeName, json);
+      await shareTextViaCapacitor(safeName, text);
       return;
     } catch {
       throw new AppError("settings.exportBackupFailed");
     }
   }
 
-  downloadJsonViaAnchor(safeName, json);
+  downloadTextViaAnchor(safeName, text, opts.mimeType);
+}
+
+/** Web: browser download. Native: system share sheet (Save to Files, AirDrop, etc.). */
+export async function downloadJsonFile(filename: string, json: string): Promise<void> {
+  await downloadTextFile(filename, json, {
+    extension: ".json",
+    mimeType: "application/json;charset=utf-8",
+  });
+}
+
+export async function downloadCsvFile(filename: string, csv: string): Promise<void> {
+  await downloadTextFile(filename, csv, {
+    extension: ".csv",
+    mimeType: "text/csv;charset=utf-8",
+  });
 }

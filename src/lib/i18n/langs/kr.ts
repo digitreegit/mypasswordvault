@@ -288,6 +288,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "errors.noPasskeyRegistered": "등록된 패스키가 없습니다.",
   "errors.locked": "잠금 상태입니다.",
   "errors.invalidBackup": "올바른 vault 백업 파일이 아닙니다.",
+  "errors.invalidSpreadsheet":
+    "올바른 스프레드시트 CSV가 아닙니다. Category, Site, Username, Password, URL, Memo 열이 있는 .csv를 사용하세요.",
   "errors.missingUserVaultsTable":
     "Supabase에 user_vaults 테이블이 없습니다. 대시보드 → SQL Editor에서 이 저장소의 supabase/migrations/20260513120000_user_vaults.sql 내용을 붙여넣어 실행한 뒤 다시 시도하세요.",
   "errors.noCloudBackup":
@@ -397,6 +399,15 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.importConfirm": "이 기기의 vault를 백업으로 바꿀까요? 저장하지 않은 변경은 사라지며 다시 잠금 해제해야 합니다.",
   "settings.importApply": "바꾸고 잠금",
   "settings.importCancel": "가져오기 취소",
+  "settings.spreadsheetBackup": "스프레드시트 (.csv)",
+  "settings.spreadsheetBackupHint":
+    "Excel·Google Sheets용 선택 내보내기/가져오기입니다. .csv는 평문이므로 파일을 가진 누구나 비밀번호를 읽을 수 있습니다. 장기 보관에는 위의 암호화 JSON 백업을 권장합니다.",
+  "settings.exportSpreadsheet": "스프레드시트 다운로드 (.csv)",
+  "settings.importSpreadsheet": "스프레드시트 가져오기…",
+  "settings.spreadsheetImportConfirm":
+    "이 기기의 모든 항목을 이 스프레드시트로 바꿀까요? 현재 항목은 삭제되며, 금고는 잠금 해제 상태로 유지됩니다.",
+  "settings.spreadsheetImportApply": "항목 바꾸기",
+  "settings.spreadsheetImportDone": "스프레드시트를 가져왔습니다.",
 
   "settings.accountTitle": "계정",
   "settings.signedInAs": "로그인: {{email}}",

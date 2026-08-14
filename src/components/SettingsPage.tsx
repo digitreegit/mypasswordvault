@@ -22,7 +22,7 @@ import {
   SettingsProFeatures,
 } from "./CheckoutProFeatures";
 import { PricingDrawer } from "./PricingDrawer";
-import { downloadJsonFile } from "../lib/vaultBackup";
+import { downloadCsvFile, downloadJsonFile } from "../lib/vaultBackup";
 import { isAppError } from "../lib/errors";
 import { SecuritySettingsPanel } from "./SecuritySettingsPanel";
 import { HelpFaqItem } from "./HelpFaqItem";
@@ -80,6 +80,8 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     setAutoLockMinutes,
     exportBackup,
     importBackup,
+    exportSpreadsheet,
+    importSpreadsheet,
     entries,
     licensed,
     isAdmin,
@@ -102,10 +104,14 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     null,
   );
   const [importDraft, setImportDraft] = useState<string | null>(null);
+  const [spreadsheetImportDraft, setSpreadsheetImportDraft] = useState<
+    string | null
+  >(null);
   const [backupToast, setBackupToast] = useState<string | null>(null);
   const [licenseKeyCopied, setLicenseKeyCopied] = useState(false);
   const [pricingDrawerOpen, setPricingDrawerOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const spreadsheetFileRef = useRef<HTMLInputElement>(null);
 
   const vaultHref = vaultHomeHref();
   const native = isNativeApp();
@@ -260,6 +266,19 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     }
   }
 
+  async function handleSpreadsheetExport() {
+    setBackupToast(null);
+    try {
+      const csv = await exportSpreadsheet();
+      const d = new Date().toISOString().slice(0, 10);
+      await downloadCsvFile(`mypasswordapp-vault-${d}.csv`, csv);
+    } catch (e: unknown) {
+      setBackupToast(
+        isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
+      );
+    }
+  }
+
   async function applyImport() {
     if (!importDraft) return;
     setBusy(true);
@@ -268,6 +287,23 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
       await importBackup(importDraft);
       setImportDraft(null);
       window.location.hash = "#/";
+    } catch (e: unknown) {
+      setBackupToast(
+        isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function applySpreadsheetImport() {
+    if (!spreadsheetImportDraft) return;
+    setBusy(true);
+    setBackupToast(null);
+    try {
+      await importSpreadsheet(spreadsheetImportDraft);
+      setSpreadsheetImportDraft(null);
+      setBackupToast(t("settings.spreadsheetImportDone"));
     } catch (e: unknown) {
       setBackupToast(
         isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
@@ -521,6 +557,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
                 if (!f) return;
                 try {
                   const text = await f.text();
+                  setSpreadsheetImportDraft(null);
                   setImportDraft(text);
                 } catch {
                   setBackupToast(t("settings.copyBackupFail"));
@@ -555,6 +592,76 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
                   disabled={busy}
                 >
                   {t("settings.importApply")}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="card p-5 sm:p-6 space-y-3">
+          <h3 className="settings-card-title text-sm font-semibold text-ink-800">
+            {t("settings.spreadsheetBackup")}
+          </h3>
+          <p className="settings-card-hint text-xs text-ink-600 leading-snug">
+            {t("settings.spreadsheetBackupHint")}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              type="button"
+              className="btn-secondary text-sm flex-1"
+              disabled={busy}
+              onClick={() => void handleSpreadsheetExport()}
+            >
+              {t("settings.exportSpreadsheet")}
+            </button>
+            <input
+              ref={spreadsheetFileRef}
+              type="file"
+              accept=".csv,text/csv,text/plain"
+              className="hidden"
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (!f) return;
+                try {
+                  const text = await f.text();
+                  setImportDraft(null);
+                  setSpreadsheetImportDraft(text);
+                } catch {
+                  setBackupToast(t("settings.copyBackupFail"));
+                }
+              }}
+            />
+            <button
+              type="button"
+              className="btn-secondary text-sm flex-1"
+              disabled={busy}
+              onClick={() => spreadsheetFileRef.current?.click()}
+            >
+              {t("settings.importSpreadsheet")}
+            </button>
+          </div>
+          {spreadsheetImportDraft && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm space-y-2">
+              <p className="text-amber-900 leading-snug">
+                {t("settings.spreadsheetImportConfirm")}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="btn-secondary text-sm flex-1"
+                  onClick={() => setSpreadsheetImportDraft(null)}
+                  disabled={busy}
+                >
+                  {t("settings.importCancel")}
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary text-sm flex-1 bg-amber-700 hover:bg-amber-800"
+                  onClick={() => void applySpreadsheetImport()}
+                  disabled={busy}
+                >
+                  {t("settings.spreadsheetImportApply")}
                 </button>
               </div>
             </div>

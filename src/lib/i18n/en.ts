@@ -295,6 +295,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "errors.noPasskeyRegistered": "No passkey is registered for this vault.",
   "errors.locked": "Vault is locked.",
   "errors.invalidBackup": "This file is not a valid vault backup.",
+  "errors.invalidSpreadsheet":
+    "This file is not a valid spreadsheet CSV. Use a .csv with Category, Site, Username, Password, URL, and Memo columns.",
   "errors.missingUserVaultsTable":
     "The Supabase project is missing the user_vaults table. In the Supabase dashboard open SQL Editor, paste and run the contents of supabase/migrations/20260513120000_user_vaults.sql in this repo, then try again.",
   "errors.noCloudBackup":
@@ -406,6 +408,15 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.importConfirm": "Replace this device’s vault with the backup? Unsaved changes here will be lost. You will need to unlock again.",
   "settings.importApply": "Replace and lock",
   "settings.importCancel": "Cancel import",
+  "settings.spreadsheetBackup": "Spreadsheet (.csv)",
+  "settings.spreadsheetBackupHint":
+    "Optional export/import for Excel or Google Sheets. The .csv is plaintext — anyone with the file can read passwords. Prefer the encrypted JSON backup above for long-term storage.",
+  "settings.exportSpreadsheet": "Download spreadsheet (.csv)",
+  "settings.importSpreadsheet": "Import spreadsheet…",
+  "settings.spreadsheetImportConfirm":
+    "Replace all entries on this device with this spreadsheet? Current entries will be removed. The vault stays unlocked.",
+  "settings.spreadsheetImportApply": "Replace entries",
+  "settings.spreadsheetImportDone": "Spreadsheet imported.",
 
   "settings.accountTitle": "Account",
   "settings.signedInAs": "Signed in as {{email}}",
