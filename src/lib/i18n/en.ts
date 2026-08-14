@@ -410,7 +410,9 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.importCancel": "Cancel import",
   "settings.spreadsheetBackup": "Spreadsheet (.csv)",
   "settings.spreadsheetBackupHint":
-    "Optional export/import for Excel or Google Sheets. The .csv is plaintext — anyone with the file can read passwords. Prefer the encrypted JSON backup above for long-term storage.",
+    "Optional export/import for Excel or Google Sheets. Requires an unlocked vault. The .csv is plaintext — anyone with the file can read passwords. Prefer the encrypted JSON backup below for long-term storage.",
+  "settings.spreadsheetNeedsUnlock":
+    "Unlock your vault first to export or import a spreadsheet.",
   "settings.exportSpreadsheet": "Download spreadsheet (.csv)",
   "settings.importSpreadsheet": "Import spreadsheet…",
   "settings.spreadsheetImportConfirm":

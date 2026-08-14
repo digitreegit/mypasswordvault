@@ -401,7 +401,9 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.importCancel": "가져오기 취소",
   "settings.spreadsheetBackup": "스프레드시트 (.csv)",
   "settings.spreadsheetBackupHint":
-    "Excel·Google Sheets용 선택 내보내기/가져오기입니다. .csv는 평문이므로 파일을 가진 누구나 비밀번호를 읽을 수 있습니다. 장기 보관에는 위의 암호화 JSON 백업을 권장합니다.",
+    "Excel·Google Sheets용 선택 내보내기/가져오기입니다. 금고를 먼저 잠금 해제해야 합니다. .csv는 평문이므로 파일을 가진 누구나 비밀번호를 읽을 수 있습니다. 장기 보관에는 아래의 암호화 JSON 백업을 권장합니다.",
+  "settings.spreadsheetNeedsUnlock":
+    "스프레드시트를 내보내거나 가져오려면 먼저 금고를 잠금 해제하세요.",
   "settings.exportSpreadsheet": "스프레드시트 다운로드 (.csv)",
   "settings.importSpreadsheet": "스프레드시트 가져오기…",
   "settings.spreadsheetImportConfirm":

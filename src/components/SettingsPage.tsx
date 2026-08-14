@@ -76,6 +76,7 @@ const SETTINGS_BACK_TO_VAULT_CLASS =
 
 export function SettingsPage({ section }: { section: SettingsSection }) {
   const {
+    status,
     meta,
     setAutoLockMinutes,
     exportBackup,
@@ -115,6 +116,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
 
   const vaultHref = vaultHomeHref();
   const native = isNativeApp();
+  const vaultUnlocked = status === "unlocked";
   const showAccountSections = Boolean(configured && user);
   const showHeaderUpgrade =
     atEntryLimit && !licensed && !isAdmin && entitlementLoaded;
@@ -268,13 +270,21 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
 
   async function handleSpreadsheetExport() {
     setBackupToast(null);
+    if (!vaultUnlocked) {
+      setBackupToast(t("settings.spreadsheetNeedsUnlock"));
+      return;
+    }
     try {
       const csv = await exportSpreadsheet();
       const d = new Date().toISOString().slice(0, 10);
       await downloadCsvFile(`mypasswordapp-vault-${d}.csv`, csv);
     } catch (e: unknown) {
       setBackupToast(
-        isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
+        isAppError(e)
+          ? e.code === "errors.locked"
+            ? t("settings.spreadsheetNeedsUnlock")
+            : t(e.code)
+          : (e as Error)?.message ?? t("setup.errGeneric")
       );
     }
   }
@@ -532,6 +542,94 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
         </div>
         <div className="card p-5 sm:p-6 space-y-3">
           <h3 className="settings-card-title text-sm font-semibold text-ink-800">
+            {t("settings.spreadsheetBackup")}
+          </h3>
+          <p className="settings-card-hint text-xs text-ink-600 leading-snug">
+            {t("settings.spreadsheetBackupHint")}
+          </p>
+          {!vaultUnlocked ? (
+            <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 leading-snug">
+              {t("settings.spreadsheetNeedsUnlock")}{" "}
+              <a href={vaultHref} className="font-medium text-accent-700 underline-offset-2 hover:underline">
+                {t("account.backToVault")}
+              </a>
+            </p>
+          ) : null}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              type="button"
+              className="btn-secondary text-sm flex-1"
+              disabled={busy || !vaultUnlocked}
+              onClick={() => void handleSpreadsheetExport()}
+            >
+              {t("settings.exportSpreadsheet")}
+            </button>
+            <input
+              ref={spreadsheetFileRef}
+              type="file"
+              accept=".csv,text/csv,text/plain"
+              className="hidden"
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (!f) return;
+                if (!vaultUnlocked) {
+                  setBackupToast(t("settings.spreadsheetNeedsUnlock"));
+                  return;
+                }
+                try {
+                  const text = await f.text();
+                  setImportDraft(null);
+                  setSpreadsheetImportDraft(text);
+                } catch {
+                  setBackupToast(t("settings.copyBackupFail"));
+                }
+              }}
+            />
+            <button
+              type="button"
+              className="btn-secondary text-sm flex-1"
+              disabled={busy || !vaultUnlocked}
+              onClick={() => {
+                if (!vaultUnlocked) {
+                  setBackupToast(t("settings.spreadsheetNeedsUnlock"));
+                  return;
+                }
+                spreadsheetFileRef.current?.click();
+              }}
+            >
+              {t("settings.importSpreadsheet")}
+            </button>
+          </div>
+          {spreadsheetImportDraft && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm space-y-2">
+              <p className="text-amber-900 leading-snug">
+                {t("settings.spreadsheetImportConfirm")}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="btn-secondary text-sm flex-1"
+                  onClick={() => setSpreadsheetImportDraft(null)}
+                  disabled={busy}
+                >
+                  {t("settings.importCancel")}
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary text-sm flex-1 bg-amber-700 hover:bg-amber-800"
+                  onClick={() => void applySpreadsheetImport()}
+                  disabled={busy}
+                >
+                  {t("settings.spreadsheetImportApply")}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="card p-5 sm:p-6 space-y-3">
+          <h3 className="settings-card-title text-sm font-semibold text-ink-800">
             {t("settings.fileBackupAdvanced")}
           </h3>
           <p className="settings-card-hint text-xs text-ink-600 leading-snug">
@@ -592,76 +690,6 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
                   disabled={busy}
                 >
                   {t("settings.importApply")}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="card p-5 sm:p-6 space-y-3">
-          <h3 className="settings-card-title text-sm font-semibold text-ink-800">
-            {t("settings.spreadsheetBackup")}
-          </h3>
-          <p className="settings-card-hint text-xs text-ink-600 leading-snug">
-            {t("settings.spreadsheetBackupHint")}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <button
-              type="button"
-              className="btn-secondary text-sm flex-1"
-              disabled={busy}
-              onClick={() => void handleSpreadsheetExport()}
-            >
-              {t("settings.exportSpreadsheet")}
-            </button>
-            <input
-              ref={spreadsheetFileRef}
-              type="file"
-              accept=".csv,text/csv,text/plain"
-              className="hidden"
-              onChange={async (e) => {
-                const f = e.target.files?.[0];
-                e.target.value = "";
-                if (!f) return;
-                try {
-                  const text = await f.text();
-                  setImportDraft(null);
-                  setSpreadsheetImportDraft(text);
-                } catch {
-                  setBackupToast(t("settings.copyBackupFail"));
-                }
-              }}
-            />
-            <button
-              type="button"
-              className="btn-secondary text-sm flex-1"
-              disabled={busy}
-              onClick={() => spreadsheetFileRef.current?.click()}
-            >
-              {t("settings.importSpreadsheet")}
-            </button>
-          </div>
-          {spreadsheetImportDraft && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm space-y-2">
-              <p className="text-amber-900 leading-snug">
-                {t("settings.spreadsheetImportConfirm")}
-              </p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  className="btn-secondary text-sm flex-1"
-                  onClick={() => setSpreadsheetImportDraft(null)}
-                  disabled={busy}
-                >
-                  {t("settings.importCancel")}
-                </button>
-                <button
-                  type="button"
-                  className="btn-primary text-sm flex-1 bg-amber-700 hover:bg-amber-800"
-                  onClick={() => void applySpreadsheetImport()}
-                  disabled={busy}
-                >
-                  {t("settings.spreadsheetImportApply")}
                 </button>
               </div>
             </div>

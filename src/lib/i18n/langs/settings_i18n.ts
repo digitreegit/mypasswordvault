@@ -43,7 +43,8 @@ export const SETTINGS_CN: Record<string, string> = {
   "settings.importCancel": "取消导入",
   "settings.spreadsheetBackup": "电子表格 (.csv)",
   "settings.spreadsheetBackupHint":
-    "可选。用于 Excel 或 Google 表格的导出/导入。.csv 为明文，任何人拿到文件都能读取密码。长期备份请优先使用上方的加密 JSON。",
+    "可选。用于 Excel 或 Google 表格的导出/导入。需先解锁保险库。.csv 为明文，任何人拿到文件都能读取密码。长期备份请优先使用下方的加密 JSON。",
+  "settings.spreadsheetNeedsUnlock": "请先解锁保险库，再导出或导入电子表格。",
   "settings.exportSpreadsheet": "下载电子表格 (.csv)",
   "settings.importSpreadsheet": "导入电子表格…",
   "settings.spreadsheetImportConfirm":
@@ -141,7 +142,9 @@ export const SETTINGS_JP: Record<string, string> = {
   "settings.importCancel": "インポートをキャンセル",
   "settings.spreadsheetBackup": "スプレッドシート (.csv)",
   "settings.spreadsheetBackupHint":
-    "任意です。Excel や Google スプレッドシート向けの書き出し/取り込みです。.csv は平文なので、ファイルを持つ人は誰でもパスワードを読めます。長期保管には上の暗号化 JSON を推奨します。",
+    "任意です。Excel や Google スプレッドシート向けの書き出し/取り込みです。先に Vault のロックを解除してください。.csv は平文なので、ファイルを持つ人は誰でもパスワードを読めます。長期保管には下の暗号化 JSON を推奨します。",
+  "settings.spreadsheetNeedsUnlock":
+    "スプレッドシートを書き出す／取り込むには、先に Vault のロックを解除してください。",
   "settings.exportSpreadsheet": "スプレッドシートをダウンロード (.csv)",
   "settings.importSpreadsheet": "スプレッドシートをインポート…",
   "settings.spreadsheetImportConfirm":
@@ -244,7 +247,9 @@ export const SETTINGS_ID: Record<string, string> = {
   "settings.importCancel": "Batalkan impor",
   "settings.spreadsheetBackup": "Spreadsheet (.csv)",
   "settings.spreadsheetBackupHint":
-    "Opsional. Ekspor/impor untuk Excel atau Google Sheets. File .csv adalah teks biasa — siapa pun yang punya file bisa membaca kata sandi. Untuk penyimpanan jangka panjang, utamakan cadangan JSON terenkripsi di atas.",
+    "Opsional. Ekspor/impor untuk Excel atau Google Sheets. Brankas harus dibuka kunci dulu. File .csv adalah teks biasa — siapa pun yang punya file bisa membaca kata sandi. Untuk penyimpanan jangka panjang, utamakan cadangan JSON terenkripsi di bawah.",
+  "settings.spreadsheetNeedsUnlock":
+    "Buka kunci brankas terlebih dahulu untuk mengekspor atau mengimpor spreadsheet.",
   "settings.exportSpreadsheet": "Unduh spreadsheet (.csv)",
   "settings.importSpreadsheet": "Impor spreadsheet…",
   "settings.spreadsheetImportConfirm":
@@ -347,7 +352,9 @@ export const SETTINGS_ES: Record<string, string> = {
   "settings.importCancel": "Cancelar importación",
   "settings.spreadsheetBackup": "Hoja de cálculo (.csv)",
   "settings.spreadsheetBackupHint":
-    "Opcional. Exportar/importar para Excel o Google Sheets. El .csv es texto plano: cualquiera con el archivo puede leer las contraseñas. Para almacenamiento a largo plazo, preferir el JSON cifrado de arriba.",
+    "Opcional. Exportar/importar para Excel o Google Sheets. Requiere la bóveda desbloqueada. El .csv es texto plano: cualquiera con el archivo puede leer las contraseñas. Para almacenamiento a largo plazo, preferir el JSON cifrado de abajo.",
+  "settings.spreadsheetNeedsUnlock":
+    "Desbloquea la bóveda primero para exportar o importar una hoja de cálculo.",
   "settings.exportSpreadsheet": "Descargar hoja (.csv)",
   "settings.importSpreadsheet": "Importar hoja…",
   "settings.spreadsheetImportConfirm":
@@ -450,7 +457,9 @@ export const SETTINGS_DE: Record<string, string> = {
   "settings.importCancel": "Import abbrechen",
   "settings.spreadsheetBackup": "Tabelle (.csv)",
   "settings.spreadsheetBackupHint":
-    "Optional. Export/Import für Excel oder Google Sheets. Die .csv-Datei ist Klartext — jeder mit der Datei kann Passwörter lesen. Für langfristige Aufbewahrung die verschlüsselte JSON-Sicherung oben bevorzugen.",
+    "Optional. Export/Import für Excel oder Google Sheets. Der Tresor muss entsperrt sein. Die .csv-Datei ist Klartext — jeder mit der Datei kann Passwörter lesen. Für langfristige Aufbewahrung die verschlüsselte JSON-Sicherung unten bevorzugen.",
+  "settings.spreadsheetNeedsUnlock":
+    "Entsperren Sie zuerst den Tresor, um eine Tabelle zu exportieren oder zu importieren.",
   "settings.exportSpreadsheet": "Tabelle herunterladen (.csv)",
   "settings.importSpreadsheet": "Tabelle importieren…",
   "settings.spreadsheetImportConfirm":
@@ -553,7 +562,9 @@ export const SETTINGS_FR: Record<string, string> = {
   "settings.importCancel": "Annuler l'importation",
   "settings.spreadsheetBackup": "Tableur (.csv)",
   "settings.spreadsheetBackupHint":
-    "Facultatif. Export/import pour Excel ou Google Sheets. Le fichier .csv est en clair — quiconque possède le fichier peut lire les mots de passe. Pour un stockage durable, préférez la sauvegarde JSON chiffrée ci-dessus.",
+    "Facultatif. Export/import pour Excel ou Google Sheets. Le coffre doit être déverrouillé. Le fichier .csv est en clair — quiconque possède le fichier peut lire les mots de passe. Pour un stockage durable, préférez la sauvegarde JSON chiffrée ci-dessous.",
+  "settings.spreadsheetNeedsUnlock":
+    "Déverrouillez d’abord le coffre pour exporter ou importer un tableur.",
   "settings.exportSpreadsheet": "Télécharger le tableur (.csv)",
   "settings.importSpreadsheet": "Importer un tableur…",
   "settings.spreadsheetImportConfirm":
@@ -656,7 +667,9 @@ export const SETTINGS_IT: Record<string, string> = {
   "settings.importCancel": "Annulla importazione",
   "settings.spreadsheetBackup": "Foglio di calcolo (.csv)",
   "settings.spreadsheetBackupHint":
-    "Facoltativo. Esporta/importa per Excel o Google Fogli. Il .csv è in chiaro: chiunque abbia il file può leggere le password. Per l'archiviazione a lungo termine preferisci il backup JSON crittografato sopra.",
+    "Facoltativo. Esporta/importa per Excel o Google Fogli. Il vault deve essere sbloccato. Il .csv è in chiaro: chiunque abbia il file può leggere le password. Per l'archiviazione a lungo termine preferisci il backup JSON crittografato sotto.",
+  "settings.spreadsheetNeedsUnlock":
+    "Sblocca prima il vault per esportare o importare un foglio di calcolo.",
   "settings.exportSpreadsheet": "Scarica foglio (.csv)",
   "settings.importSpreadsheet": "Importa foglio…",
   "settings.spreadsheetImportConfirm":
