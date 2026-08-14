@@ -24,7 +24,7 @@ export default {
       },
       fontFamily: {
         sans: [
-          "Inter",
+          "Geist Sans",
           '"Noto Sans KR"',
           "ui-sans-serif",
           "system-ui",

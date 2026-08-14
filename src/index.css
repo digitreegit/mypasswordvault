@@ -754,7 +754,7 @@ html.native-app .native-onboard__art {
 html.native-app .native-launch--intro,
 html.native-app .native-onboard__title,
 html.native-app .native-onboard__body {
-  font-family: Inter, "Noto Sans KR", ui-sans-serif, system-ui, sans-serif;
+  font-family: "Geist Sans", "Noto Sans KR", ui-sans-serif, system-ui, sans-serif;
 }
 
 html.native-app .native-onboard__title {
