@@ -505,6 +505,150 @@
         gap: 0.75rem;
         justify-content: center;
       }
+      .story {
+        margin-top: 2.5rem;
+      }
+      .story .section-desc {
+        margin-bottom: 1.5rem;
+        text-align: center;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .story > h2 {
+        text-align: center;
+      }
+      .story-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        align-items: stretch;
+      }
+      @media (min-width: 900px) {
+        .story-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 1rem;
+        }
+      }
+      .story-card {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        border-radius: 1rem;
+        overflow: hidden;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: #050814;
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+        min-width: 0;
+      }
+      .story-card:hover,
+      .story-card:focus-visible,
+      .story-card:hover *,
+      .story-card:focus-visible * {
+        text-decoration: none;
+      }
+      .story-card:hover,
+      .story-card:focus-visible {
+        transform: translateY(-3px);
+        border-color: rgba(99, 102, 241, 0.45);
+        box-shadow: 0 18px 40px rgba(79, 70, 229, 0.22);
+        outline: none;
+      }
+      .story-card-copy {
+        display: grid;
+        grid-template-rows: auto auto auto;
+        gap: 0.5rem;
+        padding: 1.15rem 0.95rem 0.4rem;
+        text-align: center;
+        min-height: 9.25rem;
+      }
+      .story-card-kicker {
+        margin: 0;
+        font-size: 0.875rem;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        line-height: 1.25;
+        color: #a5b4fc;
+        min-height: 2.5em;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+      }
+      .story-card-title {
+        margin: 0;
+        font-size: clamp(1.1rem, 1.7vw, 1.25rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.22;
+        color: #f8fafc;
+        text-wrap: balance;
+        min-height: 2.5em;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+      }
+      .story-card-body {
+        margin: 0;
+        font-size: 0.975rem;
+        line-height: 1.4;
+        color: #cbd5e1;
+        text-wrap: pretty;
+        min-height: 2.9em;
+      }
+      .story-card-art {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 10.5rem;
+        padding: 0.35rem 0.5rem 1.75rem;
+        background: #050814;
+      }
+      .story-card-art img {
+        display: block;
+        width: 100%;
+        height: 10.25rem;
+        object-fit: contain;
+        object-position: center;
+      }
+      .story-card--pay .story-card-art {
+        position: relative;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        isolation: isolate;
+        background:
+          radial-gradient(
+            ellipse 70% 58% at 46% 52%,
+            rgba(110, 140, 255, 0.28) 0%,
+            rgba(80, 110, 230, 0.12) 42%,
+            rgba(5, 8, 20, 0) 74%
+          ),
+          #050814;
+      }
+      .story-card--pay .story-card-art::before {
+        display: none;
+      }
+      .story-card--pay .story-card-art img {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: 10.25rem;
+        transform: scale(1.18) translateY(0.85rem);
+        transform-origin: center center;
+        object-fit: contain;
+        object-position: center center;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .story-card {
+          transition: none;
+        }
+        .story-card:hover,
+        .story-card:focus-visible {
+          transform: none;
+        }
+      }
       .mono {
         font-family: "IBM Plex Mono", ui-monospace, monospace;
         font-size: 0.875rem;
@@ -790,11 +934,11 @@
       .faq-a a:hover {
         text-decoration: underline;
       }
-      /* Landing text links: underline on hover only (not buttons/logo) */
-      .wrap a:not(.btn):not(.logo) {
+      /* Landing text links: underline on hover only (not buttons/logo/story cards) */
+      .wrap a:not(.btn):not(.logo):not(.story-card) {
         text-decoration: none;
       }
-      .wrap a:not(.btn):not(.logo):hover {
+      .wrap a:not(.btn):not(.logo):not(.story-card):hover {
         text-decoration: underline;
       }
       .landing-store-badges {
