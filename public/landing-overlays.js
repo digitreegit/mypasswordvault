@@ -52,7 +52,7 @@ globalThis.MPV_LANDING_OVERLAYS = {
     storyKickerSync: "Sync web + móvil",
     storyTitleSync: "Una cuenta. En todas partes.",
     storyBodySync: "Tu caja fuerte se sincroniza entre web y app.",
-    storyKickerPay: "Gratis al inicio · sin suscripción",
+    storyKickerPay: "Sin suscripción",
     storyTitlePay: "25 gratis. Luego $4.99.",
     storyBodyPay:
       "Hasta 25 entradas sin costo. Desbloquea ilimitadas con un pago único de $4.99 — sin cuotas mensuales.",
@@ -237,7 +237,7 @@ globalThis.MPV_LANDING_OVERLAYS = {
     "storyKickerSync": "网页 + 移动同步",
     "storyTitleSync": "一个账户。随处可用。",
     "storyBodySync": "网页与 App 之间保持保险库同步。",
-    "storyKickerPay": "免费起步 · 无订阅",
+    "storyKickerPay": "无订阅",
     "storyTitlePay": "25 个免费。之后 $4.99。",
     "storyBodyPay": "最多 25 个条目免费。一次性 $4.99 解锁无限 — 无月费。",
     "storyPricingFree": "免费",
@@ -384,7 +384,7 @@ globalThis.MPV_LANDING_OVERLAYS = {
     "storyKickerSync": "Web + モバイル同期",
     "storyTitleSync": "ひとつのアカウント。どこでも。",
     "storyBodySync": "Webとアプリでボルトが同期されたまま。",
-    "storyKickerPay": "無料で開始 · サブスクなし",
+    "storyKickerPay": "サブスクなし",
     "storyTitlePay": "25件まで無料。その後 $4.99。",
     "storyBodyPay": "最大25件まで無料。$4.99の一度きりの支払いで無制限 — 月額なし。",
     "storyPricingFree": "無料",
@@ -531,7 +531,7 @@ globalThis.MPV_LANDING_OVERLAYS = {
     "storyKickerSync": "Web + Mobile Sync",
     "storyTitleSync": "Ein Konto. Überall.",
     "storyBodySync": "Ihr Tresor bleibt zwischen Web und App synchron.",
-    "storyKickerPay": "Kostenlos starten · kein Abo",
+    "storyKickerPay": "Kein Abo",
     "storyTitlePay": "25 gratis. Dann $4.99.",
     "storyBodyPay":
       "Bis zu 25 Einträge kostenlos. Unbegrenzt mit einmalig $4.99 freischalten — keine Monatsgebühren.",
@@ -679,7 +679,7 @@ globalThis.MPV_LANDING_OVERLAYS = {
     "storyKickerSync": "Sync web + mobile",
     "storyTitleSync": "Un compte. Partout.",
     "storyBodySync": "Votre coffre reste synchronisé entre le web et l’app.",
-    "storyKickerPay": "Gratuit au départ · sans abonnement",
+    "storyKickerPay": "Sans abonnement",
     "storyTitlePay": "25 gratuits. Puis 4,99 $.",
     "storyBodyPay":
       "Jusqu'à 25 entrées sans frais. Illimité avec un paiement unique de 4,99 $ — pas de frais mensuels.",
@@ -827,7 +827,7 @@ globalThis.MPV_LANDING_OVERLAYS = {
     "storyKickerSync": "Sync web + mobile",
     "storyTitleSync": "Un account. Ovunque.",
     "storyBodySync": "Il vault resta sincronizzato tra web e app.",
-    "storyKickerPay": "Gratis all'inizio · senza abbonamento",
+    "storyKickerPay": "Senza abbonamento",
     "storyTitlePay": "25 gratis. Poi $4.99.",
     "storyBodyPay":
       "Fino a 25 voci gratis. Illimitate con un pagamento unico di $4.99 — niente canoni mensili.",
@@ -975,7 +975,7 @@ globalThis.MPV_LANDING_OVERLAYS = {
     "storyKickerSync": "Sinkron web + seluler",
     "storyTitleSync": "Satu akun. Di mana saja.",
     "storyBodySync": "Vault Anda tetap sinkron di web dan aplikasi.",
-    "storyKickerPay": "Gratis di awal · tanpa langganan",
+    "storyKickerPay": "Tanpa langganan",
     "storyTitlePay": "25 gratis. Lalu $4.99.",
     "storyBodyPay":
       "Hingga 25 entri gratis. Buka tanpa batas dengan pembayaran sekali $4.99 — tanpa biaya bulanan.",

@@ -156,7 +156,7 @@
     storyKickerSync: "Web + mobile sync",
     storyTitleSync: "One account. Everywhere.",
     storyBodySync: "Your vault stays in sync across web and app.",
-    storyKickerPay: "Free to start · no subscription",
+    storyKickerPay: "No subscription",
     storyTitlePay: "25 free. Then $4.99.",
     storyBodyPay:
       "Up to 25 entries at no cost. Unlock unlimited with one $4.99 payment — no monthly fees.",
@@ -354,7 +354,7 @@
     storyKickerSync: "웹 + 모바일 동기화",
     storyTitleSync: "한 계정. 어디서나.",
     storyBodySync: "웹과 앱에서 금고가 그대로 동기화됩니다.",
-    storyKickerPay: "무료로 시작 · 구독 없음",
+    storyKickerPay: "구독 없음",
     storyTitlePay: "25개까지 무료. 그다음 $4.99.",
     storyBodyPay:
       "최대 25개 항목까지 무료. $4.99 한 번 결제로 무제한 — 월 요금 없음.",
