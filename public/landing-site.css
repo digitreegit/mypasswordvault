@@ -620,15 +620,32 @@
         isolation: isolate;
         background:
           radial-gradient(
-            ellipse 70% 58% at 46% 52%,
-            rgba(110, 140, 255, 0.28) 0%,
-            rgba(80, 110, 230, 0.12) 42%,
-            rgba(5, 8, 20, 0) 74%
+            ellipse 72% 62% at 50% 58%,
+            rgba(129, 140, 248, 0.36) 0%,
+            rgba(99, 102, 241, 0.16) 44%,
+            rgba(5, 8, 20, 0) 72%
+          ),
+          radial-gradient(
+            ellipse 46% 38% at 54% 64%,
+            rgba(167, 139, 250, 0.14) 0%,
+            rgba(5, 8, 20, 0) 68%
           ),
           #050814;
       }
       .story-card--pay .story-card-art::before {
-        display: none;
+        content: "";
+        position: absolute;
+        inset: 8% 6% 16%;
+        border-radius: 50%;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(99, 102, 241, 0.34) 0%,
+          rgba(129, 140, 248, 0.14) 42%,
+          transparent 72%
+        );
+        filter: blur(10px);
+        z-index: 0;
+        pointer-events: none;
       }
       .story-card--pay .story-card-art img {
         position: relative;
