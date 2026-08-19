@@ -630,62 +630,15 @@
       .story-card--pay .story-card-art::before {
         display: none;
       }
-      .story-card-art--pricing {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 10.25rem;
-        padding: 1rem 0.75rem;
-      }
-      .story-pricing-visual {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.65rem;
+      .story-card--pay .story-card-art img {
+        position: relative;
+        z-index: 1;
         width: 100%;
-        max-width: 18rem;
-      }
-      .story-pricing-tier {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 0.2rem;
-        flex: 1 1 0;
-        min-width: 0;
-        padding: 0.85rem 0.55rem;
-        border-radius: 0.75rem;
-        border: 1px solid rgba(120, 150, 255, 0.28);
-        background: rgba(8, 14, 36, 0.72);
-        box-shadow: 0 0 24px rgba(80, 120, 255, 0.12);
-      }
-      .story-pricing-tier--free {
-        border-color: rgba(120, 180, 255, 0.35);
-      }
-      .story-pricing-tier--pro {
-        border-color: rgba(140, 110, 255, 0.42);
-        box-shadow: 0 0 28px rgba(110, 90, 255, 0.18);
-      }
-      .story-pricing-num {
-        font-family: var(--font-mono, ui-monospace, monospace);
-        font-size: clamp(1.15rem, 2.8vw, 1.45rem);
-        font-weight: 700;
-        line-height: 1.1;
-        letter-spacing: -0.02em;
-        color: #eef2ff;
-      }
-      .story-pricing-label {
-        font-size: 0.68rem;
-        font-weight: 600;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: rgba(170, 190, 255, 0.82);
-      }
-      .story-pricing-divider {
-        flex: 0 0 auto;
-        font-size: 1.1rem;
-        line-height: 1;
-        color: rgba(140, 165, 255, 0.55);
+        height: 10.25rem;
+        transform: scale(1.18) translateY(0.85rem);
+        transform-origin: center center;
+        object-fit: contain;
+        object-position: center center;
       }
       @media (prefers-reduced-motion: reduce) {
         .story-card {
