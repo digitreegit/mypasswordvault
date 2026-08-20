@@ -37,9 +37,15 @@ export const SETUP_ES: Record<string, string> = {
   "setup.placeholderMin": "Al menos 10 caracteres",
   "setup.autoLock": "Bloqueo automático (minutos)",
   "setup.nextPasskey": "Siguiente — registrar passkey",
+  "setup.next": "Continuar",
   "setup.nextRecovery": "Siguiente — guardar códigos de recuperación",
   "setup.passkeyIntro":
     "Pulsa Continuar y aprueba la solicitud del navegador o dispositivo.",
+  "setup.passkeyIntroOptional":
+    "Recomendado para desbloquear más rápido. Si Face ID, Windows Hello o passkeys no están disponibles, omite y continúa con la contraseña maestra más autenticador o códigos de recuperación.",
+  "setup.passkeyOptionalHint":
+    "Opcional — puedes omitir y añadir una passkey después en Ajustes.",
+  "setup.skipPasskey": "Omitir — continuar sin passkey",
   "setup.passkeyDeviceTitle": "Este dispositivo",
   "setup.passkeyDeviceBody":
     "El navegador puede usar biometría, PIN del dispositivo u otro método de desbloqueo que ya uses.",
@@ -120,9 +126,15 @@ export const SETUP_DE: Record<string, string> = {
   "setup.placeholderMin": "Mindestens 10 Zeichen",
   "setup.autoLock": "Automatische Sperre (Minuten)",
   "setup.nextPasskey": "Weiter — Passkey registrieren",
+  "setup.next": "Weiter",
   "setup.nextRecovery": "Weiter — Wiederherstellungscodes speichern",
   "setup.passkeyIntro":
     "Tippe auf Weiter und bestätige die Aufforderung von Browser oder Gerät.",
+  "setup.passkeyIntroOptional":
+    "Empfohlen für schnelleres Entsperren. Wenn Face ID, Windows Hello oder Passkeys nicht verfügbar sind, überspringe und fahre mit Masterpasswort plus Authentifikator oder Wiederherstellungscodes fort.",
+  "setup.passkeyOptionalHint":
+    "Optional — du kannst überspringen und später unter Einstellungen einen Passkey hinzufügen.",
+  "setup.skipPasskey": "Überspringen — ohne Passkey fortfahren",
   "setup.passkeyDeviceTitle": "Dieses Gerät",
   "setup.passkeyDeviceBody":
     "Der Browser kann Biometrie, Geräte-PIN oder eine andere Entsperrmethode verwenden, die du bereits nutzt.",
@@ -203,9 +215,15 @@ export const SETUP_FR: Record<string, string> = {
   "setup.placeholderMin": "Au moins 10 caractères",
   "setup.autoLock": "Verrouillage auto (minutes)",
   "setup.nextPasskey": "Suivant — enregistrer la passkey",
+  "setup.next": "Continuer",
   "setup.nextRecovery": "Suivant — enregistrer les codes de récupération",
   "setup.passkeyIntro":
     "Appuyez sur Continuer et validez l’invite du navigateur ou de l’appareil.",
+  "setup.passkeyIntroOptional":
+    "Recommandé pour un déverrouillage plus rapide. Si Face ID, Windows Hello ou les passkeys ne sont pas disponibles, ignorez et continuez avec le mot de passe maître plus authentificateur ou codes de récupération.",
+  "setup.passkeyOptionalHint":
+    "Facultatif — vous pouvez ignorer et ajouter une passkey plus tard dans Réglages.",
+  "setup.skipPasskey": "Ignorer — continuer sans passkey",
   "setup.passkeyDeviceTitle": "Cet appareil",
   "setup.passkeyDeviceBody":
     "Le navigateur peut utiliser la biométrie, le code PIN de l’appareil ou une autre méthode de déverrouillage déjà en place.",
@@ -286,9 +304,15 @@ export const SETUP_IT: Record<string, string> = {
   "setup.placeholderMin": "Almeno 10 caratteri",
   "setup.autoLock": "Blocco automatico (minuti)",
   "setup.nextPasskey": "Avanti — registra passkey",
+  "setup.next": "Continua",
   "setup.nextRecovery": "Avanti — salva codici di recupero",
   "setup.passkeyIntro":
     "Tocca Continua e approva la richiesta del browser o del dispositivo.",
+  "setup.passkeyIntroOptional":
+    "Consigliato per sbloccare più velocemente. Se Face ID, Windows Hello o le passkey non sono disponibili, salta e continua con la password principale più autenticatore o codici di recupero.",
+  "setup.passkeyOptionalHint":
+    "Facoltativo — puoi saltare e aggiungere una passkey dopo in Impostazioni.",
+  "setup.skipPasskey": "Salta — continua senza passkey",
   "setup.passkeyDeviceTitle": "Questo dispositivo",
   "setup.passkeyDeviceBody":
     "Il browser può usare biometria, PIN del dispositivo o un altro metodo di sblocco che usi già.",
@@ -366,8 +390,13 @@ export const SETUP_CN: Record<string, string> = {
   "setup.placeholderMin": "至少 10 个字符",
   "setup.autoLock": "自动锁定（分钟）",
   "setup.nextPasskey": "下一步 — 注册通行密钥",
+  "setup.next": "继续",
   "setup.nextRecovery": "下一步 — 保存恢复代码",
   "setup.passkeyIntro": "点击继续，并在浏览器或设备提示时确认。",
+  "setup.passkeyIntroOptional":
+    "建议用于更快解锁。若 Face ID、Windows Hello 或通行密钥不可用，可跳过，改用主密码加验证器或恢复代码继续。",
+  "setup.passkeyOptionalHint": "可选 — 可先跳过，稍后在设置中添加通行密钥。",
+  "setup.skipPasskey": "跳过 — 不使用通行密钥继续",
   "setup.passkeyDeviceTitle": "本设备",
   "setup.passkeyDeviceBody":
     "浏览器可能会使用生物识别、设备 PIN 或您已在该设备上使用的其他解锁方式。",
@@ -443,9 +472,15 @@ export const SETUP_JP: Record<string, string> = {
   "setup.placeholderMin": "10 文字以上",
   "setup.autoLock": "自動ロック（分）",
   "setup.nextPasskey": "次へ — パスキーを登録",
+  "setup.next": "続ける",
   "setup.nextRecovery": "次へ — リカバリーコードを保存",
   "setup.passkeyIntro":
     "続行を押し、ブラウザまたはデバイスの案内を承認してください。",
+  "setup.passkeyIntroOptional":
+    "素早いロック解除におすすめです。Face ID・Windows Hello・パスキーが使えない場合はスキップし、マスターパスワードと認証アプリまたはリカバリーコードで続行できます。",
+  "setup.passkeyOptionalHint":
+    "任意 — スキップして、後から設定でパスキーを追加できます。",
+  "setup.skipPasskey": "スキップ — パスキーなしで続行",
   "setup.passkeyDeviceTitle": "このデバイス",
   "setup.passkeyDeviceBody":
     "ブラウザは、生体認証、デバイス PIN、またはすでにお使いのロック解除方法を使用する場合があります。",
@@ -525,9 +560,15 @@ export const SETUP_ID: Record<string, string> = {
   "setup.placeholderMin": "Minimal 10 karakter",
   "setup.autoLock": "Kunci otomatis (menit)",
   "setup.nextPasskey": "Berikutnya — daftarkan passkey",
+  "setup.next": "Lanjutkan",
   "setup.nextRecovery": "Berikutnya — simpan kode pemulihan",
   "setup.passkeyIntro":
     "Ketuk Lanjutkan dan setujui permintaan dari browser atau perangkat.",
+  "setup.passkeyIntroOptional":
+    "Disarankan untuk buka kunci lebih cepat. Jika Face ID, Windows Hello, atau passkey tidak tersedia, lewati dan lanjutkan dengan kata sandi utama plus autentikator atau kode pemulihan.",
+  "setup.passkeyOptionalHint":
+    "Opsional — Anda dapat melewati dan menambahkan passkey nanti di Pengaturan.",
+  "setup.skipPasskey": "Lewati — lanjutkan tanpa passkey",
   "setup.passkeyDeviceTitle": "Perangkat ini",
   "setup.passkeyDeviceBody":
     "Browser dapat menggunakan biometrik, PIN perangkat, atau metode buka kunci lain yang sudah Anda gunakan.",

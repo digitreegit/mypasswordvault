@@ -157,10 +157,16 @@ export const MESSAGES_EN: Record<string, string> = {
   "setup.placeholderMin": "At least 10 characters",
   "setup.autoLock": "Auto-lock (minutes)",
   "setup.nextPasskey": "Next — register passkey",
+  "setup.next": "Continue",
   "setup.next2fa": "Next — set up two-factor authentication",
   "setup.nextRecovery": "Next — save recovery codes",
   "setup.passkeyIntro":
     "Tap Continue and approve the prompt from your browser or device when asked.",
+  "setup.passkeyIntroOptional":
+    "Recommended for faster unlock. If Face ID, Windows Hello, or passkeys aren’t available, skip and continue with your master password plus authenticator or recovery codes.",
+  "setup.passkeyOptionalHint":
+    "Optional — you can skip and add a passkey later in Settings.",
+  "setup.skipPasskey": "Skip — continue without passkey",
   "setup.registerPasskey": "Register passkey",
   "setup.passkeyDeviceTitle": "This device",
   "setup.passkeyDeviceBody":
@@ -334,7 +340,7 @@ export const MESSAGES_EN: Record<string, string> = {
     "Passkeys, authenticator app, and recovery codes for unlocking your vault.",
   "settings.securityPasskeysTitle": "Passkey",
   "settings.securityPasskeysHint":
-    "Passwordless unlock with biometrics, device PIN, or a security key registered during setup.",
+    "Optional passwordless unlock with biometrics, device PIN, or a security key. You can add one anytime.",
   "settings.securityPasskeyLegacyHint":
     "macOS and browsers remember the sign-in label from when each passkey was created. If you still see user-xxxxxxxx, add a new passkey below (your email will be used), remove the old one here, then delete the old localhost entry in System Settings → Passwords.",
   "settings.passkeysRemoveLabel": "Remove",

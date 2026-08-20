@@ -222,8 +222,7 @@ export function SecuritySettingsPanel() {
   >([]);
 
   const passkeys = meta?.passkeys ?? [];
-  const showPasskeys =
-    meta && isAuthV2(meta) && isPasskeySupported && passkeys.length > 0;
+  const showPasskeys = Boolean(meta && isAuthV2(meta) && isPasskeySupported);
   const wrongDomain =
     passkeys.length > 0 && meta ? !passkeyRegisteredForCurrentSite(meta) : false;
 
@@ -410,6 +409,11 @@ export function SecuritySettingsPanel() {
             className="space-y-2 list-none p-0 m-0"
             aria-label={t("settings.passkeysListAria")}
           >
+            {passkeys.length === 0 ? (
+              <li className="rounded-lg border border-dashed border-ink-200 bg-ink-50/60 px-4 py-3 text-sm text-ink-600">
+                {t("settings.passkeysEmpty")}
+              </li>
+            ) : null}
             {passkeys.map((pk) => {
               const linked = isPasskeyLinked(pk);
               return (

@@ -38,7 +38,7 @@ export const SETTINGS_SECURITY_CN: Record<string, string> = {
     "用于解锁保险库的通行密钥、验证器应用和恢复代码。",
   "settings.securityPasskeysTitle": "通行密钥",
   "settings.securityPasskeysHint":
-    "使用设置时注册的生物识别、设备 PIN 或安全密钥，无密码解锁。",
+    "可选：使用生物识别、设备 PIN 或安全密钥无密码解锁。可随时添加。",
   "settings.securityPasskeyLegacyHint":
     "macOS 和浏览器会保留创建通行密钥时保存的名称。若仍显示 user-xxxxxxxx，请在下方添加新通行密钥（将使用您的电子邮件），在此移除旧密钥，然后在系统设置 → 密码中删除旧的 localhost 条目。",
   "settings.passkeysRemoveLabel": "移除",
@@ -80,7 +80,7 @@ export const SETTINGS_SECURITY_JP: Record<string, string> = {
     "Vault のロック解除に使うパスキー、認証アプリ、リカバリーコードです。",
   "settings.securityPasskeysTitle": "パスキー",
   "settings.securityPasskeysHint":
-    "セットアップ時に登録した生体認証、デバイス PIN、またはセキュリティキーで、パスワードなしにロック解除します。",
+    "任意：生体認証、デバイス PIN、またはセキュリティキーでパスワードなしにロック解除。いつでも追加できます。",
   "settings.securityPasskeyLegacyHint":
     "macOS とブラウザは、パスキー作成時に保存した名前を表示し続けます。user-xxxxxxxx が表示される場合は、下で新しいパスキーを追加してください（メールアドレスが使われます）。ここで古いパスキーを削除し、システム設定 → パスワードから localhost の項目も削除してください。",
   "settings.passkeysRemoveLabel": "削除",
@@ -123,7 +123,7 @@ export const SETTINGS_SECURITY_ID: Record<string, string> = {
     "Passkey, aplikasi autentikator, dan kode pemulihan untuk membuka kunci brankas.",
   "settings.securityPasskeysTitle": "Passkey",
   "settings.securityPasskeysHint":
-    "Buka kunci tanpa kata sandi dengan biometrik, PIN perangkat, atau kunci keamanan yang didaftarkan saat penyiapan.",
+    "Opsional: buka kunci tanpa kata sandi dengan biometrik, PIN perangkat, atau kunci keamanan. Dapat ditambahkan kapan saja.",
   "settings.securityPasskeyLegacyHint":
     "macOS dan browser mengingat label saat setiap passkey dibuat. Jika masih melihat user-xxxxxxxx, tambahkan passkey baru di bawah (email Anda akan digunakan), hapus yang lama di sini, lalu hapus entri localhost lama di Pengaturan Sistem → Kata Sandi.",
   "settings.passkeysRemoveLabel": "Hapus",
@@ -166,7 +166,7 @@ export const SETTINGS_SECURITY_ES: Record<string, string> = {
     "Passkeys, app autenticadora y códigos de recuperación para desbloquear la bóveda.",
   "settings.securityPasskeysTitle": "Passkey",
   "settings.securityPasskeysHint":
-    "Desbloqueo sin contraseña con biometría, PIN del dispositivo o llave de seguridad registrada durante la configuración.",
+    "Opcional: desbloqueo sin contraseña con biometría, PIN del dispositivo o llave de seguridad. Puedes añadirla cuando quieras.",
   "settings.securityPasskeyLegacyHint":
     "macOS y los navegadores recuerdan la etiqueta de cuando se creó cada passkey. Si aún ves user-xxxxxxxx, añade una passkey nueva abajo (se usará tu correo), elimina la antigua aquí y borra la entrada localhost en Ajustes del sistema → Contraseñas.",
   "settings.passkeysRemoveLabel": "Eliminar",
@@ -209,7 +209,7 @@ export const SETTINGS_SECURITY_DE: Record<string, string> = {
     "Passkeys, Authentifikator-App und Wiederherstellungscodes zum Entsperren des Tresors.",
   "settings.securityPasskeysTitle": "Passkey",
   "settings.securityPasskeysHint":
-    "Passwortloses Entsperren mit Biometrie, Geräte-PIN oder beim Setup registriertem Sicherheitsschlüssel.",
+    "Optional: passwortloses Entsperren mit Biometrie, Geräte-PIN oder Sicherheitsschlüssel. Jederzeit hinzufügbar.",
   "settings.securityPasskeyLegacyHint":
     "macOS und Browser merken sich die Bezeichnung von der Passkey-Erstellung. Wenn weiterhin user-xxxxxxxx angezeigt wird, fügen Sie unten einen neuen Passkey hinzu (Ihre E-Mail wird verwendet), entfernen Sie den alten hier und löschen Sie den localhost-Eintrag unter Systemeinstellungen → Passwörter.",
   "settings.passkeysRemoveLabel": "Entfernen",
@@ -252,7 +252,7 @@ export const SETTINGS_SECURITY_FR: Record<string, string> = {
     "Passkeys, application d’authentification et codes de récupération pour déverrouiller le coffre.",
   "settings.securityPasskeysTitle": "Passkey",
   "settings.securityPasskeysHint":
-    "Déverrouillage sans mot de passe avec biométrie, PIN de l’appareil ou clé de sécurité enregistrée lors de la configuration.",
+    "Facultatif : déverrouillage sans mot de passe avec biométrie, PIN ou clé de sécurité. Ajoutable à tout moment.",
   "settings.securityPasskeyLegacyHint":
     "macOS et les navigateurs conservent le libellé de la création de chaque passkey. Si vous voyez encore user-xxxxxxxx, ajoutez une nouvelle passkey ci-dessous (votre e-mail sera utilisé), supprimez l’ancienne ici, puis supprimez l’entrée localhost dans Réglages système → Mots de passe.",
   "settings.passkeysRemoveLabel": "Supprimer",
@@ -295,7 +295,7 @@ export const SETTINGS_SECURITY_IT: Record<string, string> = {
     "Passkey, app autenticatore e codici di recupero per sbloccare il vault.",
   "settings.securityPasskeysTitle": "Passkey",
   "settings.securityPasskeysHint":
-    "Sblocco senza password con biometria, PIN del dispositivo o chiave di sicurezza registrata durante la configurazione.",
+    "Facoltativo: sblocco senza password con biometria, PIN o chiave di sicurezza. Puoi aggiungerla in qualsiasi momento.",
   "settings.securityPasskeyLegacyHint":
     "macOS e i browser ricordano l’etichetta usata alla creazione di ogni passkey. Se vedi ancora user-xxxxxxxx, aggiungi una nuova passkey sotto (verrà usata la tua e-mail), rimuovi quella vecchia qui, poi elimina la voce localhost in Impostazioni di sistema → Password.",
   "settings.passkeysRemoveLabel": "Rimuovi",

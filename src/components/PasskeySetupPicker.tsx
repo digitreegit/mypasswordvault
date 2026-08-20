@@ -19,6 +19,8 @@ interface PasskeySetupPickerProps {
   registeredIds: ReadonlySet<PasskeyMethodId>;
   onContinue: (registrations: PasskeyMethodOption[]) => Promise<void>;
   onBack: () => void;
+  onSkip?: () => void;
+  allowSkip?: boolean;
   unsupported: boolean;
 }
 
@@ -29,6 +31,8 @@ export function PasskeySetupPicker({
   registeredIds,
   onContinue,
   onBack,
+  onSkip,
+  allowSkip = false,
   unsupported,
 }: PasskeySetupPickerProps) {
   const [methods, setMethods] = useState<PasskeyMethodOption[]>([]);
@@ -130,6 +134,11 @@ export function PasskeySetupPicker({
 
       <p className="text-xs text-ink-500 leading-snug">{t("setup.passkeyMethodsHint")}</p>
       <p className="text-xs text-ink-500 leading-snug">{t("setup.passkeyPrfHint")}</p>
+      {allowSkip ? (
+        <p className="text-xs text-ink-500 leading-snug">
+          {t("setup.passkeyOptionalHint")}
+        </p>
+      ) : null}
       {isAndroidNative ? (
         <p className="text-xs text-ink-500 leading-snug">
           {t("setup.passkeyAndroidGooglePinHint")}
@@ -151,6 +160,18 @@ export function PasskeySetupPicker({
       >
         {busy ? t("setup.passkeyRegistering") : t("setup.passkeyContinue")}
       </button>
+      {allowSkip && onSkip ? (
+        <div className="border-t border-ink-100 pt-3">
+          <button
+            type="button"
+            className="inline-flex w-full items-center justify-center gap-1 text-sm font-medium text-ink-600 hover:text-ink-900 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+            onClick={onSkip}
+            disabled={busy}
+          >
+            <span>{t("setup.skipPasskey")}</span>
+          </button>
+        </div>
+      ) : null}
       <button
         type="button"
         className="btn-secondary w-full"

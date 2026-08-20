@@ -155,10 +155,16 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.placeholderMin": "10자 이상",
   "setup.autoLock": "자동 잠금 (분)",
   "setup.nextPasskey": "다음 — 패스키 등록",
+  "setup.next": "계속",
   "setup.next2fa": "다음 — 2단계 인증 설정",
   "setup.nextRecovery": "다음 — 복구 코드 저장",
   "setup.passkeyIntro":
     "계속을 누른 뒤 브라우저나 기기에서 표시되는 안내를 승인하세요.",
+  "setup.passkeyIntroOptional":
+    "더 빠른 잠금 해제를 위해 권장합니다. Face ID·Windows Hello·패스키를 쓸 수 없으면 건너뛰고, 마스터 비밀번호와 인증 앱 또는 복구 코드로 계속하세요.",
+  "setup.passkeyOptionalHint":
+    "선택 사항 — 건너뛴 뒤 설정에서 나중에 패스키를 추가할 수 있습니다.",
+  "setup.skipPasskey": "건너뛰기 — 패스키 없이 계속",
   "setup.registerPasskey": "패스키 등록",
   "setup.passkeyDeviceTitle": "이 기기",
   "setup.passkeyDeviceBody":
@@ -326,7 +332,7 @@ export const MESSAGES_KR: Record<string, string> = {
     "금고 잠금 해제를 위한 패스키, 인증 앱, 복구 코드입니다.",
   "settings.securityPasskeysTitle": "패스키",
   "settings.securityPasskeysHint":
-    "설정 시 등록한 생체 인증, 기기 PIN 또는 보안 키로 비밀번호 없이 잠금 해제합니다.",
+    "생체 인증, 기기 PIN 또는 보안 키로 비밀번호 없이 잠금 해제합니다. 언제든 추가할 수 있습니다.",
   "settings.securityPasskeyLegacyHint":
     "macOS·브라우저는 패스키를 등록할 때 저장한 이름을 계속 표시합니다. user-xxxxxxxx가 보이면 아래에서 새 패스키를 추가하세요(이메일이 표시됩니다). 여기서 이전 패스키를 제거한 뒤 시스템 설정 → 비밀번호에서 localhost 항목도 삭제하세요.",
   "settings.passkeysRemoveLabel": "제거",

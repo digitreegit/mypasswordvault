@@ -249,7 +249,7 @@ export function SetupScreen() {
       case "password":
         return t("setup.subtitle");
       case "passkey":
-        return t("setup.passkeyIntro");
+        return t("setup.passkeyIntroOptional");
       case "backup-totp":
         return t("setup.backupTotpIntro");
       case "recovery":
@@ -299,6 +299,20 @@ export function SetupScreen() {
         setError(t("errors.passkeyRequired"));
         return;
       }
+      const { totpSecretBase32 } = await beginBackupTotpEnrollment();
+      setTotpSecret(totpSecretBase32);
+      setStage("backup-totp");
+    } catch (e: unknown) {
+      setError(formatSetupError(e, t));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleSkipPasskey() {
+    setError(null);
+    setBusy(true);
+    try {
       const { totpSecretBase32 } = await beginBackupTotpEnrollment();
       setTotpSecret(totpSecretBase32);
       setStage("backup-totp");
@@ -474,7 +488,7 @@ export function SetupScreen() {
               onClick={handlePasswordNext}
               disabled={busy}
             >
-              {t("setup.nextPasskey")}
+              {t("setup.next")}
             </button>
             <CautionNotice showIcon>{t("setup.forgetWarn")}</CautionNotice>
           </div>
@@ -487,7 +501,11 @@ export function SetupScreen() {
             error={error}
             registeredIds={registeredPasskeyIds}
             unsupported={!isPasskeySupported}
+            allowSkip
             onContinue={handlePasskeyContinue}
+            onSkip={() => {
+              void handleSkipPasskey();
+            }}
             onBack={async () => {
               await abortSetup();
               setStage("password");

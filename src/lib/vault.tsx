@@ -11,6 +11,7 @@ import React, {
 import {
   decryptString,
   encryptString,
+  exportAesGcmKey,
   toBase64,
   VERIFIER_PLAINTEXT,
 } from "./crypto";
@@ -897,17 +898,16 @@ export function VaultProvider({
       kind?: PasskeyKind;
     }) => {
       if (status !== "unlocked") throw new AppError("errors.locked");
+      if (!sessionRef.current) throw new AppError("errors.locked");
       const m = meta ?? (await readMeta());
       if (!m || !isAuthV2(m)) throw new AppError("errors.passkeyNoPasswordless");
-      if (!m.prfSalt || !m.passkeyDataKeyWrap) {
-        throw new AppError("errors.passkeyNoPasswordless");
-      }
-      if (!passkeyRegisteredForCurrentSite(m)) {
+      const existing = m.passkeys ?? [];
+      // First passkey on this vault: allow even when wrap does not exist yet.
+      if (existing.length > 0 && !passkeyRegisteredForCurrentSite(m)) {
         throw new AppError("errors.passkeyWrongDomain");
       }
       if (!userId) throw new AppError("errors.passkeyNeedsSignIn");
 
-      const existing = m.passkeys ?? [];
       const pendingHybrid = existing.find(
         (p) =>
           resolvePasskeyKind(p) === "hybrid" && p.prfVerified === false,
@@ -915,6 +915,13 @@ export function VaultProvider({
       if (opts.kind === "hybrid" && pendingHybrid) {
         await completePasskeyPrf(pendingHybrid.id);
         return;
+      }
+
+      const prfSalt = m.prfSalt || newPrfSalt();
+      const creatingFirstWrap = !m.passkeyDataKeyWrap || existing.length === 0;
+      let dataKeyBytes: Uint8Array | null = null;
+      if (creatingFirstWrap || !m.passkeyDataKeyWrap) {
+        dataKeyBytes = await exportAesGcmKey(sessionRef.current.key);
       }
 
       const webAuthnUser = resolvePasskeyIdentityForVault(
@@ -930,7 +937,7 @@ export function VaultProvider({
         userName: webAuthnUser.name,
         userDisplayName: webAuthnUser.displayName,
         excludeCredentialIds: existing.map((p) => p.id),
-        prfSaltB64: m.prfSalt,
+        prfSaltB64: prfSalt,
         hints: opts.hints,
         label: opts.label,
         kind: opts.kind,
@@ -959,6 +966,7 @@ export function VaultProvider({
       const pendingEntry: StoredPasskey = { ...passkey, prfVerified: false };
       const withPending: VaultMeta = {
         ...m,
+        prfSalt,
         passkeys: [...existing, pendingEntry],
         passkeyRpId: currentPasskeyRpId(),
         updatedAt: Date.now(),
@@ -968,7 +976,7 @@ export function VaultProvider({
 
       let prfBytes = regPrf;
       if (!prfBytes) {
-        prfBytes = await derivePrfAfterRegistration(passkey, m.prfSalt);
+        prfBytes = await derivePrfAfterRegistration(passkey, prfSalt);
       }
       if (!prfBytes) {
         throw new AppError(
@@ -978,7 +986,15 @@ export function VaultProvider({
         );
       }
 
-      const dataKey = await dataKeyFromPrfWrap(prfBytes, m.passkeyDataKeyWrap);
+      let passkeyDataKeyWrap = m.passkeyDataKeyWrap;
+      if (!passkeyDataKeyWrap) {
+        if (!dataKeyBytes) {
+          throw new AppError("errors.passkeyNoPasswordless");
+        }
+        passkeyDataKeyWrap = await wrapDataKeyWithPrf(prfBytes, dataKeyBytes);
+      }
+
+      const dataKey = await dataKeyFromPrfWrap(prfBytes, passkeyDataKeyWrap);
       let verified: string;
       try {
         verified = await decryptString(dataKey, m.verifier);
@@ -998,6 +1014,7 @@ export function VaultProvider({
       );
       const updated: VaultMeta = {
         ...withPending,
+        passkeyDataKeyWrap,
         passkeys: linked,
         updatedAt: Date.now(),
       };
@@ -1014,9 +1031,6 @@ export function VaultProvider({
       const m = meta ?? (await readMeta());
       if (!m || !isAuthV2(m)) throw new AppError("errors.passkeyNoPasswordless");
       const existing = m.passkeys ?? [];
-      if (existing.length <= 1) {
-        throw new AppError("errors.passkeyRemoveLast");
-      }
       const next = existing.filter((p) => p.id !== credentialId);
       if (next.length === existing.length) {
         throw new AppError("errors.passkeyFailed");
@@ -1024,6 +1038,9 @@ export function VaultProvider({
       const updated: VaultMeta = {
         ...m,
         passkeys: next,
+        ...(next.length === 0
+          ? { passkeyDataKeyWrap: undefined }
+          : {}),
         updatedAt: Date.now(),
       };
       await writeMeta(updated);
@@ -1100,9 +1117,6 @@ export function VaultProvider({
   const beginBackupTotpEnrollment = useCallback(async () => {
     const pending = pendingSetupRef.current;
     if (!pending) throw new AppError("errors.noPendingSetup");
-    if (!pending.passkeys.length) {
-      throw new AppError("errors.passkeyRequired");
-    }
     const totpSecret = generateTotpSecretBase32();
     pending.totpSecret = totpSecret;
     return { totpSecretBase32: totpSecret };
