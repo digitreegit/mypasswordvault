@@ -317,20 +317,39 @@ function CategorySelect({
     const updatePosition = () => {
       const rect = buttonRef.current!.getBoundingClientRect();
       const gap = 4;
+      const viewportPadding = 8;
       const minWidth = Math.max(rect.width, 176);
       let left = rect.left;
-      if (left + minWidth > window.innerWidth - 8) {
-        left = Math.max(8, window.innerWidth - 8 - minWidth);
+      if (left + minWidth > window.innerWidth - viewportPadding) {
+        left = Math.max(
+          viewportPadding,
+          window.innerWidth - viewportPadding - minWidth,
+        );
       }
+      const desiredHeight = Math.min(
+        panelRef.current?.scrollHeight ?? 256,
+        256,
+        window.innerHeight * 0.5,
+      );
+      const spaceBelow =
+        window.innerHeight - rect.bottom - gap - viewportPadding;
+      const spaceAbove = rect.top - gap - viewportPadding;
+      const openAbove =
+        spaceBelow < desiredHeight && spaceAbove > spaceBelow;
+      const availableHeight = Math.max(
+        48,
+        openAbove ? spaceAbove : spaceBelow,
+      );
       setPanelStyle({
         position: "fixed",
-        top: rect.bottom + gap,
+        top: openAbove ? "auto" : rect.bottom + gap,
+        bottom: openAbove ? window.innerHeight - rect.top + gap : "auto",
         left,
         minWidth,
         width: "max-content",
         maxWidth: Math.min(320, window.innerWidth - 16),
         zIndex: 9999,
-        maxHeight: "min(16rem, 50vh)",
+        maxHeight: Math.min(desiredHeight, availableHeight),
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
