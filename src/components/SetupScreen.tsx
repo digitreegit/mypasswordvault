@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  ChevronRightIcon,
   QuestionMarkCircleIcon,
   ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
@@ -592,19 +591,27 @@ export function SetupScreen() {
             >
               {t("setup.nextRecovery")}
             </button>
-            <div className="space-y-3">
-              <div className="border-t border-ink-100 pt-3">
-                <button
-                  type="button"
-                  className="inline-flex w-full items-center justify-center gap-1 text-sm font-medium text-ink-600 hover:text-ink-900 transition-colors disabled:opacity-50 disabled:pointer-events-none"
-                  onClick={handleSkipTotp}
-                  disabled={busy}
-                >
-                  <span>{t("setup.skipBackupTotp")}</span>
-                  <ChevronRightIcon className="h-4 w-4 shrink-0" aria-hidden />
-                </button>
-              </div>
-              <CautionNotice showIcon>{t("setup.backupTotpRecommend")}</CautionNotice>
+            <button
+              type="button"
+              className="btn-secondary w-full"
+              onClick={() => {
+                setError(null);
+                setCode("");
+                setStage("passkey");
+              }}
+              disabled={busy}
+            >
+              {t("setup.back")}
+            </button>
+            <div className="border-t border-ink-100 pt-3">
+              <button
+                type="button"
+                className="inline-flex w-full items-center justify-center gap-1 text-sm font-medium text-ink-600 hover:text-ink-900 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                onClick={handleSkipTotp}
+                disabled={busy}
+              >
+                <span>{t("setup.skipBackupTotp")}</span>
+              </button>
             </div>
           </div>
         )}

@@ -157,10 +157,11 @@ interface VaultContextValue {
   abortSetup: () => Promise<void>;
   isPasskeySupported: boolean;
   unlockWithPasskey: () => Promise<void>;
-  unlock: (masterPassword: string, secondFactor: string, mode: "totp" | "recovery") => Promise<void>;
+  unlock: (masterPassword: string, secondFactor?: string, mode?: "totp" | "recovery") => Promise<void>;
   lock: () => void;
   resetVault: () => Promise<void>;
   setAutoLockMinutes: (m: number) => Promise<void>;
+  setRequireSecondFactorAtUnlock: (enabled: boolean) => Promise<void>;
   locale: Locale;
   setLocale: (l: Locale) => Promise<void>;
   t: (key: string, vars?: Record<string, string | number>) => string;
@@ -1315,8 +1316,8 @@ export function VaultProvider({
   const unlock = useCallback(
     async (
       masterPassword: string,
-      secondFactor: string,
-      mode: "totp" | "recovery"
+      secondFactor?: string,
+      mode?: "totp" | "recovery"
     ) => {
       const m = await readMeta();
       if (!m) throw new AppError("errors.notInitialized");
@@ -1325,6 +1326,14 @@ export function VaultProvider({
         masterPassword,
       );
       const totpSecret = await decryptString(dataKey, m.totpSecret);
+      const needSecondFactor = m.requireSecondFactorAtUnlock === true;
+      if (!needSecondFactor) {
+        await finishUnlock(m, dataKey, totpSecret, dataKeyBytes);
+        return;
+      }
+      if (!secondFactor || !mode) {
+        throw new AppError("errors.wrongTotp");
+      }
       if (mode === "totp") {
         if (!verifyTotp(totpSecret, secondFactor)) {
           throw new AppError("errors.wrongTotp");
@@ -1348,6 +1357,29 @@ export function VaultProvider({
       await finishUnlock(m, dataKey, totpSecret, dataKeyBytes);
     },
     [finishUnlock, flushCloudPush]
+  );
+
+  const setRequireSecondFactorAtUnlock = useCallback(
+    async (enabled: boolean) => {
+      if (status !== "unlocked" || !sessionRef.current) {
+        throw new AppError("errors.locked");
+      }
+      const m = meta ?? (await readMeta());
+      if (!m) throw new AppError("errors.notInitialized");
+      // Requiring a code at unlock only makes sense with an authenticator set up.
+      if (enabled && !sessionRef.current.totpSecret) {
+        throw new AppError("errors.noPendingTotp");
+      }
+      const updated: VaultMeta = {
+        ...m,
+        requireSecondFactorAtUnlock: enabled,
+        updatedAt: Date.now(),
+      };
+      await writeMeta(updated);
+      setMeta(updated);
+      await flushCloudPush();
+    },
+    [status, meta, flushCloudPush],
   );
 
   const resetVault = useCallback(async () => {
@@ -1706,6 +1738,7 @@ export function VaultProvider({
       lock,
       resetVault,
       setAutoLockMinutes,
+      setRequireSecondFactorAtUnlock,
       locale,
       setLocale,
       t,
@@ -1763,6 +1796,7 @@ export function VaultProvider({
       lock,
       resetVault,
       setAutoLockMinutes,
+      setRequireSecondFactorAtUnlock,
       setLocale,
       t,
       exportBackup,

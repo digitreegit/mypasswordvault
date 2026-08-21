@@ -161,7 +161,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.passkeyIntro":
     "계속을 누른 뒤 브라우저나 기기에서 표시되는 안내를 승인하세요.",
   "setup.passkeyIntroOptional":
-    "더 빠른 잠금 해제를 위해 권장합니다. Face ID·Windows Hello·패스키를 쓸 수 없으면 건너뛰고, 마스터 비밀번호와 인증 앱 또는 복구 코드로 계속하세요.",
+    "더 빠른 잠금 해제를 위해 권장합니다. Face ID·Windows Hello·패스키를 쓸 수 없으면 건너뛰고 마스터 비밀번호로 잠금을 해제하세요.",
   "setup.passkeyOptionalHint":
     "선택 사항 — 건너뛴 뒤 설정에서 나중에 패스키를 추가할 수 있습니다.",
   "setup.skipPasskey": "건너뛰기 — 패스키 없이 계속",
@@ -225,14 +225,18 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.errGeneric": "오류가 발생했습니다.",
   "lock.title": "잠긴 Vault",
   "lock.subtitle": "패스키로 잠금 해제하거나, 아래 백업 방법을 사용하세요.",
+  "lock.subtitlePassword": "마스터 비밀번호를 입력해 잠금을 해제하세요.",
+  "lock.subtitleBackup":
+    "마스터 비밀번호와 인증 앱 코드 또는 복구 코드로 잠금을 해제하세요.",
   "lock.checkoutUnlockHint":
     "아래에서 잠금을 해제하면 금고 목록으로 들어갑니다.",
   "lock.unlockPasskey": "패스키로 잠금 해제",
   "lock.passkeyWrongSite":
     "패스키는 {{site}}에서 등록되었고 이 사이트에서는 사용할 수 없습니다. 아래 백업 로그인(마스터 비밀번호 + 인증 앱 또는 복구 코드)을 사용하세요. 잠금 해제 후 이 사이트에서 새 패스키를 등록할 수 있습니다.",
-  "lock.useBackup": "백업 로그인",
-  "lock.hideBackup": "백업 로그인 숨기기",
+  "lock.useBackup": "마스터 비밀번호로 잠금 해제",
+  "lock.hideBackup": "비밀번호 로그인 숨기기",
   "lock.backupHint": "백업: 마스터 비밀번호 + 인증 앱 코드 또는 복구 코드",
+  "lock.backupHintPwOnly": "마스터 비밀번호를 입력해 잠금을 해제하세요.",
   "lock.backupTotpTab": "인증 앱",
   "lock.backupRecoveryTab": "복구 코드",
   "lock.recoveryCode": "복구 코드",
@@ -344,6 +348,9 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.securityTotpHint":
     "패스키를 쓸 수 없을 때 사용하는 6자리 백업 코드입니다. Google Authenticator, 1Password, Authy 등을 사용하세요.",
   "settings.securityTotpConfigured": "인증 앱 설정됨",
+  "settings.securityRequire2faAtUnlock": "잠금 해제 시 인증 코드 요구",
+  "settings.securityRequire2faAtUnlockHint":
+    "마스터 비밀번호로 잠금 해제할 때 인증 앱 코드 또는 복구 코드도 함께 요구합니다. 끄면 마스터 비밀번호만으로 해제됩니다.",
   "settings.securityTotpNotConfigured":
     "설정되지 않음 - 초기 설정에서 건너뛰었습니다. 여기서 백업 잠금 해제용으로 추가할 수 있습니다.",
   "settings.securityTotpSetup": "인증 앱 설정",

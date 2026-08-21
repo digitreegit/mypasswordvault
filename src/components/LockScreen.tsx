@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useCheckoutReturn } from "../hooks/useCheckoutReturn";
 import {
   clearCheckoutPending,
@@ -52,7 +52,7 @@ export function LockScreen() {
   const [showMasterPw, setShowMasterPw] = useState(false);
   const [code, setCode] = useState("");
   const [backupMode, setBackupMode] = useState<"totp" | "recovery">("totp");
-  const [showBackup, setShowBackup] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [backupError, setBackupError] = useState<string | null>(null);
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -86,7 +86,11 @@ export function LockScreen() {
     setBackupError(null);
     setBusy(true);
     try {
-      await unlock(pw, code, backupMode);
+      if (needSecondFactor) {
+        await unlock(pw, code, backupMode);
+      } else {
+        await unlock(pw);
+      }
     } catch (err: unknown) {
       setBackupError(
         isAppError(err)
@@ -98,6 +102,7 @@ export function LockScreen() {
     }
   }
 
+  const needSecondFactor = meta?.requireSecondFactorAtUnlock === true;
   const hasPasskeyMeta =
     meta?.authVersion === 2 &&
     !!meta.passkeyDataKeyWrap &&
@@ -108,16 +113,168 @@ export function LockScreen() {
       : false;
   const canPasskey =
     isPasskeySupported && hasPasskeyMeta && !passkeyWrongSite;
+  // Password form is the primary unlock UI when there is no usable passkey.
+  const passwordPrimary = !canPasskey;
+  const showPwForm = passwordPrimary || showPasswordForm;
+  const lockSubtitle = canPasskey
+    ? t("lock.subtitle")
+    : needSecondFactor
+      ? t("lock.subtitleBackup")
+      : t("lock.subtitlePassword");
 
-  useEffect(() => {
-    if (!canPasskey) setShowBackup(true);
-  }, [canPasskey]);
+  const passwordForm = (
+    <form onSubmit={handle} className={`space-y-4 ${canPasskey ? "pt-4" : ""}`}>
+      {canPasskey ? (
+        <p className="lock-panel-hint">
+          {needSecondFactor ? t("lock.backupHint") : t("lock.backupHintPwOnly")}
+        </p>
+      ) : null}
+      <div>
+        <label className="label">{t("lock.masterPw")}</label>
+        <div className="relative">
+          <input
+            type={showMasterPw ? "text" : "password"}
+            className="input pr-10"
+            value={pw}
+            onChange={(e) => setPw(e.target.value)}
+            autoFocus={passwordPrimary || showPasswordForm}
+            spellCheck={false}
+            autoComplete="current-password"
+          />
+          <button
+            type="button"
+            className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-ink-400 hover:text-accent-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30"
+            onClick={() => setShowMasterPw((v) => !v)}
+            title={showMasterPw ? t("vault.hide") : t("vault.show")}
+            aria-label={showMasterPw ? t("vault.hide") : t("vault.show")}
+          >
+            {showMasterPw ? <EyeOff /> : <Eye />}
+          </button>
+        </div>
+      </div>
+      {needSecondFactor ? (
+        <>
+          <div
+            role="tablist"
+            aria-label={`${t("lock.backupTotpTab")} / ${t("lock.backupRecoveryTab")}`}
+            className="flex border-b border-ink-200"
+          >
+            <button
+              type="button"
+              role="tab"
+              id="lock-backup-tab-totp"
+              aria-selected={backupMode === "totp"}
+              aria-controls="lock-backup-panel"
+              className={backupMode === "totp" ? LOCK_TAB_ACTIVE : LOCK_TAB_INACTIVE}
+              onClick={() => setBackupMode("totp")}
+            >
+              {t("lock.backupTotpTab")}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="lock-backup-tab-recovery"
+              aria-selected={backupMode === "recovery"}
+              aria-controls="lock-backup-panel"
+              className={
+                backupMode === "recovery" ? LOCK_TAB_ACTIVE : LOCK_TAB_INACTIVE
+              }
+              onClick={() => setBackupMode("recovery")}
+            >
+              {t("lock.backupRecoveryTab")}
+            </button>
+          </div>
+          <div
+            id="lock-backup-panel"
+            role="tabpanel"
+            className="space-y-4 pt-1"
+            aria-labelledby={
+              backupMode === "totp" ? "lock-backup-tab-totp" : "lock-backup-tab-recovery"
+            }
+          >
+            <label className="label">
+              {backupMode === "totp" ? t("lock.totp") : t("lock.recoveryCode")}
+            </label>
+            <input
+              className="input font-mono tracking-widest text-center text-lg"
+              inputMode={backupMode === "totp" ? "numeric" : "text"}
+              maxLength={backupMode === "totp" ? 6 : 24}
+              value={code}
+              onChange={(e) =>
+                setCode(
+                  backupMode === "totp"
+                    ? e.target.value.replace(/\D/g, "").slice(0, 6)
+                    : e.target.value.toUpperCase()
+                )
+              }
+              placeholder={backupMode === "totp" ? "000000" : "XXXX-XXXX"}
+            />
+          </div>
+        </>
+      ) : null}
+      {backupError ? (
+        <div className="text-sm text-red-600">{backupError}</div>
+      ) : null}
+      <button
+        type="submit"
+        className="btn-primary w-full inline-flex items-center justify-center gap-2"
+        disabled={
+          busy ||
+          !pw ||
+          (needSecondFactor
+            ? backupMode === "totp"
+              ? code.length !== 6
+              : code.length < 8
+            : false)
+        }
+      >
+        <LockOpen className="w-4 h-4 shrink-0" aria-hidden />{" "}
+        {needSecondFactor && canPasskey ? t("lock.unlockBackup") : t("lock.unlock")}
+      </button>
+
+      <div className="pt-2">
+        {!confirmReset ? (
+          <div className="text-center">
+            <button
+              type="button"
+              className="lock-panel-hint !text-red-600 hover:!text-red-700"
+              onClick={() => setConfirmReset(true)}
+            >
+              {t("lock.forget")}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2 text-sm text-left">
+            <p className="text-red-600 leading-snug mb-3">{t("lock.resetWarn")}</p>
+            <div className="flex gap-2 justify-start items-center">
+              <button
+                type="button"
+                className="btn-secondary shrink-0"
+                onClick={() => setConfirmReset(false)}
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                type="button"
+                className="btn-danger flex-1 min-w-0 whitespace-normal text-center leading-snug !h-auto py-2.5"
+                onClick={async () => {
+                  await resetVault();
+                }}
+              >
+                {t("lock.deleteAll")}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </form>
+  );
 
   const lockHeader = (
     <ScreenHeader
       brandName={t("app.brandName")}
       pageTitle={t("lock.title")}
-      subtitle={isNativeApp() ? undefined : t("lock.subtitle")}
+      subtitle={isNativeApp() ? undefined : lockSubtitle}
       hideTitle={isNativeApp()}
       locale={locale}
       onLocaleChange={(l) => void setLocale(l)}
@@ -135,7 +292,7 @@ export function LockScreen() {
           <h1 className="font-sans text-xl font-semibold text-ink-900 tracking-tight">
             {t("lock.title")}
           </h1>
-          <p className="web-auth-subtitle">{t("lock.subtitle")}</p>
+          <p className="web-auth-subtitle">{lockSubtitle}</p>
         </div>
       ) : null}
 
@@ -190,161 +347,31 @@ export function LockScreen() {
             {passkeyError ? (
               <p className="text-sm text-red-600 leading-snug">{passkeyError}</p>
             ) : null}
+            <p className="pt-1 text-center lock-panel-link">
+              <button
+                type="button"
+                className="font-semibold text-ink-600 hover:text-ink-800 hover:underline focus:outline-none focus-visible:underline"
+                onClick={() => {
+                  setPasskeyError(null);
+                  setShowPasswordForm((v) => !v);
+                }}
+              >
+                {showPasswordForm ? t("lock.hideBackup") : t("lock.useBackup")}
+              </button>
+            </p>
           </>
         )}
 
-        <p className="pt-1 text-center lock-panel-link">
-          <button
-            type="button"
-            className="font-semibold text-ink-600 hover:text-ink-800 hover:underline focus:outline-none focus-visible:underline"
-            onClick={() => {
-              setPasskeyError(null);
-              setShowBackup((v) => !v);
-            }}
-          >
-            {showBackup ? t("lock.hideBackup") : t("lock.useBackup")}
-          </button>
-        </p>
-
-        {showBackup && (
+        {showPwForm && (
           <>
-            <div
-              className="-mx-5 sm:-mx-8 border-t border-ink-200"
-              role="separator"
-              aria-hidden
-            />
-            <form onSubmit={handle} className="space-y-4 pt-4">
-            <p className="lock-panel-hint">{t("lock.backupHint")}</p>
-            <div>
-              <label className="label">{t("lock.masterPw")}</label>
-              <div className="relative">
-                <input
-                  type={showMasterPw ? "text" : "password"}
-                  className="input pr-10"
-                  value={pw}
-                  onChange={(e) => setPw(e.target.value)}
-                  autoFocus
-                  spellCheck={false}
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-ink-400 hover:text-accent-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30"
-                  onClick={() => setShowMasterPw((v) => !v)}
-                  title={showMasterPw ? t("vault.hide") : t("vault.show")}
-                  aria-label={showMasterPw ? t("vault.hide") : t("vault.show")}
-                >
-                  {showMasterPw ? <EyeOff /> : <Eye />}
-                </button>
-              </div>
-            </div>
-            <div
-              role="tablist"
-              aria-label={`${t("lock.backupTotpTab")} / ${t("lock.backupRecoveryTab")}`}
-              className="flex border-b border-ink-200"
-            >
-              <button
-                type="button"
-                role="tab"
-                id="lock-backup-tab-totp"
-                aria-selected={backupMode === "totp"}
-                aria-controls="lock-backup-panel"
-                className={backupMode === "totp" ? LOCK_TAB_ACTIVE : LOCK_TAB_INACTIVE}
-                onClick={() => setBackupMode("totp")}
-              >
-                {t("lock.backupTotpTab")}
-              </button>
-              <button
-                type="button"
-                role="tab"
-                id="lock-backup-tab-recovery"
-                aria-selected={backupMode === "recovery"}
-                aria-controls="lock-backup-panel"
-                className={
-                  backupMode === "recovery" ? LOCK_TAB_ACTIVE : LOCK_TAB_INACTIVE
-                }
-                onClick={() => setBackupMode("recovery")}
-              >
-                {t("lock.backupRecoveryTab")}
-              </button>
-            </div>
-            <div
-              id="lock-backup-panel"
-              role="tabpanel"
-              className="space-y-4 pt-1"
-              aria-labelledby={
-                backupMode === "totp" ? "lock-backup-tab-totp" : "lock-backup-tab-recovery"
-              }
-            >
-              <label className="label">
-                {backupMode === "totp" ? t("lock.totp") : t("lock.recoveryCode")}
-              </label>
-              <input
-                className="input font-mono tracking-widest text-center text-lg"
-                inputMode={backupMode === "totp" ? "numeric" : "text"}
-                maxLength={backupMode === "totp" ? 6 : 24}
-                value={code}
-                onChange={(e) =>
-                  setCode(
-                    backupMode === "totp"
-                      ? e.target.value.replace(/\D/g, "").slice(0, 6)
-                      : e.target.value.toUpperCase()
-                  )
-                }
-                placeholder={backupMode === "totp" ? "000000" : "XXXX-XXXX"}
+            {canPasskey ? (
+              <div
+                className="-mx-5 sm:-mx-8 border-t border-ink-200"
+                role="separator"
+                aria-hidden
               />
-            </div>
-            {backupError ? (
-              <div className="text-sm text-red-600">{backupError}</div>
             ) : null}
-            <button
-              type="submit"
-              className="btn-primary w-full inline-flex items-center justify-center gap-2"
-              disabled={
-                busy ||
-                !pw ||
-                (backupMode === "totp" ? code.length !== 6 : code.length < 8)
-              }
-            >
-              <LockOpen className="w-4 h-4 shrink-0" aria-hidden /> {t("lock.unlockBackup")}
-            </button>
-
-            <div className="pt-2">
-              {!confirmReset ? (
-                <div className="text-center">
-                  <button
-                    type="button"
-                    className="lock-panel-hint !text-red-600 hover:!text-red-700"
-                    onClick={() => setConfirmReset(true)}
-                  >
-                    {t("lock.forget")}
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-2 text-sm text-left">
-                  <p className="text-red-600 leading-snug mb-3">{t("lock.resetWarn")}</p>
-                  <div className="flex gap-2 justify-start items-center">
-                    <button
-                      type="button"
-                      className="btn-secondary shrink-0"
-                      onClick={() => setConfirmReset(false)}
-                    >
-                      {t("common.cancel")}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-danger flex-1 min-w-0 whitespace-normal text-center leading-snug !h-auto py-2.5"
-                      onClick={async () => {
-                        await resetVault();
-                      }}
-                    >
-                      {t("lock.deleteAll")}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </form>
+            {passwordForm}
           </>
         )}
     </>
@@ -352,7 +379,7 @@ export function LockScreen() {
 
   if (isNativeApp()) {
     return (
-      <NativePinnedAppShell header={lockHeader} remeasureKey={showBackup}>
+      <NativePinnedAppShell header={lockHeader} remeasureKey={showPwForm}>
         <div className="space-y-4">{lockBody}</div>
       </NativePinnedAppShell>
     );

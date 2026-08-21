@@ -160,6 +160,14 @@ export function PasskeySetupPicker({
       >
         {busy ? t("setup.passkeyRegistering") : t("setup.passkeyContinue")}
       </button>
+      <button
+        type="button"
+        className="btn-secondary w-full"
+        onClick={onBack}
+        disabled={busy}
+      >
+        {t("setup.back")}
+      </button>
       {allowSkip && onSkip ? (
         <div className="border-t border-ink-100 pt-3">
           <button
@@ -172,14 +180,6 @@ export function PasskeySetupPicker({
           </button>
         </div>
       ) : null}
-      <button
-        type="button"
-        className="btn-secondary w-full"
-        onClick={onBack}
-        disabled={busy}
-      >
-        {t("setup.back")}
-      </button>
     </div>
   );
 }

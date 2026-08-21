@@ -163,7 +163,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "setup.passkeyIntro":
     "Tap Continue and approve the prompt from your browser or device when asked.",
   "setup.passkeyIntroOptional":
-    "Recommended for faster unlock. If Face ID, Windows Hello, or passkeys aren’t available, skip and continue with your master password plus authenticator or recovery codes.",
+    "Recommended for faster unlock. If Face ID, Windows Hello, or passkeys aren’t available, skip and unlock with your master password.",
   "setup.passkeyOptionalHint":
     "Optional — you can skip and add a passkey later in Settings.",
   "setup.skipPasskey": "Skip — continue without passkey",
@@ -230,15 +230,19 @@ export const MESSAGES_EN: Record<string, string> = {
 
   "lock.title": "Vault Locked",
   "lock.subtitle": "Unlock with your passkey, or use a backup method below.",
+  "lock.subtitlePassword": "Enter your master password to unlock.",
+  "lock.subtitleBackup":
+    "Unlock with your master password plus authenticator or recovery code.",
   "lock.checkoutUnlockHint":
     "Unlock below to open your vault — your list is waiting.",
   "lock.unlockPasskey": "Unlock with passkey",
   "lock.passkeyWrongSite":
     "Your passkey was created on {{site}}, not this site. Use backup sign-in below (master password + authenticator or recovery code). You can register a new passkey here after unlocking.",
-  "lock.useBackup": "Use backup sign-in",
-  "lock.hideBackup": "Hide backup sign-in",
+  "lock.useBackup": "Use master password instead",
+  "lock.hideBackup": "Hide password sign-in",
   "lock.backupHint":
     "Backup: master password plus authenticator code or a one-time recovery code.",
+  "lock.backupHintPwOnly": "Enter your master password to unlock.",
   "lock.backupTotpTab": "Authenticator",
   "lock.backupRecoveryTab": "Recovery code",
   "lock.recoveryCode": "Recovery code",
@@ -352,6 +356,9 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.securityTotpHint":
     "Backup 6-digit codes when passkeys are unavailable. Use Google Authenticator, 1Password, Authy, or similar.",
   "settings.securityTotpConfigured": "Authenticator app configured",
+  "settings.securityRequire2faAtUnlock": "Require a code at unlock",
+  "settings.securityRequire2faAtUnlockHint":
+    "Also ask for an authenticator or recovery code when unlocking with the master password. Off = master password only.",
   "settings.securityTotpNotConfigured":
     "Not configured - you skipped this during setup. Add it here for backup unlock.",
   "settings.securityTotpSetup": "Set up authenticator app",

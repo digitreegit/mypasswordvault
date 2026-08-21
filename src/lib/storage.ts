@@ -56,6 +56,12 @@ export interface VaultMeta {
   totpSecret: string;
   // base32 TOTP secret label hint (issuer/account)
   totpLabel: string;
+  /**
+   * When true, unlocking with the master password also requires an
+   * authenticator code or recovery code. Off by default — the second factor
+   * check is client-side UX only (the master password alone decrypts).
+   */
+  requireSecondFactorAtUnlock?: boolean;
   // app settings
   autoLockMinutes: number;
   /**

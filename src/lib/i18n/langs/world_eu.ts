@@ -29,14 +29,18 @@ export const MESSAGES_ES: Record<string, string> = {
   "lock.title": "Bóveda bloqueada",
   "lock.subtitle":
     "Desbloquee con su passkey o use un método de respaldo abajo.",
+  "lock.subtitlePassword": "Introduce tu contraseña maestra para desbloquear.",
+  "lock.subtitleBackup":
+    "Desbloquea con tu contraseña maestra más autenticador o código de recuperación.",
   "lock.checkoutUnlockHint": "Desbloquee abajo para abrir su bóveda.",
   "lock.unlockPasskey": "Desbloquear con passkey",
   "lock.passkeyWrongSite":
     "Su passkey se creó en {{site}}, no en este sitio. Use el inicio de sesión de respaldo abajo (contraseña maestra + autenticador o código de recuperación). Puede registrar un passkey nuevo aquí tras desbloquear.",
-  "lock.useBackup": "Usar inicio de sesión de respaldo",
-  "lock.hideBackup": "Ocultar inicio de sesión de respaldo",
+  "lock.useBackup": "Usar contraseña maestra",
+  "lock.hideBackup": "Ocultar inicio con contraseña",
   "lock.backupHint":
     "Respaldo: contraseña maestra más código del autenticador o un código de recuperación de un solo uso.",
+  "lock.backupHintPwOnly": "Introduce tu contraseña maestra para desbloquear.",
   "lock.backupTotpTab": "Autenticador",
   "lock.backupRecoveryTab": "Código de recuperación",
   "lock.recoveryCode": "Código de recuperación",
@@ -154,14 +158,18 @@ export const MESSAGES_DE: Record<string, string> = {
   "autoLock.offBad": "Aus (nicht empfohlen)",
   "lock.title": "Tresor gesperrt",
   "lock.subtitle": "Mit Passkey entsperren oder unten eine Backup-Methode verwenden.",
+  "lock.subtitlePassword": "Gib dein Masterpasswort ein, um zu entsperren.",
+  "lock.subtitleBackup":
+    "Mit Masterpasswort plus Authenticator oder Wiederherstellungscode entsperren.",
   "lock.checkoutUnlockHint": "Entsperren Sie unten, um Ihren Tresor zu öffnen.",
   "lock.unlockPasskey": "Mit Passkey entsperren",
   "lock.passkeyWrongSite":
     "Ihr Passkey wurde auf {{site}} erstellt, nicht auf dieser Website. Nutzen Sie unten die Backup-Anmeldung (Masterpasswort + Authenticator oder Wiederherstellungscode). Nach dem Entsperren können Sie hier einen neuen Passkey registrieren.",
-  "lock.useBackup": "Backup-Anmeldung verwenden",
-  "lock.hideBackup": "Backup-Anmeldung ausblenden",
+  "lock.useBackup": "Mit Masterpasswort entsperren",
+  "lock.hideBackup": "Passwort-Anmeldung ausblenden",
   "lock.backupHint":
     "Backup: Masterpasswort plus Authenticator-Code oder einmaliger Wiederherstellungscode.",
+  "lock.backupHintPwOnly": "Gib dein Masterpasswort ein, um zu entsperren.",
   "lock.backupTotpTab": "Authenticator",
   "lock.backupRecoveryTab": "Wiederherstellungscode",
   "lock.recoveryCode": "Wiederherstellungscode",
@@ -279,14 +287,20 @@ export const MESSAGES_FR: Record<string, string> = {
   "lock.title": "Coffre verrouillé",
   "lock.subtitle":
     "Déverrouillez avec votre passkey ou utilisez une méthode de secours ci-dessous.",
+  "lock.subtitlePassword":
+    "Saisissez votre mot de passe maître pour déverrouiller.",
+  "lock.subtitleBackup":
+    "Déverrouillez avec votre mot de passe maître plus authentificateur ou code de récupération.",
   "lock.checkoutUnlockHint": "Déverrouillez ci-dessous pour ouvrir votre coffre.",
   "lock.unlockPasskey": "Déverrouiller avec passkey",
   "lock.passkeyWrongSite":
     "Votre passkey a été créé sur {{site}}, pas sur ce site. Utilisez la connexion de secours ci-dessous (mot de passe maître + authentificateur ou code de récupération). Vous pourrez enregistrer un nouveau passkey ici après déverrouillage.",
-  "lock.useBackup": "Utiliser la connexion de secours",
-  "lock.hideBackup": "Masquer la connexion de secours",
+  "lock.useBackup": "Utiliser le mot de passe maître",
+  "lock.hideBackup": "Masquer la connexion par mot de passe",
   "lock.backupHint":
     "Secours : mot de passe maître plus code d’authentificateur ou code de récupération à usage unique.",
+  "lock.backupHintPwOnly":
+    "Saisissez votre mot de passe maître pour déverrouiller.",
   "lock.backupTotpTab": "Authentificateur",
   "lock.backupRecoveryTab": "Code de récupération",
   "lock.recoveryCode": "Code de récupération",
@@ -405,14 +419,18 @@ export const MESSAGES_IT: Record<string, string> = {
   "lock.title": "Cassaforte bloccata",
   "lock.subtitle":
     "Sblocca con passkey o usa un metodo di backup qui sotto.",
+  "lock.subtitlePassword": "Inserisci la password principale per sbloccare.",
+  "lock.subtitleBackup":
+    "Sblocca con password principale più autenticatore o codice di recupero.",
   "lock.checkoutUnlockHint": "Sblocca qui sotto per aprire la cassaforte.",
   "lock.unlockPasskey": "Sblocca con passkey",
   "lock.passkeyWrongSite":
     "La passkey è stata creata su {{site}}, non su questo sito. Usa l’accesso di backup qui sotto (password principale + autenticatore o codice di recupero). Puoi registrare una nuova passkey qui dopo lo sblocco.",
-  "lock.useBackup": "Usa accesso di backup",
-  "lock.hideBackup": "Nascondi accesso di backup",
+  "lock.useBackup": "Usa la password principale",
+  "lock.hideBackup": "Nascondi accesso con password",
   "lock.backupHint":
     "Backup: password principale più codice autenticatore o codice di recupero monouso.",
+  "lock.backupHintPwOnly": "Inserisci la password principale per sbloccare.",
   "lock.backupTotpTab": "Autenticatore",
   "lock.backupRecoveryTab": "Codice di recupero",
   "lock.recoveryCode": "Codice di recupero",
