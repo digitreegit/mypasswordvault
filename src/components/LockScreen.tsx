@@ -68,7 +68,7 @@ export function LockScreen() {
     isPasskeySupported && hasPasskeyMeta && !passkeyWrongSite;
   const passwordPrimary = !canPasskey;
   const showPwForm = passwordPrimary || showPasswordForm;
-  const canUseRecovery = needSecondFactor && recoveryCodesRemaining > 0;
+  const canUseRecovery = recoveryCodesRemaining > 0;
   const lockSubtitle = canPasskey
     ? t("lock.subtitle")
     : needSecondFactor
@@ -241,59 +241,57 @@ export function LockScreen() {
           {needSecondFactor && canPasskey ? t("lock.unlockBackup") : t("lock.unlock")}
         </button>
       </form>
-
-      {canUseRecovery ? (
-        <div className="space-y-3 border-t border-ink-100 pt-3">
-          <p className="text-center lock-panel-link">
-            <button
-              type="button"
-              className="font-semibold text-ink-600 hover:text-ink-800 hover:underline focus:outline-none focus-visible:underline"
-              onClick={() => {
-                setBackupError(null);
-                setShowRecovery((v) => !v);
-              }}
-            >
-              {showRecovery
-                ? t("lock.hideRecovery")
-                : t("lock.useRecovery")}
-            </button>
-          </p>
-          {showRecovery ? (
-            <form onSubmit={handleRecoveryUnlock} className="space-y-4">
-              <p className="lock-panel-hint">{t("lock.recoveryHint")}</p>
-              <div>
-                <label className="label">{t("lock.recoveryCode")}</label>
-                <input
-                  className="input font-mono tracking-widest text-center text-lg"
-                  inputMode="text"
-                  maxLength={24}
-                  value={recoveryCode}
-                  onChange={(e) =>
-                    setRecoveryCode(e.target.value.toUpperCase())
-                  }
-                  placeholder="XXXX-XXXX"
-                  autoFocus
-                />
-              </div>
-              {backupError ? (
-                <div className="text-sm text-red-600">{backupError}</div>
-              ) : null}
-              <button
-                type="submit"
-                className="btn-secondary w-full inline-flex items-center justify-center gap-2"
-                disabled={busy || !pw || recoveryCode.length < 8}
-              >
-                <LockOpen className="w-4 h-4 shrink-0" aria-hidden />{" "}
-                {t("lock.unlockRecovery")}
-              </button>
-            </form>
-          ) : null}
-        </div>
-      ) : null}
-
-      {resetBlock}
     </div>
   );
+
+  const recoveryBlock =
+    canUseRecovery ? (
+      <div className="space-y-3 border-t border-ink-100 pt-3">
+        <p className="text-center lock-panel-link">
+          <button
+            type="button"
+            className="font-semibold text-ink-600 hover:text-ink-800 hover:underline focus:outline-none focus-visible:underline"
+            onClick={() => {
+              setBackupError(null);
+              setShowRecovery((v) => !v);
+              // Ensure master-password field is available for recovery unlock.
+              if (!showPwForm) setShowPasswordForm(true);
+            }}
+          >
+            {showRecovery ? t("lock.hideRecovery") : t("lock.useRecovery")}
+          </button>
+        </p>
+        {showRecovery ? (
+          <form onSubmit={handleRecoveryUnlock} className="space-y-4">
+            <p className="lock-panel-hint">{t("lock.recoveryHint")}</p>
+            {!showPwForm ? masterPasswordField : null}
+            <div>
+              <label className="label">{t("lock.recoveryCode")}</label>
+              <input
+                className="input font-mono tracking-widest text-center text-lg"
+                inputMode="text"
+                maxLength={24}
+                value={recoveryCode}
+                onChange={(e) => setRecoveryCode(e.target.value.toUpperCase())}
+                placeholder="XXXX-XXXX"
+                autoFocus
+              />
+            </div>
+            {backupError ? (
+              <div className="text-sm text-red-600">{backupError}</div>
+            ) : null}
+            <button
+              type="submit"
+              className="btn-secondary w-full inline-flex items-center justify-center gap-2"
+              disabled={busy || !pw || recoveryCode.length < 8}
+            >
+              <LockOpen className="w-4 h-4 shrink-0" aria-hidden />{" "}
+              {t("lock.unlockRecovery")}
+            </button>
+          </form>
+        ) : null}
+      </div>
+    ) : null;
 
   const lockHeader = (
     <ScreenHeader
@@ -399,6 +397,9 @@ export function LockScreen() {
           {passwordForm}
         </>
       )}
+
+      {recoveryBlock}
+      {resetBlock}
     </>
   );
 

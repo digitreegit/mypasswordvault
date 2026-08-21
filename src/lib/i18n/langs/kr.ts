@@ -242,7 +242,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "lock.useRecovery": "복구 코드 사용",
   "lock.hideRecovery": "복구 코드 숨기기",
   "lock.recoveryHint":
-    "최후 수단: 위에서 마스터 비밀번호를 입력한 뒤, 일회용 복구 코드를 입력하세요.",
+    "최후 수단: 마스터 비밀번호를 입력한 뒤, 일회용 복구 코드를 입력하세요.",
   "lock.recoveryCode": "복구 코드",
   "lock.unlockBackup": "백업으로 잠금 해제",
   "lock.unlockRecovery": "복구 코드로 잠금 해제",

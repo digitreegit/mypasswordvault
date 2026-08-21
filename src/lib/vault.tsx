@@ -1340,19 +1340,10 @@ export function VaultProvider({
         masterPassword,
       );
       const totpSecret = await decryptString(dataKey, m.totpSecret);
-      const needSecondFactor = m.requireSecondFactorAtUnlock === true;
-      if (!needSecondFactor) {
-        await finishUnlock(m, dataKey, totpSecret, dataKeyBytes);
-        return;
-      }
-      if (!secondFactor || !mode) {
-        throw new AppError("errors.wrongTotp");
-      }
-      if (mode === "totp") {
-        if (!verifyTotp(totpSecret, secondFactor)) {
-          throw new AppError("errors.wrongTotp");
-        }
-      } else {
+
+      // Recovery is always available as a last-resort path (consumes one code).
+      if (mode === "recovery") {
+        if (!secondFactor) throw new AppError("errors.invalidRecoveryCode");
         const hashes = m.recoveryCodeHashes ?? [];
         if (!hashes.length) throw new AppError("errors.invalidRecoveryCode");
         const idx = await matchRecoveryCode(secondFactor, hashes);
@@ -1367,6 +1358,18 @@ export function VaultProvider({
         await finishUnlock(updated, dataKey, totpSecret, dataKeyBytes);
         await flushCloudPush();
         return;
+      }
+
+      const needSecondFactor = m.requireSecondFactorAtUnlock === true;
+      if (!needSecondFactor) {
+        await finishUnlock(m, dataKey, totpSecret, dataKeyBytes);
+        return;
+      }
+      if (!secondFactor || mode !== "totp") {
+        throw new AppError("errors.wrongTotp");
+      }
+      if (!verifyTotp(totpSecret, secondFactor)) {
+        throw new AppError("errors.wrongTotp");
       }
       await finishUnlock(m, dataKey, totpSecret, dataKeyBytes);
     },

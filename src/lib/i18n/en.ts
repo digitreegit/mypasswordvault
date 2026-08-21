@@ -247,7 +247,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "lock.useRecovery": "Use a recovery code",
   "lock.hideRecovery": "Hide recovery code",
   "lock.recoveryHint":
-    "Last resort: enter your master password above, then a one-time recovery code.",
+    "Last resort: enter your master password, then a one-time recovery code.",
   "lock.recoveryCode": "Recovery code",
   "lock.unlockBackup": "Unlock with backup",
   "lock.unlockRecovery": "Unlock with recovery code",
