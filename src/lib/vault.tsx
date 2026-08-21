@@ -11,7 +11,6 @@ import React, {
 import {
   decryptString,
   encryptString,
-  exportAesGcmKey,
   toBase64,
   VERIFIER_PLAINTEXT,
 } from "./crypto";
@@ -217,7 +216,17 @@ const VaultContext = createContext<VaultContextValue | null>(null);
 // In-memory only — never persisted.
 interface Session {
   key: CryptoKey;
+  /** Raw data-key bytes for first-time passkey wrap (auth v2). Cleared on lock. */
+  dataKeyBytes: Uint8Array | null;
   totpSecret: string;
+}
+
+function clearSession(sessionRef: { current: Session | null }) {
+  const s = sessionRef.current;
+  if (s?.dataKeyBytes) {
+    s.dataKeyBytes.fill(0);
+  }
+  sessionRef.current = null;
 }
 
 function resolvePasskeyIdentityForVault(
@@ -511,7 +520,7 @@ export function VaultProvider({
   }, [status, meta]);
 
   const lockInternal = useCallback(() => {
-    sessionRef.current = null;
+    clearSession(sessionRef);
     settingsTotpPendingRef.current = null;
     setBackupTotpEnabled(false);
     setEntries([]);
@@ -865,7 +874,7 @@ export function VaultProvider({
         );
       }
 
-      const dataKey = await dataKeyFromPrfWrap(prfBytes, m.passkeyDataKeyWrap);
+      const { dataKey } = await dataKeyFromPrfWrap(prfBytes, m.passkeyDataKeyWrap);
       let verified: string;
       try {
         verified = await decryptString(dataKey, m.verifier);
@@ -918,10 +927,12 @@ export function VaultProvider({
       }
 
       const prfSalt = m.prfSalt || newPrfSalt();
-      const creatingFirstWrap = !m.passkeyDataKeyWrap || existing.length === 0;
       let dataKeyBytes: Uint8Array | null = null;
-      if (creatingFirstWrap || !m.passkeyDataKeyWrap) {
-        dataKeyBytes = await exportAesGcmKey(sessionRef.current.key);
+      if (!m.passkeyDataKeyWrap) {
+        dataKeyBytes = sessionRef.current.dataKeyBytes;
+        if (!dataKeyBytes?.length) {
+          throw new AppError("errors.passkeyRelockRequired");
+        }
       }
 
       const webAuthnUser = resolvePasskeyIdentityForVault(
@@ -994,10 +1005,10 @@ export function VaultProvider({
         passkeyDataKeyWrap = await wrapDataKeyWithPrf(prfBytes, dataKeyBytes);
       }
 
-      const dataKey = await dataKeyFromPrfWrap(prfBytes, passkeyDataKeyWrap);
+      const unwrapped = await dataKeyFromPrfWrap(prfBytes, passkeyDataKeyWrap);
       let verified: string;
       try {
-        verified = await decryptString(dataKey, m.verifier);
+        verified = await decryptString(unwrapped.dataKey, m.verifier);
       } catch {
         throw new AppError("errors.passkeyFailed");
       }
@@ -1177,6 +1188,7 @@ export function VaultProvider({
     await writeMeta(m, pending.dataKey);
     sessionRef.current = {
       key: pending.dataKey,
+      dataKeyBytes: pending.dataKeyBytes,
       totpSecret: pending.totpSecret,
     };
     pendingSetupRef.current = null;
@@ -1194,7 +1206,12 @@ export function VaultProvider({
   }, []);
 
   const finishUnlock = useCallback(
-    async (m: VaultMeta, dataKey: CryptoKey, totpSecret: string) => {
+    async (
+      m: VaultMeta,
+      dataKey: CryptoKey,
+      totpSecret: string,
+      dataKeyBytes: Uint8Array | null = null,
+    ) => {
       let activeMeta = m;
       const syncedPasskeys = syncPasskeyWebAuthnNamesToEmail(
         m.passkeys,
@@ -1213,7 +1230,7 @@ export function VaultProvider({
           await writeMeta(activeMeta);
         }
       }
-      sessionRef.current = { key: dataKey, totpSecret };
+      sessionRef.current = { key: dataKey, dataKeyBytes, totpSecret };
       setBackupTotpEnabled(totpSecret.length > 0);
       lastActivityRef.current = Date.now();
       const migratedEntries = await migrateLegacyEntries(dataKey);
@@ -1269,7 +1286,10 @@ export function VaultProvider({
       authentication.clientExtensionResults as Record<string, unknown>
     );
     if (!prfBytes) throw new AppError("errors.passkeyNoPasswordless");
-    const dataKey = await dataKeyFromPrfWrap(prfBytes, m.passkeyDataKeyWrap);
+    const { dataKey, dataKeyBytes } = await dataKeyFromPrfWrap(
+      prfBytes,
+      m.passkeyDataKeyWrap,
+    );
     let verified: string;
     try {
       verified = await decryptString(dataKey, m.verifier);
@@ -1288,7 +1308,7 @@ export function VaultProvider({
       updatedAt: Date.now(),
     };
     await writeMeta(updated);
-    await finishUnlock(updated, dataKey, totpSecret);
+    await finishUnlock(updated, dataKey, totpSecret, dataKeyBytes);
     await flushCloudPush();
   }, [finishUnlock, flushCloudPush]);
 
@@ -1300,7 +1320,10 @@ export function VaultProvider({
     ) => {
       const m = await readMeta();
       if (!m) throw new AppError("errors.notInitialized");
-      const dataKey = await assertMasterPassword(m, masterPassword);
+      const { dataKey, dataKeyBytes } = await assertMasterPassword(
+        m,
+        masterPassword,
+      );
       const totpSecret = await decryptString(dataKey, m.totpSecret);
       if (mode === "totp") {
         if (!verifyTotp(totpSecret, secondFactor)) {
@@ -1318,11 +1341,11 @@ export function VaultProvider({
           updatedAt: Date.now(),
         };
         await writeMeta(updated);
-        await finishUnlock(updated, dataKey, totpSecret);
+        await finishUnlock(updated, dataKey, totpSecret, dataKeyBytes);
         await flushCloudPush();
         return;
       }
-      await finishUnlock(m, dataKey, totpSecret);
+      await finishUnlock(m, dataKey, totpSecret, dataKeyBytes);
     },
     [finishUnlock, flushCloudPush]
   );
@@ -1336,7 +1359,7 @@ export function VaultProvider({
       }
     }
     await wipeAll();
-    sessionRef.current = null;
+    clearSession(sessionRef);
     pendingSetupRef.current = null;
     setMeta(null);
     setEntries([]);
@@ -1504,7 +1527,7 @@ export function VaultProvider({
         throw new AppError("errors.importExceedsEntryLimit");
       }
     }
-    sessionRef.current = null;
+    clearSession(sessionRef);
     pendingSetupRef.current = null;
     await wipeAll();
     const metaNorm: VaultMeta = {

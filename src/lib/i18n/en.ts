@@ -292,6 +292,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.passkeyFinishPrfBusy": "Linking…",
   "errors.passkeyNoPasswordless":
     "Passkey unlock is not available on this device. Use backup sign-in with your master password.",
+  "errors.passkeyRelockRequired":
+    "Lock the vault and unlock again, then add a passkey.",
   "errors.passkeyRequired": "Register a passkey before continuing.",
   "errors.passkeyRemoveLast": "Add another passkey before removing the last one.",
   "errors.passkeyNeedsSignIn": "Sign in with Google before registering a passkey.",

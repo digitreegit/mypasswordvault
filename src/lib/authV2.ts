@@ -40,7 +40,7 @@ export async function createAuthV2Material(masterPassword: string) {
 export async function dataKeyFromMasterPassword(
   meta: VaultMeta,
   masterPassword: string
-): Promise<CryptoKey> {
+): Promise<{ dataKey: CryptoKey; dataKeyBytes: Uint8Array | null }> {
   const salt = fromBase64(meta.salt);
   const passwordKey = await deriveKey(
     masterPassword,
@@ -48,17 +48,22 @@ export async function dataKeyFromMasterPassword(
     metaPbkdf2Iterations(meta)
   );
   if (isAuthV2(meta)) {
-    const bytes = await decryptBytes(passwordKey, meta.passwordWrap!);
-    return importAesGcmKey(bytes);
+    const dataKeyBytes = await decryptBytes(passwordKey, meta.passwordWrap!);
+    const dataKey = await importAesGcmKey(dataKeyBytes);
+    return { dataKey, dataKeyBytes };
   }
-  return passwordKey;
+  // Legacy vaults: password-derived key is the data key (non-extractable).
+  return { dataKey: passwordKey, dataKeyBytes: null };
 }
 
 export async function assertMasterPassword(
   meta: VaultMeta,
   masterPassword: string
-): Promise<CryptoKey> {
-  const dataKey = await dataKeyFromMasterPassword(meta, masterPassword);
+): Promise<{ dataKey: CryptoKey; dataKeyBytes: Uint8Array | null }> {
+  const { dataKey, dataKeyBytes } = await dataKeyFromMasterPassword(
+    meta,
+    masterPassword,
+  );
   let verified: string;
   try {
     verified = await decryptString(dataKey, meta.verifier);
@@ -68,7 +73,7 @@ export async function assertMasterPassword(
   if (verified !== VERIFIER_PLAINTEXT) {
     throw new AppError("errors.wrongMaster");
   }
-  return dataKey;
+  return { dataKey, dataKeyBytes };
 }
 
 export async function wrapDataKeyWithPrf(
@@ -82,8 +87,9 @@ export async function wrapDataKeyWithPrf(
 export async function dataKeyFromPrfWrap(
   prfBytes: Uint8Array,
   passkeyDataKeyWrap: string
-): Promise<CryptoKey> {
+): Promise<{ dataKey: CryptoKey; dataKeyBytes: Uint8Array }> {
   const prfKey = await importAesGcmKey(prfBytes);
-  const raw = await decryptBytes(prfKey, passkeyDataKeyWrap);
-  return importAesGcmKey(raw);
+  const dataKeyBytes = await decryptBytes(prfKey, passkeyDataKeyWrap);
+  const dataKey = await importAesGcmKey(dataKeyBytes);
+  return { dataKey, dataKeyBytes };
 }
