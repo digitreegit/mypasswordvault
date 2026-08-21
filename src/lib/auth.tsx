@@ -110,9 +110,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setPasswordRecoveryPending();
         setPasswordRecoveryPendingState(true);
       }
-      setSession(next);
-      if (next?.user?.id && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
-        void recordSignupPlatform(next.user.id);
+      // Keep the last good session on transient nulls (e.g. iOS passkey / Face ID
+      // UI can briefly interrupt storage reads). Only clear on explicit sign-out.
+      if (event === "SIGNED_OUT") {
+        setSession(null);
+        return;
+      }
+      if (next) {
+        setSession(next);
+        if (next.user?.id && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
+          void recordSignupPlatform(next.user.id);
+        }
       }
     });
 

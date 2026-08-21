@@ -303,10 +303,13 @@ function registerStrategies(
     ];
   }
   if (isNativeApp() && Capacitor.getPlatform() === "ios") {
+    // PRF-first (same idea as Android). Never accept a no-PRF create on iOS:
+    // Face ID succeeds, then passwordless wrap fails and setup looks "stuck"
+    // or bounced after the user already approved biometrics.
     return [
-      { enablePrf: false, attestation: false },
-      { enablePrf: false, attestation: true },
+      { enablePrf: true, attestation: false, prfEvalAtCreate: true },
       { enablePrf: true, attestation: false },
+      { enablePrf: true, attestation: true, prfEvalAtCreate: true },
       { enablePrf: true, attestation: true },
     ];
   }

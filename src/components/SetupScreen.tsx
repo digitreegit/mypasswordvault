@@ -177,12 +177,15 @@ export function SetupScreen() {
     skipBackupTotpEnrollment,
     finalizeEnrollment,
     abortSetup,
+    hasPendingSetup,
     isPasskeySupported,
     locale,
     setLocale,
     t,
   } = useVault();
-  const [stage, setStage] = useState<Stage>("password");
+  const [stage, setStage] = useState<Stage>(() =>
+    hasPendingSetup ? "passkey" : "password",
+  );
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [showMasterPw, setShowMasterPw] = useState(false);

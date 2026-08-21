@@ -232,7 +232,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "lock.subtitle": "Unlock with your passkey, or use a backup method below.",
   "lock.subtitlePassword": "Enter your master password to unlock.",
   "lock.subtitleBackup":
-    "Unlock with your master password plus authenticator or recovery code.",
+    "Unlock with your master password plus authenticator code.",
   "lock.checkoutUnlockHint":
     "Unlock below to open your vault — your list is waiting.",
   "lock.unlockPasskey": "Unlock with passkey",
@@ -240,15 +240,19 @@ export const MESSAGES_EN: Record<string, string> = {
     "Your passkey was created on {{site}}, not this site. Use backup sign-in below (master password + authenticator or recovery code). You can register a new passkey here after unlocking.",
   "lock.useBackup": "Use master password instead",
   "lock.hideBackup": "Hide password sign-in",
-  "lock.backupHint":
-    "Backup: master password plus authenticator code or a one-time recovery code.",
+  "lock.backupHint": "Backup: master password plus authenticator code.",
   "lock.backupHintPwOnly": "Enter your master password to unlock.",
   "lock.backupTotpTab": "Authenticator",
   "lock.backupRecoveryTab": "Recovery code",
+  "lock.useRecovery": "Use a recovery code",
+  "lock.hideRecovery": "Hide recovery code",
+  "lock.recoveryHint":
+    "Last resort: enter your master password above, then a one-time recovery code.",
   "lock.recoveryCode": "Recovery code",
   "lock.unlockBackup": "Unlock with backup",
+  "lock.unlockRecovery": "Unlock with recovery code",
   "lock.masterPw": "Master password",
-  "lock.totp": "Authenticator code (backup)",
+  "lock.totp": "Authenticator code",
   "lock.unlock": "Unlock",
   "lock.forget": "Forgot master password? Reset vault.",
   "lock.resetWarn":
@@ -283,7 +287,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "errors.passkeySetupOriginAndroid":
     "Passkey verification failed after the system prompt. Tap Continue again and finish every Google prompt (fingerprint and any 6-digit Google PIN). If it keeps failing, remove a partial passkey in Google Password Manager (Chrome → Settings → Google Password Manager) and try again.",
   "errors.passkeySetupPrf":
-    "Passkey was created but encryption setup failed. Click Continue again and complete the second Touch ID / Face ID prompt, or try Safari. Clear site data for 127.0.0.1 if you keep retrying.",
+    "Passkey was created but passwordless encryption needs one more Face ID / Touch ID confirmation. Tap Continue and approve the second prompt, or Skip and unlock with your master password for now.",
   "errors.passkeySetupUv":
     "Touch ID / Face ID did not complete verification. Try again and finish the system prompt.",
   "errors.passkeyInvalidState":

@@ -155,6 +155,8 @@ interface VaultContextValue {
   skipBackupTotpEnrollment: () => Promise<{ recoveryCodes: string[] }>;
   finalizeEnrollment: () => Promise<void>;
   abortSetup: () => Promise<void>;
+  /** True while master-password setup is in progress (before finalize). */
+  hasPendingSetup: boolean;
   isPasskeySupported: boolean;
   unlockWithPasskey: () => Promise<void>;
   unlock: (masterPassword: string, secondFactor?: string, mode?: "totp" | "recovery") => Promise<void>;
@@ -255,6 +257,7 @@ export function VaultProvider({
   children: React.ReactNode;
 }) {
   const [status, setStatus] = useState<VaultStatus>("loading");
+  const [pendingSetupActive, setPendingSetupActive] = useState(false);
   const [meta, setMeta] = useState<VaultMeta | null>(null);
   const [entries, setEntries] = useState<DecryptedEntry[]>([]);
   const sessionRef = useRef<Session | null>(null);
@@ -473,8 +476,9 @@ export function VaultProvider({
       if (cancelled) return;
       const m = await readMeta();
       if (!m) {
+        // Mid-setup: keep "fresh" without wiping in-progress enrollment state.
         setStatus("fresh");
-        setMeta(null);
+        if (!pendingSetupRef.current) setMeta(null);
       } else {
         let activeMeta = m;
         const syncedPasskeys = syncPasskeyWebAuthnNamesToEmail(
@@ -806,6 +810,7 @@ export function VaultProvider({
         prfSalt: newPrfSalt(),
         recoveryCodeHashes: [],
       };
+      setPendingSetupActive(true);
     },
     []
   );
@@ -837,7 +842,14 @@ export function VaultProvider({
     pending.passkeys.push(passkey);
     let prfBytes = regPrf;
     if (!prfBytes) {
-      prfBytes = await derivePrfAfterRegistration(passkey, pending.prfSalt);
+      // Second biometrics prompt on some platforms — keep the pending passkey
+      // until PRF succeeds so a cancel does not wipe setup progress.
+      try {
+        prfBytes = await derivePrfAfterRegistration(passkey, pending.prfSalt);
+      } catch (err) {
+        pending.passkeys.pop();
+        throw err;
+      }
     }
     if (prfBytes) {
       pending.passkeyDataKeyWrap = await wrapDataKeyWithPrf(
@@ -1193,6 +1205,7 @@ export function VaultProvider({
       totpSecret: pending.totpSecret,
     };
     pendingSetupRef.current = null;
+    setPendingSetupActive(false);
     setBackupTotpEnabled(pending.totpSecret.length > 0);
     setMeta(m);
     setEntries([]);
@@ -1204,6 +1217,7 @@ export function VaultProvider({
 
   const abortSetup = useCallback(async () => {
     pendingSetupRef.current = null;
+    setPendingSetupActive(false);
   }, []);
 
   const finishUnlock = useCallback(
@@ -1393,6 +1407,7 @@ export function VaultProvider({
     await wipeAll();
     clearSession(sessionRef);
     pendingSetupRef.current = null;
+    setPendingSetupActive(false);
     setMeta(null);
     setEntries([]);
     setStatus("fresh");
@@ -1561,6 +1576,7 @@ export function VaultProvider({
     }
     clearSession(sessionRef);
     pendingSetupRef.current = null;
+    setPendingSetupActive(false);
     await wipeAll();
     const metaNorm: VaultMeta = {
       ...meta,
@@ -1732,6 +1748,7 @@ export function VaultProvider({
       skipBackupTotpEnrollment,
       finalizeEnrollment,
       abortSetup,
+      hasPendingSetup: pendingSetupActive,
       isPasskeySupported: isPasskeySupported(),
       unlockWithPasskey,
       unlock,
@@ -1818,6 +1835,7 @@ export function VaultProvider({
       confirmBackupTotpSettings,
       cancelBackupTotpSettings,
       regenerateRecoveryCodes,
+      pendingSetupActive,
     ]
   );
 

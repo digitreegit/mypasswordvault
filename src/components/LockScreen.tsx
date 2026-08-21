@@ -14,11 +14,6 @@ import { isAppError } from "../lib/errors";
 import { passkeyRegisteredForCurrentSite } from "../lib/passkey";
 import { isNativeApp } from "../lib/platform";
 
-const LOCK_TAB_BASE =
-  "flex-1 min-w-0 px-1 pb-2.5 pt-0.5 text-xs font-medium transition-colors border-b-2 -mb-px focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30 focus-visible:ring-offset-2 rounded-t-md";
-const LOCK_TAB_ACTIVE = `${LOCK_TAB_BASE} border-accent-600 text-accent-700`;
-const LOCK_TAB_INACTIVE = `${LOCK_TAB_BASE} border-transparent text-ink-500 hover:text-ink-800 hover:border-ink-200`;
-
 export function LockScreen() {
   const {
     unlock,
@@ -31,6 +26,7 @@ export function LockScreen() {
     locale,
     setLocale,
     t,
+    recoveryCodesRemaining,
   } = useVault();
 
   const onCheckoutReturn = useCallback(
@@ -50,13 +46,34 @@ export function LockScreen() {
   const brandHomeHref = isNativeApp() ? undefined : "/";
   const [pw, setPw] = useState("");
   const [showMasterPw, setShowMasterPw] = useState(false);
-  const [code, setCode] = useState("");
-  const [backupMode, setBackupMode] = useState<"totp" | "recovery">("totp");
+  const [totpCode, setTotpCode] = useState("");
+  const [recoveryCode, setRecoveryCode] = useState("");
+  const [showRecovery, setShowRecovery] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [backupError, setBackupError] = useState<string | null>(null);
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+
+  const needSecondFactor = meta?.requireSecondFactorAtUnlock === true;
+  const hasPasskeyMeta =
+    meta?.authVersion === 2 &&
+    !!meta.passkeyDataKeyWrap &&
+    (meta.passkeys?.length ?? 0) > 0;
+  const passkeyWrongSite =
+    isPasskeySupported && hasPasskeyMeta && meta
+      ? !passkeyRegisteredForCurrentSite(meta)
+      : false;
+  const canPasskey =
+    isPasskeySupported && hasPasskeyMeta && !passkeyWrongSite;
+  const passwordPrimary = !canPasskey;
+  const showPwForm = passwordPrimary || showPasswordForm;
+  const canUseRecovery = needSecondFactor && recoveryCodesRemaining > 0;
+  const lockSubtitle = canPasskey
+    ? t("lock.subtitle")
+    : needSecondFactor
+      ? t("lock.subtitleBackup")
+      : t("lock.subtitlePassword");
 
   async function handlePasskey() {
     setPasskeyError(null);
@@ -81,13 +98,13 @@ export function LockScreen() {
     }
   }
 
-  async function handle(e: React.FormEvent) {
+  async function handlePasswordUnlock(e: React.FormEvent) {
     e.preventDefault();
     setBackupError(null);
     setBusy(true);
     try {
       if (needSecondFactor) {
-        await unlock(pw, code, backupMode);
+        await unlock(pw, totpCode, "totp");
       } else {
         await unlock(pw);
       }
@@ -102,172 +119,180 @@ export function LockScreen() {
     }
   }
 
-  const needSecondFactor = meta?.requireSecondFactorAtUnlock === true;
-  const hasPasskeyMeta =
-    meta?.authVersion === 2 &&
-    !!meta.passkeyDataKeyWrap &&
-    (meta.passkeys?.length ?? 0) > 0;
-  const passkeyWrongSite =
-    isPasskeySupported && hasPasskeyMeta && meta
-      ? !passkeyRegisteredForCurrentSite(meta)
-      : false;
-  const canPasskey =
-    isPasskeySupported && hasPasskeyMeta && !passkeyWrongSite;
-  // Password form is the primary unlock UI when there is no usable passkey.
-  const passwordPrimary = !canPasskey;
-  const showPwForm = passwordPrimary || showPasswordForm;
-  const lockSubtitle = canPasskey
-    ? t("lock.subtitle")
-    : needSecondFactor
-      ? t("lock.subtitleBackup")
-      : t("lock.subtitlePassword");
+  async function handleRecoveryUnlock(e: React.FormEvent) {
+    e.preventDefault();
+    setBackupError(null);
+    setBusy(true);
+    try {
+      await unlock(pw, recoveryCode, "recovery");
+    } catch (err: unknown) {
+      setBackupError(
+        isAppError(err)
+          ? t(err.code)
+          : (err as Error)?.message ?? t("lock.errFailed"),
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const masterPasswordField = (
+    <div>
+      <label className="label">{t("lock.masterPw")}</label>
+      <div className="relative">
+        <input
+          type={showMasterPw ? "text" : "password"}
+          className="input pr-10"
+          value={pw}
+          onChange={(e) => setPw(e.target.value)}
+          autoFocus={passwordPrimary || showPasswordForm}
+          spellCheck={false}
+          autoComplete="current-password"
+        />
+        <button
+          type="button"
+          className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-ink-400 hover:text-accent-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30"
+          onClick={() => setShowMasterPw((v) => !v)}
+          title={showMasterPw ? t("vault.hide") : t("vault.show")}
+          aria-label={showMasterPw ? t("vault.hide") : t("vault.show")}
+        >
+          {showMasterPw ? <EyeOff /> : <Eye />}
+        </button>
+      </div>
+    </div>
+  );
+
+  const resetBlock = (
+    <div className="pt-2">
+      {!confirmReset ? (
+        <div className="text-center">
+          <button
+            type="button"
+            className="lock-panel-hint !text-red-600 hover:!text-red-700"
+            onClick={() => setConfirmReset(true)}
+          >
+            {t("lock.forget")}
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-2 text-sm text-left">
+          <p className="text-red-600 leading-snug mb-3">{t("lock.resetWarn")}</p>
+          <div className="flex gap-2 justify-start items-center">
+            <button
+              type="button"
+              className="btn-secondary shrink-0"
+              onClick={() => setConfirmReset(false)}
+            >
+              {t("common.cancel")}
+            </button>
+            <button
+              type="button"
+              className="btn-danger flex-1 min-w-0 whitespace-normal text-center leading-snug !h-auto py-2.5"
+              onClick={async () => {
+                await resetVault();
+              }}
+            >
+              {t("lock.deleteAll")}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   const passwordForm = (
-    <form onSubmit={handle} className={`space-y-4 ${canPasskey ? "pt-4" : ""}`}>
+    <div className={`space-y-4 ${canPasskey ? "pt-4" : ""}`}>
       {canPasskey ? (
         <p className="lock-panel-hint">
           {needSecondFactor ? t("lock.backupHint") : t("lock.backupHintPwOnly")}
         </p>
       ) : null}
-      <div>
-        <label className="label">{t("lock.masterPw")}</label>
-        <div className="relative">
-          <input
-            type={showMasterPw ? "text" : "password"}
-            className="input pr-10"
-            value={pw}
-            onChange={(e) => setPw(e.target.value)}
-            autoFocus={passwordPrimary || showPasswordForm}
-            spellCheck={false}
-            autoComplete="current-password"
-          />
-          <button
-            type="button"
-            className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-ink-400 hover:text-accent-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/30"
-            onClick={() => setShowMasterPw((v) => !v)}
-            title={showMasterPw ? t("vault.hide") : t("vault.show")}
-            aria-label={showMasterPw ? t("vault.hide") : t("vault.show")}
-          >
-            {showMasterPw ? <EyeOff /> : <Eye />}
-          </button>
-        </div>
-      </div>
-      {needSecondFactor ? (
-        <>
-          <div
-            role="tablist"
-            aria-label={`${t("lock.backupTotpTab")} / ${t("lock.backupRecoveryTab")}`}
-            className="flex border-b border-ink-200"
-          >
-            <button
-              type="button"
-              role="tab"
-              id="lock-backup-tab-totp"
-              aria-selected={backupMode === "totp"}
-              aria-controls="lock-backup-panel"
-              className={backupMode === "totp" ? LOCK_TAB_ACTIVE : LOCK_TAB_INACTIVE}
-              onClick={() => setBackupMode("totp")}
-            >
-              {t("lock.backupTotpTab")}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              id="lock-backup-tab-recovery"
-              aria-selected={backupMode === "recovery"}
-              aria-controls="lock-backup-panel"
-              className={
-                backupMode === "recovery" ? LOCK_TAB_ACTIVE : LOCK_TAB_INACTIVE
-              }
-              onClick={() => setBackupMode("recovery")}
-            >
-              {t("lock.backupRecoveryTab")}
-            </button>
-          </div>
-          <div
-            id="lock-backup-panel"
-            role="tabpanel"
-            className="space-y-4 pt-1"
-            aria-labelledby={
-              backupMode === "totp" ? "lock-backup-tab-totp" : "lock-backup-tab-recovery"
-            }
-          >
-            <label className="label">
-              {backupMode === "totp" ? t("lock.totp") : t("lock.recoveryCode")}
-            </label>
+
+      <form onSubmit={handlePasswordUnlock} className="space-y-4">
+        {masterPasswordField}
+        {needSecondFactor ? (
+          <div>
+            <label className="label">{t("lock.totp")}</label>
             <input
               className="input font-mono tracking-widest text-center text-lg"
-              inputMode={backupMode === "totp" ? "numeric" : "text"}
-              maxLength={backupMode === "totp" ? 6 : 24}
-              value={code}
+              inputMode="numeric"
+              maxLength={6}
+              value={totpCode}
               onChange={(e) =>
-                setCode(
-                  backupMode === "totp"
-                    ? e.target.value.replace(/\D/g, "").slice(0, 6)
-                    : e.target.value.toUpperCase()
-                )
+                setTotpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
               }
-              placeholder={backupMode === "totp" ? "000000" : "XXXX-XXXX"}
+              placeholder="000000"
             />
           </div>
-        </>
-      ) : null}
-      {backupError ? (
-        <div className="text-sm text-red-600">{backupError}</div>
-      ) : null}
-      <button
-        type="submit"
-        className="btn-primary w-full inline-flex items-center justify-center gap-2"
-        disabled={
-          busy ||
-          !pw ||
-          (needSecondFactor
-            ? backupMode === "totp"
-              ? code.length !== 6
-              : code.length < 8
-            : false)
-        }
-      >
-        <LockOpen className="w-4 h-4 shrink-0" aria-hidden />{" "}
-        {needSecondFactor && canPasskey ? t("lock.unlockBackup") : t("lock.unlock")}
-      </button>
+        ) : null}
+        {backupError && !showRecovery ? (
+          <div className="text-sm text-red-600">{backupError}</div>
+        ) : null}
+        <button
+          type="submit"
+          className="btn-primary w-full inline-flex items-center justify-center gap-2"
+          disabled={
+            busy ||
+            !pw ||
+            (needSecondFactor ? totpCode.length !== 6 : false)
+          }
+        >
+          <LockOpen className="w-4 h-4 shrink-0" aria-hidden />{" "}
+          {needSecondFactor && canPasskey ? t("lock.unlockBackup") : t("lock.unlock")}
+        </button>
+      </form>
 
-      <div className="pt-2">
-        {!confirmReset ? (
-          <div className="text-center">
+      {canUseRecovery ? (
+        <div className="space-y-3 border-t border-ink-100 pt-3">
+          <p className="text-center lock-panel-link">
             <button
               type="button"
-              className="lock-panel-hint !text-red-600 hover:!text-red-700"
-              onClick={() => setConfirmReset(true)}
+              className="font-semibold text-ink-600 hover:text-ink-800 hover:underline focus:outline-none focus-visible:underline"
+              onClick={() => {
+                setBackupError(null);
+                setShowRecovery((v) => !v);
+              }}
             >
-              {t("lock.forget")}
+              {showRecovery
+                ? t("lock.hideRecovery")
+                : t("lock.useRecovery")}
             </button>
-          </div>
-        ) : (
-          <div className="space-y-2 text-sm text-left">
-            <p className="text-red-600 leading-snug mb-3">{t("lock.resetWarn")}</p>
-            <div className="flex gap-2 justify-start items-center">
+          </p>
+          {showRecovery ? (
+            <form onSubmit={handleRecoveryUnlock} className="space-y-4">
+              <p className="lock-panel-hint">{t("lock.recoveryHint")}</p>
+              <div>
+                <label className="label">{t("lock.recoveryCode")}</label>
+                <input
+                  className="input font-mono tracking-widest text-center text-lg"
+                  inputMode="text"
+                  maxLength={24}
+                  value={recoveryCode}
+                  onChange={(e) =>
+                    setRecoveryCode(e.target.value.toUpperCase())
+                  }
+                  placeholder="XXXX-XXXX"
+                  autoFocus
+                />
+              </div>
+              {backupError ? (
+                <div className="text-sm text-red-600">{backupError}</div>
+              ) : null}
               <button
-                type="button"
-                className="btn-secondary shrink-0"
-                onClick={() => setConfirmReset(false)}
+                type="submit"
+                className="btn-secondary w-full inline-flex items-center justify-center gap-2"
+                disabled={busy || !pw || recoveryCode.length < 8}
               >
-                {t("common.cancel")}
+                <LockOpen className="w-4 h-4 shrink-0" aria-hidden />{" "}
+                {t("lock.unlockRecovery")}
               </button>
-              <button
-                type="button"
-                className="btn-danger flex-1 min-w-0 whitespace-normal text-center leading-snug !h-auto py-2.5"
-                onClick={async () => {
-                  await resetVault();
-                }}
-              >
-                {t("lock.deleteAll")}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </form>
+            </form>
+          ) : null}
+        </div>
+      ) : null}
+
+      {resetBlock}
+    </div>
   );
 
   const lockHeader = (
@@ -296,90 +321,93 @@ export function LockScreen() {
         </div>
       ) : null}
 
-        {checkoutFlash ? (
-          <div
-            role="status"
-            className={`rounded-md border px-3 py-2.5 text-sm leading-snug ${
-              checkoutFlash === "success"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                : "border-ink-200 bg-ink-50 text-ink-700"
-            }`}
-          >
-            <p>
-              {checkoutFlash === "success"
-                ? t("pricing.checkoutSuccess")
-                : t("pricing.checkoutCancel")}
-            </p>
-            {checkoutFlash === "success" && licensed ? (
-              <p className="mt-1 font-medium text-emerald-900">
-                {t("pricing.youAreLicensed")} {t("lock.checkoutUnlockHint")}
-              </p>
-            ) : null}
-            <button
-              type="button"
-              className="mt-2 text-xs font-medium text-ink-600 hover:text-ink-900 underline"
-              onClick={dismissCheckoutFlash}
-            >
-              {t("common.close")}
-            </button>
-          </div>
-        ) : null}
-
-        {passkeyWrongSite && (
-          <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-3 leading-snug">
-            {t("lock.passkeyWrongSite", {
-              site: meta?.passkeyRpId ?? "another site",
-            })}
+      {checkoutFlash ? (
+        <div
+          role="status"
+          className={`rounded-md border px-3 py-2.5 text-sm leading-snug ${
+            checkoutFlash === "success"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+              : "border-ink-200 bg-ink-50 text-ink-700"
+          }`}
+        >
+          <p>
+            {checkoutFlash === "success"
+              ? t("pricing.checkoutSuccess")
+              : t("pricing.checkoutCancel")}
           </p>
-        )}
+          {checkoutFlash === "success" && licensed ? (
+            <p className="mt-1 font-medium text-emerald-900">
+              {t("pricing.youAreLicensed")} {t("lock.checkoutUnlockHint")}
+            </p>
+          ) : null}
+          <button
+            type="button"
+            className="mt-2 text-xs font-medium text-ink-600 hover:text-ink-900 underline"
+            onClick={dismissCheckoutFlash}
+          >
+            {t("common.close")}
+          </button>
+        </div>
+      ) : null}
 
-        {canPasskey && (
-          <>
+      {passkeyWrongSite && (
+        <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-3 leading-snug">
+          {t("lock.passkeyWrongSite", {
+            site: meta?.passkeyRpId ?? "another site",
+          })}
+        </p>
+      )}
+
+      {canPasskey && (
+        <>
+          <button
+            type="button"
+            className="btn-primary w-full inline-flex items-center justify-center gap-2"
+            onClick={() => void handlePasskey()}
+            disabled={busy}
+          >
+            <LockOpen className="w-4 h-4 shrink-0" aria-hidden />
+            {t("lock.unlockPasskey")}
+          </button>
+          {passkeyError ? (
+            <p className="text-sm text-red-600 leading-snug">{passkeyError}</p>
+          ) : null}
+          <p className="pt-1 text-center lock-panel-link">
             <button
               type="button"
-              className="btn-primary w-full inline-flex items-center justify-center gap-2"
-              onClick={() => void handlePasskey()}
-              disabled={busy}
+              className="font-semibold text-ink-600 hover:text-ink-800 hover:underline focus:outline-none focus-visible:underline"
+              onClick={() => {
+                setPasskeyError(null);
+                setShowPasswordForm((v) => !v);
+              }}
             >
-              <LockOpen className="w-4 h-4 shrink-0" aria-hidden />
-              {t("lock.unlockPasskey")}
+              {showPasswordForm ? t("lock.hideBackup") : t("lock.useBackup")}
             </button>
-            {passkeyError ? (
-              <p className="text-sm text-red-600 leading-snug">{passkeyError}</p>
-            ) : null}
-            <p className="pt-1 text-center lock-panel-link">
-              <button
-                type="button"
-                className="font-semibold text-ink-600 hover:text-ink-800 hover:underline focus:outline-none focus-visible:underline"
-                onClick={() => {
-                  setPasskeyError(null);
-                  setShowPasswordForm((v) => !v);
-                }}
-              >
-                {showPasswordForm ? t("lock.hideBackup") : t("lock.useBackup")}
-              </button>
-            </p>
-          </>
-        )}
+          </p>
+        </>
+      )}
 
-        {showPwForm && (
-          <>
-            {canPasskey ? (
-              <div
-                className="-mx-5 sm:-mx-8 border-t border-ink-200"
-                role="separator"
-                aria-hidden
-              />
-            ) : null}
-            {passwordForm}
-          </>
-        )}
+      {showPwForm && (
+        <>
+          {canPasskey ? (
+            <div
+              className="-mx-5 sm:-mx-8 border-t border-ink-200"
+              role="separator"
+              aria-hidden
+            />
+          ) : null}
+          {passwordForm}
+        </>
+      )}
     </>
   );
 
   if (isNativeApp()) {
     return (
-      <NativePinnedAppShell header={lockHeader} remeasureKey={showPwForm}>
+      <NativePinnedAppShell
+        header={lockHeader}
+        remeasureKey={`${showPwForm}-${showRecovery}`}
+      >
         <div className="space-y-4">{lockBody}</div>
       </NativePinnedAppShell>
     );

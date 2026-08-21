@@ -227,7 +227,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "lock.subtitle": "패스키로 잠금 해제하거나, 아래 백업 방법을 사용하세요.",
   "lock.subtitlePassword": "마스터 비밀번호를 입력해 잠금을 해제하세요.",
   "lock.subtitleBackup":
-    "마스터 비밀번호와 인증 앱 코드 또는 복구 코드로 잠금을 해제하세요.",
+    "마스터 비밀번호와 인증 앱 코드로 잠금을 해제하세요.",
   "lock.checkoutUnlockHint":
     "아래에서 잠금을 해제하면 금고 목록으로 들어갑니다.",
   "lock.unlockPasskey": "패스키로 잠금 해제",
@@ -235,14 +235,19 @@ export const MESSAGES_KR: Record<string, string> = {
     "패스키는 {{site}}에서 등록되었고 이 사이트에서는 사용할 수 없습니다. 아래 백업 로그인(마스터 비밀번호 + 인증 앱 또는 복구 코드)을 사용하세요. 잠금 해제 후 이 사이트에서 새 패스키를 등록할 수 있습니다.",
   "lock.useBackup": "마스터 비밀번호로 잠금 해제",
   "lock.hideBackup": "비밀번호 로그인 숨기기",
-  "lock.backupHint": "백업: 마스터 비밀번호 + 인증 앱 코드 또는 복구 코드",
+  "lock.backupHint": "백업: 마스터 비밀번호 + 인증 앱 코드",
   "lock.backupHintPwOnly": "마스터 비밀번호를 입력해 잠금을 해제하세요.",
   "lock.backupTotpTab": "인증 앱",
   "lock.backupRecoveryTab": "복구 코드",
+  "lock.useRecovery": "복구 코드 사용",
+  "lock.hideRecovery": "복구 코드 숨기기",
+  "lock.recoveryHint":
+    "최후 수단: 위에서 마스터 비밀번호를 입력한 뒤, 일회용 복구 코드를 입력하세요.",
   "lock.recoveryCode": "복구 코드",
   "lock.unlockBackup": "백업으로 잠금 해제",
+  "lock.unlockRecovery": "복구 코드로 잠금 해제",
   "lock.masterPw": "마스터 비밀번호",
-  "lock.totp": "인증 앱 코드 (백업)",
+  "lock.totp": "인증 앱 코드",
   "lock.unlock": "잠금 해제",
   "lock.forget": "비밀번호를 잊었나요? Vault 초기화.",
   "lock.resetWarn":
@@ -276,7 +281,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "errors.passkeySetupOriginAndroid":
     "시스템 안내 후 패스키 확인에 실패했습니다. Continue를 다시 누르고 Google 안내(지문·6자리 PIN)를 모두 끝까지 완료하세요. 반복되면 Chrome → Google 비밀번호 관리자에서 mypasswordvault.app 항목을 삭제한 뒤 다시 시도하세요.",
   "errors.passkeySetupPrf":
-    "패스키는 만들어졌지만 암호화 연결에 실패했습니다. Continue를 다시 누르고 두 번째 Touch ID / Face ID 안내까지 완료하거나 Safari로 시도해 보세요. 반복하면 127.0.0.1 사이트 데이터를 지운 뒤 다시 시도하세요.",
+    "패스키는 만들어졌지만 비밀번호 없는 잠금 해제를 위해 Face ID / Touch ID 확인이 한 번 더 필요합니다. Continue를 눌러 두 번째 안내를 완료하거나, Skip으로 건너뛰고 마스터 비밀번호로 잠금 해제하세요.",
   "errors.passkeySetupUv":
     "Touch ID / Face ID 확인이 끝나지 않았습니다. 시스템 안내를 끝까지 완료한 뒤 다시 시도하세요.",
   "errors.passkeyInvalidState":
