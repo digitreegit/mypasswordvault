@@ -231,6 +231,26 @@ function clearSession(sessionRef: { current: Session | null }) {
   sessionRef.current = null;
 }
 
+let recoveryUnlockQueue: Promise<void> = Promise.resolve();
+
+async function withRecoveryUnlockLock<T>(task: () => Promise<T>): Promise<T> {
+  if (typeof navigator !== "undefined" && navigator.locks) {
+    return navigator.locks.request("mypasswordvault-recovery-unlock", task);
+  }
+
+  const previous = recoveryUnlockQueue;
+  let release!: () => void;
+  recoveryUnlockQueue = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await previous;
+  try {
+    return await task();
+  } finally {
+    release();
+  }
+}
+
 function resolvePasskeyIdentityForVault(
   userId: string | null,
   userEmail?: string | null,
@@ -1357,37 +1377,66 @@ export function VaultProvider({
     ) => {
       const m = await readMeta();
       if (!m) throw new AppError("errors.notInitialized");
+
+      // A recovery code replaces TOTP, but never the master password.
+      if (mode === "recovery") {
+        return withRecoveryUnlockLock(async () => {
+          if (!secondFactor) throw new AppError("errors.invalidRecoveryCode");
+
+          // Re-read after acquiring the cross-tab lock so a code consumed by
+          // another concurrent request cannot be accepted from stale metadata.
+          const latest = await readMeta();
+          if (!latest) throw new AppError("errors.notInitialized");
+          const { dataKey, dataKeyBytes } = await assertMasterPassword(
+            latest,
+            masterPassword,
+          );
+          const totpSecret = await decryptString(dataKey, latest.totpSecret);
+          if (!totpSecret) throw new AppError("errors.invalidRecoveryCode");
+
+          const hashes = latest.recoveryCodeHashes ?? [];
+          if (!hashes.length) throw new AppError("errors.invalidRecoveryCode");
+          const idx = await matchRecoveryCode(secondFactor, hashes);
+          if (idx < 0) throw new AppError("errors.invalidRecoveryCode");
+
+          const updated: VaultMeta = {
+            ...latest,
+            requireSecondFactorAtUnlock: true,
+            recoveryCodeHashes: hashes.filter((_, i) => i !== idx),
+            updatedAt: Date.now(),
+          };
+          await writeMeta(updated);
+          await finishUnlock(updated, dataKey, totpSecret, dataKeyBytes);
+          await flushCloudPush();
+        });
+      }
+
       const { dataKey, dataKeyBytes } = await assertMasterPassword(
         m,
         masterPassword,
       );
       const totpSecret = await decryptString(dataKey, m.totpSecret);
+      const needSecondFactor = totpSecret.length > 0;
+      let activeMeta = m;
 
-      // A recovery code replaces TOTP, but never the master password.
-      if (mode === "recovery") {
-        if (m.requireSecondFactorAtUnlock !== true || !totpSecret) {
-          throw new AppError("errors.invalidRecoveryCode");
-        }
-        if (!secondFactor) throw new AppError("errors.invalidRecoveryCode");
-        const hashes = m.recoveryCodeHashes ?? [];
-        if (!hashes.length) throw new AppError("errors.invalidRecoveryCode");
-        const idx = await matchRecoveryCode(secondFactor, hashes);
-        if (idx < 0) throw new AppError("errors.invalidRecoveryCode");
-        const nextHashes = hashes.filter((_, i) => i !== idx);
-        const updated: VaultMeta = {
+      // The encrypted authenticator secret is authoritative. Heal stale legacy
+      // or cloud-synced plaintext metadata before deciding whether TOTP is
+      // required, so a false flag can never bypass the configured factor.
+      if (m.requireSecondFactorAtUnlock !== needSecondFactor) {
+        activeMeta = {
           ...m,
-          recoveryCodeHashes: nextHashes,
+          requireSecondFactorAtUnlock: needSecondFactor,
+          recoveryCodeHashes: needSecondFactor
+            ? (m.recoveryCodeHashes ?? [])
+            : [],
           updatedAt: Date.now(),
         };
-        await writeMeta(updated);
-        await finishUnlock(updated, dataKey, totpSecret, dataKeyBytes);
-        await flushCloudPush();
-        return;
+        await writeMeta(activeMeta);
+        setMeta(activeMeta);
       }
 
-      const needSecondFactor = m.requireSecondFactorAtUnlock === true;
       if (!needSecondFactor) {
-        await finishUnlock(m, dataKey, totpSecret, dataKeyBytes);
+        await finishUnlock(activeMeta, dataKey, totpSecret, dataKeyBytes);
         return;
       }
       if (!secondFactor || mode !== "totp") {
@@ -1396,7 +1445,7 @@ export function VaultProvider({
       if (!verifyTotp(totpSecret, secondFactor)) {
         throw new AppError("errors.wrongTotp");
       }
-      await finishUnlock(m, dataKey, totpSecret, dataKeyBytes);
+      await finishUnlock(activeMeta, dataKey, totpSecret, dataKeyBytes);
     },
     [finishUnlock, flushCloudPush]
   );

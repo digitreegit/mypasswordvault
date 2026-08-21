@@ -122,6 +122,17 @@ export function LockScreen() {
         await unlock(pw);
       }
     } catch (err: unknown) {
+      // A legacy/cloud-restored vault may have a stale plaintext factor flag.
+      // The provider heals it from the encrypted TOTP secret; let the rerender
+      // reveal the required field without showing a misleading error first.
+      if (
+        !needSecondFactor &&
+        isAppError(err) &&
+        err.code === "errors.wrongTotp"
+      ) {
+        setBackupError(null);
+        return;
+      }
       setBackupError(
         isAppError(err)
           ? t(err.code)
