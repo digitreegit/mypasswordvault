@@ -238,8 +238,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "lock.unlockPasskey": "Unlock with passkey",
   "lock.passkeyWrongSite":
     "Your passkey was created on {{site}}, not this site. Use backup sign-in below (master password + authenticator or recovery code). You can register a new passkey here after unlocking.",
-  "lock.useBackup": "Use master password instead",
-  "lock.hideBackup": "Hide password sign-in",
+  "lock.useBackup": "Use backup sign in",
+  "lock.hideBackup": "Hide backup sign in",
   "lock.backupHint": "Backup: master password plus authenticator code.",
   "lock.backupHintPwOnly": "Enter your master password to unlock.",
   "lock.backupTotpTab": "Authenticator",

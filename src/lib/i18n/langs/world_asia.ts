@@ -33,8 +33,8 @@ export const MESSAGES_CN: Record<string, string> = {
   "lock.unlockPasskey": "使用通行密钥解锁",
   "lock.passkeyWrongSite":
     "您的通行密钥是在 {{site}} 注册的，无法在本站点使用。请使用下方备用登录（主密码 + 验证器或恢复代码）。解锁后可在本站点注册新的通行密钥。",
-  "lock.useBackup": "使用主密码解锁",
-  "lock.hideBackup": "隐藏密码登录",
+  "lock.useBackup": "使用备用登录",
+  "lock.hideBackup": "隐藏备用登录",
   "lock.backupHint": "备用：主密码 + 验证器代码。",
   "lock.backupHintPwOnly": "输入主密码以解锁。",
   "lock.backupTotpTab": "验证器",
@@ -161,8 +161,8 @@ export const MESSAGES_JP: Record<string, string> = {
   "lock.unlockPasskey": "パスキーでロック解除",
   "lock.passkeyWrongSite":
     "パスキーは {{site}} で登録されており、このサイトでは使えません。下のバックアップログイン（マスターパスワード + 認証アプリまたは復旧コード）をご利用ください。ロック解除後、このサイトで新しいパスキーを登録できます。",
-  "lock.useBackup": "マスターパスワードでロック解除",
-  "lock.hideBackup": "パスワードログインを隠す",
+  "lock.useBackup": "バックアップでサインイン",
+  "lock.hideBackup": "バックアップサインインを隠す",
   "lock.backupHint": "バックアップ：マスターパスワード + 認証アプリのコード。",
   "lock.backupHintPwOnly": "マスターパスワードを入力してロックを解除します。",
   "lock.backupTotpTab": "認証アプリ",
@@ -293,8 +293,8 @@ export const MESSAGES_ID: Record<string, string> = {
   "lock.unlockPasskey": "Buka kunci dengan passkey",
   "lock.passkeyWrongSite":
     "Passkey Anda dibuat di {{site}}, bukan di situs ini. Gunakan masuk cadangan di bawah (kata sandi utama + autentikator atau kode pemulihan). Anda dapat mendaftarkan passkey baru di sini setelah membuka kunci.",
-  "lock.useBackup": "Gunakan kata sandi utama",
-  "lock.hideBackup": "Sembunyikan masuk dengan kata sandi",
+  "lock.useBackup": "Gunakan login cadangan",
+  "lock.hideBackup": "Sembunyikan login cadangan",
   "lock.backupHint":
     "Cadangan: kata sandi utama plus kode autentikator.",
   "lock.backupHintPwOnly":

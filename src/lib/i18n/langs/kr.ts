@@ -233,8 +233,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "lock.unlockPasskey": "패스키로 잠금 해제",
   "lock.passkeyWrongSite":
     "패스키는 {{site}}에서 등록되었고 이 사이트에서는 사용할 수 없습니다. 아래 백업 로그인(마스터 비밀번호 + 인증 앱 또는 복구 코드)을 사용하세요. 잠금 해제 후 이 사이트에서 새 패스키를 등록할 수 있습니다.",
-  "lock.useBackup": "마스터 비밀번호로 잠금 해제",
-  "lock.hideBackup": "비밀번호 로그인 숨기기",
+  "lock.useBackup": "백업으로 로그인",
+  "lock.hideBackup": "백업 로그인 숨기기",
   "lock.backupHint": "백업: 마스터 비밀번호 + 인증 앱 코드",
   "lock.backupHintPwOnly": "마스터 비밀번호를 입력해 잠금을 해제하세요.",
   "lock.backupTotpTab": "인증 앱",

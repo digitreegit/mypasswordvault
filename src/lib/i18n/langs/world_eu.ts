@@ -36,8 +36,8 @@ export const MESSAGES_ES: Record<string, string> = {
   "lock.unlockPasskey": "Desbloquear con passkey",
   "lock.passkeyWrongSite":
     "Su passkey se creó en {{site}}, no en este sitio. Use el inicio de sesión de respaldo abajo (contraseña maestra + autenticador o código de recuperación). Puede registrar un passkey nuevo aquí tras desbloquear.",
-  "lock.useBackup": "Usar contraseña maestra",
-  "lock.hideBackup": "Ocultar inicio con contraseña",
+  "lock.useBackup": "Usar inicio de sesión de respaldo",
+  "lock.hideBackup": "Ocultar inicio de sesión de respaldo",
   "lock.backupHint":
     "Respaldo: contraseña maestra más código del autenticador.",
   "lock.backupHintPwOnly": "Introduce tu contraseña maestra para desbloquear.",
@@ -170,8 +170,8 @@ export const MESSAGES_DE: Record<string, string> = {
   "lock.unlockPasskey": "Mit Passkey entsperren",
   "lock.passkeyWrongSite":
     "Ihr Passkey wurde auf {{site}} erstellt, nicht auf dieser Website. Nutzen Sie unten die Backup-Anmeldung (Masterpasswort + Authenticator oder Wiederherstellungscode). Nach dem Entsperren können Sie hier einen neuen Passkey registrieren.",
-  "lock.useBackup": "Mit Masterpasswort entsperren",
-  "lock.hideBackup": "Passwort-Anmeldung ausblenden",
+  "lock.useBackup": "Backup-Anmeldung verwenden",
+  "lock.hideBackup": "Backup-Anmeldung ausblenden",
   "lock.backupHint":
     "Backup: Masterpasswort plus Authenticator-Code.",
   "lock.backupHintPwOnly": "Gib dein Masterpasswort ein, um zu entsperren.",
@@ -305,8 +305,8 @@ export const MESSAGES_FR: Record<string, string> = {
   "lock.unlockPasskey": "Déverrouiller avec passkey",
   "lock.passkeyWrongSite":
     "Votre passkey a été créé sur {{site}}, pas sur ce site. Utilisez la connexion de secours ci-dessous (mot de passe maître + authentificateur ou code de récupération). Vous pourrez enregistrer un nouveau passkey ici après déverrouillage.",
-  "lock.useBackup": "Utiliser le mot de passe maître",
-  "lock.hideBackup": "Masquer la connexion par mot de passe",
+  "lock.useBackup": "Utiliser la connexion de secours",
+  "lock.hideBackup": "Masquer la connexion de secours",
   "lock.backupHint":
     "Secours : mot de passe maître plus code d’authentificateur.",
   "lock.backupHintPwOnly":
@@ -441,8 +441,8 @@ export const MESSAGES_IT: Record<string, string> = {
   "lock.unlockPasskey": "Sblocca con passkey",
   "lock.passkeyWrongSite":
     "La passkey è stata creata su {{site}}, non su questo sito. Usa l’accesso di backup qui sotto (password principale + autenticatore o codice di recupero). Puoi registrare una nuova passkey qui dopo lo sblocco.",
-  "lock.useBackup": "Usa la password principale",
-  "lock.hideBackup": "Nascondi accesso con password",
+  "lock.useBackup": "Usa accesso di backup",
+  "lock.hideBackup": "Nascondi accesso di backup",
   "lock.backupHint":
     "Backup: password principale più codice autenticatore.",
   "lock.backupHintPwOnly": "Inserisci la password principale per sbloccare.",
