@@ -1107,6 +1107,7 @@ export function VaultProvider({
       const updated: VaultMeta = {
         ...m,
         totpSecret: totpEnc,
+        requireSecondFactorAtUnlock: true,
         updatedAt: Date.now(),
       };
       await writeMeta(updated);
@@ -1190,6 +1191,7 @@ export function VaultProvider({
         verifier: verifierEnc,
         totpSecret: totpEnc,
         totpLabel: TOTP_BACKUP_ACCOUNT,
+        requireSecondFactorAtUnlock: pending.totpSecret.length > 0,
         autoLockMinutes: pending.autoLockMinutes,
         locale: localeRef.current,
         categories: [],
@@ -1247,6 +1249,15 @@ export function VaultProvider({
       }
       sessionRef.current = { key: dataKey, dataKeyBytes, totpSecret };
       setBackupTotpEnabled(totpSecret.length > 0);
+      // Authenticator configured ⇒ always require it at password unlock (no settings toggle).
+      if (totpSecret.length > 0 && activeMeta.requireSecondFactorAtUnlock !== true) {
+        activeMeta = {
+          ...activeMeta,
+          requireSecondFactorAtUnlock: true,
+          updatedAt: Date.now(),
+        };
+        await writeMeta(activeMeta);
+      }
       lastActivityRef.current = Date.now();
       const migratedEntries = await migrateLegacyEntries(dataKey);
       // Now that the key is available, surface plaintext category names and

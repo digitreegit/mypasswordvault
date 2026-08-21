@@ -197,7 +197,6 @@ export function SecuritySettingsPanel() {
     confirmBackupTotpSettings,
     cancelBackupTotpSettings,
     regenerateRecoveryCodes,
-    setRequireSecondFactorAtUnlock,
   } = useVault();
 
   const [totpEnrolling, setTotpEnrolling] = useState(false);
@@ -208,7 +207,6 @@ export function SecuritySettingsPanel() {
   const [totpBusy, setTotpBusy] = useState(false);
   const [totpError, setTotpError] = useState<string | null>(null);
   const [totpSuccess, setTotpSuccess] = useState<string | null>(null);
-  const [require2faBusy, setRequire2faBusy] = useState(false);
 
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
   const [recoveryConfirm, setRecoveryConfirm] = useState(false);
@@ -517,33 +515,7 @@ export function SecuritySettingsPanel() {
         hint={t("settings.securityTotpHint")}
       >
         {backupTotpEnabled ? (
-          <>
-            <ConfiguredBadge label={t("settings.securityTotpConfigured")} />
-            <label className="flex items-start gap-2.5 rounded-lg border border-ink-200 bg-white px-3 py-2.5 text-sm text-ink-700 cursor-pointer hover:bg-ink-50">
-              <input
-                type="checkbox"
-                className="mt-0.5"
-                checked={meta?.requireSecondFactorAtUnlock === true}
-                disabled={require2faBusy}
-                onChange={(e) => {
-                  const next = e.target.checked;
-                  setTotpError(null);
-                  setRequire2faBusy(true);
-                  void setRequireSecondFactorAtUnlock(next)
-                    .catch((err: unknown) => setTotpError(formatError(err, t)))
-                    .finally(() => setRequire2faBusy(false));
-                }}
-              />
-              <span className="min-w-0">
-                <span className="block font-medium text-ink-900">
-                  {t("settings.securityRequire2faAtUnlock")}
-                </span>
-                <span className="mt-0.5 block text-xs text-ink-600 leading-snug">
-                  {t("settings.securityRequire2faAtUnlockHint")}
-                </span>
-              </span>
-            </label>
-          </>
+          <ConfiguredBadge label={t("settings.securityTotpConfigured")} />
         ) : totpEnrolling ? (
           <div className="space-y-4">
             <p className="text-sm text-ink-600 leading-snug">
