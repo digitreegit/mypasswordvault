@@ -703,7 +703,7 @@ export function SecuritySettingsPanel() {
             </div>
             <button
               type="button"
-              className="btn-secondary text-sm"
+              className="btn-primary text-sm"
               onClick={() => setRecoveryCodes(null)}
             >
               {t("settings.securityRecoveryDismiss")}
