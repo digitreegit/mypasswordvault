@@ -151,8 +151,8 @@ interface VaultContextValue {
   passkeyIdentityEmail: string | null;
   beginBackupTotpEnrollment: () => Promise<{ totpSecretBase32: string }>;
   confirmBackupTotpEnrollment: (code: string) => Promise<{ recoveryCodes: string[] }>;
-  /** Skip backup TOTP; still issues one-time recovery codes. */
-  skipBackupTotpEnrollment: () => Promise<{ recoveryCodes: string[] }>;
+  /** Skip authenticator enrollment; recovery codes are not needed without it. */
+  skipBackupTotpEnrollment: () => Promise<void>;
   finalizeEnrollment: () => Promise<void>;
   abortSetup: () => Promise<void>;
   /** True while master-password setup is in progress (before finalize). */
@@ -163,7 +163,6 @@ interface VaultContextValue {
   lock: () => void;
   resetVault: () => Promise<void>;
   setAutoLockMinutes: (m: number) => Promise<void>;
-  setRequireSecondFactorAtUnlock: (enabled: boolean) => Promise<void>;
   locale: Locale;
   setLocale: (l: Locale) => Promise<void>;
   t: (key: string, vars?: Record<string, string | number>) => string;
@@ -209,7 +208,7 @@ interface VaultContextValue {
   /** Unused recovery code count. */
   recoveryCodesRemaining: number;
   beginBackupTotpSettings: () => Promise<{ totpSecretBase32: string | null }>;
-  confirmBackupTotpSettings: (code: string) => Promise<void>;
+  confirmBackupTotpSettings: (code: string) => Promise<{ recoveryCodes: string[] }>;
   cancelBackupTotpSettings: () => void;
   regenerateRecoveryCodes: () => Promise<{ recoveryCodes: string[] }>;
 }
@@ -1104,9 +1103,12 @@ export function VaultProvider({
       const m = meta ?? (await readMeta());
       if (!m) throw new AppError("errors.notInitialized");
       const totpEnc = await encryptString(sessionRef.current.key, pending);
+      const recoveryCodes = generateRecoveryCodes();
+      const recoveryCodeHashes = await hashRecoveryCodes(recoveryCodes);
       const updated: VaultMeta = {
         ...m,
         totpSecret: totpEnc,
+        recoveryCodeHashes,
         requireSecondFactorAtUnlock: true,
         updatedAt: Date.now(),
       };
@@ -1116,6 +1118,7 @@ export function VaultProvider({
       setBackupTotpEnabled(true);
       setMeta(updated);
       await flushCloudPush();
+      return { recoveryCodes };
     },
     [status, meta, flushCloudPush]
   );
@@ -1162,17 +1165,12 @@ export function VaultProvider({
     const pending = pendingSetupRef.current;
     if (!pending) throw new AppError("errors.noPendingSetup");
     pending.totpSecret = "";
-    const recoveryCodes = generateRecoveryCodes();
-    pending.recoveryCodeHashes = await hashRecoveryCodes(recoveryCodes);
-    return { recoveryCodes };
+    pending.recoveryCodeHashes = [];
   }, []);
 
   const finalizeEnrollment = useCallback(async () => {
     const pending = pendingSetupRef.current;
     if (!pending) throw new AppError("errors.noPendingSetup");
-    if (!pending.recoveryCodeHashes.length) {
-      throw new AppError("errors.noPendingSetup");
-    }
     const verifierEnc = await encryptString(pending.dataKey, VERIFIER_PLAINTEXT);
     const totpEnc = await encryptString(pending.dataKey, pending.totpSecret);
     const now = Date.now();
@@ -1249,11 +1247,24 @@ export function VaultProvider({
       }
       sessionRef.current = { key: dataKey, dataKeyBytes, totpSecret };
       setBackupTotpEnabled(totpSecret.length > 0);
-      // Authenticator configured ⇒ always require it at password unlock (no settings toggle).
+      // Keep the plaintext capability marker and recovery codes consistent
+      // with the encrypted authenticator secret.
       if (totpSecret.length > 0 && activeMeta.requireSecondFactorAtUnlock !== true) {
         activeMeta = {
           ...activeMeta,
           requireSecondFactorAtUnlock: true,
+          updatedAt: Date.now(),
+        };
+        await writeMeta(activeMeta);
+      } else if (
+        totpSecret.length === 0 &&
+        (activeMeta.requireSecondFactorAtUnlock === true ||
+          (activeMeta.recoveryCodeHashes?.length ?? 0) > 0)
+      ) {
+        activeMeta = {
+          ...activeMeta,
+          requireSecondFactorAtUnlock: false,
+          recoveryCodeHashes: [],
           updatedAt: Date.now(),
         };
         await writeMeta(activeMeta);
@@ -1352,8 +1363,11 @@ export function VaultProvider({
       );
       const totpSecret = await decryptString(dataKey, m.totpSecret);
 
-      // Recovery is always available as a last-resort path (consumes one code).
+      // A recovery code replaces TOTP, but never the master password.
       if (mode === "recovery") {
+        if (m.requireSecondFactorAtUnlock !== true || !totpSecret) {
+          throw new AppError("errors.invalidRecoveryCode");
+        }
         if (!secondFactor) throw new AppError("errors.invalidRecoveryCode");
         const hashes = m.recoveryCodeHashes ?? [];
         if (!hashes.length) throw new AppError("errors.invalidRecoveryCode");
@@ -1385,29 +1399,6 @@ export function VaultProvider({
       await finishUnlock(m, dataKey, totpSecret, dataKeyBytes);
     },
     [finishUnlock, flushCloudPush]
-  );
-
-  const setRequireSecondFactorAtUnlock = useCallback(
-    async (enabled: boolean) => {
-      if (status !== "unlocked" || !sessionRef.current) {
-        throw new AppError("errors.locked");
-      }
-      const m = meta ?? (await readMeta());
-      if (!m) throw new AppError("errors.notInitialized");
-      // Requiring a code at unlock only makes sense with an authenticator set up.
-      if (enabled && !sessionRef.current.totpSecret) {
-        throw new AppError("errors.noPendingTotp");
-      }
-      const updated: VaultMeta = {
-        ...m,
-        requireSecondFactorAtUnlock: enabled,
-        updatedAt: Date.now(),
-      };
-      await writeMeta(updated);
-      setMeta(updated);
-      await flushCloudPush();
-    },
-    [status, meta, flushCloudPush],
   );
 
   const resetVault = useCallback(async () => {
@@ -1769,7 +1760,6 @@ export function VaultProvider({
       lock,
       resetVault,
       setAutoLockMinutes,
-      setRequireSecondFactorAtUnlock,
       locale,
       setLocale,
       t,
@@ -1827,7 +1817,6 @@ export function VaultProvider({
       lock,
       resetVault,
       setAutoLockMinutes,
-      setRequireSecondFactorAtUnlock,
       setLocale,
       t,
       exportBackup,

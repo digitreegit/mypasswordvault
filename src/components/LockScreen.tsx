@@ -48,7 +48,8 @@ export function LockScreen() {
   const [showMasterPw, setShowMasterPw] = useState(false);
   const [totpCode, setTotpCode] = useState("");
   const [recoveryCode, setRecoveryCode] = useState("");
-  const [showRecovery, setShowRecovery] = useState(false);
+  const [backupFactor, setBackupFactor] = useState<"totp" | "recovery">("totp");
+  const [showSecondFactor, setShowSecondFactor] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [backupError, setBackupError] = useState<string | null>(null);
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
@@ -68,7 +69,11 @@ export function LockScreen() {
     isPasskeySupported && hasPasskeyMeta && !passkeyWrongSite;
   const passwordPrimary = !canPasskey;
   const showPwForm = passwordPrimary || showPasswordForm;
-  const canUseRecovery = recoveryCodesRemaining > 0;
+  // Recovery codes replace the authenticator code. They are not a standalone
+  // unlock method and have no purpose when an authenticator is not configured.
+  const canUseRecovery = needSecondFactor && recoveryCodesRemaining > 0;
+  const showBackupFactor =
+    needSecondFactor && (canPasskey || showSecondFactor);
   const lockSubtitle = canPasskey
     ? t("lock.subtitle")
     : needSecondFactor
@@ -100,31 +105,22 @@ export function LockScreen() {
 
   async function handlePasswordUnlock(e: React.FormEvent) {
     e.preventDefault();
+    if (needSecondFactor && !showBackupFactor) {
+      setShowSecondFactor(true);
+      return;
+    }
     setBackupError(null);
     setBusy(true);
     try {
       if (needSecondFactor) {
-        await unlock(pw, totpCode, "totp");
+        if (backupFactor === "recovery") {
+          await unlock(pw, recoveryCode, "recovery");
+        } else {
+          await unlock(pw, totpCode, "totp");
+        }
       } else {
         await unlock(pw);
       }
-    } catch (err: unknown) {
-      setBackupError(
-        isAppError(err)
-          ? t(err.code)
-          : (err as Error)?.message ?? t("lock.errFailed"),
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleRecoveryUnlock(e: React.FormEvent) {
-    e.preventDefault();
-    setBackupError(null);
-    setBusy(true);
-    try {
-      await unlock(pw, recoveryCode, "recovery");
     } catch (err: unknown) {
       setBackupError(
         isAppError(err)
@@ -210,22 +206,78 @@ export function LockScreen() {
 
       <form onSubmit={handlePasswordUnlock} className="space-y-4">
         {masterPasswordField}
-        {needSecondFactor ? (
-          <div>
-            <label className="label">{t("lock.totp")}</label>
-            <input
-              className="input font-mono tracking-widest text-center text-lg"
-              inputMode="numeric"
-              maxLength={6}
-              value={totpCode}
-              onChange={(e) =>
-                setTotpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
-              }
-              placeholder="000000"
-            />
-          </div>
+        {showBackupFactor ? (
+          <>
+            {canUseRecovery ? (
+              <div
+                className="grid grid-cols-2 border-b border-ink-200"
+                role="tablist"
+                aria-label={t("lock.backupFactorAria")}
+              >
+                {(["totp", "recovery"] as const).map((factor) => {
+                  const selected = backupFactor === factor;
+                  return (
+                    <button
+                      key={factor}
+                      type="button"
+                      role="tab"
+                      aria-selected={selected}
+                      className={`border-b-2 px-2 py-2.5 text-sm font-medium transition-colors ${
+                        selected
+                          ? "border-accent-600 text-accent-700"
+                          : "border-transparent text-ink-500 hover:text-ink-800"
+                      }`}
+                      onClick={() => {
+                        setBackupError(null);
+                        setBackupFactor(factor);
+                      }}
+                    >
+                      {factor === "totp"
+                        ? t("lock.backupTotpTab")
+                        : t("lock.backupRecoveryTab")}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+
+            {backupFactor === "recovery" && canUseRecovery ? (
+              <div>
+                <label className="label">{t("lock.recoveryCode")}</label>
+                <input
+                  className="input font-mono tracking-widest text-center text-lg"
+                  inputMode="text"
+                  maxLength={24}
+                  value={recoveryCode}
+                  onChange={(e) =>
+                    setRecoveryCode(e.target.value.toUpperCase())
+                  }
+                  placeholder="XXXX-XXXX"
+                  autoFocus
+                />
+                <p className="mt-2 lock-panel-hint">
+                  {t("lock.recoveryReplacesAuthenticator")}
+                </p>
+              </div>
+            ) : (
+              <div>
+                <label className="label">{t("lock.totp")}</label>
+                <input
+                  className="input font-mono tracking-widest text-center text-lg"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={totpCode}
+                  onChange={(e) =>
+                    setTotpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                  placeholder="000000"
+                  autoFocus={!canPasskey}
+                />
+              </div>
+            )}
+          </>
         ) : null}
-        {backupError && !showRecovery ? (
+        {backupError ? (
           <div className="text-sm text-red-600">{backupError}</div>
         ) : null}
         <button
@@ -234,61 +286,28 @@ export function LockScreen() {
           disabled={
             busy ||
             !pw ||
-            (needSecondFactor ? totpCode.length !== 6 : false)
+            (showBackupFactor && backupFactor === "totp"
+              ? totpCode.length !== 6
+              : false) ||
+            (showBackupFactor && backupFactor === "recovery"
+              ? recoveryCode.length < 8
+              : false)
           }
         >
-          <LockOpen className="w-4 h-4 shrink-0" aria-hidden />{" "}
-          {needSecondFactor && canPasskey ? t("lock.unlockBackup") : t("lock.unlock")}
+          {needSecondFactor && !showBackupFactor ? (
+            t("setup.next")
+          ) : (
+            <>
+              <LockOpen className="w-4 h-4 shrink-0" aria-hidden />{" "}
+              {needSecondFactor && canPasskey
+                ? t("lock.unlockBackup")
+                : t("lock.unlock")}
+            </>
+          )}
         </button>
       </form>
     </div>
   );
-
-  // Shown under the password form (primary or after passkey backup CTA expands).
-  const recoveryBlock = canUseRecovery ? (
-    <div className="space-y-3 border-t border-ink-100 pt-3">
-      <p className="text-center lock-panel-link">
-        <button
-          type="button"
-          className="font-semibold text-ink-600 hover:text-ink-800 hover:underline focus:outline-none focus-visible:underline"
-          onClick={() => {
-            setBackupError(null);
-            setShowRecovery((v) => !v);
-          }}
-        >
-          {showRecovery ? t("lock.hideRecovery") : t("lock.useRecovery")}
-        </button>
-      </p>
-      {showRecovery ? (
-        <form onSubmit={handleRecoveryUnlock} className="space-y-4">
-          <p className="lock-panel-hint">{t("lock.recoveryHint")}</p>
-          <div>
-            <label className="label">{t("lock.recoveryCode")}</label>
-            <input
-              className="input font-mono tracking-widest text-center text-lg"
-              inputMode="text"
-              maxLength={24}
-              value={recoveryCode}
-              onChange={(e) => setRecoveryCode(e.target.value.toUpperCase())}
-              placeholder="XXXX-XXXX"
-              autoFocus
-            />
-          </div>
-          {backupError ? (
-            <div className="text-sm text-red-600">{backupError}</div>
-          ) : null}
-          <button
-            type="submit"
-            className="btn-secondary w-full inline-flex items-center justify-center gap-2"
-            disabled={busy || !pw || recoveryCode.length < 8}
-          >
-            <LockOpen className="w-4 h-4 shrink-0" aria-hidden />{" "}
-            {t("lock.unlockRecovery")}
-          </button>
-        </form>
-      ) : null}
-    </div>
-  ) : null;
 
   const lockHeader = (
     <ScreenHeader
@@ -374,7 +393,7 @@ export function LockScreen() {
               onClick={() => {
                 setPasskeyError(null);
                 setBackupError(null);
-                setShowRecovery(false);
+                setBackupFactor("totp");
                 setShowPasswordForm((v) => !v);
               }}
             >
@@ -396,7 +415,6 @@ export function LockScreen() {
             />
           ) : null}
           {passwordForm}
-          {recoveryBlock}
           {resetBlock}
         </>
       ) : null}
@@ -407,7 +425,7 @@ export function LockScreen() {
     return (
       <NativePinnedAppShell
         header={lockHeader}
-        remeasureKey={`${showPwForm}-${showRecovery}`}
+        remeasureKey={`${showPwForm}-${showBackupFactor}-${backupFactor}`}
       >
         <div className="space-y-4">{lockBody}</div>
       </NativePinnedAppShell>

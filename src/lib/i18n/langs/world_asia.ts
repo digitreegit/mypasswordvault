@@ -37,11 +37,14 @@ export const MESSAGES_CN: Record<string, string> = {
   "lock.hideBackup": "隐藏备用登录",
   "lock.backupHint": "备用：主密码 + 验证器代码。",
   "lock.backupHintPwOnly": "输入主密码以解锁。",
+  "lock.backupFactorAria": "选择备用验证方式",
   "lock.backupTotpTab": "验证器",
   "lock.backupRecoveryTab": "恢复代码",
   "lock.useRecovery": "使用恢复代码",
   "lock.hideRecovery": "隐藏恢复代码",
   "lock.recoveryHint": "最后手段：先在上方输入主密码，再输入一次性恢复代码。",
+  "lock.recoveryReplacesAuthenticator":
+    "此一次性代码可替代验证器代码，但仍需输入主密码。",
   "lock.recoveryCode": "恢复代码",
   "lock.unlockBackup": "使用备用方式解锁",
   "lock.unlockRecovery": "使用恢复代码解锁",
@@ -165,12 +168,15 @@ export const MESSAGES_JP: Record<string, string> = {
   "lock.hideBackup": "バックアップサインインを隠す",
   "lock.backupHint": "バックアップ：マスターパスワード + 認証アプリのコード。",
   "lock.backupHintPwOnly": "マスターパスワードを入力してロックを解除します。",
+  "lock.backupFactorAria": "バックアップ認証方法を選択",
   "lock.backupTotpTab": "認証アプリ",
   "lock.backupRecoveryTab": "復旧コード",
   "lock.useRecovery": "復旧コードを使う",
   "lock.hideRecovery": "復旧コードを隠す",
   "lock.recoveryHint":
     "最終手段：上でマスターパスワードを入力し、一度限りの復旧コードを入力してください。",
+  "lock.recoveryReplacesAuthenticator":
+    "この使い捨てコードは認証アプリのコードの代わりです。マスターパスワードも必要です。",
   "lock.recoveryCode": "復旧コード",
   "lock.unlockBackup": "バックアップでロック解除",
   "lock.unlockRecovery": "復旧コードでロック解除",
@@ -299,12 +305,15 @@ export const MESSAGES_ID: Record<string, string> = {
     "Cadangan: kata sandi utama plus kode autentikator.",
   "lock.backupHintPwOnly":
     "Masukkan kata sandi utama untuk membuka kunci.",
+  "lock.backupFactorAria": "Pilih metode verifikasi cadangan",
   "lock.backupTotpTab": "Autentikator",
   "lock.backupRecoveryTab": "Kode pemulihan",
   "lock.useRecovery": "Gunakan kode pemulihan",
   "lock.hideRecovery": "Sembunyikan kode pemulihan",
   "lock.recoveryHint":
     "Jalan terakhir: masukkan kata sandi utama di atas, lalu kode pemulihan sekali pakai.",
+  "lock.recoveryReplacesAuthenticator":
+    "Kode sekali pakai ini menggantikan kode autentikator. Kata sandi utama tetap diperlukan.",
   "lock.recoveryCode": "Kode pemulihan",
   "lock.unlockBackup": "Buka kunci dengan cadangan",
   "lock.unlockRecovery": "Buka kunci dengan kode pemulihan",

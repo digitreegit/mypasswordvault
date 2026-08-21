@@ -135,7 +135,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.stepperAria": "설정 진행 단계",
   "setup.stepPassword": "마스터 비밀번호",
   "setup.stepPasskey": "패스키",
-  "setup.stepBackupTotp": "인증 앱",
+  "setup.stepBackupTotp": "인증 앱 · 복구",
   "setup.stepRecovery": "복구 코드",
   "setup.passkeyHelpTitle": "패스키란?",
   "setup.passkeyHelpBody":
@@ -237,12 +237,15 @@ export const MESSAGES_KR: Record<string, string> = {
   "lock.hideBackup": "백업 로그인 숨기기",
   "lock.backupHint": "백업: 마스터 비밀번호 + 인증 앱 코드",
   "lock.backupHintPwOnly": "마스터 비밀번호를 입력해 잠금을 해제하세요.",
+  "lock.backupFactorAria": "백업 인증 방법 선택",
   "lock.backupTotpTab": "인증 앱",
   "lock.backupRecoveryTab": "복구 코드",
   "lock.useRecovery": "복구 코드 사용",
   "lock.hideRecovery": "복구 코드 숨기기",
   "lock.recoveryHint":
     "최후 수단: 마스터 비밀번호를 입력한 뒤, 일회용 복구 코드를 입력하세요.",
+  "lock.recoveryReplacesAuthenticator":
+    "일회용 복구 코드는 인증 앱 코드를 대신합니다. 마스터 비밀번호는 계속 필요합니다.",
   "lock.recoveryCode": "복구 코드",
   "lock.unlockBackup": "백업으로 잠금 해제",
   "lock.unlockRecovery": "복구 코드로 잠금 해제",
@@ -349,13 +352,10 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.passkeysRemoveLabel": "제거",
   "settings.passkeysRemoveLastHint":
     "패스키는 최소 하나가 있어야 합니다. 먼저 다른 패스키를 추가하세요.",
-  "settings.securityTotpTitle": "인증 앱",
+  "settings.securityTotpTitle": "인증 앱 및 복구 코드",
   "settings.securityTotpHint":
-    "패스키를 쓸 수 없을 때 사용하는 6자리 백업 코드입니다. Google Authenticator, 1Password, Authy 등을 사용하세요.",
+    "마스터 비밀번호 로그인에 6자리 인증 코드를 추가합니다. 앱을 사용할 수 없으면 일회용 복구 코드가 이를 대신합니다.",
   "settings.securityTotpConfigured": "인증 앱 설정됨",
-  "settings.securityRequire2faAtUnlock": "잠금 해제 시 인증 코드 요구",
-  "settings.securityRequire2faAtUnlockHint":
-    "마스터 비밀번호로 잠금 해제할 때 인증 앱 코드 또는 복구 코드도 함께 요구합니다. 끄면 마스터 비밀번호만으로 해제됩니다.",
   "settings.securityTotpNotConfigured":
     "설정되지 않음 - 초기 설정에서 건너뛰었습니다. 여기서 백업 잠금 해제용으로 추가할 수 있습니다.",
   "settings.securityTotpSetup": "인증 앱 설정",
@@ -364,7 +364,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.securityTotpAdded": "인증 앱이 저장되었습니다.",
   "settings.securityRecoveryTitle": "복구 코드",
   "settings.securityRecoveryHint":
-    "패스키와 인증 앱을 모두 사용할 수 없을 때 쓰는 일회용 코드입니다.",
+    "인증 앱 코드를 대신하는 일회용 코드입니다. 마스터 비밀번호는 계속 필요합니다.",
   "settings.securityRecoveryRemaining": "미사용 코드 {{count}}개",
   "settings.securityRecoveryOnceHint":
     "코드는 생성 시 한 번만 표시됩니다. 다시 복사하거나 다운로드하려면 새 코드를 생성하세요(기존 코드는 모두 무효화됩니다).",

@@ -41,12 +41,15 @@ export const MESSAGES_ES: Record<string, string> = {
   "lock.backupHint":
     "Respaldo: contraseña maestra más código del autenticador.",
   "lock.backupHintPwOnly": "Introduce tu contraseña maestra para desbloquear.",
+  "lock.backupFactorAria": "Elige un método de verificación de respaldo",
   "lock.backupTotpTab": "Autenticador",
   "lock.backupRecoveryTab": "Código de recuperación",
   "lock.useRecovery": "Usar un código de recuperación",
   "lock.hideRecovery": "Ocultar código de recuperación",
   "lock.recoveryHint":
     "Último recurso: introduce la contraseña maestra arriba y luego un código de recuperación de un solo uso.",
+  "lock.recoveryReplacesAuthenticator":
+    "Este código de un solo uso sustituye al código del autenticador. La contraseña maestra sigue siendo obligatoria.",
   "lock.recoveryCode": "Código de recuperación",
   "lock.unlockBackup": "Desbloquear con respaldo",
   "lock.unlockRecovery": "Desbloquear con código de recuperación",
@@ -175,12 +178,15 @@ export const MESSAGES_DE: Record<string, string> = {
   "lock.backupHint":
     "Backup: Masterpasswort plus Authenticator-Code.",
   "lock.backupHintPwOnly": "Gib dein Masterpasswort ein, um zu entsperren.",
+  "lock.backupFactorAria": "Backup-Verifizierungsmethode auswählen",
   "lock.backupTotpTab": "Authenticator",
   "lock.backupRecoveryTab": "Wiederherstellungscode",
   "lock.useRecovery": "Wiederherstellungscode verwenden",
   "lock.hideRecovery": "Wiederherstellungscode ausblenden",
   "lock.recoveryHint":
     "Letzter Ausweg: Masterpasswort oben eingeben, dann einen einmaligen Wiederherstellungscode.",
+  "lock.recoveryReplacesAuthenticator":
+    "Dieser Einmalcode ersetzt den Authenticator-Code. Das Masterpasswort ist weiterhin erforderlich.",
   "lock.recoveryCode": "Wiederherstellungscode",
   "lock.unlockBackup": "Mit Backup entsperren",
   "lock.unlockRecovery": "Mit Wiederherstellungscode entsperren",
@@ -311,12 +317,15 @@ export const MESSAGES_FR: Record<string, string> = {
     "Secours : mot de passe maître plus code d’authentificateur.",
   "lock.backupHintPwOnly":
     "Saisissez votre mot de passe maître pour déverrouiller.",
+  "lock.backupFactorAria": "Choisir une méthode de vérification de secours",
   "lock.backupTotpTab": "Authentificateur",
   "lock.backupRecoveryTab": "Code de récupération",
   "lock.useRecovery": "Utiliser un code de récupération",
   "lock.hideRecovery": "Masquer le code de récupération",
   "lock.recoveryHint":
     "Dernier recours : saisissez le mot de passe maître ci-dessus, puis un code de récupération à usage unique.",
+  "lock.recoveryReplacesAuthenticator":
+    "Ce code à usage unique remplace le code d’authentification. Le mot de passe maître reste obligatoire.",
   "lock.recoveryCode": "Code de récupération",
   "lock.unlockBackup": "Déverrouiller avec secours",
   "lock.unlockRecovery": "Déverrouiller avec le code de récupération",
@@ -446,12 +455,15 @@ export const MESSAGES_IT: Record<string, string> = {
   "lock.backupHint":
     "Backup: password principale più codice autenticatore.",
   "lock.backupHintPwOnly": "Inserisci la password principale per sbloccare.",
+  "lock.backupFactorAria": "Scegli un metodo di verifica di backup",
   "lock.backupTotpTab": "Autenticatore",
   "lock.backupRecoveryTab": "Codice di recupero",
   "lock.useRecovery": "Usa un codice di recupero",
   "lock.hideRecovery": "Nascondi codice di recupero",
   "lock.recoveryHint":
     "Ultima risorsa: inserisci la password principale sopra, poi un codice di recupero monouso.",
+  "lock.recoveryReplacesAuthenticator":
+    "Questo codice monouso sostituisce il codice dell’autenticatore. La password principale resta obbligatoria.",
   "lock.recoveryCode": "Codice di recupero",
   "lock.unlockBackup": "Sblocca con backup",
   "lock.unlockRecovery": "Sblocca con codice di recupero",

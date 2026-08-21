@@ -41,11 +41,13 @@ const SETUP_STEPS: { id: Stage; labelKey: string }[] = [
   { id: "password", labelKey: "setup.stepPassword" },
   { id: "passkey", labelKey: "setup.stepPasskey" },
   { id: "backup-totp", labelKey: "setup.stepBackupTotp" },
-  { id: "recovery", labelKey: "setup.stepRecovery" },
 ];
 
 function SetupStepper({ stage, t }: { stage: Stage; t: TFn }) {
-  const currentIdx = SETUP_STEPS.findIndex((s) => s.id === stage);
+  // Recovery codes belong to authenticator setup, so both screens share the
+  // same final step instead of presenting recovery as a separate factor.
+  const stepperStage = stage === "recovery" ? "backup-totp" : stage;
+  const currentIdx = SETUP_STEPS.findIndex((s) => s.id === stepperStage);
 
   return (
     <nav aria-label={t("setup.stepperAria")} className="mb-6">
@@ -329,9 +331,8 @@ export function SetupScreen() {
     setError(null);
     setBusy(true);
     try {
-      const { recoveryCodes: codes } = await skipBackupTotpEnrollment();
-      setRecoveryCodes(codes);
-      setStage("recovery");
+      await skipBackupTotpEnrollment();
+      await finalizeEnrollment();
     } catch (e: unknown) {
       setError(formatSetupError(e, t));
     } finally {

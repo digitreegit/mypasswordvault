@@ -43,9 +43,9 @@ export const SETTINGS_SECURITY_CN: Record<string, string> = {
     "macOS 和浏览器会保留创建通行密钥时保存的名称。若仍显示 user-xxxxxxxx，请在下方添加新通行密钥（将使用您的电子邮件），在此移除旧密钥，然后在系统设置 → 密码中删除旧的 localhost 条目。",
   "settings.passkeysRemoveLabel": "移除",
   "settings.passkeysRemoveLastHint": "至少须保留一个通行密钥。请先添加另一个通行密钥。",
-  "settings.securityTotpTitle": "验证器应用",
+  "settings.securityTotpTitle": "验证器应用与恢复代码",
   "settings.securityTotpHint":
-    "通行密钥不可用时的 6 位备份代码。可使用 Google Authenticator、1Password、Authy 等。",
+    "使用 6 位验证器代码保护主密码登录。应用不可用时，可用一次性恢复代码替代。",
   "settings.securityTotpConfigured": "验证器应用已配置",
   "settings.securityTotpNotConfigured":
     "未配置 — 您在设置过程中跳过了此步骤。可在此添加以用于备份解锁。",
@@ -55,7 +55,7 @@ export const SETTINGS_SECURITY_CN: Record<string, string> = {
   "settings.securityTotpAdded": "验证器应用已保存。",
   "settings.securityRecoveryTitle": "恢复代码",
   "settings.securityRecoveryHint":
-    "通行密钥和验证器应用均不可用时可使用的一次性代码。",
+    "用于替代验证器代码的一次性代码。仍需输入主密码。",
   "settings.securityRecoveryRemaining": "{{count}} 个未使用的代码",
   "settings.securityRecoveryOnceHint":
     "代码创建时仅显示一次。生成新代码以再次复制或下载（将替换所有先前的代码）。",
@@ -86,9 +86,9 @@ export const SETTINGS_SECURITY_JP: Record<string, string> = {
   "settings.passkeysRemoveLabel": "削除",
   "settings.passkeysRemoveLastHint":
     "パスキーは最低 1 つ必要です。先に別のパスキーを追加してください。",
-  "settings.securityTotpTitle": "認証アプリ",
+  "settings.securityTotpTitle": "認証アプリと復旧コード",
   "settings.securityTotpHint":
-    "パスキーが使えないときの 6 桁バックアップコードです。Google Authenticator、1Password、Authy などをご利用ください。",
+    "マスターパスワードでのログインを6桁の認証コードで保護します。アプリが使えない場合は使い捨ての復旧コードで代替できます。",
   "settings.securityTotpConfigured": "認証アプリ設定済み",
   "settings.securityTotpNotConfigured":
     "未設定 — セットアップ時にスキップしました。バックアップ用のロック解除としてここで追加できます。",
@@ -98,7 +98,7 @@ export const SETTINGS_SECURITY_JP: Record<string, string> = {
   "settings.securityTotpAdded": "認証アプリを保存しました。",
   "settings.securityRecoveryTitle": "リカバリーコード",
   "settings.securityRecoveryHint":
-    "パスキーと認証アプリの両方が使えない場合の使い捨てコードです。",
+    "認証アプリのコードの代わりに使う使い捨てコードです。マスターパスワードも必要です。",
   "settings.securityRecoveryRemaining": "未使用コード {{count}} 件",
   "settings.securityRecoveryOnceHint":
     "コードは作成時に一度だけ表示されます。再度コピーまたはダウンロードするには新しいコードを生成してください（以前のコードはすべて無効になります）。",
@@ -129,9 +129,9 @@ export const SETTINGS_SECURITY_ID: Record<string, string> = {
   "settings.passkeysRemoveLabel": "Hapus",
   "settings.passkeysRemoveLastHint":
     "Minimal satu passkey harus tetap ada. Tambahkan passkey lain terlebih dahulu.",
-  "settings.securityTotpTitle": "Aplikasi autentikator",
+  "settings.securityTotpTitle": "Aplikasi autentikator & kode pemulihan",
   "settings.securityTotpHint":
-    "Kode cadangan 6 digit saat passkey tidak tersedia. Gunakan Google Authenticator, 1Password, Authy, atau sejenisnya.",
+    "Lindungi login kata sandi utama dengan kode autentikator 6 digit. Kode pemulihan sekali pakai dapat menggantikannya.",
   "settings.securityTotpConfigured": "Aplikasi autentikator dikonfigurasi",
   "settings.securityTotpNotConfigured":
     "Belum dikonfigurasi — Anda melewatinya saat penyiapan. Tambahkan di sini untuk buka kunci cadangan.",
@@ -141,7 +141,7 @@ export const SETTINGS_SECURITY_ID: Record<string, string> = {
   "settings.securityTotpAdded": "Aplikasi autentikator disimpan.",
   "settings.securityRecoveryTitle": "Kode pemulihan",
   "settings.securityRecoveryHint":
-    "Kode sekali pakai jika passkey dan aplikasi autentikator tidak tersedia.",
+    "Kode sekali pakai pengganti kode autentikator. Kata sandi utama tetap diperlukan.",
   "settings.securityRecoveryRemaining": "{{count}} kode belum digunakan",
   "settings.securityRecoveryOnceHint":
     "Kode hanya ditampilkan sekali saat dibuat. Buat kode baru untuk menyalin atau mengunduh lagi (mengganti semua kode sebelumnya).",
@@ -172,9 +172,9 @@ export const SETTINGS_SECURITY_ES: Record<string, string> = {
   "settings.passkeysRemoveLabel": "Eliminar",
   "settings.passkeysRemoveLastHint":
     "Debe quedar al menos una passkey. Añade otra passkey primero.",
-  "settings.securityTotpTitle": "App autenticadora",
+  "settings.securityTotpTitle": "App autenticadora y códigos de recuperación",
   "settings.securityTotpHint":
-    "Códigos de respaldo de 6 dígitos cuando las passkeys no están disponibles. Usa Google Authenticator, 1Password, Authy o similar.",
+    "Protege el inicio con contraseña maestra mediante un código de 6 dígitos. Los códigos de recuperación pueden sustituirlo.",
   "settings.securityTotpConfigured": "App autenticadora configurada",
   "settings.securityTotpNotConfigured":
     "Sin configurar — lo omitiste durante la configuración. Añádelo aquí para desbloqueo de respaldo.",
@@ -184,7 +184,7 @@ export const SETTINGS_SECURITY_ES: Record<string, string> = {
   "settings.securityTotpAdded": "App autenticadora guardada.",
   "settings.securityRecoveryTitle": "Códigos de recuperación",
   "settings.securityRecoveryHint":
-    "Códigos de un solo uso si las passkeys y la app autenticadora no están disponibles.",
+    "Códigos de un solo uso que sustituyen al código del autenticador. La contraseña maestra sigue siendo obligatoria.",
   "settings.securityRecoveryRemaining": "{{count}} códigos sin usar",
   "settings.securityRecoveryOnceHint":
     "Los códigos se muestran una sola vez al crearlos. Genera códigos nuevos para copiarlos o descargarlos de nuevo (reemplaza todos los anteriores).",
@@ -215,9 +215,9 @@ export const SETTINGS_SECURITY_DE: Record<string, string> = {
   "settings.passkeysRemoveLabel": "Entfernen",
   "settings.passkeysRemoveLastHint":
     "Mindestens ein Passkey muss verbleiben. Fügen Sie zuerst einen weiteren Passkey hinzu.",
-  "settings.securityTotpTitle": "Authentifikator-App",
+  "settings.securityTotpTitle": "Authenticator-App & Wiederherstellungscodes",
   "settings.securityTotpHint":
-    "6-stellige Backup-Codes, wenn Passkeys nicht verfügbar sind. Google Authenticator, 1Password, Authy o. Ä.",
+    "Schützt die Masterpasswort-Anmeldung mit einem 6-stelligen Code. Einmalige Wiederherstellungscodes können ihn ersetzen.",
   "settings.securityTotpConfigured": "Authentifikator-App eingerichtet",
   "settings.securityTotpNotConfigured":
     "Nicht eingerichtet — beim Setup übersprungen. Hier für Backup-Entsperrung hinzufügen.",
@@ -227,7 +227,7 @@ export const SETTINGS_SECURITY_DE: Record<string, string> = {
   "settings.securityTotpAdded": "Authentifikator-App gespeichert.",
   "settings.securityRecoveryTitle": "Wiederherstellungscodes",
   "settings.securityRecoveryHint":
-    "Einmalcodes, wenn Passkeys und Authentifikator-App nicht verfügbar sind.",
+    "Einmalcodes als Ersatz für den Authenticator-Code. Das Masterpasswort ist weiterhin erforderlich.",
   "settings.securityRecoveryRemaining": "{{count}} unbenutzte Codes",
   "settings.securityRecoveryOnceHint":
     "Codes werden bei Erstellung nur einmal angezeigt. Neue Codes generieren zum erneuten Kopieren oder Herunterladen (ersetzt alle bisherigen).",
@@ -258,9 +258,9 @@ export const SETTINGS_SECURITY_FR: Record<string, string> = {
   "settings.passkeysRemoveLabel": "Supprimer",
   "settings.passkeysRemoveLastHint":
     "Au moins une passkey doit rester. Ajoutez d’abord une autre passkey.",
-  "settings.securityTotpTitle": "Application d’authentification",
+  "settings.securityTotpTitle": "Authentification et codes de récupération",
   "settings.securityTotpHint":
-    "Codes de secours à 6 chiffres lorsque les passkeys ne sont pas disponibles. Google Authenticator, 1Password, Authy, etc.",
+    "Protège la connexion par mot de passe maître avec un code à 6 chiffres. Les codes de récupération peuvent le remplacer.",
   "settings.securityTotpConfigured": "Application d’authentification configurée",
   "settings.securityTotpNotConfigured":
     "Non configurée — vous l’avez ignorée lors de la configuration. Ajoutez-la ici pour un déverrouillage de secours.",
@@ -270,7 +270,7 @@ export const SETTINGS_SECURITY_FR: Record<string, string> = {
   "settings.securityTotpAdded": "Application d’authentification enregistrée.",
   "settings.securityRecoveryTitle": "Codes de récupération",
   "settings.securityRecoveryHint":
-    "Codes à usage unique si les passkeys et l’application d’authentification ne sont pas disponibles.",
+    "Codes à usage unique remplaçant le code d’authentification. Le mot de passe maître reste obligatoire.",
   "settings.securityRecoveryRemaining": "{{count}} codes inutilisés",
   "settings.securityRecoveryOnceHint":
     "Les codes ne s’affichent qu’une fois à la création. Générez de nouveaux codes pour les copier ou télécharger à nouveau (remplace tous les codes précédents).",
@@ -301,9 +301,9 @@ export const SETTINGS_SECURITY_IT: Record<string, string> = {
   "settings.passkeysRemoveLabel": "Rimuovi",
   "settings.passkeysRemoveLastHint":
     "Deve restare almeno una passkey. Aggiungi prima un’altra passkey.",
-  "settings.securityTotpTitle": "App autenticatore",
+  "settings.securityTotpTitle": "Autenticatore e codici di recupero",
   "settings.securityTotpHint":
-    "Codici di backup a 6 cifre quando le passkey non sono disponibili. Google Authenticator, 1Password, Authy o simili.",
+    "Protegge l’accesso con password principale tramite un codice a 6 cifre. I codici di recupero possono sostituirlo.",
   "settings.securityTotpConfigured": "App autenticatore configurata",
   "settings.securityTotpNotConfigured":
     "Non configurata — l’hai saltata durante la configurazione. Aggiungila qui per lo sblocco di backup.",
@@ -313,7 +313,7 @@ export const SETTINGS_SECURITY_IT: Record<string, string> = {
   "settings.securityTotpAdded": "App autenticatore salvata.",
   "settings.securityRecoveryTitle": "Codici di recupero",
   "settings.securityRecoveryHint":
-    "Codici monouso se passkey e app autenticatore non sono disponibili.",
+    "Codici monouso che sostituiscono il codice autenticatore. La password principale resta obbligatoria.",
   "settings.securityRecoveryRemaining": "{{count}} codici non usati",
   "settings.securityRecoveryOnceHint":
     "I codici vengono mostrati una sola volta alla creazione. Genera nuovi codici per copiarli o scaricarli di nuovo (sostituisce tutti i precedenti).",

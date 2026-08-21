@@ -57,9 +57,11 @@ export interface VaultMeta {
   // base32 TOTP secret label hint (issuer/account)
   totpLabel: string;
   /**
-   * When true, unlocking with the master password also requires an
-   * authenticator code or recovery code. Off by default — the second factor
-   * check is client-side UX only (the master password alone decrypts).
+   * Plaintext marker that an authenticator is configured. Password unlock then
+   * requires either its current code or a one-time recovery code.
+   *
+   * This check is enforced by the client; the master password still derives
+   * the key that decrypts the local vault.
    */
   requireSecondFactorAtUnlock?: boolean;
   // app settings

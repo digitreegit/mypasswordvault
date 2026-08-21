@@ -333,7 +333,9 @@ export function SecuritySettingsPanel() {
     setTotpError(null);
     setTotpBusy(true);
     try {
-      await confirmBackupTotpSettings(totpCode);
+      const { recoveryCodes: codes } =
+        await confirmBackupTotpSettings(totpCode);
+      setRecoveryCodes(codes);
       setTotpEnrolling(false);
       setTotpSecret("");
       setTotpCode("");
@@ -625,21 +627,26 @@ export function SecuritySettingsPanel() {
         {totpSuccess ? (
           <p className="text-sm text-accent-700">{totpSuccess}</p>
         ) : null}
-      </SecuritySection>
 
-      <SecuritySection
-        title={t("settings.securityRecoveryTitle")}
-        hint={t("settings.securityRecoveryHint")}
-      >
-        <ConfiguredBadge
-          variant={recoveryCodesRemaining === 0 ? "alert" : "ok"}
-          label={t("settings.securityRecoveryRemaining", {
-            count: recoveryCodesRemaining,
-          })}
-        />
-        <p className="settings-card-hint text-xs text-ink-600 leading-snug">
-          {t("settings.securityRecoveryOnceHint")}
-        </p>
+        {backupTotpEnabled ? (
+          <div className="mt-2 space-y-3 border-t border-ink-200 pt-4">
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-ink-900">
+                {t("settings.securityRecoveryTitle")}
+              </h3>
+              <p className="settings-card-hint text-sm text-ink-600 leading-snug">
+                {t("settings.securityRecoveryHint")}
+              </p>
+            </div>
+            <ConfiguredBadge
+              variant={recoveryCodesRemaining === 0 ? "alert" : "ok"}
+              label={t("settings.securityRecoveryRemaining", {
+                count: recoveryCodesRemaining,
+              })}
+            />
+            <p className="settings-card-hint text-xs text-ink-600 leading-snug">
+              {t("settings.securityRecoveryOnceHint")}
+            </p>
 
         {recoveryCodes ? (
           <div className="space-y-3">
@@ -738,8 +745,10 @@ export function SecuritySettingsPanel() {
             }}
           />
         )}
-        {recoveryError ? (
-          <p className="text-sm text-red-600">{recoveryError}</p>
+            {recoveryError ? (
+              <p className="text-sm text-red-600">{recoveryError}</p>
+            ) : null}
+          </div>
         ) : null}
       </SecuritySection>
     </div>

@@ -18,7 +18,7 @@ export const SETUP_ES: Record<string, string> = {
   "setup.stepperAria": "Progreso de configuración",
   "setup.stepPassword": "Contraseña maestra",
   "setup.stepPasskey": "Passkey",
-  "setup.stepBackupTotp": "Autenticador",
+  "setup.stepBackupTotp": "Autenticador y recuperación",
   "setup.stepRecovery": "Código de recuperación",
   "setup.passkeyHelpTitle": "¿Qué es una passkey?",
   "setup.passkeyHelpBody":
@@ -107,7 +107,7 @@ export const SETUP_DE: Record<string, string> = {
   "setup.stepperAria": "Einrichtungsfortschritt",
   "setup.stepPassword": "Masterpasswort",
   "setup.stepPasskey": "Passkey",
-  "setup.stepBackupTotp": "Authentifikator",
+  "setup.stepBackupTotp": "Authenticator & Wiederherstellung",
   "setup.stepRecovery": "Wiederherstellungscode",
   "setup.passkeyHelpTitle": "Was ist ein Passkey?",
   "setup.passkeyHelpBody":
@@ -196,7 +196,7 @@ export const SETUP_FR: Record<string, string> = {
   "setup.stepperAria": "Progression de la configuration",
   "setup.stepPassword": "Mot de passe maître",
   "setup.stepPasskey": "Passkey",
-  "setup.stepBackupTotp": "Authentificateur",
+  "setup.stepBackupTotp": "Authentification et récupération",
   "setup.stepRecovery": "Code de récupération",
   "setup.passkeyHelpTitle": "Qu’est-ce qu’une passkey ?",
   "setup.passkeyHelpBody":
@@ -285,7 +285,7 @@ export const SETUP_IT: Record<string, string> = {
   "setup.stepperAria": "Avanzamento configurazione",
   "setup.stepPassword": "Password principale",
   "setup.stepPasskey": "Passkey",
-  "setup.stepBackupTotp": "Autenticatore",
+  "setup.stepBackupTotp": "Autenticatore e recupero",
   "setup.stepRecovery": "Codice di recupero",
   "setup.passkeyHelpTitle": "Cos’è una passkey?",
   "setup.passkeyHelpBody":
@@ -373,7 +373,7 @@ export const SETUP_CN: Record<string, string> = {
   "setup.stepperAria": "设置进度",
   "setup.stepPassword": "主密码",
   "setup.stepPasskey": "通行密钥",
-  "setup.stepBackupTotp": "验证器",
+  "setup.stepBackupTotp": "验证器与恢复",
   "setup.stepRecovery": "恢复代码",
   "setup.passkeyHelpTitle": "什么是通行密钥？",
   "setup.passkeyHelpBody":
@@ -453,7 +453,7 @@ export const SETUP_JP: Record<string, string> = {
   "setup.stepperAria": "セットアップの進行状況",
   "setup.stepPassword": "マスターパスワード",
   "setup.stepPasskey": "パスキー",
-  "setup.stepBackupTotp": "認証アプリ",
+  "setup.stepBackupTotp": "認証アプリ・復旧",
   "setup.stepRecovery": "リカバリーコード",
   "setup.passkeyHelpTitle": "パスキーとは？",
   "setup.passkeyHelpBody":
@@ -541,7 +541,7 @@ export const SETUP_ID: Record<string, string> = {
   "setup.stepperAria": "Kemajuan penyiapan",
   "setup.stepPassword": "Kata sandi utama",
   "setup.stepPasskey": "Passkey",
-  "setup.stepBackupTotp": "Autentikator",
+  "setup.stepBackupTotp": "Autentikator & pemulihan",
   "setup.stepRecovery": "Kode pemulihan",
   "setup.passkeyHelpTitle": "Apa itu passkey?",
   "setup.passkeyHelpBody":

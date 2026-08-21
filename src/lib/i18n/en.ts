@@ -137,7 +137,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "setup.stepperAria": "Setup progress",
   "setup.stepPassword": "Master password",
   "setup.stepPasskey": "Passkey",
-  "setup.stepBackupTotp": "Authenticator",
+  "setup.stepBackupTotp": "Authenticator & recovery",
   "setup.stepRecovery": "Recovery code",
   "setup.passkeyHelpTitle": "What is a passkey?",
   "setup.passkeyHelpBody":
@@ -242,12 +242,15 @@ export const MESSAGES_EN: Record<string, string> = {
   "lock.hideBackup": "Hide backup sign in",
   "lock.backupHint": "Backup: master password plus authenticator code.",
   "lock.backupHintPwOnly": "Enter your master password to unlock.",
+  "lock.backupFactorAria": "Choose a backup verification method",
   "lock.backupTotpTab": "Authenticator",
   "lock.backupRecoveryTab": "Recovery code",
   "lock.useRecovery": "Use a recovery code",
   "lock.hideRecovery": "Hide recovery code",
   "lock.recoveryHint":
     "Last resort: enter your master password, then a one-time recovery code.",
+  "lock.recoveryReplacesAuthenticator":
+    "This one-time code replaces the authenticator code. Your master password is still required.",
   "lock.recoveryCode": "Recovery code",
   "lock.unlockBackup": "Unlock with backup",
   "lock.unlockRecovery": "Unlock with recovery code",
@@ -356,13 +359,10 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.passkeysRemoveLabel": "Remove",
   "settings.passkeysRemoveLastHint":
     "At least one passkey must remain. Add another passkey first.",
-  "settings.securityTotpTitle": "Authenticator app",
+  "settings.securityTotpTitle": "Authenticator app & recovery codes",
   "settings.securityTotpHint":
-    "Backup 6-digit codes when passkeys are unavailable. Use Google Authenticator, 1Password, Authy, or similar.",
+    "Protect master-password sign-in with a 6-digit authenticator code. One-time recovery codes replace it if the app is unavailable.",
   "settings.securityTotpConfigured": "Authenticator app configured",
-  "settings.securityRequire2faAtUnlock": "Require a code at unlock",
-  "settings.securityRequire2faAtUnlockHint":
-    "Also ask for an authenticator or recovery code when unlocking with the master password. Off = master password only.",
   "settings.securityTotpNotConfigured":
     "Not configured - you skipped this during setup. Add it here for backup unlock.",
   "settings.securityTotpSetup": "Set up authenticator app",
@@ -371,7 +371,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "settings.securityTotpAdded": "Authenticator app saved.",
   "settings.securityRecoveryTitle": "Recovery codes",
   "settings.securityRecoveryHint":
-    "One-time codes if passkeys and the authenticator app are unavailable.",
+    "One-time codes that replace your authenticator code. Your master password is still required.",
   "settings.securityRecoveryRemaining": "{{count}} unused codes",
   "settings.securityRecoveryOnceHint":
     "Codes are shown once when created. Generate new codes to copy or download them again (this replaces all previous codes).",
