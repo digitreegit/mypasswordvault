@@ -28,7 +28,7 @@
 
   function userIconSvg() {
     return (
-      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>' +
       '<circle cx="12" cy="7" r="4"></circle></svg>'
     );
@@ -83,27 +83,21 @@
   function renderSignedIn(email) {
     if (!root) return;
     sessionEmail = email || "";
-    var safeEmail = escapeHtml(sessionEmail);
     root.innerHTML =
+      '<div class="landing-signed-in-actions">' +
+      '<a class="btn btn-primary landing-nav-link" href="' +
+      appPath("/app/#") +
+      '" data-i18n="navMyVault"></a>' +
       '<div class="landing-user-menu">' +
-      '<button type="button" class="landing-user-menu-btn btn btn-primary" aria-haspopup="true" aria-expanded="false" data-i18n-aria="navUserMenu">' +
+      '<button type="button" class="landing-user-menu-btn landing-lang-btn" aria-haspopup="true" aria-expanded="false" data-i18n-aria="navUserMenu">' +
       userIconSvg() +
       "</button>" +
       '<div class="landing-user-dropdown" role="menu" hidden>' +
-      '<p class="landing-user-dropdown-email" role="presentation">' +
-      safeEmail +
-      "</p>" +
-      '<div class="landing-user-dropdown-divider" role="separator"></div>' +
-      '<a role="menuitem" class="landing-user-dropdown-item" href="' +
-      appPath("/app/#") +
-      '" data-i18n="navOpenMyVault"></a>' +
-      '<div class="landing-user-dropdown-divider" role="separator"></div>' +
       '<a role="menuitem" class="landing-user-dropdown-item" href="' +
       appPath("/app/#/settings") +
       '" data-i18n="navSettings"></a>' +
-      '<div class="landing-user-dropdown-divider" role="separator"></div>' +
       '<button type="button" role="menuitem" class="landing-user-dropdown-item landing-user-dropdown-logout" data-i18n="navLogOut"></button>' +
-      "</div></div>";
+      "</div></div></div>";
 
     applyAuthI18n();
 
@@ -113,14 +107,6 @@
     var logout = root.querySelector(".landing-user-dropdown-logout");
     if (!wrap || !btn || !menu) return;
     bindSignedInMenu(wrap, btn, menu, logout);
-  }
-
-  function escapeHtml(s) {
-    return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
   }
 
   function refreshView() {

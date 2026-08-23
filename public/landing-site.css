@@ -394,10 +394,25 @@
           justify-content: center;
         }
 
+        .landing-nav-panel .nav-actions #landing-auth-root .landing-signed-in-actions {
+          width: 100%;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .landing-nav-panel .nav-actions #landing-auth-root .landing-signed-in-actions > .btn {
+          width: 100%;
+        }
+
         .landing-nav-panel .nav-actions #landing-auth-root .landing-user-menu {
           width: 100%;
           display: flex;
           justify-content: center;
+        }
+
+        .landing-nav-panel .landing-user-menu-btn {
+          width: 100%;
+          min-height: 2.75rem;
         }
 
         .landing-nav-panel .nav-actions .landing-lang-root {
@@ -1291,8 +1306,23 @@
         border: none;
         background: transparent;
       }
+      .landing-header-band .landing-user-menu-btn {
+        border: none;
+        background: transparent;
+      }
+      .landing-header-band .landing-user-menu-btn:hover {
+        color: var(--ink);
+        border: none;
+        background: transparent;
+      }
+      .landing-header-band .landing-user-menu-btn[aria-expanded="true"] {
+        color: var(--ink);
+        border: none;
+        background: transparent;
+      }
       .landing-header-band .nav-actions > .btn-ghost.landing-nav-link:focus-visible,
-      .landing-header-band .landing-lang-btn:focus-visible {
+      .landing-header-band .landing-lang-btn:focus-visible,
+      .landing-header-band .landing-user-menu-btn:focus-visible {
         outline: 2px solid var(--accent2);
         outline-offset: 2px;
       }
@@ -1303,19 +1333,16 @@
         flex-shrink: 0;
       }
 
+      .landing-signed-in-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+
       .landing-user-menu {
         position: relative;
         display: flex;
         align-items: center;
-      }
-
-      .landing-user-menu-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 2.5rem;
-        min-height: 2.5rem;
-        padding: 0.5rem;
       }
 
       .landing-user-dropdown {
