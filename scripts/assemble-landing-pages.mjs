@@ -71,7 +71,6 @@ ${LOGO_SVG}
           </span>
         </button>
         </header>
-        <div id="landing-nav-backdrop" class="landing-nav-backdrop" aria-hidden="true"></div>
         <div id="landing-nav-panel" class="landing-nav-panel">
         <div class="nav-actions" role="navigation" aria-label="Main">
 ${navInner}
@@ -81,6 +80,7 @@ ${navInner}
         </div>
       </div>
     </div>
+    <div id="landing-nav-backdrop" class="landing-nav-backdrop" aria-hidden="true"></div>
 
     <div class="wrap">
       <main class="landing-inner-main">

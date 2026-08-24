@@ -34,8 +34,29 @@
     );
   }
 
+  function restoreLangSlot() {
+    var langSlot = document.getElementById("landing-lang-root");
+    var navActions = document.querySelector(".nav-actions");
+    var authRoot = document.getElementById("landing-auth-root");
+    if (!langSlot || !navActions || !authRoot) return;
+    if (langSlot.parentNode !== navActions) {
+      if (authRoot.nextSibling) {
+        navActions.insertBefore(langSlot, authRoot.nextSibling);
+      } else {
+        navActions.appendChild(langSlot);
+      }
+    }
+  }
+
+  function placeLangInSignedInIcons() {
+    var langSlot = document.getElementById("landing-lang-root");
+    var iconsRow = root && root.querySelector(".landing-signed-in-icons");
+    if (!langSlot || !iconsRow) return;
+    iconsRow.appendChild(langSlot);
+  }
   function renderSignIn() {
     if (!root) return;
+    restoreLangSlot();
     sessionEmail = null;
     root.innerHTML =
       '<a class="btn btn-primary landing-nav-link" href="' +
@@ -88,6 +109,7 @@
       '<a class="btn btn-primary landing-nav-link" href="' +
       appPath("/app/#") +
       '" data-i18n="navMyVault"></a>' +
+      '<div class="landing-signed-in-icons">' +
       '<div class="landing-user-menu">' +
       '<button type="button" class="landing-user-menu-btn landing-lang-btn" aria-haspopup="true" aria-expanded="false" data-i18n-aria="navUserMenu">' +
       userIconSvg() +
@@ -97,9 +119,10 @@
       appPath("/app/#/settings") +
       '" data-i18n="navSettings"></a>' +
       '<button type="button" role="menuitem" class="landing-user-dropdown-item landing-user-dropdown-logout" data-i18n="navLogOut"></button>' +
-      "</div></div></div>";
+      "</div></div></div></div>";
 
     applyAuthI18n();
+    placeLangInSignedInIcons();
 
     var wrap = root.querySelector(".landing-user-menu");
     var btn = root.querySelector(".landing-user-menu-btn");
@@ -163,6 +186,7 @@
   window.MPV_LANDING_AUTH_REFRESH_I18N = function () {
     if (!root) root = document.getElementById("landing-auth-root");
     if (sessionEmail) {
+      placeLangInSignedInIcons();
       applyAuthI18n();
       return;
     }

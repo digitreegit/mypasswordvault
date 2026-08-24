@@ -55,6 +55,12 @@
     if (t && t.closest && t.closest(".landing-lang-opt")) setOpen(false);
   });
 
+  if (backdrop) {
+    backdrop.addEventListener("click", function () {
+      setOpen(false);
+    });
+  }
+
   document.addEventListener("click", function (e) {
     if (!band.classList.contains("is-nav-open")) return;
     if (panel.contains(e.target) || header.contains(e.target)) return;

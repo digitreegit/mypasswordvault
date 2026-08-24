@@ -249,6 +249,10 @@
           display: none !important;
         }
 
+        .nav-actions {
+          flex-wrap: nowrap;
+        }
+
         .landing-header-band-inner {
           display: flex;
           align-items: center;
@@ -307,12 +311,12 @@
           position: fixed;
           left: 0;
           right: 0;
-          top: var(--landing-panel-top, 4rem);
+          top: 0;
           bottom: 0;
-          z-index: 90;
-          background: rgba(0, 0, 0, 0.5);
-          backdrop-filter: blur(3px);
-          -webkit-backdrop-filter: blur(3px);
+          z-index: 89;
+          background: rgba(8, 8, 14, 0.65);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
           pointer-events: none;
           opacity: 0;
           transition: opacity 0.2s ease;
@@ -322,6 +326,13 @@
           display: block;
           pointer-events: auto;
           opacity: 1;
+        }
+
+        body.landing-nav-open .wrap,
+        body.landing-nav-open .bg-grid,
+        body.landing-nav-open .orb {
+          pointer-events: none;
+          user-select: none;
         }
 
         .landing-nav-panel {
@@ -398,32 +409,36 @@
           width: 100%;
           flex-direction: column;
           gap: 0.5rem;
+          align-items: stretch;
         }
 
         .landing-nav-panel .nav-actions #landing-auth-root .landing-signed-in-actions > .btn {
           width: 100%;
         }
 
+        .landing-nav-panel .landing-signed-in-icons {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
         .landing-nav-panel .nav-actions #landing-auth-root .landing-user-menu {
-          width: 100%;
+          width: auto;
           display: flex;
           justify-content: center;
         }
 
-        .landing-nav-panel .landing-user-menu-btn {
-          width: 100%;
+        .landing-nav-panel .landing-user-menu-btn,
+        .landing-nav-panel .landing-lang-btn {
+          width: 2.75rem;
           min-height: 2.75rem;
         }
 
         .landing-nav-panel .nav-actions .landing-lang-root {
-          width: 100%;
+          width: auto;
           justify-content: center;
-          padding-top: 0.25rem;
-        }
-
-        .landing-nav-panel .landing-lang-btn {
-          width: 100%;
-          min-height: 2.75rem;
+          padding-top: 0;
         }
 
         body.landing-nav-open {
@@ -1333,10 +1348,24 @@
         flex-shrink: 0;
       }
 
+      #landing-lang-root {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+      }
+
       .landing-signed-in-actions {
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
+        flex-shrink: 0;
+      }
+
+      .landing-signed-in-icons {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex-shrink: 0;
       }
 
       .landing-user-menu {
