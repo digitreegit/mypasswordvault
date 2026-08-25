@@ -300,6 +300,11 @@ export function VaultProvider({
   const localeRef = useRef<Locale>("en");
   const pushDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cloudRefreshInFlightRef = useRef(false);
+  // iOS can emit a persisted `pageshow` while returning from the native
+  // passkey sheet. Keep that round trip from being mistaken for a restored
+  // browser page, and prevent cloud reconciliation from racing the metadata
+  // update that links the new credential.
+  const passkeyCeremonyDepthRef = useRef(0);
 
   const [locale, setLocaleState] = useState<Locale>(
     () => readStoredLocale() ?? detectBrowserLocale()
@@ -584,7 +589,7 @@ export function VaultProvider({
       lockInternal();
     };
     const onPageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) lockInternal();
+      if (e.persisted && passkeyCeremonyDepthRef.current === 0) lockInternal();
     };
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("beforeunload", onBeforeUnload);
@@ -751,6 +756,7 @@ export function VaultProvider({
   }, [runCloudVaultSync, userId]);
 
   const refreshCloudVault = useCallback(async () => {
+    if (passkeyCeremonyDepthRef.current > 0) return;
     if (cloudRefreshInFlightRef.current) return;
     cloudRefreshInFlightRef.current = true;
     try {
@@ -834,59 +840,75 @@ export function VaultProvider({
     []
   );
 
+  const runPasskeyCeremony = useCallback(async <T,>(
+    task: () => Promise<T>,
+  ): Promise<T> => {
+    passkeyCeremonyDepthRef.current += 1;
+    try {
+      return await task();
+    } finally {
+      passkeyCeremonyDepthRef.current = Math.max(
+        0,
+        passkeyCeremonyDepthRef.current - 1,
+      );
+    }
+  }, []);
+
   const registerPasskeyInSetup = useCallback(
     async (opts: {
       hints?: ("client-device" | "security-key" | "hybrid")[];
       label: string;
       kind?: PasskeyKind;
-    }) => {
-    const pending = pendingSetupRef.current;
-    if (!pending) throw new AppError("errors.noPendingSetup");
-    if (!userId) throw new AppError("errors.passkeyNeedsSignIn");
-    const webAuthnUser = resolvePasskeyIdentityForVault(
-      userId,
-      userEmail,
-      userDisplayName,
-    );
-    const { passkey, prfBytes: regPrf } = await registerVaultPasskey({
-      userId,
-      userName: webAuthnUser.name,
-      userDisplayName: webAuthnUser.displayName,
-      excludeCredentialIds: pending.passkeys.map((p) => p.id),
-      prfSaltB64: pending.prfSalt,
-      hints: opts.hints,
-      label: opts.label,
-      kind: opts.kind,
-    });
-    pending.passkeys.push(passkey);
-    let prfBytes = regPrf;
-    if (!prfBytes) {
-      // Second biometrics prompt on some platforms — keep the pending passkey
-      // until PRF succeeds so a cancel does not wipe setup progress.
-      try {
-        prfBytes = await derivePrfAfterRegistration(passkey, pending.prfSalt);
-      } catch (err) {
-        pending.passkeys.pop();
-        throw err;
-      }
-    }
-    if (prfBytes) {
-      pending.passkeyDataKeyWrap = await wrapDataKeyWithPrf(
-        prfBytes,
-        pending.dataKeyBytes,
-      );
-    } else {
-      pending.passkeys.pop();
-      throw new AppError("errors.passkeySetupPrf");
-    }
-  },
-    [userId, userEmail, userDisplayName]
+    }) =>
+      runPasskeyCeremony(async () => {
+        const pending = pendingSetupRef.current;
+        if (!pending) throw new AppError("errors.noPendingSetup");
+        if (!userId) throw new AppError("errors.passkeyNeedsSignIn");
+        const webAuthnUser = resolvePasskeyIdentityForVault(
+          userId,
+          userEmail,
+          userDisplayName,
+        );
+        const { passkey, prfBytes: regPrf } = await registerVaultPasskey({
+          userId,
+          userName: webAuthnUser.name,
+          userDisplayName: webAuthnUser.displayName,
+          excludeCredentialIds: pending.passkeys.map((p) => p.id),
+          prfSaltB64: pending.prfSalt,
+          hints: opts.hints,
+          label: opts.label,
+          kind: opts.kind,
+        });
+        pending.passkeys.push(passkey);
+        let prfBytes = regPrf;
+        if (!prfBytes) {
+          // Second biometrics prompt on some platforms — keep the pending passkey
+          // until PRF succeeds so a cancel does not wipe setup progress.
+          try {
+            prfBytes = await derivePrfAfterRegistration(passkey, pending.prfSalt);
+          } catch (err) {
+            pending.passkeys.pop();
+            throw err;
+          }
+        }
+        if (prfBytes) {
+          pending.passkeyDataKeyWrap = await wrapDataKeyWithPrf(
+            prfBytes,
+            pending.dataKeyBytes,
+          );
+        } else {
+          pending.passkeys.pop();
+          throw new AppError("errors.passkeySetupPrf");
+        }
+      }),
+    [userId, userEmail, userDisplayName, runPasskeyCeremony]
   );
 
   const completePasskeyPrf = useCallback(
-    async (credentialId: string) => {
+    async (credentialId: string) =>
+      runPasskeyCeremony(async () => {
       if (status !== "unlocked") throw new AppError("errors.locked");
-      const m = meta ?? (await readMeta());
+      const m = (await readMeta()) ?? meta;
       if (!m || !isAuthV2(m)) throw new AppError("errors.passkeyNoPasswordless");
       if (!m.prfSalt || !m.passkeyDataKeyWrap) {
         throw new AppError("errors.passkeyNoPasswordless");
@@ -921,6 +943,7 @@ export function VaultProvider({
         );
       }
 
+      if (!sessionRef.current) throw new AppError("errors.locked");
       const linked = existing.map((p) =>
         p.id === credentialId ? { ...p, prfVerified: true } : p,
       );
@@ -928,8 +951,8 @@ export function VaultProvider({
       await writeMeta(updated);
       setMeta(updated);
       await flushCloudPush();
-    },
-    [status, meta, flushCloudPush],
+      }),
+    [status, meta, flushCloudPush, runPasskeyCeremony],
   );
 
   const addPasskey = useCallback(
@@ -937,10 +960,11 @@ export function VaultProvider({
       hints?: ("client-device" | "security-key" | "hybrid")[];
       label: string;
       kind?: PasskeyKind;
-    }) => {
+    }) =>
+      runPasskeyCeremony(async () => {
       if (status !== "unlocked") throw new AppError("errors.locked");
       if (!sessionRef.current) throw new AppError("errors.locked");
-      const m = meta ?? (await readMeta());
+      const m = (await readMeta()) ?? meta;
       if (!m || !isAuthV2(m)) throw new AppError("errors.passkeyNoPasswordless");
       const existing = m.passkeys ?? [];
       // First passkey on this vault: allow even when wrap does not exist yet.
@@ -993,7 +1017,7 @@ export function VaultProvider({
           err.code === "errors.passkeyInvalidState" &&
           opts.hints?.includes("hybrid")
         ) {
-          const fresh = meta ?? (await readMeta());
+          const fresh = (await readMeta()) ?? meta;
           const orphan = fresh?.passkeys?.find(
             (p) =>
               resolvePasskeyKind(p) === "hybrid" && p.prfVerified === false,
@@ -1006,11 +1030,27 @@ export function VaultProvider({
         throw err;
       }
 
+      // The native sheet can outlive an auto-lock. Never write vault meta with
+      // a cleared session — writeMeta would persist category names unencrypted
+      // and dataKeyBytes has been zeroed in place.
+      if (!sessionRef.current) throw new AppError("errors.locked");
+
       const pendingEntry: StoredPasskey = { ...passkey, prfVerified: false };
+      // Registration can hand control to iOS for several seconds. Re-read the
+      // vault before committing so recently configured TOTP/recovery metadata
+      // can never be replaced by the pre-ceremony React snapshot.
+      const latest = (await readMeta()) ?? m;
+      if (!isAuthV2(latest)) {
+        throw new AppError("errors.passkeyNoPasswordless");
+      }
+      const latestPasskeys = latest.passkeys ?? [];
       const withPending: VaultMeta = {
-        ...m,
+        ...latest,
         prfSalt,
-        passkeys: [...existing, pendingEntry],
+        passkeys: [
+          ...latestPasskeys.filter((p) => p.id !== pendingEntry.id),
+          pendingEntry,
+        ],
         passkeyRpId: currentPasskeyRpId(),
         updatedAt: Date.now(),
       };
@@ -1029,7 +1069,7 @@ export function VaultProvider({
         );
       }
 
-      let passkeyDataKeyWrap = m.passkeyDataKeyWrap;
+      let passkeyDataKeyWrap = latest.passkeyDataKeyWrap;
       if (!passkeyDataKeyWrap) {
         if (!dataKeyBytes) {
           throw new AppError("errors.passkeyNoPasswordless");
@@ -1040,7 +1080,7 @@ export function VaultProvider({
       const unwrapped = await dataKeyFromPrfWrap(prfBytes, passkeyDataKeyWrap);
       let verified: string;
       try {
-        verified = await decryptString(unwrapped.dataKey, m.verifier);
+        verified = await decryptString(unwrapped.dataKey, latest.verifier);
       } catch {
         throw new AppError("errors.passkeyFailed");
       }
@@ -1052,6 +1092,7 @@ export function VaultProvider({
         );
       }
 
+      if (!sessionRef.current) throw new AppError("errors.locked");
       const linked = (withPending.passkeys ?? []).map((p) =>
         p.id === passkey.id ? { ...p, prfVerified: true } : p,
       );
@@ -1064,8 +1105,8 @@ export function VaultProvider({
       await writeMeta(updated);
       setMeta(updated);
       await flushCloudPush();
-    },
-    [status, meta, userId, userEmail, userDisplayName, flushCloudPush, completePasskeyPrf]
+      }),
+    [status, meta, userId, userEmail, userDisplayName, flushCloudPush, completePasskeyPrf, runPasskeyCeremony]
   );
 
   const removePasskey = useCallback(
@@ -1335,8 +1376,14 @@ export function VaultProvider({
     if (!m.passkeyDataKeyWrap) {
       throw new AppError("errors.passkeyNoPasswordless");
     }
+    // A credential left over from an interrupted add (prfVerified === false)
+    // cannot unwrap the data key — keep it out of the OS account picker.
+    const usablePasskeys = m.passkeys.filter((p) => p.prfVerified !== false);
+    if (!usablePasskeys.length) {
+      throw new AppError("errors.noPasskeyRegistered");
+    }
     const { authentication, passkey } = await authenticateVaultPasskey(
-      m.passkeys,
+      usablePasskeys,
       m.prfSalt
     );
     const prfBytes = readPrfFirst(

@@ -60,7 +60,7 @@ export function LockScreen() {
   const hasPasskeyMeta =
     meta?.authVersion === 2 &&
     !!meta.passkeyDataKeyWrap &&
-    (meta.passkeys?.length ?? 0) > 0;
+    (meta.passkeys ?? []).some((p) => p.prfVerified !== false);
   const passkeyWrongSite =
     isPasskeySupported && hasPasskeyMeta && meta
       ? !passkeyRegisteredForCurrentSite(meta)

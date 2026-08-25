@@ -84,6 +84,7 @@ function normalizeHashPath(path: string): string {
 }
 
 function AuthenticatedVaultRoutes({ hashPath }: { hashPath: string }) {
+  const { status } = useVault();
   const route = normalizeHashPath(hashPath);
 
   useEffect(() => {
@@ -99,10 +100,13 @@ function AuthenticatedVaultRoutes({ hashPath }: { hashPath: string }) {
     route === "settings/backup" ||
     route === "settings/account";
 
-  if (isSettingsRoute) {
+  if (isSettingsRoute && status === "unlocked") {
     return <SettingsPage section={settingsSectionFromPath(route)} />;
   }
 
+  // Settings depend on the in-memory vault key. If a lifecycle event locks the
+  // vault while this hash is active, render the lock/setup state instead of a
+  // misleading settings page with security methods shown as unconfigured.
   return <VaultShell />;
 }
 
