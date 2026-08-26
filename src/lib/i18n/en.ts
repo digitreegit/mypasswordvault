@@ -305,6 +305,8 @@ export const MESSAGES_EN: Record<string, string> = {
     "Passkey unlock is not available on this device. Use backup sign-in with your master password.",
   "errors.passkeyRelockRequired":
     "Lock the vault and unlock again, then add a passkey.",
+  "errors.passkeyLockedDuringSetup":
+    "Face ID finished, but the vault locked before the passkey could be linked. Unlock with your master password, then tap Finish setup on this passkey.",
   "errors.passkeyRequired": "Register a passkey before continuing.",
   "errors.passkeyRemoveLast": "Add another passkey before removing the last one.",
   "errors.passkeyNeedsSignIn": "Sign in with Google before registering a passkey.",

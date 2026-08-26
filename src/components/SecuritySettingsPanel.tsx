@@ -262,6 +262,8 @@ export function SecuritySettingsPanel() {
       if (isAppError(e) && e.code === "errors.passkeyHybridPrfPending") {
         setPasskeyError(null);
         setPasskeySuccess(t(e.code));
+      } else if (isAppError(e) && e.code === "errors.passkeyLockedDuringSetup") {
+        setPasskeyError(t(e.code));
       } else {
         setPasskeyError(formatError(e, t));
       }

@@ -105,34 +105,43 @@ export function LockScreen() {
 
   async function handlePasswordUnlock(e: React.FormEvent) {
     e.preventDefault();
-    if (needSecondFactor && !showBackupFactor) {
-      setShowSecondFactor(true);
-      return;
-    }
     setBackupError(null);
     setBusy(true);
     try {
-      if (needSecondFactor) {
+      if (needSecondFactor && showBackupFactor) {
         if (backupFactor === "recovery") {
           await unlock(pw, recoveryCode, "recovery");
         } else {
           await unlock(pw, totpCode, "totp");
         }
-      } else {
-        await unlock(pw);
-      }
-    } catch (err: unknown) {
-      // A legacy/cloud-restored vault may have a stale plaintext factor flag.
-      // The provider heals it from the encrypted TOTP secret; let the rerender
-      // reveal the required field without showing a misleading error first.
-      if (
-        !needSecondFactor &&
-        isAppError(err) &&
-        err.code === "errors.wrongTotp"
-      ) {
-        setBackupError(null);
         return;
       }
+      try {
+        await unlock(pw);
+      } catch (err: unknown) {
+        // Plaintext factor flag can be stale. If an authenticator is actually
+        // configured, reveal that field; otherwise unlock() already healed it.
+        if (
+          needSecondFactor &&
+          !showBackupFactor &&
+          isAppError(err) &&
+          err.code === "errors.wrongTotp"
+        ) {
+          setShowSecondFactor(true);
+          setBackupError(null);
+          return;
+        }
+        if (
+          !needSecondFactor &&
+          isAppError(err) &&
+          err.code === "errors.wrongTotp"
+        ) {
+          setBackupError(null);
+          return;
+        }
+        throw err;
+      }
+    } catch (err: unknown) {
       setBackupError(
         isAppError(err)
           ? t(err.code)

@@ -233,6 +233,24 @@ function clearSession(sessionRef: { current: Session | null }) {
 
 let recoveryUnlockQueue: Promise<void> = Promise.resolve();
 
+// Module-level so Face ID / WebAuthn sheets cannot lock the vault even if the
+// React tree remounts. iOS fires `beforeunload`/`pagehide` while the native
+// sheet is up; locking then wipes the in-memory data key and the add-passkey
+// flow returns to the lock screen with the credential never saved.
+let passkeyCeremonyDepth = 0;
+
+function isPasskeyCeremonyActive() {
+  return passkeyCeremonyDepth > 0;
+}
+
+function beginPasskeyCeremony() {
+  passkeyCeremonyDepth += 1;
+}
+
+function endPasskeyCeremony() {
+  passkeyCeremonyDepth = Math.max(0, passkeyCeremonyDepth - 1);
+}
+
 async function withRecoveryUnlockLock<T>(task: () => Promise<T>): Promise<T> {
   if (typeof navigator !== "undefined" && navigator.locks) {
     return navigator.locks.request("mypasswordvault-recovery-unlock", task);
@@ -300,11 +318,6 @@ export function VaultProvider({
   const localeRef = useRef<Locale>("en");
   const pushDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cloudRefreshInFlightRef = useRef(false);
-  // iOS can emit a persisted `pageshow` while returning from the native
-  // passkey sheet. Keep that round trip from being mistaken for a restored
-  // browser page, and prevent cloud reconciliation from racing the metadata
-  // update that links the new credential.
-  const passkeyCeremonyDepthRef = useRef(0);
 
   const [locale, setLocaleState] = useState<Locale>(
     () => readStoredLocale() ?? detectBrowserLocale()
@@ -549,6 +562,10 @@ export function VaultProvider({
   }, [status, meta]);
 
   const lockInternal = useCallback(() => {
+    if (isPasskeyCeremonyActive()) {
+      lastActivityRef.current = Date.now();
+      return;
+    }
     clearSession(sessionRef);
     settingsTotpPendingRef.current = null;
     setBackupTotpEnabled(false);
@@ -566,6 +583,10 @@ export function VaultProvider({
     const minutes = meta?.autoLockMinutes ?? 5;
     if (minutes <= 0) return;
     const interval = setInterval(() => {
+      if (isPasskeyCeremonyActive()) {
+        lastActivityRef.current = Date.now();
+        return;
+      }
       const idleMs = Date.now() - lastActivityRef.current;
       if (idleMs > minutes * 60_000) {
         lockInternal();
@@ -581,6 +602,7 @@ export function VaultProvider({
       if (document.hidden) lastActivityRef.current = Date.now();
     };
     const onBeforeUnload = () => {
+      if (isPasskeyCeremonyActive()) return;
       try {
         if (sessionStorage.getItem("mpw_checkout_pending") === "1") return;
       } catch {
@@ -589,7 +611,7 @@ export function VaultProvider({
       lockInternal();
     };
     const onPageShow = (e: PageTransitionEvent) => {
-      if (e.persisted && passkeyCeremonyDepthRef.current === 0) lockInternal();
+      if (e.persisted && !isPasskeyCeremonyActive()) lockInternal();
     };
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("beforeunload", onBeforeUnload);
@@ -649,6 +671,7 @@ export function VaultProvider({
   }, [userId, finalizePaidCheckout]);
 
   useLayoutEffect(() => {
+    if (isPasskeyCeremonyActive()) return;
     if (status === "unlocked" && !sessionRef.current) {
       lockInternal();
     }
@@ -756,7 +779,7 @@ export function VaultProvider({
   }, [runCloudVaultSync, userId]);
 
   const refreshCloudVault = useCallback(async () => {
-    if (passkeyCeremonyDepthRef.current > 0) return;
+    if (isPasskeyCeremonyActive()) return;
     if (cloudRefreshInFlightRef.current) return;
     cloudRefreshInFlightRef.current = true;
     try {
@@ -843,14 +866,18 @@ export function VaultProvider({
   const runPasskeyCeremony = useCallback(async <T,>(
     task: () => Promise<T>,
   ): Promise<T> => {
-    passkeyCeremonyDepthRef.current += 1;
+    beginPasskeyCeremony();
+    lastActivityRef.current = Date.now();
     try {
       return await task();
     } finally {
-      passkeyCeremonyDepthRef.current = Math.max(
-        0,
-        passkeyCeremonyDepthRef.current - 1,
-      );
+      lastActivityRef.current = Date.now();
+      endPasskeyCeremony();
+      const session = sessionRef.current;
+      if (session) {
+        setBackupTotpEnabled(session.totpSecret.length > 0);
+        setStatus((current) => (current === "locked" ? "unlocked" : current));
+      }
     }
   }, []);
 
@@ -907,10 +934,10 @@ export function VaultProvider({
   const completePasskeyPrf = useCallback(
     async (credentialId: string) =>
       runPasskeyCeremony(async () => {
-      if (status !== "unlocked") throw new AppError("errors.locked");
+      if (!sessionRef.current) throw new AppError("errors.locked");
       const m = (await readMeta()) ?? meta;
       if (!m || !isAuthV2(m)) throw new AppError("errors.passkeyNoPasswordless");
-      if (!m.prfSalt || !m.passkeyDataKeyWrap) {
+      if (!m.prfSalt) {
         throw new AppError("errors.passkeyNoPasswordless");
       }
       const existing = m.passkeys ?? [];
@@ -928,7 +955,16 @@ export function VaultProvider({
         );
       }
 
-      const { dataKey } = await dataKeyFromPrfWrap(prfBytes, m.passkeyDataKeyWrap);
+      let passkeyDataKeyWrap = m.passkeyDataKeyWrap;
+      if (!passkeyDataKeyWrap) {
+        const dataKeyBytes = sessionRef.current.dataKeyBytes;
+        if (!dataKeyBytes?.length) {
+          throw new AppError("errors.passkeyRelockRequired");
+        }
+        passkeyDataKeyWrap = await wrapDataKeyWithPrf(prfBytes, dataKeyBytes);
+      }
+
+      const { dataKey } = await dataKeyFromPrfWrap(prfBytes, passkeyDataKeyWrap);
       let verified: string;
       try {
         verified = await decryptString(dataKey, m.verifier);
@@ -944,15 +980,22 @@ export function VaultProvider({
       }
 
       if (!sessionRef.current) throw new AppError("errors.locked");
-      const linked = existing.map((p) =>
+      const latest = (await readMeta()) ?? m;
+      const latestPasskeys = latest.passkeys ?? [];
+      const linked = latestPasskeys.map((p) =>
         p.id === credentialId ? { ...p, prfVerified: true } : p,
       );
-      const updated: VaultMeta = { ...m, passkeys: linked, updatedAt: Date.now() };
+      const updated: VaultMeta = {
+        ...latest,
+        passkeyDataKeyWrap,
+        passkeys: linked,
+        updatedAt: Date.now(),
+      };
       await writeMeta(updated);
       setMeta(updated);
       await flushCloudPush();
       }),
-    [status, meta, flushCloudPush, runPasskeyCeremony],
+    [meta, flushCloudPush, runPasskeyCeremony],
   );
 
   const addPasskey = useCallback(
@@ -962,7 +1005,6 @@ export function VaultProvider({
       kind?: PasskeyKind;
     }) =>
       runPasskeyCeremony(async () => {
-      if (status !== "unlocked") throw new AppError("errors.locked");
       if (!sessionRef.current) throw new AppError("errors.locked");
       const m = (await readMeta()) ?? meta;
       if (!m || !isAuthV2(m)) throw new AppError("errors.passkeyNoPasswordless");
@@ -984,11 +1026,14 @@ export function VaultProvider({
 
       const prfSalt = m.prfSalt || newPrfSalt();
       let dataKeyBytes: Uint8Array | null = null;
+      try {
       if (!m.passkeyDataKeyWrap) {
-        dataKeyBytes = sessionRef.current.dataKeyBytes;
-        if (!dataKeyBytes?.length) {
+        const raw = sessionRef.current.dataKeyBytes;
+        if (!raw?.length) {
           throw new AppError("errors.passkeyRelockRequired");
         }
+        // Copy so a lifecycle lock cannot zero the bytes we need to wrap.
+        dataKeyBytes = raw.slice();
       }
 
       const webAuthnUser = resolvePasskeyIdentityForVault(
@@ -1012,17 +1057,14 @@ export function VaultProvider({
         passkey = registered.passkey;
         regPrf = registered.prfBytes;
       } catch (err) {
-        if (
-          isAppError(err) &&
-          err.code === "errors.passkeyInvalidState" &&
-          opts.hints?.includes("hybrid")
-        ) {
+        dataKeyBytes?.fill(0);
+        if (isAppError(err) && err.code === "errors.passkeyInvalidState") {
           const fresh = (await readMeta()) ?? meta;
-          const orphan = fresh?.passkeys?.find(
-            (p) =>
-              resolvePasskeyKind(p) === "hybrid" && p.prfVerified === false,
-          );
+          const orphan = fresh?.passkeys?.find((p) => p.prfVerified === false);
           if (orphan) {
+            if (!sessionRef.current) {
+              throw new AppError("errors.passkeyLockedDuringSetup");
+            }
             await completePasskeyPrf(orphan.id);
             return;
           }
@@ -1030,17 +1072,13 @@ export function VaultProvider({
         throw err;
       }
 
-      // The native sheet can outlive an auto-lock. Never write vault meta with
-      // a cleared session — writeMeta would persist category names unencrypted
-      // and dataKeyBytes has been zeroed in place.
-      if (!sessionRef.current) throw new AppError("errors.locked");
-
       const pendingEntry: StoredPasskey = { ...passkey, prfVerified: false };
       // Registration can hand control to iOS for several seconds. Re-read the
       // vault before committing so recently configured TOTP/recovery metadata
       // can never be replaced by the pre-ceremony React snapshot.
       const latest = (await readMeta()) ?? m;
       if (!isAuthV2(latest)) {
+        dataKeyBytes?.fill(0);
         throw new AppError("errors.passkeyNoPasswordless");
       }
       const latestPasskeys = latest.passkeys ?? [];
@@ -1055,13 +1093,19 @@ export function VaultProvider({
         updatedAt: Date.now(),
       };
       await writeMeta(withPending);
-      setMeta(withPending);
+      if (sessionRef.current) setMeta(withPending);
+
+      if (!sessionRef.current) {
+        dataKeyBytes?.fill(0);
+        throw new AppError("errors.passkeyLockedDuringSetup");
+      }
 
       let prfBytes = regPrf;
       if (!prfBytes) {
         prfBytes = await derivePrfAfterRegistration(passkey, prfSalt);
       }
       if (!prfBytes) {
+        dataKeyBytes?.fill(0);
         throw new AppError(
           opts.kind === "hybrid"
             ? "errors.passkeyHybridPrfPending"
@@ -1071,10 +1115,12 @@ export function VaultProvider({
 
       let passkeyDataKeyWrap = latest.passkeyDataKeyWrap;
       if (!passkeyDataKeyWrap) {
-        if (!dataKeyBytes) {
-          throw new AppError("errors.passkeyNoPasswordless");
+        const wrapBytes = dataKeyBytes ?? sessionRef.current.dataKeyBytes;
+        if (!wrapBytes?.length) {
+          dataKeyBytes?.fill(0);
+          throw new AppError("errors.passkeyLockedDuringSetup");
         }
-        passkeyDataKeyWrap = await wrapDataKeyWithPrf(prfBytes, dataKeyBytes);
+        passkeyDataKeyWrap = await wrapDataKeyWithPrf(prfBytes, wrapBytes);
       }
 
       const unwrapped = await dataKeyFromPrfWrap(prfBytes, passkeyDataKeyWrap);
@@ -1082,9 +1128,11 @@ export function VaultProvider({
       try {
         verified = await decryptString(unwrapped.dataKey, latest.verifier);
       } catch {
+        dataKeyBytes?.fill(0);
         throw new AppError("errors.passkeyFailed");
       }
       if (verified !== VERIFIER_PLAINTEXT) {
+        dataKeyBytes?.fill(0);
         throw new AppError(
           opts.kind === "hybrid"
             ? "errors.passkeyHybridPrfPending"
@@ -1092,7 +1140,10 @@ export function VaultProvider({
         );
       }
 
-      if (!sessionRef.current) throw new AppError("errors.locked");
+      if (!sessionRef.current) {
+        dataKeyBytes?.fill(0);
+        throw new AppError("errors.passkeyLockedDuringSetup");
+      }
       const linked = (withPending.passkeys ?? []).map((p) =>
         p.id === passkey.id ? { ...p, prfVerified: true } : p,
       );
@@ -1104,9 +1155,13 @@ export function VaultProvider({
       };
       await writeMeta(updated);
       setMeta(updated);
+      dataKeyBytes?.fill(0);
       await flushCloudPush();
+      } finally {
+        dataKeyBytes?.fill(0);
+      }
       }),
-    [status, meta, userId, userEmail, userDisplayName, flushCloudPush, completePasskeyPrf, runPasskeyCeremony]
+    [meta, userId, userEmail, userDisplayName, flushCloudPush, completePasskeyPrf, runPasskeyCeremony]
   );
 
   const removePasskey = useCallback(

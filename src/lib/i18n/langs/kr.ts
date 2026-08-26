@@ -299,6 +299,8 @@ export const MESSAGES_KR: Record<string, string> = {
     "이 기기에서는 패스키만으로 잠금 해제할 수 없습니다. 마스터 비밀번호 백업 로그인을 사용하세요.",
   "errors.passkeyRelockRequired":
     "금고를 잠근 뒤 다시 잠금 해제한 다음 패스키를 추가하세요.",
+  "errors.passkeyLockedDuringSetup":
+    "Face ID는 완료됐지만 패스키가 연결되기 전에 금고가 잠겼습니다. 마스터 비밀번호로 잠금 해제한 다음, 해당 패스키의 설정 완료를 눌러 주세요.",
   "errors.passkeyRequired": "계속하려면 패스키를 등록하세요.",
   "errors.passkeyRemoveLast": "마지막 패스키를 제거하려면 먼저 다른 패스키를 추가하세요.",
   "errors.passkeyNeedsSignIn": "패스키 등록 전에 Google로 로그인하세요.",
