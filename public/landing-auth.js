@@ -48,12 +48,6 @@
     }
   }
 
-  function placeLangInSignedInIcons() {
-    var langSlot = document.getElementById("landing-lang-root");
-    var iconsRow = root && root.querySelector(".landing-signed-in-icons");
-    if (!langSlot || !iconsRow) return;
-    iconsRow.appendChild(langSlot);
-  }
   function renderSignIn() {
     if (!root) return;
     restoreLangSlot();
@@ -121,8 +115,8 @@
       '<button type="button" role="menuitem" class="landing-user-dropdown-item landing-user-dropdown-logout" data-i18n="navLogOut"></button>' +
       "</div></div></div></div>";
 
+    restoreLangSlot();
     applyAuthI18n();
-    placeLangInSignedInIcons();
 
     var wrap = root.querySelector(".landing-user-menu");
     var btn = root.querySelector(".landing-user-menu-btn");
@@ -185,11 +179,7 @@
   window.MPV_LANDING_AUTH_INIT = init;
   window.MPV_LANDING_AUTH_REFRESH_I18N = function () {
     if (!root) root = document.getElementById("landing-auth-root");
-    if (sessionEmail) {
-      placeLangInSignedInIcons();
-      applyAuthI18n();
-      return;
-    }
+    restoreLangSlot();
     applyAuthI18n();
   };
 
