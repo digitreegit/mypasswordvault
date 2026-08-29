@@ -318,6 +318,8 @@ export function VaultProvider({
   const localeRef = useRef<Locale>("en");
   const pushDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cloudRefreshInFlightRef = useRef(false);
+  /** Serialize meta read-modify-write so category edits are not clobbered by entry saves. */
+  const metaWriteChainRef = useRef(Promise.resolve());
 
   const [locale, setLocaleState] = useState<Locale>(
     () => readStoredLocale() ?? detectBrowserLocale()
@@ -498,6 +500,20 @@ export function VaultProvider({
     },
     [decryptMetaFromStorage]
   );
+
+  const runMetaWrite = useCallback(async <T,>(fn: () => Promise<T>): Promise<T> => {
+    const previous = metaWriteChainRef.current;
+    let release!: () => void;
+    metaWriteChainRef.current = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await previous.catch(() => {});
+    try {
+      return await fn();
+    } finally {
+      release();
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -1627,12 +1643,13 @@ export function VaultProvider({
         secret
       );
       await putEntry(persisted);
-      const m = await readMeta();
-      if (m) {
+      await runMetaWrite(async () => {
+        const m = await readMeta();
+        if (!m) return;
         const nextMeta: VaultMeta = { ...m, updatedAt: Date.now() };
         await writeMeta(nextMeta);
         setMeta(nextMeta);
-      }
+      });
       setEntries((prev) => {
         const idx = prev.findIndex((e) => e.id === id);
         if (idx === -1) return [merged, ...prev];
@@ -1643,17 +1660,24 @@ export function VaultProvider({
       lastActivityRef.current = Date.now();
       scheduleCloudPush();
     },
-    [entries, scheduleCloudPush, hasUnlimitedEntries, entitlementLoaded]
+    [
+      entries,
+      scheduleCloudPush,
+      hasUnlimitedEntries,
+      entitlementLoaded,
+      runMetaWrite,
+    ]
   );
 
   const removeEntry = useCallback(async (id: string) => {
     await deleteEntry(id);
-    const m = await readMeta();
-    if (m) {
+    await runMetaWrite(async () => {
+      const m = await readMeta();
+      if (!m) return;
       const nextMeta: VaultMeta = { ...m, updatedAt: Date.now() };
       await writeMeta(nextMeta);
       setMeta(nextMeta);
-    }
+    });
     setEntries((prev) => prev.filter((e) => e.id !== id));
     lastActivityRef.current = Date.now();
     if (pushDebounceRef.current) {
@@ -1661,37 +1685,42 @@ export function VaultProvider({
       pushDebounceRef.current = null;
     }
     await flushCloudPush();
-  }, [flushCloudPush]);
+  }, [flushCloudPush, runMetaWrite]);
 
   const setCategories = useCallback(
     async (next: VaultCategory[]) => {
-      const m = await readMeta();
-      if (!m) return;
-      const updated: VaultMeta = {
-        ...m,
-        categories: next,
-        updatedAt: Date.now(),
-      };
-      await writeMeta(updated);
-      setMeta(updated);
+      await runMetaWrite(async () => {
+        const m = await readMeta();
+        if (!m) return;
+        const updated: VaultMeta = {
+          ...m,
+          categories: next,
+          updatedAt: Date.now(),
+        };
+        await writeMeta(updated);
+        setMeta(updated);
+      });
       scheduleCloudPush();
     },
-    [scheduleCloudPush]
+    [scheduleCloudPush, runMetaWrite]
   );
 
   const deleteCategory = useCallback(
     async (id: string) => {
       const session = sessionRef.current;
-      const m = await readMeta();
-      if (!m || !session) return;
-      const cats = m.categories ?? [];
-      const updated: VaultMeta = {
-        ...m,
-        categories: cats.filter((c) => c.id !== id),
-        updatedAt: Date.now(),
-      };
-      await writeMeta(updated);
-      setMeta(updated);
+      if (!session) return;
+      await runMetaWrite(async () => {
+        const m = await readMeta();
+        if (!m) return;
+        const cats = m.categories ?? [];
+        const updated: VaultMeta = {
+          ...m,
+          categories: cats.filter((c) => c.id !== id),
+          updatedAt: Date.now(),
+        };
+        await writeMeta(updated);
+        setMeta(updated);
+      });
       const raw = await listEntries();
       for (const e of raw) {
         const secret = await decryptEntry(session.key, e);
@@ -1709,7 +1738,7 @@ export function VaultProvider({
       lastActivityRef.current = Date.now();
       scheduleCloudPush();
     },
-    [loadEntries, scheduleCloudPush]
+    [loadEntries, scheduleCloudPush, runMetaWrite]
   );
 
   const exportBackup = useCallback(async () => {
@@ -1849,20 +1878,22 @@ export function VaultProvider({
         }
       }
 
-      const m = await readMeta();
-      if (!m) throw new AppError("errors.notInitialized");
-      const updated: VaultMeta = {
-        ...m,
-        categories: nextCats,
-        updatedAt: Date.now(),
-      };
-      await writeMeta(updated);
-      setMeta(updated);
+      await runMetaWrite(async () => {
+        const m = await readMeta();
+        if (!m) throw new AppError("errors.notInitialized");
+        const updated: VaultMeta = {
+          ...m,
+          categories: nextCats,
+          updatedAt: Date.now(),
+        };
+        await writeMeta(updated);
+        setMeta(updated);
+      });
       setEntries(nextEntries);
       lastActivityRef.current = Date.now();
       scheduleCloudPush();
     },
-    [entries, meta?.categories, scheduleCloudPush],
+    [entries, meta?.categories, scheduleCloudPush, runMetaWrite],
   );
 
   const atEntryLimit = useMemo(

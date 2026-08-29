@@ -99,11 +99,15 @@ function categoriesDraftDirty(
   return draftExistingIds.join("|") !== savedIds.join("|");
 }
 
+export type CategoriesDialogCloseResult = {
+  savedCategories: VaultCategory[];
+};
+
 export function CategoriesDialog({
   onClose,
   startWithNewCategory = false,
 }: {
-  onClose: () => void;
+  onClose: (result?: CategoriesDialogCloseResult) => void;
   startWithNewCategory?: boolean;
 }) {
   const { categories, setCategories, deleteCategory, t } = useVault();
@@ -314,7 +318,7 @@ export function CategoriesDialog({
         name: c.name.trim() || t("vault.newCategory"),
       }));
       await setCategories(trimmed);
-      onClose();
+      onClose({ savedCategories: trimmed });
     } finally {
       setBusy(false);
     }
@@ -339,7 +343,7 @@ export function CategoriesDialog({
               {t("vault.categoriesTitle")}
             </h1>
             <ModalCloseButton
-              onClick={onClose}
+              onClick={() => onClose()}
               ariaLabel={t("common.close")}
             />
           </div>
@@ -494,7 +498,12 @@ export function CategoriesDialog({
             {t("vault.addCategory")}
           </button>
           <div className="flex justify-end gap-2">
-            <button type="button" className="btn-ghost shrink-0" onClick={onClose} disabled={busy}>
+            <button
+              type="button"
+              className="btn-ghost shrink-0"
+              onClick={() => onClose()}
+              disabled={busy}
+            >
               {t("common.cancel")}
             </button>
             <button

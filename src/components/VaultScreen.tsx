@@ -20,7 +20,10 @@ import {
 import { useVault, type DecryptedEntry } from "../lib/vault";
 import { newId, type VaultCategory } from "../lib/storage";
 import { PasswordGenerator } from "./PasswordGenerator";
-import { CategoriesDialog } from "./CategoriesDialog";
+import {
+  CategoriesDialog,
+  type CategoriesDialogCloseResult,
+} from "./CategoriesDialog";
 import { PricingDrawer } from "./PricingDrawer";
 import { ModalCloseButton } from "./ModalCloseButton";
 import {
@@ -269,7 +272,6 @@ type TFn = (key: string, vars?: Record<string, string | number>) => string;
 
 function CategorySelect({
   value,
-  categories,
   onChange,
   onAddCategory,
   className,
@@ -279,7 +281,8 @@ function CategorySelect({
   t,
 }: {
   value: string;
-  categories: VaultCategory[];
+  /** Ignored; kept so existing call sites stay typed. Live list comes from useVault(). */
+  categories?: VaultCategory[];
   onChange: (categoryId: string) => void;
   onAddCategory: () => void;
   className?: string;
@@ -288,6 +291,9 @@ function CategorySelect({
   onOpenChange?: (open: boolean) => void;
   t: TFn;
 }) {
+  // Always read live vault state so a category added from this menu appears
+  // without closing the surrounding entry modal.
+  const { categories } = useVault();
   const [open, setOpen] = useState(false);
   const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({});
   const rootRef = useRef<HTMLDivElement>(null);
@@ -363,7 +369,7 @@ function CategorySelect({
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [open]);
+  }, [open, categories.length]);
 
   useEffect(() => {
     if (!open) return;
@@ -558,6 +564,15 @@ export function VaultScreen() {
   >(null);
   const [showCategories, setShowCategories] = useState(false);
   const [categoriesStartWithNew, setCategoriesStartWithNew] = useState(false);
+  /** Category ids present when "Add category" was opened from an entry form. */
+  const categoryIdsAtOpenRef = useRef<string[]>([]);
+  /** Entry that opened "Add category" (modal, mobile detail, or table row). */
+  const entryIdForCategoryAddRef = useRef<string | null>(null);
+  /** Apply a newly saved category to the open entry form once. */
+  const [pendingCategoryPick, setPendingCategoryPick] = useState<{
+    entryId: string;
+    categoryId: string;
+  } | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("category");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -1015,17 +1030,57 @@ export function VaultScreen() {
       pinEntryRow(mobileDetailId);
       registerCategoryMenuOpen(mobileDetailId, true);
     }
+    entryIdForCategoryAddRef.current =
+      desktopAddEntryId ??
+      mobileDetailId ??
+      categoryMenuOpenEntryIdRef.current;
+    categoryIdsAtOpenRef.current = categories.map((c) => c.id);
     setCategoriesStartWithNew(true);
     setShowCategories(true);
-  }, [mobileDetailId, cancelScheduledUnpin, pinEntryRow, registerCategoryMenuOpen]);
+  }, [
+    mobileDetailId,
+    desktopAddEntryId,
+    cancelScheduledUnpin,
+    pinEntryRow,
+    registerCategoryMenuOpen,
+    categories,
+  ]);
 
-  const closeCategoriesDialog = useCallback(() => {
-    setShowCategories(false);
-    setCategoriesStartWithNew(false);
-    if (mobileDetailId) {
-      registerCategoryMenuOpen(mobileDetailId, false);
-    }
-  }, [mobileDetailId, registerCategoryMenuOpen]);
+  const closeCategoriesDialog = useCallback(
+    (result?: CategoriesDialogCloseResult) => {
+      const wasAdding = categoriesStartWithNew;
+      const entryIdForAdd = entryIdForCategoryAddRef.current;
+      entryIdForCategoryAddRef.current = null;
+      setShowCategories(false);
+      setCategoriesStartWithNew(false);
+      if (mobileDetailId) {
+        registerCategoryMenuOpen(mobileDetailId, false);
+      }
+      if (!wasAdding || !result?.savedCategories) return;
+      const before = new Set(categoryIdsAtOpenRef.current);
+      const added = [...result.savedCategories]
+        .reverse()
+        .find((c) => !before.has(c.id));
+      const entryId =
+        desktopAddEntryId ?? mobileDetailId ?? entryIdForAdd;
+      if (!added || !entryId) return;
+      if (
+        desktopAddEntryId === entryId ||
+        mobileDetailId === entryId
+      ) {
+        setPendingCategoryPick({ entryId, categoryId: added.id });
+      } else {
+        void upsertEntry({ id: entryId, categoryId: added.id });
+      }
+    },
+    [
+      categoriesStartWithNew,
+      mobileDetailId,
+      desktopAddEntryId,
+      registerCategoryMenuOpen,
+      upsertEntry,
+    ],
+  );
 
   const openPasswordGenerator = useCallback(
     (entryId: string) => {
@@ -1471,6 +1526,12 @@ export function VaultScreen() {
             onCancelScheduledUnpinEntryRow={cancelScheduledUnpin}
             onRegisterCategoryMenuOpen={registerCategoryMenuOpen}
             onOpenCategoriesAddNew={openCategoriesAddNew}
+            pendingCategoryId={
+              pendingCategoryPick?.entryId === mobileDetailEntry.id
+                ? pendingCategoryPick.categoryId
+                : null
+            }
+            onPendingCategoryConsumed={() => setPendingCategoryPick(null)}
             isNewEntry={draftEntryIds.includes(mobileDetailEntry.id)}
             t={t}
           />
@@ -1486,6 +1547,12 @@ export function VaultScreen() {
             generatorPassword={mobileGeneratorPassword}
             onGeneratorPasswordConsumed={() => setMobileGeneratorPassword(null)}
             onOpenCategoriesAddNew={openCategoriesAddNew}
+            pendingCategoryId={
+              pendingCategoryPick?.entryId === desktopAddEntry.id
+                ? pendingCategoryPick.categoryId
+                : null
+            }
+            onPendingCategoryConsumed={() => setPendingCategoryPick(null)}
             onSave={async (draft) => {
               await upsertEntry({
                 id: draft.id,
@@ -1836,6 +1903,8 @@ function AddEntryModal({
   generatorPassword,
   onGeneratorPasswordConsumed,
   onOpenCategoriesAddNew,
+  pendingCategoryId,
+  onPendingCategoryConsumed,
   t,
 }: {
   entry: DecryptedEntry;
@@ -1848,6 +1917,8 @@ function AddEntryModal({
   generatorPassword?: string | null;
   onGeneratorPasswordConsumed?: () => void;
   onOpenCategoriesAddNew: () => void;
+  pendingCategoryId?: string | null;
+  onPendingCategoryConsumed?: () => void;
   t: TFn;
 }) {
   const [draft, setDraft] = useState(() => mobileEntryDraftFrom(entry));
@@ -1865,6 +1936,12 @@ function AddEntryModal({
     setDraft((current) => ({ ...current, password: generatorPassword }));
     onGeneratorPasswordConsumed?.();
   }, [generatorPassword, onGeneratorPasswordConsumed]);
+
+  useEffect(() => {
+    if (!pendingCategoryId) return;
+    setDraft((current) => ({ ...current, categoryId: pendingCategoryId }));
+    onPendingCategoryConsumed?.();
+  }, [pendingCategoryId, onPendingCategoryConsumed]);
 
   const isDirty = mobileEntryDraftDirty(draft, baseline);
   const patchDraft = (patch: Partial<DecryptedEntry>) => {
@@ -2176,6 +2253,8 @@ function MobileEntryDetail({
   onCancelScheduledUnpinEntryRow,
   onRegisterCategoryMenuOpen,
   onOpenCategoriesAddNew,
+  pendingCategoryId,
+  onPendingCategoryConsumed,
   isNewEntry = false,
   t,
 }: Omit<RowProps, "expanded" | "onToggleExpand" | "onChange" | "listIndex"> & {
@@ -2184,6 +2263,8 @@ function MobileEntryDetail({
   isNewEntry?: boolean;
   generatorPassword?: string | null;
   onGeneratorPasswordConsumed?: () => void;
+  pendingCategoryId?: string | null;
+  onPendingCategoryConsumed?: () => void;
 }) {
   const [savedEntry, setSavedEntry] = useState(() => mobileEntryDraftFrom(entry));
   const [draft, setDraft] = useState(() => mobileEntryDraftFrom(entry));
@@ -2217,6 +2298,12 @@ function MobileEntryDetail({
     setDraft((current) => ({ ...current, password: generatorPassword }));
     onGeneratorPasswordConsumed?.();
   }, [generatorPassword, onGeneratorPasswordConsumed]);
+
+  useEffect(() => {
+    if (!pendingCategoryId) return;
+    setDraft((current) => ({ ...current, categoryId: pendingCategoryId }));
+    onPendingCategoryConsumed?.();
+  }, [pendingCategoryId, onPendingCategoryConsumed]);
 
   const isDirty = mobileEntryDraftDirty(draft, savedEntry);
   const siteLabel = draft.site.trim() || t("vault.newEntry");
@@ -2756,39 +2843,19 @@ function Row({
         </td>
         <td className="w-[1%] whitespace-nowrap pl-2 pr-3 sm:pr-4 py-1 align-middle">
           <div className="flex w-full flex-nowrap items-center justify-end gap-2.5">
-            {!confirmDel ? (
-              <>
-                <span
-                  className="h-5 w-px bg-ink-100 shrink-0 self-center"
-                  aria-hidden
-                />
-                <button
-                  type="button"
-                  className="text-ink-400 hover:text-red-600 p-2 sm:p-1 touch-manipulation min-w-8 min-h-8 inline-flex items-center justify-center"
-                  onClick={() => setConfirmDel(true)}
-                  title={t("vault.ttDelete")}
-                >
-                  <Trash />
-                </button>
-              </>
-            ) : (
-              <div className="inline-flex shrink-0 flex-nowrap items-center gap-1 whitespace-nowrap">
-                <button
-                  type="button"
-                  className="shrink-0 whitespace-nowrap text-xs text-ink-500 hover:text-ink-700 px-1"
-                  onClick={() => setConfirmDel(false)}
-                >
-                  {t("common.cancel")}
-                </button>
-                <button
-                  type="button"
-                  className="shrink-0 whitespace-nowrap text-xs text-red-600 hover:text-red-700 px-1 font-medium"
-                  onClick={onDelete}
-                >
-                  {t("common.confirm")}
-                </button>
-              </div>
-            )}
+            <span
+              className="h-5 w-px bg-ink-100 shrink-0 self-center"
+              aria-hidden
+            />
+            <button
+              type="button"
+              className="text-ink-400 hover:text-red-600 p-2 sm:p-1 touch-manipulation min-w-8 min-h-8 inline-flex items-center justify-center"
+              onClick={() => setConfirmDel(true)}
+              title={t("vault.ttDelete")}
+              aria-label={t("vault.ttDelete")}
+            >
+              <Trash />
+            </button>
             <button
               type="button"
               className="inline-flex shrink-0 items-center justify-center leading-none text-ink-500 hover:text-ink-800 p-2 sm:p-1 rounded-md hover:bg-ink-100 touch-manipulation min-w-8 min-h-8"
@@ -2801,6 +2868,18 @@ function Row({
               {expanded ? <ChevronUp /> : <ChevronDown />}
             </button>
           </div>
+          <MobileActionModal
+            open={confirmDel}
+            title={t("vault.ttDelete")}
+            body={t("vault.mobileDeleteModalBody")}
+            cancelLabel={t("common.cancel")}
+            confirmLabel={t("vault.mobileDeleteConfirm")}
+            onCancel={() => setConfirmDel(false)}
+            onConfirm={() => {
+              setConfirmDel(false);
+              onDelete();
+            }}
+          />
         </td>
       </tr>
       {expanded ? (
