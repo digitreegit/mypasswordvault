@@ -584,7 +584,6 @@ export function SetupScreen() {
                   setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                 }
                 placeholder="000000"
-                autoFocus
               />
             </div>
             {error && <div className="text-sm text-red-600">{error}</div>}

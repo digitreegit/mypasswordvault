@@ -14,6 +14,7 @@ const SECURITY_KEYS = [
   "settings.securityTotpConfigured",
   "settings.securityTotpNotConfigured",
   "settings.securityTotpSetup",
+  "settings.securityTotpSetupHint",
   "settings.securityTotpConfirm",
   "settings.securityTotpConfirming",
   "settings.securityTotpAdded",
@@ -47,9 +48,10 @@ export const SETTINGS_SECURITY_CN: Record<string, string> = {
   "settings.securityTotpHint":
     "使用 6 位验证器代码保护主密码登录。应用不可用时，可用一次性恢复代码替代。",
   "settings.securityTotpConfigured": "验证器应用已配置",
-  "settings.securityTotpNotConfigured":
-    "未配置 — 您在设置过程中跳过了此步骤。可在此添加以用于备份解锁。",
+  "settings.securityTotpNotConfigured": "尚未配置验证器应用。",
   "settings.securityTotpSetup": "设置验证器应用",
+  "settings.securityTotpSetupHint":
+    "使用 Google Authenticator、1Password、Authy 等扫描二维码。",
   "settings.securityTotpConfirm": "确认并保存",
   "settings.securityTotpConfirming": "保存中…",
   "settings.securityTotpAdded": "验证器应用已保存。",
@@ -90,9 +92,10 @@ export const SETTINGS_SECURITY_JP: Record<string, string> = {
   "settings.securityTotpHint":
     "マスターパスワードでのログインを6桁の認証コードで保護します。アプリが使えない場合は使い捨ての復旧コードで代替できます。",
   "settings.securityTotpConfigured": "認証アプリ設定済み",
-  "settings.securityTotpNotConfigured":
-    "未設定 — セットアップ時にスキップしました。バックアップ用のロック解除としてここで追加できます。",
+  "settings.securityTotpNotConfigured": "認証アプリはまだ設定されていません。",
   "settings.securityTotpSetup": "認証アプリを設定",
+  "settings.securityTotpSetupHint":
+    "Google Authenticator、1Password、Authy などで QR コードをスキャンします。",
   "settings.securityTotpConfirm": "確認して保存",
   "settings.securityTotpConfirming": "保存中…",
   "settings.securityTotpAdded": "認証アプリを保存しました。",
@@ -134,8 +137,10 @@ export const SETTINGS_SECURITY_ID: Record<string, string> = {
     "Lindungi login kata sandi utama dengan kode autentikator 6 digit. Kode pemulihan sekali pakai dapat menggantikannya.",
   "settings.securityTotpConfigured": "Aplikasi autentikator dikonfigurasi",
   "settings.securityTotpNotConfigured":
-    "Belum dikonfigurasi — Anda melewatinya saat penyiapan. Tambahkan di sini untuk buka kunci cadangan.",
+    "Belum ada autentikator yang dikonfigurasi.",
   "settings.securityTotpSetup": "Siapkan aplikasi autentikator",
+  "settings.securityTotpSetupHint":
+    "Pindai kode QR dengan Google Authenticator, 1Password, Authy, atau sejenisnya.",
   "settings.securityTotpConfirm": "Konfirmasi dan simpan",
   "settings.securityTotpConfirming": "Menyimpan…",
   "settings.securityTotpAdded": "Aplikasi autentikator disimpan.",
@@ -177,8 +182,10 @@ export const SETTINGS_SECURITY_ES: Record<string, string> = {
     "Protege el inicio con contraseña maestra mediante un código de 6 dígitos. Los códigos de recuperación pueden sustituirlo.",
   "settings.securityTotpConfigured": "App autenticadora configurada",
   "settings.securityTotpNotConfigured":
-    "Sin configurar — lo omitiste durante la configuración. Añádelo aquí para desbloqueo de respaldo.",
+    "Aún no hay autenticador configurado.",
   "settings.securityTotpSetup": "Configurar app autenticadora",
+  "settings.securityTotpSetupHint":
+    "Escanea un código QR con Google Authenticator, 1Password, Authy o similar.",
   "settings.securityTotpConfirm": "Confirmar y guardar",
   "settings.securityTotpConfirming": "Guardando…",
   "settings.securityTotpAdded": "App autenticadora guardada.",
@@ -220,8 +227,10 @@ export const SETTINGS_SECURITY_DE: Record<string, string> = {
     "Schützt die Masterpasswort-Anmeldung mit einem 6-stelligen Code. Einmalige Wiederherstellungscodes können ihn ersetzen.",
   "settings.securityTotpConfigured": "Authentifikator-App eingerichtet",
   "settings.securityTotpNotConfigured":
-    "Nicht eingerichtet — beim Setup übersprungen. Hier für Backup-Entsperrung hinzufügen.",
+    "Noch kein Authentifikator eingerichtet.",
   "settings.securityTotpSetup": "Authentifikator-App einrichten",
+  "settings.securityTotpSetupHint":
+    "QR-Code mit Google Authenticator, 1Password, Authy oder ähnlich scannen.",
   "settings.securityTotpConfirm": "Bestätigen und speichern",
   "settings.securityTotpConfirming": "Speichern…",
   "settings.securityTotpAdded": "Authentifikator-App gespeichert.",
@@ -263,8 +272,10 @@ export const SETTINGS_SECURITY_FR: Record<string, string> = {
     "Protège la connexion par mot de passe maître avec un code à 6 chiffres. Les codes de récupération peuvent le remplacer.",
   "settings.securityTotpConfigured": "Application d’authentification configurée",
   "settings.securityTotpNotConfigured":
-    "Non configurée — vous l’avez ignorée lors de la configuration. Ajoutez-la ici pour un déverrouillage de secours.",
+    "Aucune application d’authentification configurée pour l’instant.",
   "settings.securityTotpSetup": "Configurer l’application d’authentification",
+  "settings.securityTotpSetupHint":
+    "Scannez un QR code avec Google Authenticator, 1Password, Authy ou similaire.",
   "settings.securityTotpConfirm": "Confirmer et enregistrer",
   "settings.securityTotpConfirming": "Enregistrement…",
   "settings.securityTotpAdded": "Application d’authentification enregistrée.",
@@ -306,8 +317,10 @@ export const SETTINGS_SECURITY_IT: Record<string, string> = {
     "Protegge l’accesso con password principale tramite un codice a 6 cifre. I codici di recupero possono sostituirlo.",
   "settings.securityTotpConfigured": "App autenticatore configurata",
   "settings.securityTotpNotConfigured":
-    "Non configurata — l’hai saltata durante la configurazione. Aggiungila qui per lo sblocco di backup.",
+    "Nessun autenticatore configurato al momento.",
   "settings.securityTotpSetup": "Configura app autenticatore",
+  "settings.securityTotpSetupHint":
+    "Scansiona un codice QR con Google Authenticator, 1Password, Authy o simili.",
   "settings.securityTotpConfirm": "Conferma e salva",
   "settings.securityTotpConfirming": "Salvataggio…",
   "settings.securityTotpAdded": "App autenticatore salvata.",

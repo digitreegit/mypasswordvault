@@ -22,7 +22,6 @@ import {
   TOTP_BACKUP_ACCOUNT,
 } from "../lib/totp";
 import { downloadTextFile } from "../lib/downloadTextFile";
-import { isNativeApp } from "../lib/platform";
 import { useVault } from "../lib/vault";
 import { Check, Copy, Download } from "./Icons";
 
@@ -608,22 +607,19 @@ export function SecuritySettingsPanel() {
             </div>
           </div>
         ) : (
-          <>
-            {isNativeApp() ? (
-              <p className="security-totp-skipped-banner text-sm leading-snug">
-                {t("settings.securityTotpNotConfigured")}
-              </p>
-            ) : (
-              <p className="settings-card-hint text-sm text-orange-700 leading-snug">
-                {t("settings.securityTotpNotConfigured")}
-              </p>
-            )}
-            <SecurityCtaRow
-              label={t("settings.securityTotpSetup")}
-              disabled={totpBusy}
-              onClick={() => void startTotpEnrollment()}
-            />
-          </>
+          <ul className="space-y-2 list-none p-0 m-0">
+            <li className="rounded-lg border border-dashed border-ink-200 bg-ink-50/60 px-4 py-3 text-sm text-ink-600">
+              {t("settings.securityTotpNotConfigured")}
+            </li>
+            <li className="list-none">
+              <PasskeyAddOptionBox
+                title={t("settings.securityTotpSetup")}
+                subtitle={t("settings.securityTotpSetupHint")}
+                busy={totpBusy}
+                onClick={() => void startTotpEnrollment()}
+              />
+            </li>
+          </ul>
         )}
         {totpError ? <p className="text-sm text-red-600">{totpError}</p> : null}
         {totpSuccess ? (

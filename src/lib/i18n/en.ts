@@ -366,8 +366,10 @@ export const MESSAGES_EN: Record<string, string> = {
     "Protect master-password sign-in with a 6-digit authenticator code. One-time recovery codes replace it if the app is unavailable.",
   "settings.securityTotpConfigured": "Authenticator app configured",
   "settings.securityTotpNotConfigured":
-    "Not configured - you skipped this during setup. Add it here for backup unlock.",
+    "No authenticator configured yet.",
   "settings.securityTotpSetup": "Set up authenticator app",
+  "settings.securityTotpSetupHint":
+    "Scan a QR code with Google Authenticator, 1Password, Authy, or similar.",
   "settings.securityTotpConfirm": "Confirm and save",
   "settings.securityTotpConfirming": "Saving…",
   "settings.securityTotpAdded": "Authenticator app saved.",

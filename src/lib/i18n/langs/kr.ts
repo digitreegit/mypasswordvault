@@ -358,9 +358,10 @@ export const MESSAGES_KR: Record<string, string> = {
   "settings.securityTotpHint":
     "마스터 비밀번호 로그인에 6자리 인증 코드를 추가합니다. 앱을 사용할 수 없으면 일회용 복구 코드가 이를 대신합니다.",
   "settings.securityTotpConfigured": "인증 앱 설정됨",
-  "settings.securityTotpNotConfigured":
-    "설정되지 않음 - 초기 설정에서 건너뛰었습니다. 여기서 백업 잠금 해제용으로 추가할 수 있습니다.",
+  "settings.securityTotpNotConfigured": "아직 인증 앱이 설정되지 않았습니다.",
   "settings.securityTotpSetup": "인증 앱 설정",
+  "settings.securityTotpSetupHint":
+    "Google Authenticator, 1Password, Authy 등으로 QR 코드를 스캔하세요.",
   "settings.securityTotpConfirm": "확인 후 저장",
   "settings.securityTotpConfirming": "저장 중…",
   "settings.securityTotpAdded": "인증 앱이 저장되었습니다.",

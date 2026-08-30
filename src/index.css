@@ -2255,17 +2255,6 @@ html.native-app .settings-native-chrome .settings-mobile-tablist-wrap {
     @apply ui-icon shrink-0 mt-0.5;
   }
 
-  html.native-app .security-totp-skipped-banner {
-    margin: 0;
-    padding: 0.75rem 1rem;
-    border-radius: 0.625rem;
-    background-color: #fef08a;
-    border: 1px solid #fde047;
-    color: #111827;
-    font-size: 0.875rem;
-    line-height: 1.43;
-  }
-
   .vault-entry-limit-banner {
     width: 100%;
     background-color: #fef08a;
