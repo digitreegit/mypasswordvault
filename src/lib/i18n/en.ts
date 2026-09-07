@@ -1,5 +1,7 @@
 /** Base strings (English). Other locales spread this and override. */
 export const MESSAGES_EN: Record<string, string> = {
+  "errors.accountVaultUnavailable": "Could not safely load this account’s vault. Check your connection and try again.",
+  "app.retry": "Try again",
   "legal.privacyPolicy": "Privacy Policy",
   "legal.termsOfUse": "Terms of Use",
 

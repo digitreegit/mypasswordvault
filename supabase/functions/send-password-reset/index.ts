@@ -70,25 +70,38 @@ Deno.serve(async (req) => {
 
   let body: { email?: unknown; redirectTo?: unknown };
   try {
-    body = await req.json();
+    body = (await req.json()) ?? {};
   } catch {
     return json({ error: "invalid_json" }, 400);
   }
 
   const email = typeof body.email === "string" ? body.email.trim() : "";
-  const redirectTo =
-    typeof body.redirectTo === "string" &&
-    (body.redirectTo.startsWith("http://") || body.redirectTo.startsWith("https://"))
-      ? body.redirectTo
-      : undefined;
+  // Never let a caller choose an arbitrary destination for a recovery token.
+  const fallback = Deno.env.get("PUBLIC_APP_URL")?.trim() || "https://mypasswordvault.app/app/";
+  let redirectTo = fallback;
+  if (typeof body.redirectTo === "string") {
+    try {
+      const target = new URL(body.redirectTo);
+      const allowed = new URL(fallback);
+      if (target.origin === allowed.origin && target.pathname.replace(/\/$/, "") === allowed.pathname.replace(/\/$/, "")) {
+        redirectTo = `${target.origin}${target.pathname}`;
+      }
+    } catch { /* use trusted fallback */ }
+  }
 
-  if (!email || !email.includes("@")) {
+  if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return json({ ok: true });
   }
 
   const admin = createClient(supabaseUrl, adminKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(email.toLowerCase()));
+  const emailHash = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
+  const { data: claimed, error: throttleError } = await admin.rpc("claim_password_reset", { p_email_hash: emailHash });
+  if (throttleError) return json({ error: "temporarily_unavailable" }, 503);
+  if (!claimed) return json({ ok: true });
 
   const { data, error: genErr } = await admin.auth.admin.generateLink({
     type: "recovery",

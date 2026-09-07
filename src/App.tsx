@@ -60,11 +60,16 @@ function HtmlLang() {
 }
 
 function Router() {
-  const { status, t } = useVault();
+  const { status, t, initializationError } = useVault();
   if (status === "loading") {
     return (
       <div className={nativeScreenRootClass("items-center justify-center text-ink-500 px-4")}>
-        {t("app.loading")}
+        {initializationError ? (
+          <div role="alert" className="text-center space-y-4">
+            <p>{t("errors.accountVaultUnavailable")}</p>
+            <button type="button" onClick={() => window.location.reload()}>{t("app.retry")}</button>
+          </div>
+        ) : t("app.loading")}
       </div>
     );
   }
@@ -157,6 +162,7 @@ function AuthenticatedApp() {
 
   return (
     <VaultProvider
+      key={session.user.id}
       userId={session.user.id}
       userEmail={session.user.email}
       userDisplayName={passkeyDisplayName}

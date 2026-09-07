@@ -49,6 +49,9 @@ export async function deriveKey(
   salt: Uint8Array,
   iterations: number = DEFAULT_PBKDF2_ITERATIONS
 ): Promise<CryptoKey> {
+  if (!Number.isSafeInteger(iterations) || iterations > 10_000_000) {
+    throw new Error("Invalid PBKDF2 iteration count");
+  }
   const rounds =
     Number.isFinite(iterations) && iterations >= LEGACY_PBKDF2_ITERATIONS
       ? Math.floor(iterations)

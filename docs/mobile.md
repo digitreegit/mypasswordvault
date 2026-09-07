@@ -64,11 +64,14 @@ Secrets (production):
 | Secret | Purpose |
 |--------|---------|
 | `APPLE_BUNDLE_ID` | e.g. `com.skyface.mypasswordvault` |
-| `APPLE_ISSUER_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` | App Store Server API |
+| `APPLE_ISSUER_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` | Required App Store Server API credentials, including sandbox verification |
+| `STORE_PRO_PRODUCT_ID` | Optional server-side SKU override; defaults to the SKU above |
 | `GOOGLE_PLAY_PACKAGE_NAME` | Same as applicationId |
 | `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | Play Developer API service account |
 
-**Dev only** (never in production): `STORE_VERIFY_DEV_BYPASS=1` — client sends `verification_data: "dev_ok"` from `devGrantStoreLicense()` when the native bridge is missing.
+**Dev only** (never in production): `STORE_VERIFY_DEV_BYPASS=1` **and** `DENO_ENV=development` — client sends `verification_data: "dev_ok"` from `devGrantStoreLicense()` when the native bridge is missing.
+
+Client-supplied JWS payloads are only transaction lookup hints. Apple Server API lookup is mandatory; unsigned Sandbox/Xcode payloads and missing API credentials fail closed. Test real sandbox purchases before releasing the updated function.
 
 ### Native bridge
 

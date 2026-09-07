@@ -8,10 +8,12 @@ import { completeOAuthFromUrl } from "./supabaseAuthRedirect";
 let listenerRegistered = false;
 
 function isAuthCallbackUrl(url: string): boolean {
-  return (
-    url.startsWith(NATIVE_AUTH_REDIRECT) ||
-    url.includes("://auth/callback")
-  );
+  try {
+    const actual = new URL(url);
+    const expected = new URL(NATIVE_AUTH_REDIRECT);
+    return actual.protocol === expected.protocol && actual.host === expected.host &&
+      actual.pathname === expected.pathname && !actual.username && !actual.password;
+  } catch { return false; }
 }
 
 async function onAuthCallback(url: string): Promise<void> {

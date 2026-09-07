@@ -4,6 +4,7 @@
  *   (or SUPABASE_SECRET_KEYS JSON with service_role).
  */
 import { createClient } from "npm:@supabase/supabase-js@2.49.8";
+import { checkoutPaymentIsActive } from "../_shared/checkoutPayment.ts";
 import Stripe from "npm:stripe@17.4.0";
 import { purchaseCountryFromCheckoutSession } from "../_shared/purchaseMetadata.ts";
 
@@ -57,7 +58,7 @@ Deno.serve(async (req) => {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(body, sig, whSecret);
+    event = await stripe.webhooks.constructEventAsync(body, sig, whSecret);
   } catch (e) {
     console.error("stripe signature verify failed", e);
     return new Response("bad signature", { status: 400 });
@@ -77,6 +78,13 @@ Deno.serve(async (req) => {
     } else if (!userId) {
       console.error("checkout.session.completed: no user id", sess.id);
     } else {
+      try {
+        if (!await checkoutPaymentIsActive(stripe, sess)) {
+          return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
+        }
+      } catch {
+        return new Response("payment lookup failed", { status: 502 });
+      }
       const admin = createClient(supabaseUrl, serviceKey);
       let accountEmail: string | null =
         sess.customer_details?.email?.trim() || null;
@@ -139,6 +147,7 @@ Deno.serve(async (req) => {
           .eq("stripe_checkout_session_id", sid);
         if (error) {
           console.error("charge.refunded: entitlements update", error);
+          return new Response("db error", { status: 500 });
         }
       }
     }

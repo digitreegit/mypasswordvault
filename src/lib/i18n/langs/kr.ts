@@ -2,6 +2,8 @@ import { MESSAGES_EN as en } from "../en";
 
 export const MESSAGES_KR: Record<string, string> = {
   ...en,
+  "errors.accountVaultUnavailable": "이 계정의 금고를 안전하게 불러오지 못했습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.",
+  "app.retry": "다시 시도",
   "legal.privacyPolicy": "개인정보 처리방침",
   "legal.termsOfUse": "이용약관",
 

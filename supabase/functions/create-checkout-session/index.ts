@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
   let uiMode: "embedded" | "hosted" = "embedded";
   let returnBaseUrl: string | undefined;
   try {
-    const body = await req.json();
+    const body = (await req.json()) ?? {};
     if (body?.ui_mode === "hosted") uiMode = "hosted";
     if (typeof body?.return_base_url === "string") {
       returnBaseUrl = body.return_base_url;

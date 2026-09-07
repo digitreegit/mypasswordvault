@@ -3,6 +3,7 @@
  * (does not rely on webhook timing). JWT must match checkout metadata user id.
  */
 import { createClient } from "npm:@supabase/supabase-js@2.49.8";
+import { checkoutPaymentIsActive } from "../_shared/checkoutPayment.ts";
 import Stripe from "npm:stripe@17.4.0";
 import { purchaseCountryFromCheckoutSession } from "../_shared/purchaseMetadata.ts";
 
@@ -82,7 +83,7 @@ Deno.serve(async (req) => {
   } catch {
     return json({ error: "invalid_json" }, 400);
   }
-  const sessionId = typeof body.session_id === "string" ? body.session_id.trim() : "";
+  const sessionId = typeof body?.session_id === "string" ? body.session_id.trim() : "";
   if (!sessionId.startsWith("cs_")) {
     return json({ error: "invalid_session_id" }, 400);
   }
@@ -110,6 +111,13 @@ Deno.serve(async (req) => {
       sessionId,
     });
     return json({ error: "forbidden" }, 403);
+  }
+
+  // Checkout payment_status remains paid after a refund. Check the actual charge.
+  try {
+    if (!await checkoutPaymentIsActive(stripe, sess)) return json({ licensed: false });
+  } catch {
+    return json({ error: "stripe_error" }, 502);
   }
 
   const admin = createClient(supabaseUrl, serviceKey);

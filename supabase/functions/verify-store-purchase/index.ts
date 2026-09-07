@@ -88,18 +88,24 @@ Deno.serve(async (req) => {
     return json({ error: "invalid_json" }, 400);
   }
 
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return json({ error: "invalid_body" }, 400);
+  }
   const platform = body.platform;
   if (platform !== "ios" && platform !== "android") {
     return json({ error: "invalid_platform" }, 400);
   }
 
-  const productId = body.product_id?.trim();
-  const verificationData = body.verification_data?.trim();
-  const transactionIdHint = body.transaction_id?.trim();
+  const productId = typeof body.product_id === "string" ? body.product_id.trim() : "";
+  const verificationData = typeof body.verification_data === "string" ? body.verification_data.trim() : "";
+  const transactionIdHint = typeof body.transaction_id === "string" ? body.transaction_id.trim() : "";
+  const allowedProductId = Deno.env.get("STORE_PRO_PRODUCT_ID")?.trim() ||
+    "com.skyface.mypasswordvault.pro_lifetime";
+  if (productId !== allowedProductId) return json({ error: "invalid_product_id" }, 400);
 
   const devBypass =
     Deno.env.get("STORE_VERIFY_DEV_BYPASS") === "1" &&
-    Deno.env.get("DENO_ENV") !== "production";
+    Deno.env.get("DENO_ENV") === "development";
 
   let verifiedTransactionId = transactionIdHint ?? "";
   let amountCents: number | null = null;
@@ -130,13 +136,15 @@ Deno.serve(async (req) => {
   }
 
   const admin = createClient(supabaseUrl, serviceKey);
-  const { data: existing } = await admin
+  const { data: existing, error: lookupError } = await admin
     .from("user_entitlements")
     .select("user_id, licensed")
     .eq("store_transaction_id", verifiedTransactionId)
     .maybeSingle();
 
-  if (existing?.licensed && existing.user_id !== user.id) {
+  if (lookupError) return json({ error: "db_error" }, 500);
+
+  if (existing && existing.user_id !== user.id) {
     return json({ error: "transaction_owned_by_other_user" }, 409);
   }
 
@@ -162,7 +170,7 @@ Deno.serve(async (req) => {
   if (grantError) {
     console.error("verify-store-purchase grant failed", grantError);
     return json(
-      { error: "db_error", detail: grantError.message },
+      { error: "db_error" },
       500,
     );
   }

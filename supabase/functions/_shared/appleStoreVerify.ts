@@ -38,8 +38,8 @@ function transactionIdFromVerificationData(
   if (verificationData.includes(".")) {
     const payload = decodeJwsPayload(verificationData);
     const transactionId =
-      payload?.transactionId?.trim() ||
-      payload?.originalTransactionId?.trim() ||
+      (typeof payload?.transactionId === "string" ? payload.transactionId.trim() : "") ||
+      (typeof payload?.originalTransactionId === "string" ? payload.originalTransactionId.trim() : "") ||
       "";
     return { transactionId, payload };
   }
@@ -47,7 +47,7 @@ function transactionIdFromVerificationData(
 }
 
 function isSandboxEnvironment(payload: AppleTransactionPayload | null): boolean {
-  const env = payload?.environment?.toLowerCase();
+  const env = typeof payload?.environment === "string" ? payload.environment.toLowerCase() : "";
   return env === "sandbox" || env === "xcode";
 }
 
@@ -56,11 +56,11 @@ function validatePayloadFields(
   expectedBundleId: string,
   expectedProductId: string,
 ): string | null {
-  if (payload.revocationDate) return "transaction_revoked";
-  if (payload.bundleId && payload.bundleId !== expectedBundleId) {
+  if (payload.revocationDate != null) return "transaction_revoked";
+  if (payload.bundleId !== expectedBundleId) {
     return "bundle_mismatch";
   }
-  if (expectedProductId && payload.productId !== expectedProductId) {
+  if (!expectedProductId || payload.productId !== expectedProductId) {
     return "product_mismatch";
   }
   return null;
@@ -157,20 +157,9 @@ export async function verifyApplePurchase(
   }
 
   const txFallback = transactionId ||
-    payload?.transactionId?.trim() ||
-    payload?.originalTransactionId?.trim() ||
+    (typeof payload?.transactionId === "string" ? payload.transactionId.trim() : "") ||
+    (typeof payload?.originalTransactionId === "string" ? payload.originalTransactionId.trim() : "") ||
     "";
-
-  // StoreKit JWS from device — accept Sandbox / Xcode without App Store Server API keys.
-  if (payload && isSandboxEnvironment(payload)) {
-    const trusted = tryTrustStoreKitJws(
-      payload,
-      bundleId,
-      expectedProductId,
-      txFallback,
-    );
-    if (trusted) return trusted;
-  }
 
   const hasApiCredentials = Boolean(
     issuerId && keyId && privateKey && bundleId,
@@ -202,17 +191,6 @@ export async function verifyApplePurchase(
       );
       if (trusted) return trusted;
     }
-  }
-
-  // No Apple API keys: still trust StoreKit JWS when product/bundle match.
-  if (!hasApiCredentials && payload) {
-    const trusted = tryTrustStoreKitJws(
-      payload,
-      bundleId,
-      expectedProductId,
-      txFallback,
-    );
-    if (trusted?.ok) return trusted;
   }
 
   if (!hasApiCredentials) {

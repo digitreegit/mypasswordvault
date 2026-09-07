@@ -144,8 +144,8 @@ export async function deleteEntry(id: string): Promise<void> {
 
 export async function wipeAll(): Promise<void> {
   const d = await db();
-  await d.clear(STORE_META);
-  await d.clear(STORE_ENTRIES);
+  const tx = d.transaction([STORE_META, STORE_ENTRIES], "readwrite");
+  await Promise.all([tx.objectStore(STORE_META).clear(), tx.objectStore(STORE_ENTRIES).clear(), tx.done]);
 }
 
 export function newId(): string {
@@ -153,4 +153,30 @@ export function newId(): string {
   const buf = new Uint8Array(16);
   crypto.getRandomValues(buf);
   return Array.from(buf, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** Replace a snapshot atomically: a failed write must leave the previous vault intact. */
+export async function replaceVaultSnapshot(meta: VaultMeta, entries: VaultEntry[]): Promise<void> {
+  const d = await db();
+  const tx = d.transaction([STORE_META, STORE_ENTRIES], "readwrite");
+  const writes: Promise<unknown>[] = [];
+  try {
+    writes.push(tx.objectStore(STORE_META).clear(), tx.objectStore(STORE_ENTRIES).clear());
+    writes.push(tx.objectStore(STORE_META).put(meta));
+    for (const entry of entries) writes.push(tx.objectStore(STORE_ENTRIES).put(entry));
+    await Promise.all([...writes, tx.done]);
+  } catch (error) {
+    try { tx.abort(); } catch { /* already aborted */ }
+    await Promise.allSettled([...writes, tx.done]);
+    throw error;
+  }
+}
+
+/** Read key metadata and ciphertext rows from the same IndexedDB snapshot. */
+export async function readVaultSnapshot(): Promise<{ meta: VaultMeta | undefined; entries: VaultEntry[] }> {
+  const tx = (await db()).transaction([STORE_META, STORE_ENTRIES], "readonly");
+  const [meta, entries] = await Promise.all([
+    tx.objectStore(STORE_META).get("vault"), tx.objectStore(STORE_ENTRIES).getAll(), tx.done,
+  ]);
+  return { meta, entries };
 }

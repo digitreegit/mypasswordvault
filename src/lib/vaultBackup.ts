@@ -32,12 +32,41 @@ export function parseVaultBackup(jsonText: string): VaultBackupPayload {
   if (meta.id !== "vault") throw new AppError("errors.invalidBackup");
   if (typeof meta.salt !== "string" || typeof meta.verifier !== "string")
     throw new AppError("errors.invalidBackup");
+  const validTime = (v: unknown) => typeof v === "number" && Number.isSafeInteger(v) && v >= 0;
+  const validBlob = (v: unknown, minBytes = 28) => {
+    if (typeof v !== "string" || !/^[A-Za-z0-9+/]+={0,2}$/.test(v)) return false;
+    try { return atob(v).length >= minBytes; } catch { return false; }
+  };
+  if (!validBlob(meta.salt, 32) || atob(meta.salt).length !== 32 ||
+      !validBlob(meta.verifier) || !validBlob(meta.totpSecret) ||
+      !validTime(meta.createdAt) || !validTime(meta.updatedAt) ||
+      !Number.isFinite(meta.autoLockMinutes) || meta.autoLockMinutes < 0 ||
+      (meta.pbkdf2Iterations !== undefined &&
+        (!Number.isSafeInteger(meta.pbkdf2Iterations) || meta.pbkdf2Iterations < 310_000 || meta.pbkdf2Iterations > 10_000_000)) ||
+      (meta.authVersion !== undefined && meta.authVersion !== 2) ||
+      (meta.authVersion === 2 && !validBlob(meta.passwordWrap)) ||
+      (meta.categoriesEnc !== undefined && !validBlob(meta.categoriesEnc)) ||
+      (meta.passkeyDataKeyWrap !== undefined && !validBlob(meta.passkeyDataKeyWrap)) ||
+      (meta.cloudUserId !== undefined && typeof meta.cloudUserId !== "string") ||
+      (meta.categories !== undefined && (!Array.isArray(meta.categories) ||
+        !meta.categories.every(c => isRecord(c) && typeof c.id === "string" && typeof c.name === "string"))) ||
+      (meta.passkeys !== undefined && (!Array.isArray(meta.passkeys) || !meta.passkeys.every(p =>
+        isRecord(p) && typeof p.id === "string" && typeof p.publicKey === "string" &&
+        typeof p.algorithm === "string" && validTime(p.counter) && validTime(p.createdAt) &&
+        Array.isArray(p.transports) && p.transports.every(t => typeof t === "string")))) ||
+      (meta.recoveryCodeHashes !== undefined && (!Array.isArray(meta.recoveryCodeHashes) ||
+        !meta.recoveryCodeHashes.every(h => typeof h === "string")))) {
+    throw new AppError("errors.invalidBackup");
+  }
   if (!Array.isArray(raw.entries)) throw new AppError("errors.invalidBackup");
   const entries = raw.entries as unknown as VaultEntry[];
+  const ids = new Set<string>();
   for (const e of entries) {
-    if (!isRecord(e) || typeof e.id !== "string") {
+    if (!isRecord(e) || typeof e.id !== "string" || !e.id || ids.has(e.id) || !validTime(e.updatedAt) ||
+        (e.enc !== undefined ? !validBlob(e.enc) : !validBlob(e.passwordEnc))) {
       throw new AppError("errors.invalidBackup");
     }
+    ids.add(e.id);
   }
   return {
     format: VAULT_BACKUP_FORMAT,

@@ -9,8 +9,9 @@
 // encrypted (`passwordEnc`). `decryptEntry` transparently reads both formats so
 // older snapshots keep working until they are migrated to the encrypted form.
 
+import { AppError } from "./errors";
 import { decryptString, encryptString } from "./crypto";
-import type { VaultCategory, VaultEntry } from "./storage";
+import type { VaultCategory, VaultEntry, VaultMeta } from "./storage";
 
 export interface EntrySecret {
   categoryId: string;
@@ -22,22 +23,12 @@ export interface EntrySecret {
   memo: string;
 }
 
-const EMPTY_SECRET: EntrySecret = {
-  categoryId: "",
-  site: "",
-  url: "",
-  username: "",
-  password: "",
-  notes: "",
-  memo: "",
-};
-
 function asString(v: unknown): string {
   return typeof v === "string" ? v : "";
 }
 
 function normalizeSecret(raw: unknown): EntrySecret {
-  if (raw === null || typeof raw !== "object") return { ...EMPTY_SECRET };
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) throw new AppError("errors.invalidBackup");
   const r = raw as Record<string, unknown>;
   return {
     categoryId: asString(r.categoryId),
@@ -83,7 +74,7 @@ export async function decryptEntry(
       const json = await decryptString(key, e.enc as string);
       return normalizeSecret(JSON.parse(json));
     } catch {
-      return { ...EMPTY_SECRET };
+      throw new AppError("errors.invalidBackup");
     }
   }
   let password = "";
@@ -91,7 +82,7 @@ export async function decryptEntry(
     try {
       password = await decryptString(key, e.passwordEnc);
     } catch {
-      password = "";
+      throw new AppError("errors.invalidBackup");
     }
   }
   return {
@@ -119,11 +110,23 @@ export async function decryptCategories(
 ): Promise<VaultCategory[]> {
   try {
     const arr = JSON.parse(await decryptString(key, enc));
-    if (!Array.isArray(arr)) return [];
+    if (!Array.isArray(arr)) throw new AppError("errors.invalidBackup");
     return arr
       .filter((c) => c && typeof c.id === "string")
       .map((c) => ({ id: c.id as string, name: asString(c.name) }));
   } catch {
-    return [];
+    throw new AppError("errors.invalidBackup");
   }
+}
+
+/** A locked read may carry placeholder categories; existing ciphertext is authoritative. */
+export async function encryptMetaCategories(meta: VaultMeta, key?: CryptoKey): Promise<VaultMeta> {
+  if (typeof meta.categoriesEnc === "string") {
+    const { categories: _drop, ...rest } = meta;
+    return rest;
+  }
+  if (!key) return meta;
+  const categoriesEnc = await encryptCategories(key, meta.categories ?? []);
+  const { categories: _drop, ...rest } = meta;
+  return { ...rest, categoriesEnc };
 }

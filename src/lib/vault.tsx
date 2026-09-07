@@ -38,11 +38,11 @@ import {
   buildEncryptedEntryRow,
   decryptCategories,
   decryptEntry,
-  encryptCategories,
+  encryptMetaCategories,
   isEncryptedEntry,
   type EntrySecret,
 } from "./entryCrypto";
-import { stampVaultMetaForUser } from "./vaultOwner";
+import { stampVaultMetaForUser, resolveVaultOwner } from "./vaultOwner";
 import { resolvePasskeyKind } from "./passkeyMethods";
 import {
   generateRecoveryCodes,
@@ -63,6 +63,8 @@ import {
   type PasskeyKind,
   type VaultMeta,
   wipeAll,
+  replaceVaultSnapshot,
+  readVaultSnapshot,
 } from "./storage";
 import { generateTotpSecretBase32, verifyTotp } from "./totp";
 import { AppError, isAppError } from "./errors";
@@ -123,6 +125,7 @@ export interface DecryptedEntry {
 }
 
 interface VaultContextValue {
+  initializationError: boolean;
   status: VaultStatus;
   meta: VaultMeta | null;
   entries: DecryptedEntry[];
@@ -293,11 +296,13 @@ export function VaultProvider({
   userDisplayName?: string | null;
   children: React.ReactNode;
 }) {
+  const [initializationError, setInitializationError] = useState(false);
   const [status, setStatus] = useState<VaultStatus>("loading");
   const [pendingSetupActive, setPendingSetupActive] = useState(false);
   const [meta, setMeta] = useState<VaultMeta | null>(null);
   const [entries, setEntries] = useState<DecryptedEntry[]>([]);
   const sessionRef = useRef<Session | null>(null);
+  const mountedRef = useRef(true);
   const settingsTotpPendingRef = useRef<string | null>(null);
   // During setup we may have a derived key but no committed meta yet.
   const pendingSetupRef = useRef<{
@@ -444,8 +449,13 @@ export function VaultProvider({
   }, [userId, flushCloudPush]);
 
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
+      mountedRef.current = false;
       if (pushDebounceRef.current) clearTimeout(pushDebounceRef.current);
+      clearSession(sessionRef);
+      pendingSetupRef.current?.dataKeyBytes.fill(0);
+      pendingSetupRef.current = null;
     };
   }, []);
 
@@ -454,19 +464,7 @@ export function VaultProvider({
   // matching the all-fields encryption used for entries.
   const encryptMetaForStorage = useCallback(
     async (m: VaultMeta, keyOverride?: CryptoKey): Promise<VaultMeta> => {
-      const key = keyOverride ?? sessionRef.current?.key;
-      if (!key) {
-        // Locked: cannot encrypt names. Preserve existing ciphertext and never
-        // persist plaintext names alongside it.
-        if (typeof m.categoriesEnc === "string") {
-          const { categories: _drop, ...rest } = m;
-          return rest;
-        }
-        return m;
-      }
-      const categoriesEnc = await encryptCategories(key, m.categories ?? []);
-      const { categories: _drop, ...rest } = m;
-      return { ...rest, categoriesEnc };
+      return encryptMetaCategories(m, keyOverride ?? sessionRef.current?.key);
     },
     []
   );
@@ -487,7 +485,9 @@ export function VaultProvider({
 
   const writeMeta = useCallback(
     async (m: VaultMeta, keyOverride?: CryptoKey): Promise<void> => {
-      await putMetaRaw(await encryptMetaForStorage(m, keyOverride));
+      const encrypted = await encryptMetaForStorage(m, keyOverride);
+      if (!mountedRef.current) throw new AppError("errors.locked");
+      await putMetaRaw(encrypted);
     },
     [encryptMetaForStorage]
   );
@@ -518,15 +518,23 @@ export function VaultProvider({
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      let cloudFailed = false;
       try {
         if (userId) await reconcileCloudVault(userId, userEmail);
       } catch (e) {
         console.error("Cloud vault reconcile failed", e);
-        if (userId && (await readMeta())) {
-          markCloudSyncPending(userId);
-        }
+        cloudFailed = true;
       }
       if (cancelled) return;
+      const stored = await getMetaRaw();
+      if (userId && ((stored && resolveVaultOwner(stored) !== userId) || (!stored && cloudFailed))) {
+        // Reconciliation may have failed offline. Never adopt another account's vault.
+        setMeta(null);
+        setEntries([]);
+        setStatus("loading");
+        setInitializationError(true);
+        return;
+      }
       const m = await readMeta();
       if (!m) {
         // Mid-setup: keep "fresh" without wiping in-progress enrollment state.
@@ -593,6 +601,21 @@ export function VaultProvider({
     lockInternal();
   }, [lockInternal]);
 
+  // Mobile OS timers are suspended in the background; clear unlocked secrets on exit.
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    let disposed = false;
+    let handle: { remove: () => Promise<void> } | undefined;
+    void import("@capacitor/app").then(async ({ App }) => {
+      const listener = await App.addListener("appStateChange", ({ isActive }) => {
+        if (!isActive && sessionRef.current) lockInternal();
+      });
+      if (disposed) await listener.remove();
+      else handle = listener;
+    });
+    return () => { disposed = true; void handle?.remove(); };
+  }, [lockInternal]);
+
   // Auto-lock on inactivity.
   useEffect(() => {
     if (status !== "unlocked") return;
@@ -615,7 +638,9 @@ export function VaultProvider({
   // in-memory crypto session — force lock so the grid is never shown without a key.
   useEffect(() => {
     const onVisibility = () => {
-      if (document.hidden) lastActivityRef.current = Date.now();
+      if (document.hidden || isPasskeyCeremonyActive()) return;
+      const minutes = meta?.autoLockMinutes ?? 5;
+      if (minutes > 0 && Date.now() - lastActivityRef.current >= minutes * 60_000) lockInternal();
     };
     const onBeforeUnload = () => {
       if (isPasskeyCeremonyActive()) return;
@@ -637,7 +662,7 @@ export function VaultProvider({
       window.removeEventListener("beforeunload", onBeforeUnload);
       window.removeEventListener("pageshow", onPageShow);
     };
-  }, [lockInternal]);
+  }, [lockInternal, meta?.autoLockMinutes]);
 
   // Returning from Stripe in another tab: refresh license while vault stays unlocked.
   useEffect(() => {
@@ -734,7 +759,7 @@ export function VaultProvider({
         updatedAt: e.updatedAt,
       });
     }
-    setEntries(decrypted);
+    if (sessionRef.current?.key === key) setEntries(decrypted);
   }, []);
 
   /**
@@ -770,13 +795,25 @@ export function VaultProvider({
 
     const result = await reconcileCloudVault(userId, userEmail);
     if (result === "remote_applied" || result === "local_pushed") {
+      if (result === "remote_applied" && sessionRef.current) {
+        const raw = await getMetaRaw();
+        try {
+          if (!raw || await decryptString(sessionRef.current.key, raw.verifier) !== VERIFIER_PLAINTEXT) {
+            throw new AppError("errors.locked");
+          }
+        } catch {
+          lockInternal();
+          setMeta(raw ?? null);
+          return result;
+        }
+      }
       const m = await readMeta();
       if (m) setMeta(m);
       const session = sessionRef.current;
       if (session) await loadEntries(session.key);
     }
     return result;
-  }, [userId, userEmail, loadEntries, flushCloudPush]);
+  }, [userId, userEmail, loadEntries, flushCloudPush, lockInternal]);
 
   const syncVaultNow = useCallback(async (): Promise<VaultSyncResult> => {
     if (cloudRefreshInFlightRef.current) return "unchanged";
@@ -1359,6 +1396,7 @@ export function VaultProvider({
       totpSecret: string,
       dataKeyBytes: Uint8Array | null = null,
     ) => {
+      if (!mountedRef.current) throw new AppError("errors.locked");
       let activeMeta = m;
       const syncedPasskeys = syncPasskeyWebAuthnNamesToEmail(
         m.passkeys,
@@ -1377,51 +1415,62 @@ export function VaultProvider({
           await writeMeta(activeMeta);
         }
       }
-      sessionRef.current = { key: dataKey, dataKeyBytes, totpSecret };
-      setBackupTotpEnabled(totpSecret.length > 0);
-      // Keep the plaintext capability marker and recovery codes consistent
-      // with the encrypted authenticator secret.
-      if (totpSecret.length > 0 && activeMeta.requireSecondFactorAtUnlock !== true) {
-        activeMeta = {
-          ...activeMeta,
-          requireSecondFactorAtUnlock: true,
-          updatedAt: Date.now(),
-        };
-        await writeMeta(activeMeta);
-      } else if (
-        totpSecret.length === 0 &&
-        (activeMeta.requireSecondFactorAtUnlock === true ||
-          (activeMeta.recoveryCodeHashes?.length ?? 0) > 0)
-      ) {
-        activeMeta = {
-          ...activeMeta,
-          requireSecondFactorAtUnlock: false,
-          recoveryCodeHashes: [],
-          updatedAt: Date.now(),
-        };
-        await writeMeta(activeMeta);
+      try {
+        if (!mountedRef.current) throw new AppError("errors.locked");
+        sessionRef.current = { key: dataKey, dataKeyBytes, totpSecret };
+        setBackupTotpEnabled(totpSecret.length > 0);
+        // Keep the plaintext capability marker and recovery codes consistent
+        // with the encrypted authenticator secret.
+        if (totpSecret.length > 0 && activeMeta.requireSecondFactorAtUnlock !== true) {
+          activeMeta = {
+            ...activeMeta,
+            requireSecondFactorAtUnlock: true,
+            updatedAt: Date.now(),
+          };
+          await writeMeta(activeMeta);
+        } else if (
+          totpSecret.length === 0 &&
+          (activeMeta.requireSecondFactorAtUnlock === true ||
+            (activeMeta.recoveryCodeHashes?.length ?? 0) > 0)
+        ) {
+          activeMeta = {
+            ...activeMeta,
+            requireSecondFactorAtUnlock: false,
+            recoveryCodeHashes: [],
+            updatedAt: Date.now(),
+          };
+          await writeMeta(activeMeta);
+        }
+        lastActivityRef.current = Date.now();
+        const migratedEntries = await migrateLegacyEntries(dataKey);
+        // Now that the key is available, surface plaintext category names and
+        // migrate any legacy plaintext categories to encrypted-at-rest form.
+        const needCategoryMigration = typeof activeMeta.categoriesEnc !== "string";
+        const decryptedMeta = await decryptMetaFromStorage(activeMeta, dataKey);
+        let finalMeta = decryptedMeta;
+        if (migratedEntries || needCategoryMigration) {
+          finalMeta = stampVaultMetaForUser(
+            { ...decryptedMeta, updatedAt: Date.now() },
+            userId
+          );
+          await writeMeta(finalMeta, dataKey);
+        }
+        setMeta(finalMeta);
+        await loadEntries(dataKey);
+        if (sessionRef.current?.key !== dataKey) throw new AppError("errors.locked");
+        setStatus("unlocked");
+        if (migratedEntries || needCategoryMigration) {
+          await flushCloudPush();
+        }
+        void refreshEntitlements();
+      } catch (error) {
+        if (sessionRef.current?.key === dataKey) clearSession(sessionRef);
+        dataKeyBytes?.fill(0);
+        setEntries([]);
+        setBackupTotpEnabled(false);
+        setStatus("locked");
+        throw error;
       }
-      lastActivityRef.current = Date.now();
-      const migratedEntries = await migrateLegacyEntries(dataKey);
-      // Now that the key is available, surface plaintext category names and
-      // migrate any legacy plaintext categories to encrypted-at-rest form.
-      const needCategoryMigration = typeof activeMeta.categoriesEnc !== "string";
-      const decryptedMeta = await decryptMetaFromStorage(activeMeta, dataKey);
-      let finalMeta = decryptedMeta;
-      if (migratedEntries || needCategoryMigration) {
-        finalMeta = stampVaultMetaForUser(
-          { ...decryptedMeta, updatedAt: Date.now() },
-          userId
-        );
-        await writeMeta(finalMeta, dataKey);
-      }
-      setMeta(finalMeta);
-      await loadEntries(dataKey);
-      setStatus("unlocked");
-      if (migratedEntries || needCategoryMigration) {
-        await flushCloudPush();
-      }
-      void refreshEntitlements();
     },
     [
       loadEntries,
@@ -1744,9 +1793,8 @@ export function VaultProvider({
   const exportBackup = useCallback(async () => {
     // Use the encrypted-at-rest meta so exported backups never contain plaintext
     // category names.
-    const m = await getMetaRaw();
+    const { meta: m, entries: raw } = await readVaultSnapshot();
     if (!m) throw new AppError("errors.notInitialized");
-    const raw = await listEntries();
     return buildVaultBackupJson(m, raw);
   }, []);
 
@@ -1759,27 +1807,13 @@ export function VaultProvider({
         throw new AppError("errors.importExceedsEntryLimit");
       }
     }
+    const metaNorm = { ...meta, cloudUserId: userId ?? meta.cloudUserId };
+    await replaceVaultSnapshot(metaNorm, parsedEntries.map((e) =>
+      isEncryptedEntry(e) ? { id: e.id, updatedAt: e.updatedAt, enc: e.enc } : e
+    ));
     clearSession(sessionRef);
     pendingSetupRef.current = null;
     setPendingSetupActive(false);
-    await wipeAll();
-    const metaNorm: VaultMeta = {
-      ...meta,
-      categories: meta.categories ?? [],
-    };
-    await writeMeta(metaNorm);
-    for (const e of parsedEntries) {
-      if (isEncryptedEntry(e)) {
-        await putEntry({ id: e.id, updatedAt: e.updatedAt, enc: e.enc });
-        continue;
-      }
-      const row: VaultEntry = {
-        ...e,
-        categoryId: typeof e.categoryId === "string" ? e.categoryId : "",
-        memo: typeof e.memo === "string" ? e.memo : "",
-      };
-      await putEntry(row);
-    }
     setMeta(metaNorm);
     if (meta.locale) {
       const L = normalizeLocale(meta.locale);
@@ -1793,7 +1827,7 @@ export function VaultProvider({
     setEntries([]);
     setStatus("locked");
     await flushCloudPush();
-  }, [flushCloudPush]);
+  }, [flushCloudPush, userId]);
 
   const exportSpreadsheet = useCallback(async () => {
     const session = sessionRef.current;
@@ -1919,6 +1953,7 @@ export function VaultProvider({
 
   const value = useMemo<VaultContextValue>(
     () => ({
+      initializationError,
       status,
       meta,
       entries,
@@ -1973,6 +2008,7 @@ export function VaultProvider({
       regenerateRecoveryCodes,
     }),
     [
+      initializationError,
       status,
       meta,
       entries,
