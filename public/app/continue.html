@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>My Password Vault</title>
+<link rel="icon" href="/favicon.png">
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 24px; background: #f4f4f6; color: #1c1c22;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  }
+  main {
+    width: 100%; max-width: 420px; background: #fff; border-radius: 20px; padding: 36px 28px;
+    text-align: center; box-shadow: 0 8px 30px rgba(20, 20, 40, 0.08);
+  }
+  img { width: 64px; height: 64px; border-radius: 14px; }
+  h1 { font-size: 22px; margin: 20px 0 10px; }
+  p { font-size: 15px; line-height: 1.55; color: #55555f; margin: 0 0 8px; }
+  .btn {
+    display: block; margin-top: 24px; padding: 14px 18px; border-radius: 12px; background: #3b47d6;
+    color: #fff; font-weight: 600; font-size: 16px; text-decoration: none;
+  }
+  .link { display: inline-block; margin-top: 16px; font-size: 14px; color: #3b47d6; text-decoration: none; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <img src="/email/vault-icon.png" alt="">
+  <h1 id="title"></h1>
+  <p id="body"></p>
+  <a id="open" class="btn" hidden></a>
+  <a id="web" class="link" href="/app/" hidden></a>
+</main>
+<script>
+(function () {
+  var ko = /^ko\b/i.test(navigator.language || "");
+  var T = ko ? {
+    confirmedTitle: "이메일이 확인됐습니다",
+    confirmedMobile: "아래 버튼을 눌러 My Password Vault 앱으로 돌아가세요.",
+    confirmedDesktop: "가입하신 휴대폰의 My Password Vault 앱으로 돌아가 로그인하세요.",
+    recoveryTitle: "비밀번호 재설정",
+    recoveryMobile: "아래 버튼을 눌러 앱에서 새 비밀번호를 설정하세요.",
+    recoveryDesktop: "재설정을 요청한 휴대폰에서 이 메일의 링크를 다시 열어 주세요. 새 비밀번호는 그 앱에서 설정합니다.",
+    errorTitle: "링크를 사용할 수 없습니다",
+    errorBody: "링크가 만료됐거나 이미 사용됐습니다. 앱에서 메일을 다시 요청해 주세요.",
+    open: "앱 열기",
+    web: "웹에서 열기"
+  } : {
+    confirmedTitle: "Your email is confirmed",
+    confirmedMobile: "Tap the button below to return to the My Password Vault app.",
+    confirmedDesktop: "Go back to the My Password Vault app on the phone you signed up with and sign in.",
+    recoveryTitle: "Reset your password",
+    recoveryMobile: "Tap the button below to set a new password in the app.",
+    recoveryDesktop: "Open the link in this email on the phone where you requested the reset. You'll set the new password in the app there.",
+    errorTitle: "This link can't be used",
+    errorBody: "It has expired or was already used. Request a new email from the app.",
+    open: "Open the app",
+    web: "Open on the web"
+  };
+  document.documentElement.lang = ko ? "ko" : "en";
+
+  var search = new URLSearchParams(location.search);
+  var hash = new URLSearchParams(location.hash.replace(/^#/, ""));
+  var code = search.get("code");
+  var type = search.get("type") || "";
+  var failed = Boolean(search.get("error") || hash.get("error")) || !code;
+  var mobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var recovery = type === "recovery";
+
+  var $ = function (id) { return document.getElementById(id); };
+  if (failed) {
+    $("title").textContent = T.errorTitle;
+    $("body").textContent = T.errorBody;
+    return;
+  }
+
+  $("title").textContent = recovery ? T.recoveryTitle : T.confirmedTitle;
+  if (!mobile) {
+    $("body").textContent = recovery ? T.recoveryDesktop : T.confirmedDesktop;
+    if (!recovery) {
+      $("web").textContent = T.web;
+      $("web").hidden = false;
+    }
+    return;
+  }
+
+  $("body").textContent = recovery ? T.recoveryMobile : T.confirmedMobile;
+  var appUrl = "com.skyface.mypasswordvault://auth/callback?code=" + encodeURIComponent(code);
+  var open = $("open");
+  open.href = appUrl;
+  open.textContent = T.open;
+  open.hidden = false;
+  history.replaceState(null, "", location.pathname);
+  location.href = appUrl;
+})();
+</script>
+</body>
+</html>
