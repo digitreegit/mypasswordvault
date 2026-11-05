@@ -1,9 +1,12 @@
 import {
   applyVaultSnapshotChanges,
+  clearActiveVault,
+  deleteStashedVault,
   getMeta,
   replaceVaultSnapshot,
   readVaultSnapshot,
-  wipeAll,
+  restoreStashedVault,
+  stashVaultForAccount,
   type VaultEntry,
   type VaultMeta,
 } from "./storage";
@@ -24,6 +27,7 @@ import {
   stampVaultMetaForUser,
 } from "./vaultOwner";
 import {
+  matchesSyncBase,
   mergeVaultSnapshots,
   sameSnapshot,
   syncBaseOf,
@@ -119,6 +123,7 @@ export async function deleteRemoteVaultBackup(userId: string): Promise<void> {
     .eq("user_id", userId);
   if (error) assertSupabaseVaultOk(error);
   clearSyncBase(userId);
+  await deleteStashedVault(userId);
 }
 
 const SYNC_BASE_PREFIX = "mpw_sync_base_v1:";
@@ -217,14 +222,41 @@ async function forcePullRemoteVaultInternal(userId: string): Promise<boolean> {
   return true;
 }
 
+/**
+ * Before another account takes over this device, keep the current owner's vault if it has
+ * changes the cloud never received. A fully synced vault is not kept: it is in the cloud.
+ */
+async function stashOutgoingVault(): Promise<void> {
+  const { meta, entries } = await readVaultSnapshot();
+  const owner = resolveVaultOwner(meta);
+  if (!meta || !owner) return;
+  const snapshot = { meta, entries };
+  if (!hasCloudSyncPending(owner) && matchesSyncBase(snapshot, readSyncBase(owner))) {
+    await deleteStashedVault(owner);
+    return;
+  }
+  await stashVaultForAccount(owner, snapshot);
+}
+
 async function switchLocalVaultToAccount(userId: string): Promise<void> {
+  await stashOutgoingVault();
+  if (await restoreStashedVault(userId)) {
+    setVaultOwnerUserId(userId);
+    try {
+      await syncLocalWithRemote(userId);
+    } catch (e) {
+      console.error("Cloud sync of restored vault failed", e);
+      markCloudSyncPending(userId);
+    }
+    return;
+  }
   const remote = await fetchRemoteVaultBackup(userId);
   if (remote) {
     const { meta, entries } = parseVaultBackup(remote);
     await importVaultSnapshot(meta, entries, userId);
     return;
   }
-  await wipeAll();
+  await clearActiveVault();
   clearVaultOwnerUserId();
   setVaultOwnerUserId(userId);
   clearSyncBase(userId);

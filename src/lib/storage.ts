@@ -143,10 +143,67 @@ export async function deleteEntry(id: string): Promise<void> {
   await (await db()).delete(STORE_ENTRIES, id);
 }
 
+/** Erase everything on this device, including vaults stashed for other accounts. */
 export async function wipeAll(): Promise<void> {
   const d = await db();
   const tx = d.transaction([STORE_META, STORE_ENTRIES], "readwrite");
   await Promise.all([tx.objectStore(STORE_META).clear(), tx.objectStore(STORE_ENTRIES).clear(), tx.done]);
+}
+
+/** Erase the active vault only; vaults stashed for other accounts stay. */
+export async function clearActiveVault(): Promise<void> {
+  const d = await db();
+  const tx = d.transaction([STORE_META, STORE_ENTRIES], "readwrite");
+  await Promise.all([tx.objectStore(STORE_META).delete("vault"), tx.objectStore(STORE_ENTRIES).clear(), tx.done]);
+}
+
+// Stashed vaults share the meta store under their own key, so a version bump (which old
+// open tabs would block) is not needed.
+const STASH_PREFIX = "stash:";
+
+type StashedVault = { id: string; meta: VaultMeta; entries: VaultEntry[]; stashedAt: number };
+
+/**
+ * Keep an account's ciphertext snapshot on this device while another account uses it, so
+ * edits that never reached the cloud are not lost on account switch.
+ */
+export async function stashVaultForAccount(
+  userId: string,
+  snapshot: { meta: VaultMeta; entries: VaultEntry[] },
+): Promise<void> {
+  const record: StashedVault = { id: STASH_PREFIX + userId, ...snapshot, stashedAt: Date.now() };
+  await (await db()).put(STORE_META, record);
+}
+
+export async function deleteStashedVault(userId: string): Promise<void> {
+  await (await db()).delete(STORE_META, STASH_PREFIX + userId);
+}
+
+/** Make the account's stashed vault the active vault (and drop the stash) in one transaction. */
+export async function restoreStashedVault(userId: string): Promise<boolean> {
+  const d = await db();
+  const tx = d.transaction([STORE_META, STORE_ENTRIES], "readwrite");
+  const metaStore = tx.objectStore(STORE_META);
+  const entryStore = tx.objectStore(STORE_ENTRIES);
+  try {
+    const stash = (await metaStore.get(STASH_PREFIX + userId)) as StashedVault | undefined;
+    if (!stash) {
+      await tx.done;
+      return false;
+    }
+    await Promise.all([
+      metaStore.delete(STASH_PREFIX + userId),
+      entryStore.clear(),
+      metaStore.put({ ...stash.meta, id: "vault", cloudUserId: userId }),
+      ...stash.entries.map((e) => entryStore.put(e)),
+      tx.done,
+    ]);
+    return true;
+  } catch (error) {
+    try { tx.abort(); } catch { /* already aborted */ }
+    await tx.done.catch(() => {});
+    throw error;
+  }
 }
 
 export function newId(): string {
@@ -162,7 +219,7 @@ export async function replaceVaultSnapshot(meta: VaultMeta, entries: VaultEntry[
   const tx = d.transaction([STORE_META, STORE_ENTRIES], "readwrite");
   const writes: Promise<unknown>[] = [];
   try {
-    writes.push(tx.objectStore(STORE_META).clear(), tx.objectStore(STORE_ENTRIES).clear());
+    writes.push(tx.objectStore(STORE_META).delete("vault"), tx.objectStore(STORE_ENTRIES).clear());
     writes.push(tx.objectStore(STORE_META).put(meta));
     for (const entry of entries) writes.push(tx.objectStore(STORE_ENTRIES).put(entry));
     await Promise.all([...writes, tx.done]);

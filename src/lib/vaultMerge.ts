@@ -48,6 +48,15 @@ export function sameEntries(a: VaultEntry[], b: VaultEntry[]): boolean {
   return b.every((e) => byId.get(e.id) === canonicalJson(e));
 }
 
+/** True when nothing in `snapshot` changed since it was last synced as `base`. */
+export function matchesSyncBase(snapshot: VaultSnapshot, base: SyncBase | null): boolean {
+  if (!base || base.verifier !== snapshot.meta.verifier) return false;
+  if (base.metaSignature !== metaSignature(snapshot.meta)) return false;
+  const ids = Object.keys(base.entries);
+  return ids.length === snapshot.entries.length &&
+    snapshot.entries.every((e) => base.entries[e.id] === e.updatedAt);
+}
+
 export function sameSnapshot(a: VaultSnapshot, b: VaultSnapshot): boolean {
   return metaSignature(a.meta) === metaSignature(b.meta) && sameEntries(a.entries, b.entries);
 }

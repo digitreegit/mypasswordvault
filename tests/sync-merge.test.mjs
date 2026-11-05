@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import 'fake-indexeddb/auto';
 
+const USER = 'user-1';
 const store = new Map();
 globalThis.localStorage = {
   getItem: k => (store.has(k) ? store.get(k) : null),
@@ -17,30 +18,35 @@ globalThis.localStorage = {
 const temp = await mkdtemp(join(tmpdir(), 'mpv-sync-'));
 test.after(() => rm(temp, { recursive: true, force: true }));
 
-// One user_vaults row with updated_at compare-and-swap, like PostgREST + Postgres.
-const table = { row: null, clock: 0, beforeUpdate: null };
+// user_vaults rows with updated_at compare-and-swap, like PostgREST + Postgres.
+const table = { rows: new Map(), clock: 0, beforeUpdate: null,
+  get row() { return this.rows.get(USER) ?? null; },
+  set row(v) { if (v) this.rows.set(USER, v); else this.rows.delete(USER); } };
 const stamp = () => `t${++table.clock}`;
 globalThis.__testSupabase = {
   from() { return {
-    select() { return { eq() { return {
+    select() { return { eq(_col, uid) { return {
       async maybeSingle() {
-        return { data: table.row && { vault_backup: table.row.vault_backup, updated_at: table.row.updated_at }, error: null };
+        const r = table.rows.get(uid);
+        return { data: r ? { vault_backup: r.vault_backup, updated_at: r.updated_at } : null, error: null };
       },
     }; } }; },
     async insert(rec) {
-      if (table.row) return { error: { code: '23505', message: 'duplicate key' } };
-      table.row = { vault_backup: rec.vault_backup, updated_at: stamp() };
+      if (table.rows.has(rec.user_id)) return { error: { code: '23505', message: 'duplicate key' } };
+      table.rows.set(rec.user_id, { vault_backup: rec.vault_backup, updated_at: stamp() });
       return { error: null };
     },
-    async upsert(rec) { table.row = { vault_backup: rec.vault_backup, updated_at: stamp() }; return { error: null }; },
-    update(rec) { return { eq() { return { eq(_col, expected) { return {
+    async upsert(rec) { table.rows.set(rec.user_id, { vault_backup: rec.vault_backup, updated_at: stamp() }); return { error: null }; },
+    update(rec) { return { eq(_col, uid) { return { eq(_c, expected) { return {
       async select() {
         if (table.beforeUpdate) { const hook = table.beforeUpdate; table.beforeUpdate = null; hook(); }
-        if (!table.row || table.row.updated_at !== expected) return { data: [], error: null };
-        table.row = { vault_backup: rec.vault_backup, updated_at: stamp() };
-        return { data: [{ user_id: 'u' }], error: null };
+        const r = table.rows.get(uid);
+        if (!r || r.updated_at !== expected) return { data: [], error: null };
+        table.rows.set(uid, { vault_backup: rec.vault_backup, updated_at: stamp() });
+        return { data: [{ user_id: uid }], error: null };
       },
     }; } }; } }; },
+    delete() { return { async eq(_col, uid) { table.rows.delete(uid); return { error: null }; } }; },
   }; },
 };
 
@@ -66,7 +72,6 @@ const lib = await bundle('sync', `
     : 'export function vaultPasskeysIndicateDifferentAccount() { return false; }' }));
 } }]);
 
-const USER = 'user-1';
 const key = await lib.importAesGcmKey(lib.randomBytes(32));
 const secret = site => ({ categoryId: '', site, url: '', username: 'u', password: 'p', notes: '', memo: '' });
 const entry = async (id, t) => lib.buildEncryptedEntryRow(key, id, t, secret(`${id}@${t}`));
@@ -167,4 +172,35 @@ test('applying a merged snapshot never clobbers an edit made meanwhile', async (
   const next = { meta: read.meta, entries: read.entries.filter(e => e.id !== 'b') };
   assert.equal(await lib.applyVaultSnapshotChanges(read, next), false);
   assert.deepEqual(ids(await lib.listEntries()), ['a@7', 'b@20', 'e@8']);
+});
+
+test('switching accounts keeps the first account’s unsynced edits until it signs back in', async () => {
+  const OTHER = 'user-2';
+  store.clear(); table.rows.clear();
+  const [a1, b1] = [await entry('a', 1), await entry('b', 1)];
+  await lib.replaceVaultSnapshot(meta, [a1, b1]);
+  assert.equal(await lib.pushVaultBackupToCloud(USER), 'local_pushed');
+
+  // Offline edit that never reached the cloud, then another account signs in here.
+  await lib.putEntry(await entry('a', 9));
+  store.set('mpv_cloud_sync_pending', JSON.stringify({ [USER]: true }));
+  const otherMeta = { ...meta, cloudUserId: OTHER };
+  table.rows.set(OTHER, { vault_backup: lib.buildVaultBackupJson(otherMeta, [await entry('z', 1)]), updated_at: stamp() });
+  assert.equal(await lib.reconcileCloudVault(OTHER), 'remote_applied');
+  assert.deepEqual(ids(await lib.listEntries()), ['z@1']);
+
+  // Meanwhile the first account changed on another device.
+  otherDeviceWrites(meta, [a1, b1, await entry('c', 3)]);
+  assert.equal(await lib.reconcileCloudVault(USER), 'remote_applied');
+  assert.deepEqual(ids(await lib.listEntries()), ['a@9', 'b@1', 'c@3']);
+  assert.deepEqual(ids(remoteSnapshot().entries), ['a@9', 'b@1', 'c@3']);
+});
+
+test('a fully synced vault is not kept on the device after an account switch', async () => {
+  const OTHER = 'user-2';
+  // USER is fully synced from the previous test; switching away must not leave a copy.
+  assert.equal(await lib.reconcileCloudVault(OTHER), 'remote_applied');
+  table.rows.delete(USER);
+  await lib.reconcileCloudVault(USER);
+  assert.deepEqual(await lib.listEntries(), []);
 });

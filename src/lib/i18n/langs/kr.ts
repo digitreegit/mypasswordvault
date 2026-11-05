@@ -332,6 +332,8 @@ export const MESSAGES_KR: Record<string, string> = {
     "구매가 승인 대기 중입니다. 승인되면 PRO가 자동으로 적용됩니다.",
   "errors.storePurchaseOtherAccount":
     "이 스토어 구매는 이미 다른 My Password Vault 계정에 연결되어 있습니다. 해당 계정으로 로그인해 PRO를 사용하세요.",
+  "errors.storePurchaseRefunded":
+    "환불된 구매라서 PRO를 복원할 수 없습니다.",
   "errors.entryLimitReached":
     "무료 플랜에서는 비밀번호 항목을 최대 {{limit}}개까지 저장할 수 있습니다. 더 추가하려면 유료 라이선스로 업그레이드하세요.",
   "errors.importExceedsEntryLimit":

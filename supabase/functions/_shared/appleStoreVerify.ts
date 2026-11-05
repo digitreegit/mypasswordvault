@@ -22,7 +22,8 @@ function normalizePrivateKey(raw: string): string {
   return raw.replace(/\\n/g, "\n").trim();
 }
 
-function decodeJwsPayload(jws: string): AppleTransactionPayload | null {
+/** Decodes without verifying the signature; only trust fields re-read from the App Store Server API. */
+export function decodeJwsPayload<T = AppleTransactionPayload>(jws: string): T | null {
   const parts = jws.split(".");
   if (parts.length !== 3) return null;
   try {
@@ -31,7 +32,7 @@ function decodeJwsPayload(jws: string): AppleTransactionPayload | null {
       : "=".repeat(4 - (parts[1].length % 4));
     const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/") + pad;
     const json = atob(b64);
-    return JSON.parse(json) as AppleTransactionPayload;
+    return JSON.parse(json) as T;
   } catch {
     return null;
   }
@@ -145,6 +146,33 @@ function tryTrustStoreKitJws(
   return { ok: true, transactionId: verifiedId, relatedTransactionIds };
 }
 
+export function appleApiConfigured(): boolean {
+  return Boolean(
+    Deno.env.get("APPLE_ISSUER_ID")?.trim() &&
+      Deno.env.get("APPLE_KEY_ID")?.trim() &&
+      Deno.env.get("APPLE_PRIVATE_KEY")?.trim(),
+  );
+}
+
+/**
+ * Authoritative transaction state from the App Store Server API (production first unless the
+ * hint says sandbox, then the other environment). Null when not configured or not found.
+ */
+export async function lookupAppleTransaction(
+  transactionId: string,
+  sandboxHint = false,
+): Promise<AppleTransactionPayload | null> {
+  const bundleId =
+    Deno.env.get("APPLE_BUNDLE_ID")?.trim() ?? "com.skyface.mypasswordvault";
+  const issuerId = Deno.env.get("APPLE_ISSUER_ID")?.trim();
+  const keyId = Deno.env.get("APPLE_KEY_ID")?.trim();
+  const privateKey = Deno.env.get("APPLE_PRIVATE_KEY")?.trim();
+  if (!issuerId || !keyId || !privateKey || !transactionId) return null;
+  const jwt = await createAppStoreServerJwt(issuerId, keyId, bundleId, privateKey);
+  return (await fetchAppleTransaction(transactionId, sandboxHint, jwt)) ??
+    (await fetchAppleTransaction(transactionId, !sandboxHint, jwt));
+}
+
 export async function verifyApplePurchase(
   verificationData: string,
   expectedProductId: string,
@@ -174,22 +202,7 @@ export async function verifyApplePurchase(
   );
 
   if (hasApiCredentials && txFallback) {
-    const sandboxHint = isSandboxEnvironment(payload);
-    const jwt = await createAppStoreServerJwt(
-      issuerId!,
-      keyId!,
-      bundleId,
-      privateKey!,
-    );
-
-    let apiPayload = await fetchAppleTransaction(txFallback, sandboxHint, jwt);
-    if (!apiPayload && !sandboxHint) {
-      apiPayload = await fetchAppleTransaction(txFallback, true, jwt);
-    }
-    if (!apiPayload && sandboxHint) {
-      apiPayload = await fetchAppleTransaction(txFallback, false, jwt);
-    }
-
+    const apiPayload = await lookupAppleTransaction(txFallback, isSandboxEnvironment(payload));
     if (apiPayload) {
       const trusted = tryTrustStoreKitJws(
         apiPayload,

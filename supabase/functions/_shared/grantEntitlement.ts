@@ -42,3 +42,30 @@ export async function grantLicense(
   });
   return { error: error ? new Error(error.message) : null };
 }
+
+/**
+ * Revoke (or, after a reversed refund, restore) the license granted by a store purchase.
+ * Matches on the purchase ids *and* the platform, so an account that later paid another way
+ * keeps that license. Returns the number of rows changed.
+ */
+export async function setStorePurchaseRefunded(
+  admin: SupabaseClient,
+  platform: "ios" | "android",
+  purchaseIds: string[],
+  refunded: boolean,
+): Promise<{ updated: number; error: Error | null }> {
+  const ids = [...new Set(purchaseIds.map((id) => id.trim()).filter(Boolean))];
+  if (ids.length === 0) return { updated: 0, error: null };
+  let query = admin
+    .from("user_entitlements")
+    .update(
+      refunded
+        ? { licensed: false, refunded_at: new Date().toISOString() }
+        : { licensed: true, refunded_at: null },
+    )
+    .eq("purchase_platform", platform)
+    .in("store_transaction_id", ids);
+  query = refunded ? query.is("refunded_at", null) : query.not("refunded_at", "is", null);
+  const { data, error } = await query.select("user_id");
+  return { updated: data?.length ?? 0, error: error ? new Error(error.message) : null };
+}

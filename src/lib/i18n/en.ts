@@ -338,6 +338,8 @@ export const MESSAGES_EN: Record<string, string> = {
     "Your purchase is waiting for approval. PRO turns on automatically once it is approved.",
   "errors.storePurchaseOtherAccount":
     "This store purchase is already linked to another My Password Vault account. Sign in with that account to use PRO.",
+  "errors.storePurchaseRefunded":
+    "This purchase was refunded, so PRO can't be restored from it.",
   "errors.entryLimitReached":
     "The free plan allows up to {{limit}} password entries. Upgrade to add more.",
   "errors.importExceedsEntryLimit":

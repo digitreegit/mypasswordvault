@@ -30,31 +30,35 @@ function parseServiceAccount(json: string): ServiceAccount | null {
 }
 
 async function getGoogleAccessToken(sa: ServiceAccount): Promise<string | null> {
-  const { SignJWT, importPKCS8 } = await import("npm:jose");
-  const key = await importPKCS8(normalizePrivateKey(sa.private_key), "RS256");
-  const jwt = await new SignJWT({})
-    .setProtectedHeader({ alg: "RS256", typ: "JWT" })
-    .setIssuer(sa.client_email)
-    .setAudience(sa.token_uri ?? "https://oauth2.googleapis.com/token")
-    .setIssuedAt()
-    .setExpirationTime("1h")
-    .setClaim("scope", "https://www.googleapis.com/auth/androidpublisher")
-    .sign(key);
+  try {
+    const { SignJWT, importPKCS8 } = await import("npm:jose");
+    const key = await importPKCS8(normalizePrivateKey(sa.private_key), "RS256");
+    const jwt = await new SignJWT({ scope: "https://www.googleapis.com/auth/androidpublisher" })
+      .setProtectedHeader({ alg: "RS256", typ: "JWT" })
+      .setIssuer(sa.client_email)
+      .setAudience(sa.token_uri ?? "https://oauth2.googleapis.com/token")
+      .setIssuedAt()
+      .setExpirationTime("1h")
+      .sign(key);
 
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion: jwt,
-    }),
-  });
-  if (!res.ok) {
-    console.error("Google OAuth token failed", res.status, await res.text());
+    const res = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        assertion: jwt,
+      }),
+    });
+    if (!res.ok) {
+      console.error("Google OAuth token failed", res.status, await res.text());
+      return null;
+    }
+    const data = (await res.json()) as { access_token?: string };
+    return data.access_token?.trim() ?? null;
+  } catch (e) {
+    console.error("Google OAuth token failed", e);
     return null;
   }
-  const data = (await res.json()) as { access_token?: string };
-  return data.access_token?.trim() ?? null;
 }
 
 async function fetchProductPurchase(
@@ -77,6 +81,56 @@ async function fetchProductPurchase(
     return null;
   }
   return (await res.json()) as GoogleProductPurchase;
+}
+
+export type GoogleVoidedPurchase = {
+  purchaseToken?: string;
+  orderId?: string;
+  voidedTimeMillis?: string;
+  voidedReason?: number;
+  voidedSource?: number;
+};
+
+/**
+ * Refunded / charged-back / revoked purchases voided within the last `days` (Play keeps 30).
+ * Null when not configured or when Play rejects the call (e.g. missing permission).
+ */
+/** Google keeps 30 days of voided purchases and rejects a start time at the very edge. */
+export async function listGoogleVoidedPurchases(
+  days = 29,
+): Promise<GoogleVoidedPurchase[] | null> {
+  const packageName =
+    Deno.env.get("GOOGLE_PLAY_PACKAGE_NAME")?.trim() ??
+    "com.skyface.mypasswordvault";
+  const saJson = Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON")?.trim();
+  const sa = saJson ? parseServiceAccount(saJson) : null;
+  if (!sa) return null;
+  const accessToken = await getGoogleAccessToken(sa);
+  if (!accessToken) return null;
+
+  const startTime = Date.now() - days * 24 * 60 * 60 * 1000;
+  const voided: GoogleVoidedPurchase[] = [];
+  let pageToken: string | undefined;
+  do {
+    const url = new URL(
+      `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${encodeURIComponent(packageName)}/purchases/voidedpurchases`,
+    );
+    url.searchParams.set("startTime", String(startTime));
+    url.searchParams.set("maxResults", "1000");
+    if (pageToken) url.searchParams.set("token", pageToken);
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (!res.ok) {
+      console.error("Google Play voided purchases failed", res.status, await res.text());
+      return null;
+    }
+    const data = (await res.json()) as {
+      voidedPurchases?: GoogleVoidedPurchase[];
+      tokenPagination?: { nextPageToken?: string };
+    };
+    voided.push(...(data.voidedPurchases ?? []));
+    pageToken = data.tokenPagination?.nextPageToken;
+  } while (pageToken);
+  return voided;
 }
 
 export async function verifyGooglePurchase(

@@ -62,7 +62,7 @@ import {
   type StoredPasskey,
   type PasskeyKind,
   type VaultMeta,
-  wipeAll,
+  clearActiveVault,
   replaceVaultSnapshot,
   readVaultSnapshot,
 } from "./storage";
@@ -1745,7 +1745,7 @@ export function VaultProvider({
         console.error("Cloud vault delete failed", e);
       }
     }
-    await wipeAll();
+    await clearActiveVault();
     clearSession(sessionRef);
     pendingSetupRef.current = null;
     setPendingSetupActive(false);

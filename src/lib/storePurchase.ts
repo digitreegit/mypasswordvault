@@ -148,6 +148,9 @@ async function verifyStorePurchaseOnServer(
     if (detail.startsWith("transaction_owned_by_other_user")) {
       throw new AppError("errors.storePurchaseOtherAccount", detail);
     }
+    if (detail.startsWith("transaction_refunded")) {
+      throw new AppError("errors.storePurchaseRefunded", detail);
+    }
     throw new AppError("errors.storeVerifyFailed", detail);
   }
   const errCode =

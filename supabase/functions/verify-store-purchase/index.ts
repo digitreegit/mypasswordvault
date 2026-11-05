@@ -142,13 +142,19 @@ Deno.serve(async (req) => {
   const purchaseIds = [...new Set([verifiedTransactionId, ...relatedTransactionIds])];
   const { data: owners, error: lookupError } = await admin
     .from("user_entitlements")
-    .select("user_id, licensed")
+    .select("user_id, licensed, refunded_at, purchase_platform")
     .in("store_transaction_id", purchaseIds);
 
   if (lookupError) return json({ error: "db_error" }, 500);
 
   if (owners?.some((row) => row.user_id !== user.id)) {
     return json({ error: "transaction_owned_by_other_user" }, 409);
+  }
+
+  // Play can still report a refunded one-time purchase as purchased; the refund sweep's
+  // record is authoritative until a reversed refund clears it.
+  if (owners?.some((row) => row.refunded_at && row.purchase_platform === platform)) {
+    return json({ error: "transaction_refunded" }, 409);
   }
 
   const existing = owners?.find((row) => row.user_id === user.id);
