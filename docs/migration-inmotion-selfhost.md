@@ -263,15 +263,58 @@ psql --single-transaction --variable ON_ERROR_STOP=1 \
 - [ ] 웹: 로그인(구글·애플·이메일), 싱크, 결제
 - [ ] **iOS 스토어 버전 앱** (재설치 없이): 로그인 유지 또는 재로그인, 싱크, Apple 로그인, 구매 복원
 - [ ] **Android 스토어 버전 앱**: 같은 항목, Play 구매 검증
-- [ ] Resend 대시보드에서 메일 발송 정상
+- [x] Apple 로그인: iOS 앱에서 정상 (웹 앱에는 Apple 버튼 자체가 없음)
+- [x] 비밀번호 재설정 메일 수신 (2026-11-05)
+  - 제목이 비어 있던 문제: `functions.env`에 `RESET_EMAIL_SUBJECT=` 빈 값 → `??`는 빈 문자열을 그대로 사용. 코드를 `?.trim() ||`로 바꾸고 빈 줄 삭제
+- [x] Resend 대시보드에서 메일 발송 정상 (Delivered 확인)
+- [x] Resend API 키 교체 (2026-11-05, 디버깅 중 `docker compose config` 출력에 노출)
+  - 새 키 `mpv-selfhost-functions`: Sending access, `mypasswordvault.app` 도메인만. 클립보드 → ssh로 `functions.env`에만 저장
+  - 새 키로 발송 Delivered 확인 후 이전 키 `mypasswordvault-v3` 삭제
+  - `My Password Vault` 키(Full access)는 클라우드 Supabase용으로 남김 → 10단계에서 삭제
+  - 교훈: `docker compose config`는 비밀값을 그대로 출력함. 변수 이름 확인은 `awk`로 값 없이
+- [x] 메일 hook 시크릿 교체 (같은 출력에 노출): 서버에서 새로 생성해 `.env`·`functions.env` 동시 교체, `/recover` 호출로 "Hook ran successfully" 확인
 - [ ] 서버 로그에 401/500 급증 없는지
-- [ ] 백업 cron 동작 + **R2에서 실제 복원 테스트 1회**
+- [x] 백업 cron 동작 + **R2에서 실제 복원 테스트 1회** (2026-11-05, 아래 "백업" 참고)
+- [x] 업타임 모니터 + 백업 실패 알림 (Better Stack 무료, 계정 hoyong@skyface.com, 알림은 이메일)
+  - Caddy `/healthz`: 키 없이 호출 가능, 내부에서 `/auth/v1/health`로 바꿔 publishable key를 붙여 게이트웨이까지 통과 → 200이면 Caddy·게이트웨이·Auth 모두 정상
+  - 모니터 "My Password Vault API": `/healthz` 3분마다, 4개 리전, IPv4, 1분 연속 실패 시 알림
+  - 하트비트 "MPV daily DB backup": 1일 주기 + 2시간 유예. `mpv-backup` 성공 시 ping, 실패 시 `/fail` ping
+  - 하트비트 URL은 `/etc/mpv-backup/heartbeat.env` (600)에만 저장. 비우면 ping 생략
+
+## 백업 (2026-11-05 설정)
+
+- R2 버킷 `mpv-db-backups` (ENAM, 비공개, Standard)
+  - Lifecycle `delete-after-30-days`: 30일 후 자동 삭제
+  - Bucket lock `retain-7-days`: 업로드 후 7일 동안 삭제·덮어쓰기 불가 (서버가 털려도 최근 백업 보호)
+  - Account API token `mpv-backup-server`: Object Read & Write, 이 버킷만, IP `23.235.194.180`만, 만료 없음
+- 암호화: `age`. 공개키 `age1jjskydz60y9xdw9zxss7cseelfdhe4r3n6t5qqsjdjyam2zp3pjq4zufs6`만 서버에 있음
+  - **개인키는 Mac `~/.mpv-backup-key/age-key.txt` + 사용자가 따로 보관한 사본뿐.** 잃으면 백업 복원 불가
+- 서버: `/usr/local/sbin/mpv-backup` (root), 키 `/etc/mpv-backup/r2.env`, 공개키 `/etc/mpv-backup/age-recipients.txt` (모두 600)
+  - `pg_dump -Fc` → `age` 암호화 → `/var/tmp` 임시 파일 → `rclone copyto` 단일 PUT → 크기 확인 (10KB 미만이면 실패)
+  - rclone 1.60 + 버킷 잠금 R2 조합에서 스트리밍/멀티파트 업로드와 업로드 후 HEAD가 501 → 임시 파일 + `--s3-upload-cutoff 4G` + `NO_HEAD`
+  - `mpv-backup.timer`: 매일 03:30 EST (최대 10분 랜덤 지연, 꺼져 있던 동안 놓친 실행은 부팅 후 실행)
+  - 수동 실행: `sudo systemctl start mpv-backup.service`, 로그: `journalctl -u mpv-backup.service`
+- 첫 백업 `daily/mpv-20261105T152920Z.dump.age` (290KB). `test/` 아래 6바이트 테스트 파일 2개는 잠금 때문에 30일 뒤 자동 삭제
+
+**복원 방법** (복호화된 데이터는 디스크에 안 남기고 파이프로만):
+
+```sh
+OBJ=daily/mpv-<시각>.dump.age
+ssh mpv-vps "sudo bash -c 'set -a; . /etc/mpv-backup/r2.env; set +a; export RCLONE_CONFIG_R2_TYPE=s3 RCLONE_CONFIG_R2_PROVIDER=Cloudflare RCLONE_CONFIG_R2_ACCESS_KEY_ID=\$R2_ACCESS_KEY_ID RCLONE_CONFIG_R2_SECRET_ACCESS_KEY=\$R2_SECRET_ACCESS_KEY RCLONE_CONFIG_R2_ENDPOINT=https://5b986f1f53f22707003d24c70d0ef013.r2.cloudflarestorage.com; rclone cat r2:mpv-db-backups/$OBJ'" \
+  | age -d -i ~/.mpv-backup-key/age-key.txt \
+  | ssh mpv-vps 'sudo docker exec -i supabase-db pg_restore -U supabase_admin -d <대상 DB>'
+```
+
+- `-U supabase_admin`(슈퍼유저)로 해야 함. `postgres`로 하면 소유자·권한 오류 88건
+- 서버를 새로 만드는 경우 R2 키가 IP 제한이라 새 서버 IP로 토큰을 다시 만들거나, Mac에서 Cloudflare 대시보드로 파일을 내려받아 `age -d`
+- **복원 테스트 결과 (2026-11-05):** 임시 DB `restore_test`에 오류 0건. 운영 DB와 users 32 / vaults 19 / entitlements 32, 금고·이용권 내용 해시, 트리거, RLS, 정책 5개 모두 일치 → 확인 후 삭제
 
 ## 10. 비용 정리 (반드시 마지막)
 
 - [ ] Supabase 커스텀 도메인 애드온 끄기
 - [ ] Skyface 조직을 Free로 다운그레이드 (클라우드 프로젝트는 한동안 읽기용 백업으로 남겨 두고, 이후 삭제)
 - [ ] Vercel의 Mypasswordvault 프로젝트 삭제 (도메인 연결 해제 확인 후)
+- [ ] Resend `My Password Vault` 키(Full access, 클라우드용) 삭제
 
 **10단계를 먼저 하면 앱 로그인과 싱크가 즉시 끊김.**
 

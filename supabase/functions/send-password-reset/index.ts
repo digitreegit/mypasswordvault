@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
 
   const actionLink = String(data.properties.action_link);
   const subject =
-    Deno.env.get("RESET_EMAIL_SUBJECT") ??
+    Deno.env.get("RESET_EMAIL_SUBJECT")?.trim() ||
     `Reset your ${BRAND_NAME} password`;
 
   const html = buildBrandedEmailHtml({
