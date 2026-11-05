@@ -246,7 +246,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearPasswordRecoveryPending();
     setPasswordRecoveryPendingState(false);
     stripAuthParamsFromUrl();
-    await supabase.auth.signOut();
+    // Local scope: signing out here must not revoke the user's sessions on other devices.
+    await supabase.auth.signOut({ scope: "local" });
   }, []);
 
   const deleteAccount = useCallback(async () => {

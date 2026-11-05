@@ -1,3 +1,4 @@
+import { isAuthSessionMissingError } from "@supabase/supabase-js";
 import { getSupabase, isSupabaseConfigured } from "./supabaseClient";
 
 /** Free tier: max password entries when signed in with Supabase and no license. */
@@ -44,6 +45,23 @@ export async function fetchUserEntitlement(userId: string): Promise<UserEntitlem
     stripeCheckoutSessionId: sid,
     purchasePlatform: parsePurchasePlatform(data?.purchase_platform),
   };
+}
+
+/**
+ * True when the server no longer has this device's session (e.g. revoked by a
+ * global sign-out elsewhere). supabase-js clears the local session and emits
+ * SIGNED_OUT in that case, so the app returns to the sign-in screen instead of
+ * running on a still-unexpired access token as a free user. Network errors → false.
+ */
+export async function isServerSessionRevoked(): Promise<boolean> {
+  const sb = getSupabase();
+  if (!sb) return false;
+  try {
+    const { error } = await sb.auth.getUser();
+    return Boolean(error && isAuthSessionMissingError(error));
+  } catch {
+    return false;
+  }
 }
 
 export async function fetchUserLicensed(userId: string): Promise<boolean> {

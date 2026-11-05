@@ -97,7 +97,11 @@ import {
   takeRememberedCheckoutSessionId,
 } from "./checkoutReturn";
 import { confirmCheckoutSession } from "./confirmCheckoutSession";
-import { FREE_ENTRY_LIMIT, fetchUserEntitlement } from "./entitlements";
+import {
+  FREE_ENTRY_LIMIT,
+  fetchUserEntitlement,
+  isServerSessionRevoked,
+} from "./entitlements";
 import { fetchIsAdmin } from "./adminApi";
 import { isSupabaseConfigured } from "./supabaseClient";
 import { isNativeApp } from "./platform";
@@ -367,11 +371,17 @@ export function VaultProvider({
     if (!opts?.keepLoaded) setEntitlementLoaded(false);
     let licensedNow = false;
     let adminNow = false;
+    let revoked = false;
     try {
-      const [ent, adminFlag] = await Promise.all([
+      const [ent, adminFlag, sessionRevoked] = await Promise.all([
         fetchUserEntitlement(userId),
         fetchIsAdmin(),
+        isServerSessionRevoked(),
       ]);
+      if (sessionRevoked) {
+        revoked = true;
+        return false;
+      }
       let resolved = ent;
       if (!ent.licensed && isCheckoutPending()) {
         const sid = takeRememberedCheckoutSessionId();
@@ -391,7 +401,7 @@ export function VaultProvider({
       setIsAdmin(false);
       setLicenseKey(null);
     } finally {
-      setEntitlementLoaded(true);
+      if (!revoked) setEntitlementLoaded(true);
     }
     return licensedNow || adminNow;
   }, [userId]);
