@@ -373,6 +373,7 @@ type PurchaseBreakdownRow = {
   purchase_platform: string | null;
   purchase_country: string | null;
   stripe_checkout_session_id: string | null;
+  amount_cents?: number | null;
 };
 
 function resolvePlatformForStats(row: PurchaseBreakdownRow): PurchasePlatform {
@@ -386,6 +387,7 @@ async function fetchPaidPurchaseRows(
   admin: ReturnType<typeof createClient>,
 ): Promise<PurchaseBreakdownRow[]> {
   const selectAttempts = [
+    "purchase_platform, purchase_country, stripe_checkout_session_id, amount_cents",
     "purchase_platform, purchase_country, stripe_checkout_session_id",
     "purchase_platform, stripe_checkout_session_id",
     "stripe_checkout_session_id",
@@ -414,16 +416,20 @@ async function fetchPurchaseBreakdownStats(
   admin: ReturnType<typeof createClient>,
 ): Promise<{
   sales_by_platform: { web: number; ios: number; android: number };
+  sales_amount_cents_by_platform: { web: number; ios: number; android: number };
   sales_by_country: { country: string; count: number }[];
 }> {
   const rows = await fetchPaidPurchaseRows(admin);
 
   const platform = { web: 0, ios: 0, android: 0 };
+  const amounts = { web: 0, ios: 0, android: 0 };
+  const fallback = defaultLicenseAmountCents();
   const countryMap = new Map<string, number>();
 
   for (const row of rows) {
     const plat = resolvePlatformForStats(row);
     platform[plat] += 1;
+    amounts[plat] += row.amount_cents ?? fallback;
 
     const country = normalizePurchaseCountry(row.purchase_country) ?? "unknown";
     countryMap.set(country, (countryMap.get(country) ?? 0) + 1);
@@ -434,7 +440,11 @@ async function fetchPurchaseBreakdownStats(
     .sort((a, b) => b.count - a.count || a.country.localeCompare(b.country))
     .slice(0, 16);
 
-  return { sales_by_platform: platform, sales_by_country };
+  return {
+    sales_by_platform: platform,
+    sales_amount_cents_by_platform: amounts,
+    sales_by_country,
+  };
 }
 
 async function fetchSignupByCountryStats(
@@ -600,6 +610,7 @@ async function fetchDashboardStats(admin: ReturnType<typeof createClient>) {
       free_members,
       open_complaints,
       sales_by_platform: breakdown.sales_by_platform,
+      sales_amount_cents_by_platform: breakdown.sales_amount_cents_by_platform,
       sales_by_country: breakdown.sales_by_country,
       signups_by_country,
       signups_by_platform,

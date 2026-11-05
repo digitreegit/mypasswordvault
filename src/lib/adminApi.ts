@@ -12,6 +12,8 @@ export type AdminStats = {
   free_members: number;
   open_complaints: number;
   sales_by_platform: { web: number; ios: number; android: number };
+  /** Customer price before store/Stripe fees; store sales never appear in Stripe. */
+  sales_amount_cents_by_platform: { web: number; ios: number; android: number };
   sales_by_country: { country: string; count: number }[];
   signups_by_country: { country: string; count: number }[];
   signups_by_platform: {

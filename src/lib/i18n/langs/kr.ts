@@ -828,6 +828,14 @@ export const MESSAGES_KR: Record<string, string> = {
   "admin.refundConfirm":
     "{{label}} — Stripe 환불 후 PRO 라이선스를 해제합니다.\n\n세션: {{session}}\n\n계속할까요?",
   "admin.refundFailed": "환불 실패: {{error}}",
+  "admin.storeRefundIos": "Apple 환불",
+  "admin.storeRefundIosHint":
+    "Apple 구매는 Apple만 환불할 수 있습니다. 고객이 reportaproblem.apple.com에서 요청하고, Apple이 승인하면 PRO가 자동으로 해제됩니다.",
+  "admin.storeRefundAndroid": "Play 환불",
+  "admin.storeRefundAndroidHint":
+    "Play Console > 주문 관리에서 환불합니다. 하루 안에 PRO가 자동으로 해제됩니다.",
+  "admin.salesChannelNote":
+    "금액은 수수료를 빼기 전 고객 결제 금액입니다. 웹 판매만 Stripe를 거치고, iOS와 Android 판매는 Apple과 Google이 따로 정산합니다.",
   "admin.noticeTitle": "알림",
   "admin.complaintPrompt": "컴플레인 메모 (선택):",
   "admin.complaintFailed": "등록 실패: {{error}}",

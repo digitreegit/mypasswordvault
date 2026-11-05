@@ -55,6 +55,7 @@ const EMPTY_STATS: AdminStats = {
   free_members: 0,
   open_complaints: 0,
   sales_by_platform: { web: 0, ios: 0, android: 0 },
+  sales_amount_cents_by_platform: { web: 0, ios: 0, android: 0 },
   sales_by_country: [],
   signups_by_country: [],
   signups_by_platform: { web: 0, ios: 0, android: 0, unknown: 0 },
@@ -67,6 +68,10 @@ function normalizeAdminStats(raw: Partial<AdminStats>): AdminStats {
     sales_by_platform: {
       ...EMPTY_STATS.sales_by_platform,
       ...(raw.sales_by_platform ?? {}),
+    },
+    sales_amount_cents_by_platform: {
+      ...EMPTY_STATS.sales_amount_cents_by_platform,
+      ...(raw.sales_amount_cents_by_platform ?? {}),
     },
     signups_by_platform: {
       ...EMPTY_STATS.signups_by_platform,
@@ -283,6 +288,33 @@ function AdminCustomerActions({
         >
           {t("admin.refund")}
         </button>
+      ) : null}
+      {!row.licenseKey &&
+      !row.refunded &&
+      !row.isAdmin &&
+      row.plan === "pro" &&
+      (row.purchasePlatform === "ios" || row.purchasePlatform === "android") ? (
+        <a
+          className={btnSecondary}
+          href={
+            row.purchasePlatform === "ios"
+              ? "https://reportaproblem.apple.com/"
+              : "https://play.google.com/console/u/0/developers/6539843721306476188/orders"
+          }
+          target="_blank"
+          rel="noopener noreferrer"
+          title={t(
+            row.purchasePlatform === "ios"
+              ? "admin.storeRefundIosHint"
+              : "admin.storeRefundAndroidHint",
+          )}
+        >
+          {t(
+            row.purchasePlatform === "ios"
+              ? "admin.storeRefundIos"
+              : "admin.storeRefundAndroid",
+          )}
+        </a>
       ) : null}
       <button
         type="button"

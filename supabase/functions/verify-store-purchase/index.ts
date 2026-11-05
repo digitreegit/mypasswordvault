@@ -110,6 +110,7 @@ Deno.serve(async (req) => {
   let verifiedTransactionId = transactionIdHint ?? "";
   let relatedTransactionIds: string[] = [];
   let amountCents: number | null = null;
+  let purchaseCountry: string | null = null;
 
   if (devBypass && verificationData === "dev_ok") {
     verifiedTransactionId =
@@ -125,12 +126,15 @@ Deno.serve(async (req) => {
     }
     verifiedTransactionId = r.transactionId;
     relatedTransactionIds = r.relatedTransactionIds;
+    amountCents = r.amountCents;
   } else {
     const r = await verifyGooglePurchase(verificationData, productId ?? "");
     if (!r.ok) {
       return json({ error: r.error ?? "verify_failed" }, 502);
     }
     verifiedTransactionId = r.transactionId;
+    if (r.uncharged) amountCents = 0;
+    purchaseCountry = r.regionCode;
   }
 
   if (!verifiedTransactionId) {
@@ -173,6 +177,7 @@ Deno.serve(async (req) => {
     accountEmail: user.email?.trim() ?? null,
     amountCents,
     currency: "usd",
+    purchaseCountry,
     storeTransactionId: verifiedTransactionId,
     storeProductId: productId ?? null,
   });

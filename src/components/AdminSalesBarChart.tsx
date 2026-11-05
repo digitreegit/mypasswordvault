@@ -24,11 +24,13 @@ function LegendItem({
   colorClass,
   label,
   value,
+  amount,
   muted = false,
 }: {
   colorClass: string;
   label: string;
   value: number;
+  amount?: string;
   muted?: boolean;
 }) {
   return (
@@ -47,6 +49,9 @@ function LegendItem({
       >
         {value}
       </span>
+      {amount ? (
+        <span className="tabular-nums text-ink-500">· {amount}</span>
+      ) : null}
     </div>
   );
 }
@@ -107,6 +112,7 @@ export function AdminSalesBarChart({
   let web = platform.web;
   const ios = platform.ios;
   const android = platform.android;
+  const amounts = stats.sales_amount_cents_by_platform ?? { web: 0, ios: 0, android: 0 };
   const assigned = web + ios + android;
   if (total > assigned) web += total - assigned;
 
@@ -175,9 +181,16 @@ export function AdminSalesBarChart({
             colorClass={seg.colorClass}
             label={seg.label}
             value={seg.value}
+            amount={formatMoney(
+              amounts[seg.key as keyof typeof amounts] ?? 0,
+              "usd",
+            )}
           />
         ))}
       </div>
+      <p className="mt-2 text-xs text-ink-500 leading-relaxed">
+        {t("admin.salesChannelNote")}
+      </p>
     </>
   );
 

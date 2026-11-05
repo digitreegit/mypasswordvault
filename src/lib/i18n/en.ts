@@ -843,6 +843,14 @@ export const MESSAGES_EN: Record<string, string> = {
   "admin.refundConfirm":
     "{{label}} — issue a Stripe refund and revoke the PRO license.\n\nSession: {{session}}\n\nContinue?",
   "admin.refundFailed": "Refund failed: {{error}}",
+  "admin.storeRefundIos": "Apple refund",
+  "admin.storeRefundIosHint":
+    "Apple purchases can only be refunded by Apple: the customer requests it at reportaproblem.apple.com. PRO is revoked automatically when Apple approves.",
+  "admin.storeRefundAndroid": "Play refund",
+  "admin.storeRefundAndroidHint":
+    "Refund in Play Console > Order management. PRO is revoked automatically within a day.",
+  "admin.salesChannelNote":
+    "Amounts are customer prices before fees. Only Web sales go through Stripe; iOS and Android sales are paid out separately by Apple and Google.",
   "admin.noticeTitle": "Notice",
   "admin.complaintPrompt": "Complaint note (optional):",
   "admin.complaintFailed": "Could not log complaint: {{error}}",

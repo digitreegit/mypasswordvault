@@ -24,11 +24,12 @@ export async function grantLicense(
     purchased_at: new Date().toISOString(),
     purchase_platform: input.platform,
     refunded_at: null,
+    // Always overwrite, so a new purchase never inherits an earlier purchase's figures.
+    amount_cents: input.amountCents ?? null,
+    purchase_country: input.purchaseCountry ?? null,
   };
   if (input.accountEmail) row.account_email = input.accountEmail;
-  if (input.amountCents != null) row.amount_cents = input.amountCents;
   if (input.currency) row.currency = input.currency;
-  if (input.purchaseCountry) row.purchase_country = input.purchaseCountry;
   if (input.stripeCheckoutSessionId) {
     row.stripe_checkout_session_id = input.stripeCheckoutSessionId;
   }

@@ -7,6 +7,9 @@ export type AppleTransactionPayload = {
   environment?: string;
   type?: string;
   revocationDate?: number;
+  /** Customer price in milliunits of `currency` (4990 = 4.99). */
+  price?: number;
+  currency?: string;
 };
 
 export type AppleVerifyResult =
@@ -14,8 +17,16 @@ export type AppleVerifyResult =
    * `transactionId` is the purchase's originalTransactionId: restoring a non-consumable
    * mints a new transactionId, so only the original id identifies the purchase across
    * restores and accounts. `relatedTransactionIds` holds the other ids seen for it.
+   * `amountCents` is 0 for sandbox/TestFlight purchases, which Apple never charges, and null
+   * when the charge isn't in USD.
    */
-  | { ok: true; transactionId: string; relatedTransactionIds: string[] }
+  | {
+    ok: true;
+    transactionId: string;
+    relatedTransactionIds: string[];
+    amountCents: number | null;
+    currency: string | null;
+  }
   | { ok: false; transactionId: string; error: string };
 
 function normalizePrivateKey(raw: string): string {
@@ -143,7 +154,19 @@ function tryTrustStoreKitJws(
   const relatedTransactionIds = [
     ...new Set([payload.transactionId?.trim(), fallbackTransactionId]),
   ].filter((id): id is string => Boolean(id) && id !== verifiedId);
-  return { ok: true, transactionId: verifiedId, relatedTransactionIds };
+  const currency = typeof payload.currency === "string" && payload.currency.trim()
+    ? payload.currency.trim().toLowerCase()
+    : null;
+  let amountCents: number | null = null;
+  if (isSandboxEnvironment(payload)) {
+    amountCents = 0;
+  } else if (
+    currency === "usd" && typeof payload.price === "number" && Number.isFinite(payload.price)
+  ) {
+    // Revenue totals are summed in USD; other currencies fall back to the list price.
+    amountCents = Math.round(payload.price / 10);
+  }
+  return { ok: true, transactionId: verifiedId, relatedTransactionIds, amountCents, currency };
 }
 
 export function appleApiConfigured(): boolean {

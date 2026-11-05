@@ -1,5 +1,6 @@
 export type GoogleVerifyResult =
-  | { ok: true; transactionId: string }
+  /** `uncharged` marks license-tester and promo-code purchases, which Google never charges. */
+  | { ok: true; transactionId: string; uncharged: boolean; regionCode: string | null }
   | { ok: false; transactionId: string; error: string };
 
 type ServiceAccount = {
@@ -13,6 +14,9 @@ type GoogleProductPurchase = {
   orderId?: string;
   acknowledgementState?: number;
   consumptionState?: number;
+  /** 0 = test (license tester), 1 = promo, 2 = rewarded; absent for normal purchases. */
+  purchaseType?: number;
+  regionCode?: string;
 };
 
 function normalizePrivateKey(raw: string): string {
@@ -185,5 +189,11 @@ export async function verifyGooglePurchase(
   }
 
   const transactionId = purchase.orderId?.trim() || token;
-  return { ok: true, transactionId };
+  const region = purchase.regionCode?.trim().toUpperCase() ?? "";
+  return {
+    ok: true,
+    transactionId,
+    uncharged: purchase.purchaseType === 0 || purchase.purchaseType === 1,
+    regionCode: /^[A-Z]{2}$/.test(region) ? region : null,
+  };
 }
