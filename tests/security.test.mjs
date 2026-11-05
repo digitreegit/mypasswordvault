@@ -132,15 +132,28 @@ test('only authenticated Apple API responses can validate a client transaction h
     assert.equal((await apple.verifyApplePurchase(jws(payload), product)).ok, false);
   } finally { globalThis.fetch = originalFetch; env.clear(); }
 });
+test('a restored Apple purchase is identified by its original transaction id', async () => {
+  env.set('APPLE_ISSUER_ID', 'issuer'); env.set('APPLE_KEY_ID', 'key'); env.set('APPLE_PRIVATE_KEY', 'test');
+  const originalFetch = globalThis.fetch;
+  try {
+    const restored = { ...payload, transactionId: 'restore-2', originalTransactionId: 'original-1' };
+    globalThis.fetch = async () => new Response(JSON.stringify({ signedTransactionInfo: jws(restored) }));
+    const r = await apple.verifyApplePurchase('restore-2', product);
+    assert.equal(r.ok, true);
+    assert.equal(r.transactionId, 'original-1');
+    assert.deepEqual(r.relatedTransactionIds, ['restore-2']);
+  } finally { globalThis.fetch = originalFetch; env.clear(); }
+});
 
 const remote = new Map();
 const uploads = [];
 globalThis.__testSupabase = {
   from() { return {
     select() { return { eq(_column, userId) { return {
-      async maybeSingle() { return { data: remote.has(userId) ? { vault_backup: remote.get(userId) } : null, error: null }; },
+      async maybeSingle() { return { data: remote.has(userId) ? { vault_backup: remote.get(userId), updated_at: 't0' } : null, error: null }; },
     }; } }; },
     async upsert(record) { uploads.push(record); return { error: null }; },
+    async insert(record) { uploads.push(record); return { error: null }; },
   }; },
 };
 const cloud = await bundle('cloud', `
@@ -155,10 +168,10 @@ const cloud = await bundle('cloud', `
 } }]);
 test('a delayed push cannot upload another account’s ciphertext', async () => {
   await cloud.replaceVaultSnapshot(meta, [row]); uploads.length = 0;
-  assert.equal(await cloud.pushVaultBackupToCloud('owner-b'), false);
+  assert.equal(await cloud.pushVaultBackupToCloud('owner-b'), 'failed');
   assert.equal(uploads.length, 0);
   assert.equal((await cloud.getMeta()).cloudUserId, 'owner-a');
-  assert.equal(await cloud.pushVaultBackupToCloud('owner-a'), true);
+  assert.equal(await cloud.pushVaultBackupToCloud('owner-a'), 'local_pushed');
   assert.equal(uploads[0].user_id, 'owner-a');
 });
 test('invalid cloud data on account switch preserves the previous local vault', async () => {

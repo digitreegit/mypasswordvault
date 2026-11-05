@@ -16,7 +16,10 @@ import {
   STORE_PRO_PRODUCT_ID,
   storeBridgeMissingErrorCode,
 } from "./platform";
-import type { StorePurchasePayload } from "./storePurchase";
+import {
+  verifyDeliveredStoreTransaction,
+  type StorePurchasePayload,
+} from "./storePurchase";
 
 let initPromise: Promise<void> | null = null;
 
@@ -88,6 +91,14 @@ type PendingPurchase = {
 
 let pendingPurchase: PendingPurchase | null = null;
 let handlersRegistered = false;
+const ORDER_SETTLE_TIMEOUT_MS = 45_000;
+
+function takePendingPurchase(productId: string): PendingPurchase | null {
+  const pending = pendingPurchase;
+  if (!pending || pending.productId !== productId) return null;
+  pendingPurchase = null;
+  return pending;
+}
 
 function storePlatform() {
   const native = getNativePlatform();
@@ -164,19 +175,37 @@ function registerStoreHandlers(
   });
 
   store.when().approved((transaction) => {
-    const pending = pendingPurchase;
-    if (
-      !pending ||
-      !transactionMatchesProduct(transaction, pending.productId)
-    ) {
+    if (!transactionMatchesProduct(transaction, STORE_PRO_PRODUCT_ID)) return;
+    const pending = takePendingPurchase(STORE_PRO_PRODUCT_ID);
+    if (pending) {
+      try {
+        pending.resolve(payloadFromTransaction(transaction, pending.productId));
+      } catch (e: unknown) {
+        pending.reject(e);
+      }
       return;
     }
-    pendingPurchase = null;
+    // Replayed at launch or approved later (Ask to Buy, Play pending payment).
+    let payload: StorePurchasePayload;
     try {
-      pending.resolve(payloadFromTransaction(transaction, pending.productId));
+      payload = payloadFromTransaction(transaction, STORE_PRO_PRODUCT_ID);
     } catch (e: unknown) {
-      pending.reject(e);
+      console.warn("store.approved without verification data", e);
+      return;
     }
+    void verifyDeliveredStoreTransaction(payload);
+  });
+
+  // iOS Ask to Buy reports "pending"; Play pending payments stay "initiated" with isPending.
+  const rejectAsPending = (transaction: Transaction) => {
+    if (!transactionMatchesProduct(transaction, STORE_PRO_PRODUCT_ID)) return;
+    takePendingPurchase(STORE_PRO_PRODUCT_ID)?.reject(
+      new AppError("errors.storePurchasePending"),
+    );
+  };
+  store.when().pending(rejectAsPending);
+  store.when().initiated((transaction) => {
+    if (transaction.isPending) rejectAsPending(transaction);
   });
 
   store.ready(() => {
@@ -273,10 +302,22 @@ async function orderProduct(productId: string): Promise<StorePurchasePayload> {
   }
 
   return new Promise((resolve, reject) => {
-    pendingPurchase = { productId, resolve, reject };
+    const entry: PendingPurchase = { productId, resolve, reject };
+    pendingPurchase = entry;
 
     void offer.order().then((err) => {
-      if (!err || pendingPurchase?.productId !== productId) return;
+      if (pendingPurchase !== entry) return;
+      if (!err) {
+        // The sheet closed without an error; "approved" or "pending" normally follows.
+        // Never leave the purchase button stuck if neither arrives — a later approval is
+        // still verified by the global "approved" handler.
+        window.setTimeout(() => {
+          if (pendingPurchase !== entry) return;
+          pendingPurchase = null;
+          reject(new AppError("errors.storePurchasePending"));
+        }, ORDER_SETTLE_TIMEOUT_MS);
+        return;
+      }
       pendingPurchase = null;
       if (err.code === ErrorCode.PAYMENT_CANCELLED) {
         reject(new AppError("errors.storePurchaseCancelled"));

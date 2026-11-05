@@ -1,5 +1,6 @@
 import { openDB, type IDBPDatabase } from "idb";
 import type { Locale } from "./i18n/locale";
+import { metaSignature } from "./vaultMerge";
 
 const DB_NAME = "mypasswordapp";
 const DB_VERSION = 1;
@@ -168,6 +169,70 @@ export async function replaceVaultSnapshot(meta: VaultMeta, entries: VaultEntry[
   } catch (error) {
     try { tx.abort(); } catch { /* already aborted */ }
     await Promise.allSettled([...writes, tx.done]);
+    throw error;
+  }
+}
+
+/**
+ * Write a merged cloud snapshot over the rows it was computed from. Rows and meta that
+ * changed locally after `read` was taken are left alone (the next sync merges them), so a
+ * background sync can never clobber an edit made while it was in flight.
+ * Returns false when something was skipped for that reason.
+ */
+export async function applyVaultSnapshotChanges(
+  read: { meta: VaultMeta; entries: VaultEntry[] },
+  next: { meta: VaultMeta; entries: VaultEntry[] },
+): Promise<boolean> {
+  const d = await db();
+  const tx = d.transaction([STORE_META, STORE_ENTRIES], "readwrite");
+  const metaStore = tx.objectStore(STORE_META);
+  const entryStore = tx.objectStore(STORE_ENTRIES);
+  try {
+    const [currentMeta, current] = await Promise.all([
+      metaStore.get("vault") as Promise<VaultMeta | undefined>,
+      entryStore.getAll() as Promise<VaultEntry[]>,
+    ]);
+    const readVersion = new Map(read.entries.map((e) => [e.id, e.updatedAt]));
+    const currentById = new Map(current.map((e) => [e.id, e]));
+    const nextIds = new Set(next.entries.map((e) => e.id));
+    let complete = true;
+    const writes: Promise<unknown>[] = [];
+
+    for (const entry of next.entries) {
+      const cur = currentById.get(entry.id);
+      if (cur?.updatedAt !== readVersion.get(entry.id)) {
+        complete = false;
+        continue;
+      }
+      if (!cur || cur.updatedAt !== entry.updatedAt || cur.enc !== entry.enc) {
+        writes.push(entryStore.put(entry));
+      }
+    }
+    for (const cur of current) {
+      if (nextIds.has(cur.id)) continue;
+      if (readVersion.get(cur.id) === cur.updatedAt) writes.push(entryStore.delete(cur.id));
+      else complete = false;
+    }
+
+    const metaUnchanged =
+      currentMeta !== undefined &&
+      currentMeta.updatedAt === read.meta.updatedAt &&
+      metaSignature(currentMeta) === metaSignature(read.meta);
+    if (metaUnchanged) {
+      if (metaSignature(currentMeta) !== metaSignature(next.meta) ||
+          currentMeta.updatedAt !== next.meta.updatedAt ||
+          currentMeta.cloudUserId !== next.meta.cloudUserId) {
+        writes.push(metaStore.put(next.meta));
+      }
+    } else {
+      complete = false;
+    }
+
+    await Promise.all([...writes, tx.done]);
+    return complete;
+  } catch (error) {
+    try { tx.abort(); } catch { /* already aborted */ }
+    await tx.done.catch(() => {});
     throw error;
   }
 }

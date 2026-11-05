@@ -86,6 +86,7 @@ import {
 import {
   deleteRemoteVaultBackup,
   pushVaultBackupToCloud,
+  type CloudPushResult,
   reconcileCloudVault,
 } from "./cloudVault";
 import { markCloudSyncPending } from "./cloudSyncPending";
@@ -101,10 +102,13 @@ import {
   FREE_ENTRY_LIMIT,
   fetchUserEntitlement,
   isServerSessionRevoked,
+  readCachedEntitlement,
+  writeCachedEntitlement,
 } from "./entitlements";
 import { fetchIsAdmin } from "./adminApi";
 import { isSupabaseConfigured } from "./supabaseClient";
 import { isNativeApp } from "./platform";
+import { isStoreSheetActive, STORE_PRO_GRANTED_EVENT } from "./storeSheetGuard";
 
 export type VaultStatus = "loading" | "fresh" | "locked" | "unlocked";
 
@@ -258,6 +262,11 @@ function endPasskeyCeremony() {
   passkeyCeremonyDepth = Math.max(0, passkeyCeremonyDepth - 1);
 }
 
+/** A native sheet or payment flow owns the screen; idle and resume checks must not lock. */
+function isExternalFlowActive() {
+  return isPasskeyCeremonyActive() || isStoreSheetActive();
+}
+
 async function withRecoveryUnlockLock<T>(task: () => Promise<T>): Promise<T> {
   if (typeof navigator !== "undefined" && navigator.locks) {
     return navigator.locks.request("mypasswordvault-recovery-unlock", task);
@@ -324,6 +333,9 @@ export function VaultProvider({
     recoveryCodeHashes: string[];
   } | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
+  const autoLockMinutesRef = useRef(5);
+  const userEmailRef = useRef(userEmail);
+  userEmailRef.current = userEmail;
   const localeRef = useRef<Locale>("en");
   const pushDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cloudRefreshInFlightRef = useRef(false);
@@ -352,59 +364,108 @@ export function VaultProvider({
 
   const hasUnlimitedEntries = licensed || isAdmin;
 
+  /** Last known plan for the current account; null until the server (or cache) has answered once. */
+  const knownEntitlementRef = useRef<{ userId: string; licensed: boolean; isAdmin: boolean } | null>(null);
+  const entitlementSeqRef = useRef(0);
+
   const applyLicensedOptimistic = useCallback((sessionId?: string | null) => {
+    // Discard refreshes that started before the purchase was granted.
+    entitlementSeqRef.current += 1;
     setLicensed(true);
     setEntitlementLoaded(true);
     if (sessionId?.startsWith("cs_")) {
       setLicenseKey(sessionId);
     }
-  }, []);
+    if (userId) {
+      const isAdminNow = knownEntitlementRef.current?.userId === userId && knownEntitlementRef.current.isAdmin;
+      knownEntitlementRef.current = { userId, licensed: true, isAdmin: isAdminNow };
+      writeCachedEntitlement(userId, { licensed: true, isAdmin: isAdminNow });
+    }
+  }, [userId]);
 
-  const refreshEntitlements = useCallback(async (opts?: { keepLoaded?: boolean }): Promise<boolean> => {
+  // Never flip a known plan back to "loading" or FREE because a refresh failed:
+  // offline launches, server blips and app-resume races must keep PRO / ADMIN.
+  const refreshEntitlements = useCallback(async (_opts?: { keepLoaded?: boolean }): Promise<boolean> => {
     if (!userId || !isSupabaseConfigured) {
+      knownEntitlementRef.current = null;
       setLicensed(true);
       setIsAdmin(false);
       setLicenseKey(null);
       setEntitlementLoaded(true);
       return true;
     }
-    if (!opts?.keepLoaded) setEntitlementLoaded(false);
-    let licensedNow = false;
-    let adminNow = false;
-    let revoked = false;
-    try {
-      const [ent, adminFlag, sessionRevoked] = await Promise.all([
-        fetchUserEntitlement(userId),
-        fetchIsAdmin(),
-        isServerSessionRevoked(),
-      ]);
-      if (sessionRevoked) {
-        revoked = true;
-        return false;
-      }
-      let resolved = ent;
-      if (!ent.licensed && isCheckoutPending()) {
-        const sid = takeRememberedCheckoutSessionId();
+    if (knownEntitlementRef.current?.userId !== userId) {
+      const cached = readCachedEntitlement(userId);
+      knownEntitlementRef.current = cached ? { userId, ...cached } : null;
+      setLicensed(cached?.licensed ?? false);
+      setIsAdmin(cached?.isAdmin ?? false);
+      setLicenseKey(null);
+      setEntitlementLoaded(Boolean(cached));
+    }
+    const seq = ++entitlementSeqRef.current;
+    const [entResult, adminResult, revokedResult] = await Promise.allSettled([
+      fetchUserEntitlement(userId),
+      fetchIsAdmin(),
+      isServerSessionRevoked(),
+    ]);
+    const known = () =>
+      knownEntitlementRef.current?.userId === userId ? knownEntitlementRef.current : null;
+    const knownAnswer = () => Boolean(known()?.licensed || known()?.isAdmin);
+    if (seq !== entitlementSeqRef.current) return knownAnswer();
+    // auth-js emits SIGNED_OUT for a server-revoked session; keep the current plan until then.
+    if (revokedResult.status === "fulfilled" && revokedResult.value) return knownAnswer();
+
+    let ent = entResult.status === "fulfilled" ? entResult.value : null;
+    if (entResult.status === "rejected") console.warn("refreshEntitlements", entResult.reason);
+    if (ent && !ent.licensed && isCheckoutPending()) {
+      const sid = takeRememberedCheckoutSessionId();
+      try {
         if (sid && (await confirmCheckoutSession(sid))) {
-          resolved = await fetchUserEntitlement(userId);
+          ent = await fetchUserEntitlement(userId);
           clearCheckoutPending();
         }
+      } catch (e) {
+        console.warn("refreshEntitlements checkout confirm", e);
       }
-      licensedNow = resolved.licensed;
-      adminNow = adminFlag;
-      setLicensed(resolved.licensed);
-      setIsAdmin(adminFlag);
-      setLicenseKey(resolved.stripeCheckoutSessionId);
-    } catch (e) {
-      console.error("refreshEntitlements", e);
-      setLicensed(false);
-      setIsAdmin(false);
-      setLicenseKey(null);
-    } finally {
-      if (!revoked) setEntitlementLoaded(true);
+      if (seq !== entitlementSeqRef.current) return knownAnswer();
     }
-    return licensedNow || adminNow;
+    const adminFlag = adminResult.status === "fulfilled" ? adminResult.value : null;
+    if (!ent && adminFlag === null) return knownAnswer();
+
+    const prev = known();
+    const next = {
+      userId,
+      licensed: ent ? ent.licensed : prev?.licensed ?? false,
+      isAdmin: adminFlag ?? prev?.isAdmin ?? false,
+    };
+    knownEntitlementRef.current = next;
+    writeCachedEntitlement(userId, { licensed: next.licensed, isAdmin: next.isAdmin });
+    setLicensed(next.licensed);
+    setIsAdmin(next.isAdmin);
+    if (ent) setLicenseKey(ent.stripeCheckoutSessionId);
+    if (ent || prev) setEntitlementLoaded(true);
+    return next.licensed || next.isAdmin;
   }, [userId]);
+
+  // Offline launch: retry as soon as the network comes back.
+  useEffect(() => {
+    if (!userId) return;
+    const onOnline = () => void refreshEntitlements({ keepLoaded: true });
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, [userId, refreshEntitlements]);
+
+  // The server has granted PRO for a store transaction (in-app purchase, restore, or a
+  // re-delivered / Ask-to-Buy transaction verified in the background).
+  useEffect(() => {
+    if (!userId) return;
+    const onGranted = () => {
+      applyLicensedOptimistic();
+      void refreshEntitlements();
+    };
+    window.addEventListener(STORE_PRO_GRANTED_EVENT, onGranted);
+    return () => window.removeEventListener(STORE_PRO_GRANTED_EVENT, onGranted);
+  }, [userId, refreshEntitlements, applyLicensedOptimistic]);
 
   const finalizePaidCheckout = useCallback(
     (sessionId?: string | null) =>
@@ -439,14 +500,20 @@ export function VaultProvider({
     localeRef.current = locale;
   }, [locale]);
 
+  /** Set below; lets a push that merged in another device's edits refresh the list. */
+  const applyCloudResultRef = useRef<(result: CloudPushResult) => Promise<void>>(async () => {});
+
   const syncCloudNow = useCallback(async (): Promise<boolean> => {
     if (!userId) return true;
-    return pushVaultBackupToCloud(userId);
+    const result = await pushVaultBackupToCloud(userId);
+    if (result === "remote_applied") await applyCloudResultRef.current(result);
+    return result !== "failed";
   }, [userId]);
 
   const flushCloudPush = useCallback(async () => {
     if (!userId) return;
-    await pushVaultBackupToCloud(userId);
+    const result = await pushVaultBackupToCloud(userId);
+    if (result === "remote_applied") await applyCloudResultRef.current(result);
   }, [userId]);
 
   const scheduleCloudPush = useCallback(() => {
@@ -525,8 +592,10 @@ export function VaultProvider({
     }
   }, []);
 
+  // Runs once per account: an email change on the same account must not re-lock the vault.
   useEffect(() => {
     let cancelled = false;
+    const userEmail = userEmailRef.current;
     (async () => {
       let cloudFailed = false;
       try {
@@ -585,7 +654,7 @@ export function VaultProvider({
     return () => {
       cancelled = true;
     };
-  }, [userId, userEmail]);
+  }, [userId]);
 
   // Keep UI in sync with the in-memory session (e.g. right after setup before re-lock).
   useEffect(() => {
@@ -611,14 +680,21 @@ export function VaultProvider({
     lockInternal();
   }, [lockInternal]);
 
-  // Mobile OS timers are suspended in the background; clear unlocked secrets on exit.
+  // Mobile OS timers are suspended in the background, so the inactivity interval below
+  // cannot fire there. Re-check on return instead of locking on every exit: system sheets
+  // (StoreKit, Play Billing, Face ID), file pickers and a quick copy/paste into another app
+  // must not cost the user their master password inside the auto-lock window.
   useEffect(() => {
     if (!isNativeApp()) return;
     let disposed = false;
     let handle: { remove: () => Promise<void> } | undefined;
     void import("@capacitor/app").then(async ({ App }) => {
       const listener = await App.addListener("appStateChange", ({ isActive }) => {
-        if (!isActive && sessionRef.current) lockInternal();
+        if (!isActive || !sessionRef.current || isExternalFlowActive()) return;
+        const minutes = autoLockMinutesRef.current;
+        if (minutes > 0 && Date.now() - lastActivityRef.current >= minutes * 60_000) {
+          lockInternal();
+        }
       });
       if (disposed) await listener.remove();
       else handle = listener;
@@ -626,13 +702,17 @@ export function VaultProvider({
     return () => { disposed = true; void handle?.remove(); };
   }, [lockInternal]);
 
+  useEffect(() => {
+    autoLockMinutesRef.current = meta?.autoLockMinutes ?? 5;
+  }, [meta?.autoLockMinutes]);
+
   // Auto-lock on inactivity.
   useEffect(() => {
     if (status !== "unlocked") return;
     const minutes = meta?.autoLockMinutes ?? 5;
     if (minutes <= 0) return;
     const interval = setInterval(() => {
-      if (isPasskeyCeremonyActive()) {
+      if (isExternalFlowActive()) {
         lastActivityRef.current = Date.now();
         return;
       }
@@ -648,7 +728,7 @@ export function VaultProvider({
   // in-memory crypto session — force lock so the grid is never shown without a key.
   useEffect(() => {
     const onVisibility = () => {
-      if (document.hidden || isPasskeyCeremonyActive()) return;
+      if (document.hidden || isExternalFlowActive()) return;
       const minutes = meta?.autoLockMinutes ?? 5;
       if (minutes > 0 && Date.now() - lastActivityRef.current >= minutes * 60_000) lockInternal();
     };
@@ -732,6 +812,17 @@ export function VaultProvider({
     lastActivityRef.current = Date.now();
   }, []);
 
+  // Count input anywhere in the unlocked app (Settings, dialogs, drawers), not just the list.
+  useEffect(() => {
+    if (status !== "unlocked") return;
+    const opts = { capture: true, passive: true } as const;
+    const events = ["pointerdown", "pointermove", "keydown", "touchstart", "wheel", "scroll"] as const;
+    for (const ev of events) window.addEventListener(ev, touchActivity, opts);
+    return () => {
+      for (const ev of events) window.removeEventListener(ev, touchActivity, opts);
+    };
+  }, [status, touchActivity]);
+
   const setLocale = useCallback(async (next: Locale) => {
     const L = normalizeLocale(next);
     setLocaleState(L);
@@ -756,7 +847,14 @@ export function VaultProvider({
     const raw = await listEntries();
     const decrypted: DecryptedEntry[] = [];
     for (const e of raw) {
-      const secret = await decryptEntry(key, e);
+      let secret: Awaited<ReturnType<typeof decryptEntry>>;
+      try {
+        secret = await decryptEntry(key, e);
+      } catch (err) {
+        // Keep the row on disk and in the cloud snapshot; one damaged entry must not block unlock.
+        console.error("Skipping undecryptable vault entry", e.id, err);
+        continue;
+      }
       decrypted.push({
         id: e.id,
         categoryId: secret.categoryId,
@@ -783,15 +881,44 @@ export function VaultProvider({
       let migrated = false;
       for (const e of raw) {
         if (isEncryptedEntry(e)) continue;
-        const secret = await decryptEntry(key, e);
-        const row = await buildEncryptedEntryRow(key, e.id, Date.now(), secret);
-        await putEntry(row);
-        migrated = true;
+        try {
+          const secret = await decryptEntry(key, e);
+          const row = await buildEncryptedEntryRow(key, e.id, Date.now(), secret);
+          await putEntry(row);
+          migrated = true;
+        } catch (err) {
+          console.error("Skipping legacy entry migration", e.id, err);
+        }
       }
       return migrated;
     },
     []
   );
+
+  const applyCloudResult = useCallback(async (result: CloudPushResult) => {
+    if (result !== "remote_applied" && result !== "local_pushed") return;
+    if (result === "remote_applied" && sessionRef.current) {
+      const raw = await getMetaRaw();
+      try {
+        if (!raw || await decryptString(sessionRef.current.key, raw.verifier) !== VERIFIER_PLAINTEXT) {
+          throw new AppError("errors.locked");
+        }
+      } catch {
+        // The cloud vault was re-created with a different key; the open session cannot read it.
+        lockInternal();
+        setMeta(raw ?? null);
+        return;
+      }
+    }
+    const m = await readMeta();
+    if (m) setMeta(m);
+    const session = sessionRef.current;
+    if (session) await loadEntries(session.key);
+  }, [loadEntries, lockInternal, readMeta]);
+
+  useEffect(() => {
+    applyCloudResultRef.current = applyCloudResult;
+  }, [applyCloudResult]);
 
   const runCloudVaultSync = useCallback(async (): Promise<VaultSyncResult> => {
     if (!userId || !isSupabaseConfigured) return "empty";
@@ -804,26 +931,9 @@ export function VaultProvider({
     }
 
     const result = await reconcileCloudVault(userId, userEmail);
-    if (result === "remote_applied" || result === "local_pushed") {
-      if (result === "remote_applied" && sessionRef.current) {
-        const raw = await getMetaRaw();
-        try {
-          if (!raw || await decryptString(sessionRef.current.key, raw.verifier) !== VERIFIER_PLAINTEXT) {
-            throw new AppError("errors.locked");
-          }
-        } catch {
-          lockInternal();
-          setMeta(raw ?? null);
-          return result;
-        }
-      }
-      const m = await readMeta();
-      if (m) setMeta(m);
-      const session = sessionRef.current;
-      if (session) await loadEntries(session.key);
-    }
+    await applyCloudResult(result);
     return result;
-  }, [userId, userEmail, loadEntries, flushCloudPush, lockInternal]);
+  }, [userId, userEmail, flushCloudPush, applyCloudResult]);
 
   const syncVaultNow = useCallback(async (): Promise<VaultSyncResult> => {
     if (cloudRefreshInFlightRef.current) return "unchanged";

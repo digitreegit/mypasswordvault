@@ -103,6 +103,16 @@ Deno.serve(async (req) => {
   }
   const user = userData.user;
 
+  // A stale tab or a second device must not charge an account that is already PRO.
+  const { data: entitlement } = await supa
+    .from("user_entitlements")
+    .select("licensed")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (entitlement?.licensed) {
+    return json({ error: "already_licensed" }, 409);
+  }
+
   const stripe = new Stripe(stripeKey);
   const publishableKey = Deno.env.get("STRIPE_PUBLISHABLE_KEY")?.trim() ?? "";
 

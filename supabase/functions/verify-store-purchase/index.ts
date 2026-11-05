@@ -108,6 +108,7 @@ Deno.serve(async (req) => {
     Deno.env.get("DENO_ENV") === "development";
 
   let verifiedTransactionId = transactionIdHint ?? "";
+  let relatedTransactionIds: string[] = [];
   let amountCents: number | null = null;
 
   if (devBypass && verificationData === "dev_ok") {
@@ -123,6 +124,7 @@ Deno.serve(async (req) => {
       return json({ error: r.error ?? "verify_failed" }, 502);
     }
     verifiedTransactionId = r.transactionId;
+    relatedTransactionIds = r.relatedTransactionIds;
   } else {
     const r = await verifyGooglePurchase(verificationData, productId ?? "");
     if (!r.ok) {
@@ -136,19 +138,21 @@ Deno.serve(async (req) => {
   }
 
   const admin = createClient(supabaseUrl, serviceKey);
-  const { data: existing, error: lookupError } = await admin
+  // Older rows may hold a restore-specific Apple transactionId instead of the original id.
+  const purchaseIds = [...new Set([verifiedTransactionId, ...relatedTransactionIds])];
+  const { data: owners, error: lookupError } = await admin
     .from("user_entitlements")
     .select("user_id, licensed")
-    .eq("store_transaction_id", verifiedTransactionId)
-    .maybeSingle();
+    .in("store_transaction_id", purchaseIds);
 
   if (lookupError) return json({ error: "db_error" }, 500);
 
-  if (existing && existing.user_id !== user.id) {
+  if (owners?.some((row) => row.user_id !== user.id)) {
     return json({ error: "transaction_owned_by_other_user" }, 409);
   }
 
-  if (existing?.licensed && existing.user_id === user.id) {
+  const existing = owners?.find((row) => row.user_id === user.id);
+  if (existing?.licensed) {
     return json({
       licensed: true,
       purchase_platform: platform,

@@ -334,6 +334,10 @@ export const MESSAGES_EN: Record<string, string> = {
   "errors.storeVerifyFailed": "Could not verify your store purchase. Try again or contact support.",
   "errors.storeDevOnly": "Dev store grant is only available in development builds.",
   "errors.storePurchaseCancelled": "Purchase was cancelled.",
+  "errors.storePurchasePending":
+    "Your purchase is waiting for approval. PRO turns on automatically once it is approved.",
+  "errors.storePurchaseOtherAccount":
+    "This store purchase is already linked to another My Password Vault account. Sign in with that account to use PRO.",
   "errors.entryLimitReached":
     "The free plan allows up to {{limit}} password entries. Upgrade to add more.",
   "errors.importExceedsEntryLimit":

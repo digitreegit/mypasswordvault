@@ -1,5 +1,6 @@
 import { getSupabase } from "./supabaseClient";
 import { AppError } from "./errors";
+import { STORE_PRO_GRANTED_EVENT, withStoreSheet } from "./storeSheetGuard";
 import {
   getNativePlatform,
   isNativeApp,
@@ -51,12 +52,12 @@ export async function purchaseProViaStore(): Promise<void> {
     throw new AppError(storeBridgeMissingErrorCode());
   }
 
-  const payload = await bridge.purchase(STORE_PRO_PRODUCT_ID);
-  try {
+  await withStoreSheet(async () => {
+    const payload = await bridge.purchase(STORE_PRO_PRODUCT_ID);
     await verifyStorePurchaseOnServer({ ...payload, restore: false });
-  } finally {
-    await payload.completePurchase?.();
-  }
+    await finishTransaction(payload);
+  });
+  notifyProGranted();
 }
 
 export async function restoreStorePurchases(): Promise<boolean> {
@@ -65,14 +66,56 @@ export async function restoreStorePurchases(): Promise<boolean> {
   if (!bridge?.restore) {
     throw new AppError(storeBridgeMissingErrorCode());
   }
-  const payload = await bridge.restore();
-  if (!payload) return false;
-  try {
+  const restored = await withStoreSheet(async () => {
+    const payload = await bridge.restore();
+    if (!payload) return false;
     await verifyStorePurchaseOnServer({ ...payload, restore: true });
+    await finishTransaction(payload);
+    return true;
+  });
+  if (restored) notifyProGranted();
+  return restored;
+}
+
+const backgroundVerifications = new Set<string>();
+
+/**
+ * Transactions the store delivers outside an active purchase: unfinished ones replayed at
+ * launch (app killed mid-purchase, earlier verify failed) and Ask to Buy / pending payments
+ * approved later. Left unfinished on failure so the store replays them next launch.
+ */
+export async function verifyDeliveredStoreTransaction(
+  payload: StorePurchasePayload,
+): Promise<void> {
+  const key = payload.transactionId || payload.verificationData;
+  if (backgroundVerifications.has(key)) return;
+  backgroundVerifications.add(key);
+  try {
+    await verifyStorePurchaseOnServer({ ...payload, restore: false });
+    await finishTransaction(payload);
+    notifyProGranted();
+  } catch (e) {
+    console.warn("Deferred store transaction not verified yet", e);
   } finally {
-    await payload.completePurchase?.();
+    backgroundVerifications.delete(key);
   }
-  return true;
+}
+
+/**
+ * Finish (iOS) / acknowledge (Play) only after the server granted PRO. An unfinished
+ * transaction is replayed by the store on next launch, and Play refunds an unacknowledged
+ * purchase after three days, so a failed verification must never finish it.
+ */
+async function finishTransaction(payload: StorePurchasePayload): Promise<void> {
+  try {
+    await payload.completePurchase?.();
+  } catch (e) {
+    console.warn("Store transaction finish failed; the store will replay it", e);
+  }
+}
+
+function notifyProGranted(): void {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(STORE_PRO_GRANTED_EVENT));
 }
 
 async function verifyStorePurchaseOnServer(
@@ -101,6 +144,9 @@ async function verifyStorePurchaseOnServer(
       } catch {
         /* keep error.message */
       }
+    }
+    if (detail.startsWith("transaction_owned_by_other_user")) {
+      throw new AppError("errors.storePurchaseOtherAccount", detail);
     }
     throw new AppError("errors.storeVerifyFailed", detail);
   }

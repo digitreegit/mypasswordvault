@@ -58,13 +58,26 @@ export function PricingPage() {
   const busy = storeBilling ? storeBusy : stripeBusy;
   const uid = session?.user?.id;
 
+  /** Unknown (offline / server error) leaves the current value alone and reports "not yet". */
+  const checkLicensed = useCallback(async (): Promise<boolean> => {
+    if (!uid) return false;
+    try {
+      const lic = await fetchUserLicensed(uid);
+      setLicensed(lic);
+      return lic;
+    } catch (e) {
+      console.warn("PricingPage license check", e);
+      return false;
+    }
+  }, [uid]);
+
   const reloadLicense = useCallback(async () => {
     if (!uid || !isSupabaseConfigured) {
       setLicensed(null);
       return;
     }
-    setLicensed(await fetchUserLicensed(uid));
-  }, [uid]);
+    await checkLicensed();
+  }, [uid, checkLicensed]);
 
   const onCheckoutReturn = useCallback(
     ({ result, sessionId }: { result: CheckoutReturn; sessionId: string | null }) => {
@@ -78,18 +91,14 @@ export function PricingPage() {
       void (async () => {
         if (!uid) return;
         await finalizeCheckoutAfterPayment(
-          async () => {
-            const lic = await fetchUserLicensed(uid);
-            setLicensed(lic);
-            return lic;
-          },
+          checkLicensed,
           confirmCheckoutSession,
           sessionId,
           () => setLicensed(true),
         );
       })();
     },
-    [t, uid],
+    [t, uid, checkLicensed],
   );
 
   useCheckoutReturn(onCheckoutReturn);
@@ -111,18 +120,14 @@ export function PricingPage() {
       setStripeBusy(false);
       if (!uid) return;
       await finalizeCheckoutAfterPayment(
-        async () => {
-          const lic = await fetchUserLicensed(uid);
-          setLicensed(lic);
-          return lic;
-        },
+        checkLicensed,
         confirmCheckoutSession,
         sessionId,
         () => setLicensed(true),
       );
       setCheckoutFlash(t("pricing.checkoutSuccess"));
     },
-    [t, uid],
+    [t, uid, checkLicensed],
   );
 
   function startCheckout() {

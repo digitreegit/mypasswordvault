@@ -10,7 +10,12 @@ export type AppleTransactionPayload = {
 };
 
 export type AppleVerifyResult =
-  | { ok: true; transactionId: string }
+  /**
+   * `transactionId` is the purchase's originalTransactionId: restoring a non-consumable
+   * mints a new transactionId, so only the original id identifies the purchase across
+   * restores and accounts. `relatedTransactionIds` holds the other ids seen for it.
+   */
+  | { ok: true; transactionId: string; relatedTransactionIds: string[] }
   | { ok: false; transactionId: string; error: string };
 
 function normalizePrivateKey(raw: string): string {
@@ -71,8 +76,8 @@ function verifiedIdFromPayload(
   fallback: string,
 ): string {
   return (
-    payload.transactionId?.trim() ||
     payload.originalTransactionId?.trim() ||
+    payload.transactionId?.trim() ||
     fallback
   );
 }
@@ -134,7 +139,10 @@ function tryTrustStoreKitJws(
   if (!verifiedId) {
     return { ok: false, transactionId: "", error: "missing_transaction_id" };
   }
-  return { ok: true, transactionId: verifiedId };
+  const relatedTransactionIds = [
+    ...new Set([payload.transactionId?.trim(), fallbackTransactionId]),
+  ].filter((id): id is string => Boolean(id) && id !== verifiedId);
+  return { ok: true, transactionId: verifiedId, relatedTransactionIds };
 }
 
 export async function verifyApplePurchase(

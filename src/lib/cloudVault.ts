@@ -1,20 +1,20 @@
 import {
+  applyVaultSnapshotChanges,
   getMeta,
-  listEntries,
   replaceVaultSnapshot,
   readVaultSnapshot,
-  putMeta,
   wipeAll,
   type VaultEntry,
   type VaultMeta,
 } from "./storage";
 import { AppError } from "./errors";
-import { buildVaultBackupJson, parseVaultBackup, snapshotRevision, snapshotRevisionFromPayload } from "./vaultBackup";
+import { buildVaultBackupJson, parseVaultBackup, snapshotRevision } from "./vaultBackup";
 import { getSupabase } from "./supabaseClient";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { vaultPasskeysIndicateDifferentAccount } from "./passkey";
 import {
   clearCloudSyncPending,
+  hasCloudSyncPending,
   markCloudSyncPending,
 } from "./cloudSyncPending";
 import {
@@ -23,6 +23,13 @@ import {
   setVaultOwnerUserId,
   stampVaultMetaForUser,
 } from "./vaultOwner";
+import {
+  mergeVaultSnapshots,
+  sameSnapshot,
+  syncBaseOf,
+  type SyncBase,
+  type VaultSnapshot,
+} from "./vaultMerge";
 
 /** PostgREST when `user_vaults` was never created in the project. */
 function assertSupabaseVaultOk(error: PostgrestError | null): void {
@@ -38,20 +45,24 @@ function assertSupabaseVaultOk(error: PostgrestError | null): void {
   throw error;
 }
 
-export async function fetchRemoteVaultBackup(
-  userId: string
-): Promise<string | null> {
+type RemoteVaultRow = { json: string; updatedAt: string };
+
+async function fetchRemoteVaultRow(userId: string): Promise<RemoteVaultRow | null> {
   const supabase = getSupabase();
   if (!supabase) return null;
   const { data, error } = await supabase
     .from("user_vaults")
-    .select("vault_backup")
+    .select("vault_backup, updated_at")
     .eq("user_id", userId)
     .maybeSingle();
   if (error) assertSupabaseVaultOk(error);
   const raw = data?.vault_backup;
   if (typeof raw !== "string" || raw.length === 0) return null;
-  return raw;
+  return { json: raw, updatedAt: String(data?.updated_at ?? "") };
+}
+
+export async function fetchRemoteVaultBackup(userId: string): Promise<string | null> {
+  return (await fetchRemoteVaultRow(userId))?.json ?? null;
 }
 
 export async function upsertRemoteVaultBackup(
@@ -71,6 +82,34 @@ export async function upsertRemoteVaultBackup(
   if (error) assertSupabaseVaultOk(error);
 }
 
+/**
+ * Compare-and-swap on `updated_at`, so a device never overwrites a snapshot it has not
+ * merged. Returns false when another device wrote in between (the caller re-merges).
+ */
+async function writeRemoteVaultIfUnchanged(
+  userId: string,
+  backupJson: string,
+  expectedUpdatedAt: string | null,
+): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return true;
+  const row = { vault_backup: backupJson, updated_at: new Date().toISOString() };
+  if (expectedUpdatedAt === null) {
+    const { error } = await supabase.from("user_vaults").insert({ user_id: userId, ...row });
+    if (error?.code === "23505") return false;
+    if (error) assertSupabaseVaultOk(error);
+    return true;
+  }
+  const { data, error } = await supabase
+    .from("user_vaults")
+    .update(row)
+    .eq("user_id", userId)
+    .eq("updated_at", expectedUpdatedAt)
+    .select("user_id");
+  if (error) assertSupabaseVaultOk(error);
+  return (data?.length ?? 0) > 0;
+}
+
 export async function deleteRemoteVaultBackup(userId: string): Promise<void> {
   const supabase = getSupabase();
   if (!supabase) return;
@@ -79,33 +118,51 @@ export async function deleteRemoteVaultBackup(userId: string): Promise<void> {
     .delete()
     .eq("user_id", userId);
   if (error) assertSupabaseVaultOk(error);
+  clearSyncBase(userId);
 }
 
-/** Push local vault snapshot to Supabase; tracks offline pending state. */
-async function pushVaultBackupToCloudInternal(userId: string): Promise<boolean> {
-  const supabase = getSupabase();
-  if (!supabase) return true;
-  const { meta: m, entries } = await readVaultSnapshot();
-  if (!m) return true;
-  if (resolveVaultOwner(m) !== userId) return false;
+const SYNC_BASE_PREFIX = "mpw_sync_base_v1:";
+
+function readSyncBase(userId: string): SyncBase | null {
   try {
-    const stamped = stampVaultMetaForUser(m, userId);
-
-    const revision = snapshotRevision(stamped, entries);
-    const metaForPush =
-      revision > stamped.updatedAt
-        ? { ...stamped, updatedAt: revision }
-        : stamped;
-
-    const json = buildVaultBackupJson(metaForPush, entries);
-    await upsertRemoteVaultBackup(userId, json);
-    clearCloudSyncPending(userId);
-    return true;
-  } catch (e) {
-    console.error("Cloud vault push failed", e);
-    markCloudSyncPending(userId);
-    return false;
+    const raw = localStorage.getItem(SYNC_BASE_PREFIX + userId);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SyncBase;
+    if (typeof parsed?.verifier !== "string" || typeof parsed.entries !== "object") return null;
+    return parsed;
+  } catch {
+    return null;
   }
+}
+
+function writeSyncBase(userId: string, snapshot: VaultSnapshot): void {
+  try {
+    localStorage.setItem(SYNC_BASE_PREFIX + userId, JSON.stringify(syncBaseOf(snapshot)));
+  } catch {
+    /* without a base the next merge keeps every entry instead of dropping deletions */
+  }
+}
+
+function clearSyncBase(userId: string): void {
+  try {
+    localStorage.removeItem(SYNC_BASE_PREFIX + userId);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Old clients compare whole snapshots by their newest timestamp; keep that meaningful. */
+function withRevision(snapshot: VaultSnapshot): VaultSnapshot {
+  const revision = snapshotRevision(snapshot.meta, snapshot.entries);
+  return revision > snapshot.meta.updatedAt
+    ? { ...snapshot, meta: { ...snapshot.meta, updatedAt: revision } }
+    : snapshot;
+}
+
+function normalizeEntry(e: VaultEntry): VaultEntry {
+  return typeof e.enc === "string" && e.enc.length > 0
+    ? { id: e.id, updatedAt: e.updatedAt, enc: e.enc }
+    : { ...e, categoryId: e.categoryId ?? "", memo: e.memo ?? "" };
 }
 
 export type CloudReconcileResult =
@@ -115,11 +172,11 @@ export type CloudReconcileResult =
   | "empty";
 
 function compareVaultSnapshots(
-  remote: ReturnType<typeof parseVaultBackup>,
-  local: ReturnType<typeof parseVaultBackup>,
+  remote: VaultSnapshot,
+  local: VaultSnapshot,
 ): "remote" | "local" | "equal" {
-  const remoteRev = snapshotRevisionFromPayload(remote);
-  const localRev = snapshotRevisionFromPayload(local);
+  const remoteRev = snapshotRevision(remote.meta, remote.entries);
+  const localRev = snapshotRevision(local.meta, local.entries);
   if (remoteRev > localRev) return "remote";
   if (localRev > remoteRev) return "local";
   if (remote.entries.length !== local.entries.length) {
@@ -134,12 +191,10 @@ async function importVaultSnapshot(
   ownerUserId: string,
 ): Promise<void> {
   const metaNorm = { ...meta, cloudUserId: ownerUserId };
-  await replaceVaultSnapshot(metaNorm, entries.map((e) =>
-    typeof e.enc === "string" && e.enc.length > 0
-      ? { id: e.id, updatedAt: e.updatedAt, enc: e.enc }
-      : { ...e, categoryId: e.categoryId ?? "", memo: e.memo ?? "" }
-  ));
+  const normalized = entries.map(normalizeEntry);
+  await replaceVaultSnapshot(metaNorm, normalized);
   setVaultOwnerUserId(ownerUserId);
+  writeSyncBase(ownerUserId, { meta: metaNorm, entries: normalized });
 }
 
 /**
@@ -172,17 +227,115 @@ async function switchLocalVaultToAccount(userId: string): Promise<void> {
   await wipeAll();
   clearVaultOwnerUserId();
   setVaultOwnerUserId(userId);
+  clearSyncBase(userId);
+}
+
+const MAX_SYNC_ATTEMPTS = 3;
+
+/**
+ * Bring this device and the cloud to the same vault: merge per entry against the last
+ * synced state, write whichever side is behind, and never overwrite a cloud snapshot this
+ * device has not merged. Requires a local vault owned by `userId`.
+ */
+async function syncLocalWithRemote(userId: string, attempt = 1): Promise<CloudReconcileResult> {
+  const { meta: rawMeta, entries } = await readVaultSnapshot();
+  if (!rawMeta) return "empty";
+  const read = { meta: rawMeta, entries };
+  const local: VaultSnapshot = { meta: stampVaultMetaForUser(rawMeta, userId), entries };
+  const remoteRow = await fetchRemoteVaultRow(userId);
+  const lastAttempt = attempt >= MAX_SYNC_ATTEMPTS;
+
+  if (!remoteRow) {
+    const outgoing = withRevision(local);
+    const json = buildVaultBackupJson(outgoing.meta, outgoing.entries);
+    if (lastAttempt) await upsertRemoteVaultBackup(userId, json);
+    else if (!(await writeRemoteVaultIfUnchanged(userId, json, null))) {
+      return syncLocalWithRemote(userId, attempt + 1);
+    }
+    writeSyncBase(userId, outgoing);
+    clearCloudSyncPending(userId);
+    return "local_pushed";
+  }
+
+  const remote = parseVaultBackup(remoteRow.json);
+  // First sync on this device (e.g. right after updating): with nothing left unpushed, the
+  // local copy is what it last synced, so deletions made elsewhere still apply. With a failed
+  // push outstanding, keep everything rather than guess.
+  const base = readSyncBase(userId) ??
+    (hasCloudSyncPending(userId) ? null : syncBaseOf(local));
+  const merged = mergeVaultSnapshots(local, remote, base);
+
+  if (!merged) {
+    // Re-created vault (different data key): entries cannot be mixed, keep the newer vault.
+    const outgoing = withRevision(local);
+    const winner = compareVaultSnapshots(remote, outgoing);
+    if (winner === "remote") {
+      await importVaultSnapshot(remote.meta, remote.entries, userId);
+      return "remote_applied";
+    }
+    if (winner === "local") {
+      const json = buildVaultBackupJson(outgoing.meta, outgoing.entries);
+      if (lastAttempt) await upsertRemoteVaultBackup(userId, json);
+      else if (!(await writeRemoteVaultIfUnchanged(userId, json, remoteRow.updatedAt))) {
+        return syncLocalWithRemote(userId, attempt + 1);
+      }
+      writeSyncBase(userId, outgoing);
+      clearCloudSyncPending(userId);
+      return "local_pushed";
+    }
+    return "unchanged";
+  }
+
+  const result: VaultSnapshot = {
+    meta: { ...merged.meta, cloudUserId: userId },
+    entries: merged.entries.map(normalizeEntry),
+  };
+  const remoteBehind = !sameSnapshot(result, remote);
+  const localBehind = !sameSnapshot(result, local);
+
+  if (remoteBehind) {
+    const outgoing = withRevision(result);
+    const json = buildVaultBackupJson(outgoing.meta, outgoing.entries);
+    if (lastAttempt) await upsertRemoteVaultBackup(userId, json);
+    else if (!(await writeRemoteVaultIfUnchanged(userId, json, remoteRow.updatedAt))) {
+      return syncLocalWithRemote(userId, attempt + 1);
+    }
+  }
+  if (localBehind) {
+    await applyVaultSnapshotChanges(read, result);
+  }
+  writeSyncBase(userId, result);
+  clearCloudSyncPending(userId);
+  if (localBehind) return "remote_applied";
+  return remoteBehind ? "local_pushed" : "unchanged";
+}
+
+export type CloudPushResult = CloudReconcileResult | "failed";
+
+/** Sync after a local change; may also pull changes made on other devices. */
+async function pushVaultBackupToCloudInternal(userId: string): Promise<CloudPushResult> {
+  const supabase = getSupabase();
+  if (!supabase) return "unchanged";
+  const m = await getMeta();
+  if (!m) return "unchanged";
+  if (resolveVaultOwner(m) !== userId) return "failed";
+  try {
+    return await syncLocalWithRemote(userId);
+  } catch (e) {
+    console.error("Cloud vault push failed", e);
+    markCloudSyncPending(userId);
+    return "failed";
+  }
 }
 
 /**
- * Merge local IndexedDB with cloud snapshot (entry-aware last-write-wins).
+ * Merge local IndexedDB with the cloud snapshot (per-entry three-way merge).
  * Does not decrypt secrets — only moves ciphertext JSON.
  */
 async function reconcileCloudVaultInternal(
   userId: string,
   userEmail?: string | null,
 ): Promise<CloudReconcileResult> {
-  const remote = await fetchRemoteVaultBackup(userId);
   const local = await getMeta();
   const localOwner = resolveVaultOwner(local);
 
@@ -200,55 +353,15 @@ async function reconcileCloudVaultInternal(
     return "remote_applied";
   }
 
-  if (!remote && !local) return "empty";
-
-  if (!remote && local) {
-    const stamped = stampVaultMetaForUser(local, userId);
-    if (stamped !== local) await putMeta(stamped);
-    const entries = await listEntries();
-    const revision = snapshotRevision(stamped, entries);
-    const metaForPush =
-      revision > stamped.updatedAt
-        ? { ...stamped, updatedAt: revision }
-        : stamped;
-    if (metaForPush !== stamped) await putMeta(metaForPush);
-    const json = buildVaultBackupJson(metaForPush, entries);
-    await upsertRemoteVaultBackup(userId, json);
-    clearCloudSyncPending(userId);
-    return "local_pushed";
-  }
-
-  if (remote && !local) {
+  if (!local) {
+    const remote = await fetchRemoteVaultBackup(userId);
+    if (!remote) return "empty";
     const { meta, entries } = parseVaultBackup(remote);
     await importVaultSnapshot(meta, entries, userId);
     return "remote_applied";
   }
 
-  if (remote && local) {
-    const stamped = stampVaultMetaForUser(local, userId);
-    const entries = await listEntries();
-    const revision = snapshotRevision(stamped, entries);
-    const metaForLocal =
-      revision > stamped.updatedAt ? { ...stamped, updatedAt: revision } : stamped;
-    const localJson = buildVaultBackupJson(metaForLocal, entries);
-    const remotePayload = parseVaultBackup(remote);
-    const localPayload = parseVaultBackup(localJson);
-    const winner = compareVaultSnapshots(remotePayload, localPayload);
-    if (winner === "remote") {
-      const { meta, entries: remoteEntries } = remotePayload;
-      await importVaultSnapshot(meta, remoteEntries, userId);
-      return "remote_applied";
-    }
-    if (winner === "local") {
-      if (metaForLocal !== stamped) await putMeta(metaForLocal);
-      await upsertRemoteVaultBackup(userId, localJson);
-      clearCloudSyncPending(userId);
-      return "local_pushed";
-    }
-    return "unchanged";
-  }
-
-  return "unchanged";
+  return syncLocalWithRemote(userId);
 }
 
 /** @deprecated Use reconcileCloudVault */
@@ -269,7 +382,7 @@ function withCloudLock<T>(task: () => Promise<T>): Promise<T> {
   cloudQueue = result.catch(() => {});
   return result;
 }
-export function pushVaultBackupToCloud(userId: string): Promise<boolean> {
+export function pushVaultBackupToCloud(userId: string): Promise<CloudPushResult> {
   return withCloudLock(() => pushVaultBackupToCloudInternal(userId));
 }
 export function reconcileCloudVault(userId: string, userEmail?: string | null): Promise<CloudReconcileResult> {

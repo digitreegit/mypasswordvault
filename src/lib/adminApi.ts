@@ -123,9 +123,11 @@ async function invokeAdmin<T>(
   return { ok: true, data: payload as T };
 }
 
-export async function fetchIsAdmin() {
+/** null when the check could not complete (offline, 5xx) — callers keep the last known value. */
+export async function fetchIsAdmin(): Promise<boolean | null> {
   const r = await invokeAdmin<{ isAdmin: boolean }>({ action: "check_admin" });
-  return r.ok && Boolean(r.data.isAdmin);
+  if (r.ok) return Boolean(r.data.isAdmin);
+  return r.error === "forbidden" || r.error === "admin_not_configured" ? false : null;
 }
 
 export async function fetchAdminStats() {

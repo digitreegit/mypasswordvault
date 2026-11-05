@@ -18,6 +18,7 @@ import type {
   StripeWithEmbeddedCheckout,
 } from "../lib/stripeEmbeddedCheckout";
 import { usesStoreBilling } from "../lib/platform";
+import { beginStoreSheet } from "../lib/storeSheetGuard";
 import { CheckoutProFeatures } from "./CheckoutProFeatures";
 
 type TFn = (key: string) => string;
@@ -30,6 +31,8 @@ function checkoutErrorMessage(reason: string, t: TFn): string {
       return t("pricing.errStripeKey");
     case "unauthorized":
       return t("pricing.errSignIn");
+    case "already_licensed":
+      return t("pricing.youAreLicensed");
     case "server_misconfigured":
     case "stripe_error":
     case "no_checkout_secret":
@@ -195,6 +198,12 @@ export function StripeCheckoutModal({
       onClose();
     }
   }, [open, onClose]);
+
+  // Card entry happens inside Stripe's iframe, which the vault's activity listeners never see.
+  useEffect(() => {
+    if (!open || usesStoreBilling()) return;
+    return beginStoreSheet();
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;

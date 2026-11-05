@@ -73,7 +73,7 @@ export function useProPurchase(t: TFn) {
         return { ok: false as const };
       }
       if (isAppError(e)) {
-        const detail = e.detail ? String(e.detail) : "";
+        const detail = e.code === "errors.storeVerifyFailed" && e.detail ? String(e.detail) : "";
         setErr(detail ? `${t(e.code)} (${detail})` : t(e.code));
       } else {
         setErr(formatErr(e));

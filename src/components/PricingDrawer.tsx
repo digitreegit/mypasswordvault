@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../lib/auth";
@@ -41,21 +41,28 @@ export function PricingDrawer({
     restoreStore,
   } = useProPurchase(t);
   const busy = storeBilling ? storeBusy : stripeBusy;
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
+  // Once per open: callers pass an inline onClose, which must not re-trigger this.
   useEffect(() => {
     if (!open) {
       setEntered(false);
       return;
     }
     setErr(null);
+    let cancelled = false;
     void (async () => {
       const lic = await refreshEntitlements({ keepLoaded: true });
-      if (lic) onClose();
+      if (lic && !cancelled) onCloseRef.current();
     })();
     if (storeBilling) void initNativeStoreBridge();
     const id = requestAnimationFrame(() => setEntered(true));
-    return () => cancelAnimationFrame(id);
-  }, [open, refreshEntitlements, onClose, storeBilling]);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(id);
+    };
+  }, [open, refreshEntitlements, storeBilling]);
 
   useEffect(() => {
     if (!open) return;

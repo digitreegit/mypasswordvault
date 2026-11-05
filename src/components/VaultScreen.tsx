@@ -14,7 +14,6 @@ import { useCheckoutReturn } from "../hooks/useCheckoutReturn";
 import {
   clearCheckoutPending,
   clearCheckoutPopupMode,
-  isCheckoutPending,
   type CheckoutReturn,
 } from "../lib/checkoutReturn";
 import { useVault, type DecryptedEntry } from "../lib/vault";
@@ -981,8 +980,9 @@ export function VaultScreen() {
     }
   }
 
+  // Only an actual return from a completed payment; an opened-then-abandoned checkout must not show PRO.
   const awaitingLicenseAfterPay =
-    (checkoutFlash === "success" || isCheckoutPending() || checkoutPolling) &&
+    (checkoutFlash === "success" || checkoutPolling) &&
     !licensed &&
     !isAdmin &&
     entitlementLoaded;

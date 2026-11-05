@@ -627,7 +627,8 @@ Deno.serve(async (req) => {
   if (action === "check_admin") {
     const auth = await getAuthedUserEmail(req);
     if ("error" in auth) {
-      return json({ isAdmin: false });
+      // Not a definitive "no": the client keeps its last known admin state.
+      return json({ error: "unauthorized" }, 401);
     }
     return json({ isAdmin: adminEmailAllowlist().has(auth.email) });
   }
