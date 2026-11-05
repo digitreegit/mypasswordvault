@@ -132,19 +132,6 @@ export function PasskeySetupPicker({
         )}
       </div>
 
-      <p className="text-xs text-ink-500 leading-snug">{t("setup.passkeyMethodsHint")}</p>
-      <p className="text-xs text-ink-500 leading-snug">{t("setup.passkeyPrfHint")}</p>
-      {allowSkip ? (
-        <p className="text-xs text-ink-500 leading-snug">
-          {t("setup.passkeyOptionalHint")}
-        </p>
-      ) : null}
-      {isAndroidNative ? (
-        <p className="text-xs text-ink-500 leading-snug">
-          {t("setup.passkeyAndroidGooglePinHint")}
-        </p>
-      ) : null}
-
       {unsupported && !devIpBlocked ? (
         <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-2.5">
           {t("setup.passkeyUnsupported")}
@@ -152,6 +139,7 @@ export function PasskeySetupPicker({
       ) : null}
       {error ? <div className="text-sm text-red-600">{error}</div> : null}
 
+      {/* Actions stay right under the card so Skip is reachable without scrolling on small screens / large fonts. */}
       <button
         type="button"
         className="btn-primary w-full"
@@ -160,26 +148,39 @@ export function PasskeySetupPicker({
       >
         {busy ? t("setup.passkeyRegistering") : t("setup.passkeyContinue")}
       </button>
+      {allowSkip && onSkip ? (
+        <div className="space-y-1.5">
+          <button
+            type="button"
+            className="btn-secondary w-full"
+            onClick={onSkip}
+            disabled={busy}
+          >
+            {t("setup.skipPasskey")}
+          </button>
+          <p className="text-xs text-ink-500 leading-snug text-center">
+            {t("setup.passkeyOptionalHint")}
+          </p>
+        </div>
+      ) : null}
       <button
         type="button"
-        className="btn-secondary w-full"
+        className="inline-flex w-full items-center justify-center text-sm font-medium text-ink-600 hover:text-ink-900 transition-colors disabled:opacity-50 disabled:pointer-events-none"
         onClick={onBack}
         disabled={busy}
       >
         {t("setup.back")}
       </button>
-      {allowSkip && onSkip ? (
-        <div className="border-t border-ink-100 pt-3">
-          <button
-            type="button"
-            className="inline-flex w-full items-center justify-center gap-1 text-sm font-medium text-ink-600 hover:text-ink-900 transition-colors disabled:opacity-50 disabled:pointer-events-none"
-            onClick={onSkip}
-            disabled={busy}
-          >
-            <span>{t("setup.skipPasskey")}</span>
-          </button>
-        </div>
-      ) : null}
+
+      <div className="space-y-2 border-t border-ink-100 pt-3">
+        <p className="text-xs text-ink-500 leading-snug">{t("setup.passkeyMethodsHint")}</p>
+        <p className="text-xs text-ink-500 leading-snug">{t("setup.passkeyPrfHint")}</p>
+        {isAndroidNative ? (
+          <p className="text-xs text-ink-500 leading-snug">
+            {t("setup.passkeyAndroidGooglePinHint")}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }
