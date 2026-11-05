@@ -28,12 +28,6 @@ const cfg = spawnSync("node", ["scripts/write-landing-config.mjs"], {
 });
 if (cfg.status !== 0) process.exit(cfg.status ?? 1);
 
-const vercelAnalytics = spawnSync("node", ["scripts/build-vercel-analytics.mjs"], {
-  cwd: new URL("../", import.meta.url).pathname,
-  stdio: "inherit",
-});
-if (vercelAnalytics.status !== 0) process.exit(vercelAnalytics.status ?? 1);
-
 const copyRuntime = spawnSync("node", ["scripts/copy-landing-runtime-to-dist.mjs"], {
   cwd: new URL("../", import.meta.url).pathname,
   stdio: "inherit",

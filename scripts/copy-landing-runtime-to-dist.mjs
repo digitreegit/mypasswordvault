@@ -12,7 +12,6 @@ if (!existsSync(dist)) {
 }
 
 for (const name of [
-  "vercel-analytics-init.js",
   "landing-config.js",
   "landing-analytics.js",
   "sitemap.xml",

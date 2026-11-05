@@ -1,6 +1,6 @@
 /**
  * Marketing attribution: capture inbound UTM params and decorate outbound links.
- * Page views use Vercel Analytics (vercel-analytics-init.js).
+ * Page views use Cloudflare Web Analytics (beacon injected by Cloudflare Pages).
  *
  * Share links (examples):
  *   https://mypasswordvault.app/?utm_source=tiktok&utm_medium=social&utm_campaign=launch
