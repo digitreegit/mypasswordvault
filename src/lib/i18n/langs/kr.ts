@@ -708,7 +708,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "pricing.storeBridgeFailedHint":
     "App Store Connect에 com.skyface.mypasswordvault.pro_lifetime(비소모성) 상품을 등록하고, 기기에서 Sandbox Apple ID로 테스트하거나 Xcode Run → Options에서 Products.storekit을 지정하세요.",
   "pricing.storeBridgeFailedHintAndroid":
-    "Play Console에서 일회성 상품 com.skyface.mypasswordvault.pro_lifetime을 만들고(Monetize → Products → One-time products), 활성화한 뒤 내부 테스트에 빌드를 올리고 라이선스 테스터 계정으로 Play 테스트 링크에서 앱을 설치하세요.",
+    "Google Play 스토어 앱을 열어 로그인한 뒤, 여기로 돌아와 다시 시도해 주세요. 이미 결제했다면 아래 '구매 복원'을 눌러 주세요.",
   "pricing.planTabsAria": "요금제 비교",
   "pricing.storeBridgePending":
     "이 빌드에는 인앱 결제 플러그인이 아직 연결되지 않았습니다. docs/mobile.md를 참고하거나 웹에서 같은 계정으로 구매하세요.",

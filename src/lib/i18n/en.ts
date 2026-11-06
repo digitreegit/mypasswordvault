@@ -723,7 +723,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "pricing.storeBridgeFailedHint":
     "Set up product com.skyface.mypasswordvault.pro_lifetime in App Store Connect (non-consumable), use a Sandbox Apple ID on device, or in Xcode assign Products.storekit under Run → Options → StoreKit Configuration.",
   "pricing.storeBridgeFailedHintAndroid":
-    "In Play Console create one-time product com.skyface.mypasswordvault.pro_lifetime (Monetize → Products → One-time products), activate it, upload a build to Internal testing, add License testers, then install the app from the Play testing link on this device.",
+    "Open the Google Play Store app and make sure you are signed in, then return here and try again. If you already paid, tap Restore purchases below.",
   "pricing.planTabsAria": "Compare plans",
   "pricing.storeBridgePending":
     "In-app purchase is not wired in this build yet. Install the native billing plugin (see docs/mobile.md) or buy on the web with the same account.",
