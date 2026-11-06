@@ -122,6 +122,8 @@ export function signInMethodFromUser(
 
 export function getUserSignInMethod(user: User): UserSignInMethod {
   const stored = resolveStoredSignInMethod(user);
-  if (stored) return stored;
+  // Account passkey is an AuthLastMethod but not a UserSignInMethod label —
+  // fall through to identities for Settings / account copy.
+  if (stored && stored !== "passkey") return stored;
   return signInMethodFromUser(user, null);
 }

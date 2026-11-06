@@ -22,6 +22,9 @@ import { isNativeApp } from "../lib/platform";
 import { PasskeySetupPicker } from "./PasskeySetupPicker";
 import type { PasskeyMethodId, PasskeyMethodOption } from "../lib/passkeyMethods";
 import { AccountContinuityBanner } from "./AccountContinuityBanner";
+import { useAuth } from "../lib/auth";
+import { maybeSilentLinkGoogleAfterApple } from "../lib/silentGoogleLink";
+import { maybeRegisterAccountPasskeyAfterSetup } from "../lib/authPasskey";
 
 type Stage = "password" | "passkey" | "backup-totp" | "recovery";
 
@@ -186,6 +189,7 @@ export function SetupScreen() {
     setLocale,
     t,
   } = useVault();
+  const { user, linkGoogleIdentity } = useAuth();
   // Phase A: only the password stage is shown. Older mid-setup sessions finish via effect.
   const [stage, setStage] = useState<Stage>("password");
   const [pw, setPw] = useState("");
@@ -261,6 +265,11 @@ export function SetupScreen() {
     }
   }, [stage, t]);
 
+  // Silent continuity: one-shot Google link sheet after Apple (no instructional banner).
+  useEffect(() => {
+    void maybeSilentLinkGoogleAfterApple(user, linkGoogleIdentity);
+  }, [user, linkGoogleIdentity]);
+
   /** Phase A: master password only → empty vault. Passkey/TOTP later. */
   async function handlePasswordNext() {
     setError(null);
@@ -277,6 +286,8 @@ export function SetupScreen() {
       await setup(pw, autoLock);
       await skipBackupTotpEnrollment();
       await finalizeEnrollment();
+      // Account passkey for web reopen without Hide My Email (Face ID once; cancel OK).
+      await maybeRegisterAccountPasskeyAfterSetup(user?.id);
     } catch (e: unknown) {
       setError(formatSetupError(e, t));
     } finally {

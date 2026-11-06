@@ -24,10 +24,12 @@ Fundamental product work. Autofill (C) is the long lever; A/B/D make the funnel 
 
 ## Phase D — Hide My Email / cross-login vault split
 
-- Canonical `user_id` with vault data; `linkIdentity` + `claim-auth-identity`
-- Web never starts Apple OAuth (Apple ID email/password fails most users). Bridge: add Google on iPhone → open web with Google
+- Canonical `user_id` with vault data; `linkIdentity` + `claim-auth-identity` (empty duplicates only)
+- **Silent bridges (no instructional “do X then Y”):**
+  - iOS after Apple: one-shot system Google link sheet (`silentGoogleLink`)
+  - Account passkey (`auth_passkeys` + `auth-passkey-register` / `auth-passkey-login`) for web reopen without knowing Hide My Email
+- Web never starts Apple OAuth; web Auth = Google + Continue with passkey / Conditional UI
 - Native iOS keeps Continue with Apple; Settings “Add Apple” is iOS-only
-- Settings: linked Google / Apple / email
 
 ## Do not (for now)
 
@@ -35,3 +37,4 @@ Fundamental product work. Autofill (C) is the long lever; A/B/D make the funnel 
 - Ads-only growth without loop change
 - Longer “more secure” onboarding
 - Price/copy changes without Autofill
+- Auto-merge of two non-empty vaults

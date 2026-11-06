@@ -58,6 +58,7 @@ import { stripAuthParamsFromUrl } from "./supabaseAuthRedirect";
 import { finalizeSignIn } from "./signInRecord";
 import { recordSignupPlatform } from "./recordSignupPlatform";
 import { getUserSignInMethod, userSupportsEmailPassword } from "./signInMethod";
+import { signInWithAccountPasskey as signInWithAccountPasskeyImpl } from "./authPasskey";
 
 export { getUserSignInMethod, userSupportsEmailPassword };
 
@@ -69,6 +70,8 @@ interface AuthContextValue {
   user: User | null;
   signInWithGoogle: () => Promise<void>;
   signInWithApple: () => Promise<void>;
+  /** Discoverable account passkey → same user_id (no Hide My Email knowledge). */
+  signInWithAccountPasskey: () => Promise<void>;
   /** Link Apple to the current user so later Apple sign-in opens the same vault. */
   linkAppleIdentity: () => Promise<void>;
   /** Link Google to the current user so web/Android Google opens the same vault. */
@@ -299,6 +302,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await linkProviderWithClaim("google");
   }, [linkProviderWithClaim]);
 
+  const signInWithAccountPasskey = useCallback(async () => {
+    markSignInAttempt("passkey");
+    try {
+      await signInWithAccountPasskeyImpl();
+      const supabase = getSupabase();
+      if (!supabase) return;
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        finalizeSignIn(data.session, "passkey", "SIGNED_IN");
+      }
+    } catch (e) {
+      clearSignInAttempt();
+      throw e;
+    }
+  }, []);
+
   const attachPendingEmailIdentity = useCallback(async () => {
     const supabase = getSupabase();
     if (!supabase) throw new Error("Supabase not configured");
@@ -468,6 +487,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user: session?.user ?? null,
       signInWithGoogle,
       signInWithApple,
+      signInWithAccountPasskey,
       linkAppleIdentity,
       linkGoogleIdentity,
       attachPendingEmailIdentity,
@@ -487,6 +507,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session,
       signInWithGoogle,
       signInWithApple,
+      signInWithAccountPasskey,
       linkAppleIdentity,
       linkGoogleIdentity,
       attachPendingEmailIdentity,

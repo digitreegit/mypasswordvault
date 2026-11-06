@@ -50,6 +50,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "auth.subtitle": "계정에 로그인하세요",
   "auth.google": "Google로 계속하기",
   "auth.apple": "Apple로 계속하기",
+  "auth.passkey": "패스키로 계속하기",
   "auth.iphoneVaultTitle": "아이폰 앱을 이미 쓰나요?",
   "auth.iphoneVaultBody":
     "아이폰 앱 설정에서 Google을 추가한 뒤, 웹에서는 Google로 열면 같은 금고입니다. 웹에서 Apple 계정을 칠 필요 없어요.",

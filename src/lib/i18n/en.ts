@@ -48,6 +48,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "auth.subtitle": "Sign in to your account",
   "auth.google": "Continue with Google",
   "auth.apple": "Continue with Apple",
+  "auth.passkey": "Continue with passkey",
   "auth.iphoneVaultTitle": "Already using the iPhone app?",
   "auth.iphoneVaultBody":
     "On iPhone, add Google in Settings, then open this site with Google. Same vault—no Apple ID typing on the web.",

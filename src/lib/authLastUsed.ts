@@ -1,6 +1,6 @@
 import type { Session } from "@supabase/supabase-js";
 
-export type AuthLastMethod = "google" | "apple" | "email";
+export type AuthLastMethod = "google" | "apple" | "email" | "passkey";
 
 export type PendingAuthMethod = {
   method: AuthLastMethod;
@@ -20,7 +20,12 @@ const PENDING_MAX_AGE_MS = 30 * 60 * 1000;
 const JUST_COMPLETED_MAX_AGE_MS = 60 * 1000;
 
 export function isAuthLastMethod(value: string): value is AuthLastMethod {
-  return value === "google" || value === "apple" || value === "email";
+  return (
+    value === "google" ||
+    value === "apple" ||
+    value === "email" ||
+    value === "passkey"
+  );
 }
 
 function normalizeEmail(email: string): string {

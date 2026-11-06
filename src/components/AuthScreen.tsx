@@ -19,6 +19,10 @@ import {
 } from "../lib/i18n/locale";
 import { LOCALE_CHANGED, notifyLocaleChanged } from "../lib/appLocale";
 import { isNativeApp, getNativePlatform } from "../lib/platform";
+import {
+  isAccountPasskeySupported,
+  startAccountPasskeyConditionalUI,
+} from "../lib/authPasskey";
 import { requestPasswordResetEmail } from "../lib/passwordReset";
 import {
   getSupabase,
@@ -154,6 +158,7 @@ export function AuthScreen({
     passwordRecoveryPending,
     signInWithGoogle,
     signInWithApple,
+    signInWithAccountPasskey,
     signInWithEmail,
     signUpWithEmail,
     updatePassword,
@@ -279,6 +284,30 @@ export function AuthScreen({
     if (!configured) return;
     setAppleConfirmOpen(true);
   }
+
+  async function onAccountPasskey() {
+    if (!configured) return;
+    clearMessages();
+    setBusy(true);
+    try {
+      await signInWithAccountPasskey();
+      setLastUsedRevision((n) => n + 1);
+    } catch (e: unknown) {
+      setError(mapAuthError(locale, e, t));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Web: Conditional UI so a synced account passkey can sign in without typing email.
+  useEffect(() => {
+    if (isNativeApp() || view !== "signin" || !configured) return;
+    const ac = startAccountPasskeyConditionalUI(
+      () => setLastUsedRevision((n) => n + 1),
+      (e) => console.warn("passkey conditional UI", e),
+    );
+    return () => ac?.abort();
+  }, [configured, view]);
 
   async function onGoogle() {
     if (!configured) return;
@@ -498,6 +527,24 @@ export function AuthScreen({
                 </span>
               </button>
             </div>
+
+            {!isNativeApp() &&
+            view === "signin" &&
+            isAccountPasskeySupported() ? (
+              <div className="relative pt-2">
+                {lastUsed === "passkey" && (
+                  <LastUsedBadge label={t("auth.lastUsed")} />
+                )}
+                <button
+                  type="button"
+                  className="btn-secondary w-full justify-center border-ink-200 bg-white shadow-sm hover:bg-ink-50"
+                  onClick={() => void onAccountPasskey()}
+                  disabled={busy}
+                >
+                  {t("auth.passkey")}
+                </button>
+              </div>
+            ) : null}
 
             {/* Native iOS only (App Store 4.8). Web never starts Apple OAuth. */}
             {showAppleSignIn ? (
