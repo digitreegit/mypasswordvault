@@ -11,9 +11,28 @@ import { getSupabase, isSupabaseConfigured } from "./supabaseClient";
 import { getNativePlatform, getOAuthRedirectUrl } from "./platform";
 import {
   isNativeApp,
+  linkAppleIdentityNative,
+  linkGoogleIdentityNative,
   signInWithAppleNative,
   signInWithGoogleNative,
 } from "./nativeAuth";
+import {
+  userHasAppleIdentity,
+  userHasEmailIdentity,
+  userHasGoogleIdentity,
+} from "./appleRelayAccount";
+import {
+  claimAuthIdentity,
+  isIdentityAlreadyLinkedError,
+} from "./claimAuthIdentity";
+import {
+  clearAbandonedEmptyAuthUser,
+  readAbandonedEmptyAuthUser,
+} from "./abandonedAuthUser";
+import {
+  clearPendingEmailAttach,
+  readPendingEmailAttach,
+} from "./pendingEmailAttach";
 import {
   AuthEmailTakenError,
   isAuthEmailTakenError,
@@ -34,6 +53,7 @@ import {
   clearAllLocalAppData,
   requestAccountDeletion,
 } from "./accountDeletion";
+import { AppError, isAppError } from "./errors";
 import { stripAuthParamsFromUrl } from "./supabaseAuthRedirect";
 import { finalizeSignIn } from "./signInRecord";
 import { recordSignupPlatform } from "./recordSignupPlatform";
@@ -49,12 +69,24 @@ interface AuthContextValue {
   user: User | null;
   signInWithGoogle: () => Promise<void>;
   signInWithApple: () => Promise<void>;
+  /** Link Apple to the current user so later Apple sign-in opens the same vault. */
+  linkAppleIdentity: () => Promise<void>;
+  /** Link Google to the current user so web/Android Google opens the same vault. */
+  linkGoogleIdentity: () => Promise<void>;
+  /**
+   * After opening the real vault, attach an abandoned empty email signup
+   * (claim empty user + set email/password on this user_id).
+   */
+  attachPendingEmailIdentity: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
   updateEmail: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<void>;
+  appleIdentityLinked: boolean;
+  googleIdentityLinked: boolean;
+  emailIdentityLinked: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -153,16 +185,168 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithApple = useCallback(async () => {
-    if (getNativePlatform() !== "ios") {
-      throw new Error("Sign in with Apple is only available on iOS");
-    }
     markSignInAttempt("apple");
     try {
-      await signInWithAppleNative();
+      if (isNativeApp()) {
+        // Android has no Apple button in UI; keep native path for iOS (+ future).
+        if (getNativePlatform() === "android") {
+          throw new Error("Sign in with Apple is not available on Android");
+        }
+        await signInWithAppleNative();
+        return;
+      }
+      const supabase = getSupabase();
+      if (!supabase) throw new Error("Supabase not configured");
+      const redirectTo = getOAuthRedirectUrl();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "apple",
+        options: {
+          redirectTo,
+          scopes: "name email",
+        },
+      });
+      if (error) {
+        clearSignInAttempt();
+        throw error;
+      }
     } catch (e) {
       clearSignInAttempt();
       throw e;
     }
+  }, []);
+
+  const linkProviderWithClaim = useCallback(
+    async (provider: "apple" | "google") => {
+      const supabase = getSupabase();
+      if (!supabase) throw new Error("Supabase not configured");
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) throw new Error("Auth session missing!");
+      const user = sessionData.session.user;
+      if (provider === "apple" && userHasAppleIdentity(user)) return;
+      if (provider === "google" && userHasGoogleIdentity(user)) return;
+
+      const abandoned = readAbandonedEmptyAuthUser();
+      const abandonedId =
+        abandoned?.provider === provider ? abandoned.userId : null;
+
+      const runLink = async () => {
+        if (isNativeApp()) {
+          if (provider === "apple") {
+            if (getNativePlatform() === "android") {
+              throw new Error("Linking Sign in with Apple is not available on Android");
+            }
+            await linkAppleIdentityNative();
+            return;
+          }
+          await linkGoogleIdentityNative();
+          return;
+        }
+        const redirectTo = getOAuthRedirectUrl();
+        const { error } = await supabase.auth.linkIdentity({
+          provider,
+          options:
+            provider === "apple"
+              ? { redirectTo, scopes: "name email" }
+              : {
+                  redirectTo,
+                  queryParams: { prompt: "select_account" },
+                },
+        });
+        if (error) throw error;
+      };
+
+      const claimOrThrow = async (emptyUserId: string) => {
+        const claimed = await claimAuthIdentity({
+          provider,
+          emptyUserId,
+        });
+        if (claimed.ok) {
+          clearAbandonedEmptyAuthUser();
+          return;
+        }
+        if (claimed.error === "empty_user_not_found") return;
+        if (claimed.error === "other_account_has_data") {
+          throw new AppError("continuity.errOtherHasData");
+        }
+        if (claimed.error === "caller_already_has_provider") {
+          clearAbandonedEmptyAuthUser();
+          return;
+        }
+        throw new AppError("continuity.errClaimFailed");
+      };
+
+      try {
+        if (abandonedId) await claimOrThrow(abandonedId);
+        await runLink();
+        clearAbandonedEmptyAuthUser();
+      } catch (e) {
+        if (isAppError(e)) throw e;
+        if (!isIdentityAlreadyLinkedError(e)) throw e;
+        if (!abandonedId) throw new AppError("continuity.errOtherHasData");
+        await claimOrThrow(abandonedId);
+        await runLink();
+        clearAbandonedEmptyAuthUser();
+      }
+    },
+    [],
+  );
+
+  const linkAppleIdentity = useCallback(async () => {
+    await linkProviderWithClaim("apple");
+  }, [linkProviderWithClaim]);
+
+  const linkGoogleIdentity = useCallback(async () => {
+    await linkProviderWithClaim("google");
+  }, [linkProviderWithClaim]);
+
+  const attachPendingEmailIdentity = useCallback(async () => {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not configured");
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session?.user) throw new Error("Auth session missing!");
+    const user = sessionData.session.user;
+    if (userHasEmailIdentity(user)) {
+      clearPendingEmailAttach();
+      clearAbandonedEmptyAuthUser();
+      return;
+    }
+
+    const pending = readPendingEmailAttach();
+    const abandoned = readAbandonedEmptyAuthUser();
+    const emptyUserId =
+      pending?.emptyUserId ||
+      (abandoned?.provider === "email" ? abandoned.userId : null);
+    const email = pending?.email || abandoned?.email;
+    const password = pending?.password;
+    if (!emptyUserId || !email || !password) {
+      throw new AppError("continuity.errEmailAttachNeedPassword");
+    }
+    if (emptyUserId === user.id) {
+      clearPendingEmailAttach();
+      clearAbandonedEmptyAuthUser();
+      return;
+    }
+
+    const claimed = await claimAuthIdentity({
+      provider: "email",
+      emptyUserId,
+      email,
+      password,
+    });
+    clearPendingEmailAttach();
+    if (!claimed.ok) {
+      if (claimed.error === "other_account_has_data") {
+        throw new AppError("continuity.errOtherHasData");
+      }
+      if (claimed.error === "caller_already_has_provider") {
+        clearAbandonedEmptyAuthUser();
+        return;
+      }
+      throw new AppError("continuity.errClaimFailed");
+    }
+    clearAbandonedEmptyAuthUser();
+    // Refresh session so identities/email reflect admin update.
+    await supabase.auth.refreshSession();
   }, []);
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
@@ -265,6 +449,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(null);
   }, []);
 
+  const appleIdentityLinked = Boolean(
+    session?.user && userHasAppleIdentity(session.user)
+  );
+  const googleIdentityLinked = Boolean(
+    session?.user && userHasGoogleIdentity(session.user)
+  );
+  const emailIdentityLinked = Boolean(
+    session?.user && userHasEmailIdentity(session.user)
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       configured: isSupabaseConfigured,
@@ -274,12 +468,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user: session?.user ?? null,
       signInWithGoogle,
       signInWithApple,
+      linkAppleIdentity,
+      linkGoogleIdentity,
+      attachPendingEmailIdentity,
       signInWithEmail,
       signUpWithEmail,
       updateEmail,
       updatePassword,
       signOut,
       deleteAccount,
+      appleIdentityLinked,
+      googleIdentityLinked,
+      emailIdentityLinked,
     }),
     [
       loading,
@@ -287,12 +487,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session,
       signInWithGoogle,
       signInWithApple,
+      linkAppleIdentity,
+      linkGoogleIdentity,
+      attachPendingEmailIdentity,
       signInWithEmail,
       signUpWithEmail,
       updateEmail,
       updatePassword,
       signOut,
       deleteAccount,
+      appleIdentityLinked,
+      googleIdentityLinked,
+      emailIdentityLinked,
     ]
   );
 

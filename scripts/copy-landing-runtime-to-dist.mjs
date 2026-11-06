@@ -14,6 +14,10 @@ if (!existsSync(dist)) {
 for (const name of [
   "landing-config.js",
   "landing-analytics.js",
+  "landing-auth.js",
+  "manifest.webmanifest",
+  "sw.js",
+  "pwa-register.js",
   "sitemap.xml",
   "robots.txt",
 ]) {

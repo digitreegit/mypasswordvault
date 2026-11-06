@@ -48,7 +48,84 @@ export const MESSAGES_EN: Record<string, string> = {
   "auth.subtitle": "Sign in to your account",
   "auth.google": "Continue with Google",
   "auth.apple": "Continue with Apple",
+  "auth.iphoneVaultTitle": "Already using the iPhone app?",
+  "auth.iphoneVaultBody":
+    "Open the same vault you started on your phone. You do not need a new account.",
+  "auth.openIphoneVault": "Open my iPhone vault",
+  "auth.appleConfirmTitle": "One tip before Apple",
+  "auth.appleConfirmBody":
+    "If you already saved passwords on the web with Google, use Google here so everything stays in one place. Apple is fine for a new start—we'll help you add Google later in one tap.",
+  "auth.appleConfirmPreferGoogle": "Use Google (recommended)",
+  "auth.appleConfirmContinue": "Continue with Apple",
   "auth.lastUsed": "LAST USED",
+
+  "continuity.linkedMethodsTitle": "Ways to open this vault",
+  "continuity.linkedMethodsHint":
+    "Phone and computer can both open the same vault when Google and Apple are attached here.",
+  "continuity.statusGoogleLinked": "Google ready",
+  "continuity.statusGoogleMissing": "Google not added yet",
+  "continuity.statusAppleLinked": "Apple ready",
+  "continuity.statusAppleMissing": "Apple not added yet",
+  "continuity.statusEmailLinked": "Email ready",
+  "continuity.statusEmailMissing": "Email & password not added yet",
+  "continuity.linkGoogle": "Add Google",
+  "continuity.linkApple": "Add Apple",
+  "continuity.linkGoogleDone": "Google can open this vault now.",
+  "continuity.linkAppleDone": "Apple can open this vault now.",
+  "continuity.gateWrongTitle": "This looks like a new empty vault",
+  "continuity.gateWrongBody":
+    "Your passwords are probably under Google. Open that vault—we'll attach Apple afterward in one tap.",
+  "continuity.gateEmptyTitle": "Is this your first vault?",
+  "continuity.gateEmptyBody":
+    "If you already saved passwords on another device, open that vault instead of starting over.",
+  "continuity.gateEmailTitle": "Already have passwords on iPhone?",
+  "continuity.gateEmailBody":
+    "If you started with Apple on iPhone, open that vault. We'll move this email onto it automatically so everything stays in one place.",
+  "continuity.openWithGoogle": "Open with Google",
+  "continuity.openIphoneVault": "Open my iPhone vault",
+  "continuity.openIphoneVaultContinue": "Continue with Apple",
+  "continuity.emailPasswordLabel": "Password for this email",
+  "continuity.emailPasswordPlaceholder": "The password you just created",
+  "continuity.emailPasswordHint":
+    "Needed once so we can attach this email to your iPhone vault. Then Apple sign-in opens the same vault.",
+  "continuity.attachTitle": "Save one tap for next time",
+  "continuity.attachBody":
+    "Attach the login you just left so phone and web both open this vault.",
+  "continuity.attachEmailTitle": "Finish attaching your email",
+  "continuity.attachEmailBody":
+    "Connect {{email}} to this vault so the website and iPhone stay in sync.",
+  "continuity.attachEmail": "Attach email",
+  "continuity.attachGoogle": "Attach Google",
+  "continuity.attachApple": "Attach Apple",
+  "continuity.linkEmailDone": "Email can open this vault now. Same passwords on phone and web.",
+  "continuity.webReadyTitle": "Use this vault on a computer too",
+  "continuity.webReadyBody":
+    "Attach Google once. Then the website opens the same passwords—no second vault.",
+  "continuity.oneMoreTitle": "Open this vault on your other devices",
+  "continuity.oneMoreBody":
+    "One tap attaches another login to the same vault. You can skip and do it later.",
+  "continuity.startFresh": "I'm starting new",
+  "continuity.later": "Later",
+  "continuity.errOtherHasData":
+    "That login already belongs to another vault with passwords. Open it instead of attaching it here.",
+  "continuity.errClaimFailed":
+    "Couldn't attach that login. Try again, or open the other vault directly.",
+  "continuity.errEmailAttachNeedPassword":
+    "Enter the password for this email to continue.",
+  "continuity.passkeyOfferTitle": "Unlock faster next time?",
+  "continuity.passkeyOfferBodyNative":
+    "Turn on Face ID / fingerprint so you don’t type your master password every time. You can do this later in Settings.",
+  "continuity.passkeyOfferBodyWeb":
+    "Save a passkey (Touch ID, Face ID, or Windows Hello) for one-tap unlock. You can do this later in Settings.",
+  "continuity.passkeyOfferEnable": "Enable",
+  "continuity.backupBannerTitle": "Add a backup unlock method",
+  "continuity.backupBannerBody":
+    "Passkeys and an authenticator app (or recovery codes) help if you lose a device. Set them up anytime in Security settings.",
+  "continuity.backupBannerCta": "Open Security settings",
+  "setup.openVault": "Open my vault",
+  "setup.laterPasskeyHint":
+    "You can turn on Face ID / passkey and backup unlock later — after you save your first passwords.",
+
   "auth.or": "or",
   "auth.email": "Email",
   "auth.emailPlaceholder": "you@example.com",
@@ -104,7 +181,7 @@ export const MESSAGES_EN: Record<string, string> = {
     "If you lose your passkey device, use backup sign-in: your master password plus either a code from your authenticator app (TOTP backup) or a one-time recovery code you saved during setup. Each recovery code works once. You can also restore from your account and re-register a passkey after verifying your master password.",
   "auth.faqIosSyncQ": "How do I sync the iOS app with my web vault?",
   "auth.faqIosSyncA":
-    "Cloud sync is tied to your <strong>sign-in account</strong>, not your device. On iOS, if you use <strong>Continue with Apple</strong> and want the same vault as on the web, you must choose <strong>Share My Email</strong> when Apple asks—not <strong>Hide My Email</strong>. Hide My Email creates a private relay address and a <strong>separate account</strong> that will not match a web vault signed in with Google or your normal email. Easiest if you already use the web: tap <strong>Continue with Google</strong> on iOS with the <strong>same email</strong>. If you prefer Apple on iOS, pick Share My Email so your real address matches your web login. Already chose Hide My Email? Turn off My Password Vault under Settings → Apple ID → iCloud → Hide My Email (or at appleid.apple.com → Apps Using Apple ID), sign out in the app, and sign in again.",
+    "Cloud sync is tied to your <strong>sign-in account</strong> (<code>user_id</code>), not your device. Prefer one account with both Google and Apple linked in <strong>Settings</strong>. If you start on iPhone with Apple (including Hide My Email), open the web with <strong>Continue with Apple</strong>, then <strong>Add Google</strong> in Settings. If you start on the web with Google, sign in with Google on iOS and <strong>Add Apple</strong> in Settings. Hide My Email alone never matches a Google email—linking is required. Share My Email can still help when Apple returns your real address.",
   "auth.faqPricingQ": "Is this free or paid?",
   "auth.faqPricingA":
     "You can save up to 25 password entries for free. A one-time $4.99 purchase unlocks unlimited entries on your account forever. Open __PRICING_LINK__ from the app for checkout.",
@@ -319,7 +396,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "errors.locked": "Vault is locked.",
   "errors.invalidBackup": "This file is not a valid vault backup.",
   "errors.invalidSpreadsheet":
-    "This file is not a valid spreadsheet CSV. Use a .csv with Category, Site, Username, Password, URL, and Memo columns.",
+    "This CSV could not be read. Export from Chrome, Safari, Bitwarden, or 1Password, or use our spreadsheet export — column names are matched automatically.",
   "errors.missingUserVaultsTable":
     "The Supabase project is missing the user_vaults table. In the Supabase dashboard open SQL Editor, paste and run the contents of supabase/migrations/20260513120000_user_vaults.sql in this repo, then try again.",
   "errors.noCloudBackup":
@@ -452,6 +529,12 @@ export const MESSAGES_EN: Record<string, string> = {
     "Replace all entries on this device with this spreadsheet? Current entries will be removed. The vault stays unlocked.",
   "settings.spreadsheetImportApply": "Replace entries",
   "settings.spreadsheetImportDone": "Spreadsheet imported.",
+  "settings.spreadsheetImportDoneCounted":
+    "{{count}} passwords saved. Free plan: {{remaining}} of {{limit}} slots left.",
+  "settings.spreadsheetImportDoneCountedPro":
+    "{{count}} passwords saved.",
+  "settings.spreadsheetImportFormatsHint":
+    "Works with CSV from Chrome, Safari, Bitwarden, 1Password, or our export. Column names are matched automatically.",
 
   "settings.accountTitle": "Account",
   "settings.signedInAs": "Signed in as {{email}}",

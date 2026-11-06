@@ -21,6 +21,7 @@ import { isAppError } from "../lib/errors";
 import { isNativeApp } from "../lib/platform";
 import { PasskeySetupPicker } from "./PasskeySetupPicker";
 import type { PasskeyMethodId, PasskeyMethodOption } from "../lib/passkeyMethods";
+import { AccountContinuityBanner } from "./AccountContinuityBanner";
 
 type Stage = "password" | "passkey" | "backup-totp" | "recovery";
 
@@ -185,9 +186,8 @@ export function SetupScreen() {
     setLocale,
     t,
   } = useVault();
-  const [stage, setStage] = useState<Stage>(() =>
-    hasPendingSetup ? "passkey" : "password",
-  );
+  // Phase A: only the password stage is shown. Older mid-setup sessions finish via effect.
+  const [stage, setStage] = useState<Stage>("password");
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [showMasterPw, setShowMasterPw] = useState(false);
@@ -261,6 +261,7 @@ export function SetupScreen() {
     }
   }, [stage, t]);
 
+  /** Phase A: master password only → empty vault. Passkey/TOTP later. */
   async function handlePasswordNext() {
     setError(null);
     if (pw.length < 10) {
@@ -274,13 +275,34 @@ export function SetupScreen() {
     setBusy(true);
     try {
       await setup(pw, autoLock);
-      setStage("passkey");
+      await skipBackupTotpEnrollment();
+      await finalizeEnrollment();
     } catch (e: unknown) {
       setError(formatSetupError(e, t));
     } finally {
       setBusy(false);
     }
   }
+
+  // Interrupted mid-setup from an older build: finish into the vault.
+  useEffect(() => {
+    if (!hasPendingSetup || stage !== "passkey") return;
+    let cancelled = false;
+    void (async () => {
+      setBusy(true);
+      try {
+        await skipBackupTotpEnrollment();
+        if (!cancelled) await finalizeEnrollment();
+      } catch (e: unknown) {
+        if (!cancelled) setError(formatSetupError(e, t));
+      } finally {
+        if (!cancelled) setBusy(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [hasPendingSetup, stage, skipBackupTotpEnrollment, finalizeEnrollment, t]);
 
   async function handlePasskeyContinue(toRegister: PasskeyMethodOption[]) {
     setError(null);
@@ -377,23 +399,15 @@ export function SetupScreen() {
       languageAriaLabel={t("settings.language")}
       brandHomeHref={brandHomeHref}
       brandHomeAriaLabel={brandHomeHref ? t("auth.brandHomeAria") : undefined}
-      beforeTitle={
-        <div>
-          <div
-            className="-mx-5 sm:-mx-8 h-px bg-ink-200"
-            role="presentation"
-          />
-          <div className="pt-4">
-            <SetupStepper stage={stage} t={t} />
-          </div>
-        </div>
-      }
       className="mb-0"
     />
   );
 
   const setupBody = (
     <>
+      <div className="mb-4">
+        <AccountContinuityBanner />
+      </div>
       <div className="setup-shell-intro mb-5 space-y-1">
         <h1 className="font-sans text-xl font-semibold text-ink-900 tracking-tight">
           {pageTitle}
@@ -488,11 +502,14 @@ export function SetupScreen() {
             {error && <div className="text-sm text-red-600">{error}</div>}
             <button
               className="btn-primary w-full"
-              onClick={handlePasswordNext}
+              onClick={() => void handlePasswordNext()}
               disabled={busy}
             >
-              {t("setup.next")}
+              {busy ? t("app.loading") : t("setup.openVault")}
             </button>
+            <p className="text-xs text-ink-500 leading-snug text-center">
+              {t("setup.laterPasskeyHint")}
+            </p>
             <CautionNotice showIcon>{t("setup.forgetWarn")}</CautionNotice>
           </div>
         )}

@@ -184,8 +184,8 @@ interface VaultContextValue {
   importBackup: (jsonText: string) => Promise<void>;
   /** Plaintext CSV for spreadsheet apps (Excel, Sheets). Vault must be unlocked. */
   exportSpreadsheet: () => Promise<string>;
-  /** Replace all entries from a spreadsheet CSV; stays unlocked. */
-  importSpreadsheet: (csvText: string) => Promise<void>;
+  /** Replace all entries from a spreadsheet CSV; stays unlocked. Returns imported row count. */
+  importSpreadsheet: (csvText: string) => Promise<number>;
 
   upsertEntry: (
     partial: Partial<DecryptedEntry> & { id?: string }
@@ -1966,7 +1966,7 @@ export function VaultProvider({
   }, [entries, meta?.categories]);
 
   const importSpreadsheet = useCallback(
-    async (csvText: string) => {
+    async (csvText: string): Promise<number> => {
       const session = sessionRef.current;
       if (!session) throw new AppError("errors.locked");
       const rows = parseSpreadsheetCsv(csvText);
@@ -2046,6 +2046,7 @@ export function VaultProvider({
       setEntries(nextEntries);
       lastActivityRef.current = Date.now();
       scheduleCloudPush();
+      return nextEntries.length;
     },
     [entries, meta?.categories, scheduleCloudPush, runMetaWrite],
   );

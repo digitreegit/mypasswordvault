@@ -158,8 +158,24 @@
     });
     window.__mpvLandingSupabase = supabaseClient;
 
+    function shouldSkipLandingToApp() {
+      // Home only — keep marketing pages (pricing, faq, …) browsable while signed in.
+      var path = location.pathname || "/";
+      if (path !== "/" && path !== "/index.html") return false;
+      if (/[?&]stay=1(?:&|$)/.test(location.search || "")) return false;
+      return true;
+    }
+
+    function goAppIfSignedIn(session) {
+      if (!session || !session.user) return false;
+      if (!shouldSkipLandingToApp()) return false;
+      location.replace(appPath("/app/"));
+      return true;
+    }
+
     supabaseClient.auth.getSession().then(function (res) {
       var session = res.data && res.data.session;
+      if (goAppIfSignedIn(session)) return;
       if (session && session.user) {
         renderSignedIn(session.user.email || session.user.id);
       } else {
@@ -168,6 +184,7 @@
     });
 
     supabaseClient.auth.onAuthStateChange(function (_event, session) {
+      if (goAppIfSignedIn(session)) return;
       if (session && session.user) {
         renderSignedIn(session.user.email || session.user.id);
       } else {

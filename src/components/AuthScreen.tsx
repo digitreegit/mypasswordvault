@@ -252,17 +252,20 @@ export function AuthScreen({
             ? t("auth.subtitle")
             : undefined;
 
-  const showAppleSignIn = getNativePlatform() === "ios";
+  /** iOS + web (Hide My Email recovery). Not Android. */
+  const showAppleSignIn = getNativePlatform() !== "android";
+  const [appleConfirmOpen, setAppleConfirmOpen] = useState(false);
 
   function clearMessages() {
     setError(null);
     setInfo(null);
   }
 
-  async function onApple() {
+  async function runAppleSignIn() {
     if (!configured) return;
     clearMessages();
     setBusy(true);
+    setAppleConfirmOpen(false);
     try {
       await signInWithApple();
     } catch (e: unknown) {
@@ -270,6 +273,11 @@ export function AuthScreen({
     } finally {
       setBusy(false);
     }
+  }
+
+  function onApple() {
+    if (!configured) return;
+    setAppleConfirmOpen(true);
   }
 
   async function onGoogle() {
@@ -491,7 +499,8 @@ export function AuthScreen({
               </button>
             </div>
 
-            {showAppleSignIn ? (
+            {/* Native iOS: Apple as peer (App Store 4.8). Web: not a peer signup — “open iPhone vault”. */}
+            {showAppleSignIn && isNativeApp() ? (
               <div className="relative pt-2">
                 {view === "signin" && lastUsed === "apple" && (
                   <LastUsedBadge label={t("auth.lastUsed")} />
@@ -499,7 +508,7 @@ export function AuthScreen({
                 <button
                   type="button"
                   className="auth-apple-btn btn w-full justify-center border border-black bg-black text-white shadow-sm hover:bg-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:opacity-60"
-                  onClick={() => void onApple()}
+                  onClick={() => onApple()}
                   disabled={busy}
                 >
                   <span className="flex items-center justify-center gap-2">
@@ -507,6 +516,33 @@ export function AuthScreen({
                     {t("auth.apple")}
                   </span>
                 </button>
+              </div>
+            ) : null}
+
+            {showAppleSignIn && !isNativeApp() ? (
+              <div className="rounded-lg border border-ink-200 bg-ink-50 px-3.5 py-3 space-y-2">
+                <p className="text-sm font-semibold text-ink-900">
+                  {t("auth.iphoneVaultTitle")}
+                </p>
+                <p className="text-xs text-ink-500 leading-snug">
+                  {t("auth.iphoneVaultBody")}
+                </p>
+                <div className="relative pt-0.5">
+                  {view === "signin" && lastUsed === "apple" && (
+                    <LastUsedBadge label={t("auth.lastUsed")} />
+                  )}
+                  <button
+                    type="button"
+                    className="auth-apple-btn btn w-full justify-center border border-black bg-black text-white shadow-sm hover:bg-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:opacity-60"
+                    onClick={() => void runAppleSignIn()}
+                    disabled={busy}
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <AppleGlyph />
+                      {t("auth.openIphoneVault")}
+                    </span>
+                  </button>
+                </div>
               </div>
             ) : null}
 
@@ -633,19 +669,69 @@ export function AuthScreen({
   );
 
   return (
-    <AuthScreenLayout header={authHeader} remeasureKey={view}>
-      <div className="space-y-5">
-        {!isNativeApp() ? authHeader : null}
-        {isNativeApp() ? (
-          <AuthPageIntro
-            title={pageTitle}
-            subtitle={pageSubtitle}
-            titleClassName="text-2xl font-bold text-ink-900 tracking-tight"
-          />
-        ) : null}
-        {authForms}
-      </div>
-    </AuthScreenLayout>
+    <>
+      <AuthScreenLayout header={authHeader} remeasureKey={view}>
+        <div className="space-y-5">
+          {!isNativeApp() ? authHeader : null}
+          {isNativeApp() ? (
+            <AuthPageIntro
+              title={pageTitle}
+              subtitle={pageSubtitle}
+              titleClassName="text-2xl font-bold text-ink-900 tracking-tight"
+            />
+          ) : null}
+          {authForms}
+        </div>
+      </AuthScreenLayout>
+      {appleConfirmOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40">
+          <div
+            className="card w-full max-w-md shadow-lg overflow-hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="apple-confirm-title"
+          >
+            <div className="px-5 py-4 border-b border-ink-200">
+              <h2
+                id="apple-confirm-title"
+                className="font-sans text-lg font-semibold text-ink-900"
+              >
+                {t("auth.appleConfirmTitle")}
+              </h2>
+            </div>
+            <div className="px-5 py-4 text-sm text-ink-700 leading-relaxed space-y-2">
+              <p>{t("auth.appleConfirmBody")}</p>
+            </div>
+            <div className="px-5 py-3 border-t border-ink-100 flex flex-col gap-2">
+              <button
+                type="button"
+                className="btn-primary w-full"
+                disabled={busy}
+                onClick={() => void onGoogle()}
+              >
+                {t("auth.appleConfirmPreferGoogle")}
+              </button>
+              <button
+                type="button"
+                className="btn-secondary w-full"
+                disabled={busy}
+                onClick={() => void runAppleSignIn()}
+              >
+                {t("auth.appleConfirmContinue")}
+              </button>
+              <button
+                type="button"
+                className="btn-secondary w-full"
+                disabled={busy}
+                onClick={() => setAppleConfirmOpen(false)}
+              >
+                {t("common.cancel")}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
 

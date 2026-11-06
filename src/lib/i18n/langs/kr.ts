@@ -50,7 +50,85 @@ export const MESSAGES_KR: Record<string, string> = {
   "auth.subtitle": "계정에 로그인하세요",
   "auth.google": "Google로 계속하기",
   "auth.apple": "Apple로 계속하기",
+  "auth.iphoneVaultTitle": "아이폰 앱을 이미 쓰나요?",
+  "auth.iphoneVaultBody":
+    "폰에서 만든 금고를 그대로 엽니다. 새 계정을 만들 필요 없어요.",
+  "auth.openIphoneVault": "아이폰 금고 열기",
+  "auth.appleConfirmTitle": "Apple 전에 한 가지만",
+  "auth.appleConfirmBody":
+    "이미 웹에서 Google로 비밀번호를 저장했다면 여기도 Google을 쓰세요. 한곳에 모입니다. Apple로 새로 시작해도 되고, 나중에 Google을 한 번만 붙이면 됩니다.",
+  "auth.appleConfirmPreferGoogle": "Google로 열기 (권장)",
+  "auth.appleConfirmContinue": "Apple로 계속",
   "auth.lastUsed": "최근 사용",
+
+  "continuity.linkedMethodsTitle": "이 금고를 여는 방법",
+  "continuity.linkedMethodsHint":
+    "Google과 Apple을 여기에 붙여 두면 폰과 컴퓨터가 같은 금고를 엽니다.",
+  "continuity.statusGoogleLinked": "Google 준비됨",
+  "continuity.statusGoogleMissing": "Google 아직 없음",
+  "continuity.statusAppleLinked": "Apple 준비됨",
+  "continuity.statusAppleMissing": "Apple 아직 없음",
+  "continuity.statusEmailLinked": "이메일 준비됨",
+  "continuity.statusEmailMissing": "이메일·비밀번호 아직 없음",
+  "continuity.linkGoogle": "Google 추가",
+  "continuity.linkApple": "Apple 추가",
+  "continuity.linkGoogleDone": "이제 Google로도 이 금고를 열 수 있어요.",
+  "continuity.linkAppleDone": "이제 Apple로도 이 금고를 열 수 있어요.",
+  "continuity.gateWrongTitle": "비어 있는 새 금고로 보여요",
+  "continuity.gateWrongBody":
+    "비밀번호는 Google 쪽에 있을 가능성이 큽니다. 그 금고를 여세요. 이후에 Apple은 한 번만 누르면 붙습니다.",
+  "continuity.gateEmptyTitle": "처음 쓰는 금고인가요?",
+  "continuity.gateEmptyBody":
+    "다른 기기에 이미 비밀번호를 저장했다면, 새로 만들지 말고 그 금고를 여세요.",
+  "continuity.gateEmailTitle": "아이폰에 이미 비밀번호가 있나요?",
+  "continuity.gateEmailBody":
+    "아이폰에서 Apple로 시작했다면 그 금고를 여세요. 이 이메일은 자동으로 그 계정에 붙어서, 폰과 웹이 같은 금고를 씁니다.",
+  "continuity.openWithGoogle": "Google로 열기",
+  "continuity.openIphoneVault": "아이폰 금고 열기",
+  "continuity.openIphoneVaultContinue": "Apple로 계속",
+  "continuity.emailPasswordLabel": "이 이메일의 비밀번호",
+  "continuity.emailPasswordPlaceholder": "방금 만든 비밀번호",
+  "continuity.emailPasswordHint":
+    "이 이메일을 아이폰 금고에 붙이려면 한 번만 필요합니다. 이후에는 Apple로 같은 금고가 열립니다.",
+  "continuity.attachTitle": "다음에 더 편하게",
+  "continuity.attachBody":
+    "방금 쓰던 로그인을 이 금고에 붙이면, 폰과 웹이 둘 다 같은 곳을 엽니다.",
+  "continuity.attachEmailTitle": "이메일 연결 마무리",
+  "continuity.attachEmailBody":
+    "{{email}}을(를) 이 금고에 연결하면 웹과 아이폰이 같은 비밀번호를 봅니다.",
+  "continuity.attachEmail": "이메일 붙이기",
+  "continuity.attachGoogle": "Google 붙이기",
+  "continuity.attachApple": "Apple 붙이기",
+  "continuity.linkEmailDone":
+    "이제 이메일로도 이 금고를 열 수 있어요. 폰과 웹이 같습니다.",
+  "continuity.webReadyTitle": "컴퓨터에서도 쓰려면",
+  "continuity.webReadyBody":
+    "Google을 한 번만 붙이세요. 웹에서도 같은 비밀번호가 열립니다.",
+  "continuity.oneMoreTitle": "다른 기기에서도 이 금고 열기",
+  "continuity.oneMoreBody":
+    "한 번만 누르면 다른 로그인이 같은 금고에 붙습니다. 나중에 해도 됩니다.",
+  "continuity.startFresh": "새로 시작할게요",
+  "continuity.later": "나중에",
+  "continuity.errOtherHasData":
+    "그 로그인은 이미 비밀번호가 있는 다른 금고에 쓰입니다. 여기는 붙이지 말고 그쪽으로 여세요.",
+  "continuity.errClaimFailed":
+    "로그인을 붙이지 못했어요. 다시 시도하거나 다른 금고를 직접 여세요.",
+  "continuity.errEmailAttachNeedPassword":
+    "계속하려면 이 이메일의 비밀번호를 입력하세요.",
+  "continuity.passkeyOfferTitle": "다음엔 더 빨리 열까요?",
+  "continuity.passkeyOfferBodyNative":
+    "Face ID·지문을 켜면 마스터 비밀번호를 매번 치지 않아도 됩니다. 나중에 설정에서도 할 수 있어요.",
+  "continuity.passkeyOfferBodyWeb":
+    "패스키(Touch ID·Face ID·Windows Hello)로 한 번에 잠금 해제하세요. 나중에 설정에서도 할 수 있어요.",
+  "continuity.passkeyOfferEnable": "켜기",
+  "continuity.backupBannerTitle": "백업 잠금 해제 추가",
+  "continuity.backupBannerBody":
+    "패스키와 인증 앱(또는 복구 코드)이 있으면 기기를 잃어도 복구하기 쉽습니다. 보안 설정에서 언제든 추가하세요.",
+  "continuity.backupBannerCta": "보안 설정 열기",
+  "setup.openVault": "금고 열기",
+  "setup.laterPasskeyHint":
+    "Face ID·패스키와 백업 잠금 해제는 비밀번호를 저장한 뒤에 설정해도 됩니다.",
+
   "auth.or": "또는",
   "auth.email": "이메일",
   "auth.emailPlaceholder": "you@example.com",
@@ -104,7 +182,7 @@ export const MESSAGES_KR: Record<string, string> = {
     "패스키 기기를 잃었을 때는 마스터 비밀번호 + 백업 인증 앱(TOTP) 또는 일회용 복구 코드로 잠금 해제할 수 있습니다. 복구 코드는 설정 시 한 번만 표시되니 안전한 곳에 보관하세요.",
   "auth.faqIosSyncQ": "iOS 앱과 웹 금고를 어떻게 동기화하나요?",
   "auth.faqIosSyncA":
-    "클라우드 동기화는 기기가 아니라 <strong>로그인 계정</strong>에 묶입니다. iOS에서 <strong>Apple로 계속하기</strong>를 쓰면서 웹과 같은 금고를 쓰려면, Apple이 물을 때 <strong>이메일 공유(Share My Email)</strong>를 선택해야 합니다—<strong>이메일 가리기(Hide My Email)는 선택하지 마세요</strong>. Hide My Email은 릴레이 주소로 <strong>별도 계정</strong>이 만들어져 Google이나 일반 이메일로 웹에 로그인한 금고와 맞지 않습니다. 이미 웹을 쓰는 경우 가장 쉬운 방법: iOS에서 <strong>Google로 계속하기</strong>를 누르고 <strong>같은 이메일</strong>로 로그인하세요. iOS에서 Apple을 쓰려면 Share My Email로 실제 주소가 웹 계정과 같게 하세요. 이미 Hide My Email을 선택했다면, 설정 → Apple ID → iCloud → Hide My Email(또는 appleid.apple.com → Apps Using Apple ID)에서 My Password Vault 연결을 끊고, 앱에서 로그아웃한 뒤 다시 로그인하세요.",
+    "클라우드 동기화는 기기가 아니라 <strong>로그인 계정</strong>(<code>user_id</code>)에 묶입니다. <strong>설정</strong>에서 같은 계정에 Google과 Apple을 모두 연결하는 것이 가장 확실합니다. 아이폰에서 Apple(Hide My Email 포함)로 시작했다면 웹에서도 <strong>Apple로 계속하기</strong>로 같은 금고를 연 뒤 설정에서 <strong>Google 추가</strong>하세요. 웹에서 Google로 시작했다면 iOS에서도 Google로 로그인한 뒤 설정에서 <strong>Apple 추가</strong>하세요. Hide My Email만으로는 Google 이메일과 절대 맞지 않아 연결이 필요합니다. Share My Email은 Apple이 실제 주소를 줄 때 도움이 됩니다.",
   "auth.faqPricingQ": "유료인가요, 무료인가요?",
   "auth.faqPricingA":
     "비밀번호 항목은 무료로 최대 25개까지 저장할 수 있습니다. $4.99를 한 번만 결제하면 이 계정에서 항목 수 제한 없이 계속 쓸 수 있습니다. 앱에서 __PRICING_LINK__를 열어 결제할 수 있습니다.",
@@ -313,7 +391,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "errors.locked": "잠금 상태입니다.",
   "errors.invalidBackup": "올바른 vault 백업 파일이 아닙니다.",
   "errors.invalidSpreadsheet":
-    "올바른 스프레드시트 CSV가 아닙니다. Category, Site, Username, Password, URL, Memo 열이 있는 .csv를 사용하세요.",
+    "CSV를 읽지 못했습니다. Chrome·Safari·Bitwarden·1Password보내기 또는 이 앱보내기 파일을 쓰세요. 열 이름은 자동으로 맞춥니다.",
   "errors.missingUserVaultsTable":
     "Supabase에 user_vaults 테이블이 없습니다. 대시보드 → SQL Editor에서 이 저장소의 supabase/migrations/20260513120000_user_vaults.sql 내용을 붙여넣어 실행한 뒤 다시 시도하세요.",
   "errors.noCloudBackup":
@@ -443,6 +521,12 @@ export const MESSAGES_KR: Record<string, string> = {
     "이 기기의 모든 항목을 이 스프레드시트로 바꿀까요? 현재 항목은 삭제되며, 금고는 잠금 해제 상태로 유지됩니다.",
   "settings.spreadsheetImportApply": "항목 바꾸기",
   "settings.spreadsheetImportDone": "스프레드시트를 가져왔습니다.",
+  "settings.spreadsheetImportDoneCounted":
+    "비밀번호 {{count}}개 저장됨. 무료 한도 {{limit}}개 중 {{remaining}}개 남음.",
+  "settings.spreadsheetImportDoneCountedPro":
+    "비밀번호 {{count}}개 저장됨.",
+  "settings.spreadsheetImportFormatsHint":
+    "Chrome·Safari·Bitwarden·1Password CSV 또는 이 앱보내기 파일을 그대로 가져올 수 있습니다. 열 이름은 자동으로 맞춥니다.",
 
   "settings.accountTitle": "계정",
   "settings.signedInAs": "로그인: {{email}}",

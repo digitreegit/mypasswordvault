@@ -119,6 +119,7 @@
   - `GOTRUE_URI_ALLOW_LIST`에 `https://mypasswordvault.app/app/`, `com.skyface.mypasswordvault://auth/callback` 등 1단계 기록값
   - `API_EXTERNAL_URL` = 스테이징 동안 `https://auth-new...`, 컷오버 시 `https://auth.mypasswordvault.app`
   - `GOTRUE_EXTERNAL_GOOGLE_*`, `GOTRUE_EXTERNAL_APPLE_*` (Redirect URI는 `<API_EXTERNAL_URL>/auth/v1/callback`)
+  - `GOTRUE_SECURITY_MANUAL_LINKING_ENABLED=true` (Apple↔Google `linkIdentity`; see `docs/apple-sign-in-ios.md`)
   - Send Email Hook: `GOTRUE_HOOK_SEND_EMAIL_ENABLED=true`, URI는 셀프호스팅 `send-auth-email` 함수, secret은 `SEND_EMAIL_HOOK_SECRET`과 동일
   - 이메일 확인·비밀번호 정책·JWT 만료를 클라우드와 동일하게
 - [ ] Studio / 관리 화면은 외부 비공개 (SSH 터널 또는 Cloudflare Access)

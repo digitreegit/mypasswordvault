@@ -13,6 +13,7 @@ import { NativePinnedAppShell } from "./NativePinnedAppShell";
 import { isAppError } from "../lib/errors";
 import { passkeyRegisteredForCurrentSite } from "../lib/passkey";
 import { isNativeApp } from "../lib/platform";
+import { AccountContinuityBanner } from "./AccountContinuityBanner";
 
 export function LockScreen() {
   const {
@@ -354,6 +355,10 @@ export function LockScreen() {
           <p className="web-auth-subtitle">{lockSubtitle}</p>
         </div>
       ) : null}
+
+      <div className="mb-4">
+        <AccountContinuityBanner />
+      </div>
 
       {checkoutFlash ? (
         <div
