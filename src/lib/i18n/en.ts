@@ -50,7 +50,7 @@ export const MESSAGES_EN: Record<string, string> = {
   "auth.apple": "Continue with Apple",
   "auth.iphoneVaultTitle": "Already using the iPhone app?",
   "auth.iphoneVaultBody":
-    "Open the same vault you started on your phone. You do not need a new account.",
+    "On iPhone, add Google in Settings, then open this site with Google. Same vault—no Apple ID typing on the web.",
   "auth.openIphoneVault": "Open my iPhone vault",
   "auth.appleConfirmTitle": "One tip before Apple",
   "auth.appleConfirmBody":
@@ -81,6 +81,9 @@ export const MESSAGES_EN: Record<string, string> = {
   "continuity.gateEmailTitle": "Already have passwords on iPhone?",
   "continuity.gateEmailBody":
     "If you started with Apple on iPhone, open that vault. We'll move this email onto it automatically so everything stays in one place.",
+  "continuity.gateUseGoogleTitle": "Use Google to open the same vault",
+  "continuity.gateUseGoogleBody":
+    "On the iPhone app, open Settings and add Google to your vault. Then come back here and continue with Google—no Apple Account typing on the web.",
   "continuity.openWithGoogle": "Open with Google",
   "continuity.openIphoneVault": "Open my iPhone vault",
   "continuity.openIphoneVaultContinue": "Continue with Apple",
@@ -91,6 +94,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "continuity.attachTitle": "Save one tap for next time",
   "continuity.attachBody":
     "Attach the login you just left so phone and web both open this vault.",
+  "continuity.attachAppleOnIphoneBody":
+    "Add Apple from the iPhone app Settings so you never type your Apple Account on the web.",
   "continuity.attachEmailTitle": "Finish attaching your email",
   "continuity.attachEmailBody":
     "Connect {{email}} to this vault so the website and iPhone stay in sync.",

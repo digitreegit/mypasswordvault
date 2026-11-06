@@ -252,8 +252,8 @@ export function AuthScreen({
             ? t("auth.subtitle")
             : undefined;
 
-  /** iOS + web (Hide My Email recovery). Not Android. */
-  const showAppleSignIn = getNativePlatform() !== "android";
+  /** Native iOS only — web Apple OAuth forces Apple ID email/password and fails most users. */
+  const showAppleSignIn = isNativeApp() && getNativePlatform() !== "android";
   const [appleConfirmOpen, setAppleConfirmOpen] = useState(false);
 
   function clearMessages() {
@@ -499,8 +499,8 @@ export function AuthScreen({
               </button>
             </div>
 
-            {/* Native iOS: Apple as peer (App Store 4.8). Web: not a peer signup — “open iPhone vault”. */}
-            {showAppleSignIn && isNativeApp() ? (
+            {/* Native iOS only (App Store 4.8). Web never starts Apple OAuth. */}
+            {showAppleSignIn ? (
               <div className="relative pt-2">
                 {view === "signin" && lastUsed === "apple" && (
                   <LastUsedBadge label={t("auth.lastUsed")} />
@@ -516,33 +516,6 @@ export function AuthScreen({
                     {t("auth.apple")}
                   </span>
                 </button>
-              </div>
-            ) : null}
-
-            {showAppleSignIn && !isNativeApp() ? (
-              <div className="rounded-lg border border-ink-200 bg-ink-50 px-3.5 py-3 space-y-2">
-                <p className="text-sm font-semibold text-ink-900">
-                  {t("auth.iphoneVaultTitle")}
-                </p>
-                <p className="text-xs text-ink-500 leading-snug">
-                  {t("auth.iphoneVaultBody")}
-                </p>
-                <div className="relative pt-0.5">
-                  {view === "signin" && lastUsed === "apple" && (
-                    <LastUsedBadge label={t("auth.lastUsed")} />
-                  )}
-                  <button
-                    type="button"
-                    className="auth-apple-btn btn w-full justify-center border border-black bg-black text-white shadow-sm hover:bg-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:opacity-60"
-                    onClick={() => void runAppleSignIn()}
-                    disabled={busy}
-                  >
-                    <span className="flex items-center justify-center gap-2">
-                      <AppleGlyph />
-                      {t("auth.openIphoneVault")}
-                    </span>
-                  </button>
-                </div>
               </div>
             ) : null}
 

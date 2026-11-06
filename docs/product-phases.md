@@ -25,7 +25,8 @@ Fundamental product work. Autofill (C) is the long lever; A/B/D make the funnel 
 ## Phase D — Hide My Email / cross-login vault split
 
 - Canonical `user_id` with vault data; `linkIdentity` + `claim-auth-identity`
-- Web “Open my iPhone vault”; empty email → attach to Apple vault in one flow
+- Web never starts Apple OAuth (Apple ID email/password fails most users). Bridge: add Google on iPhone → open web with Google
+- Native iOS keeps Continue with Apple; Settings “Add Apple” is iOS-only
 - Settings: linked Google / Apple / email
 
 ## Do not (for now)

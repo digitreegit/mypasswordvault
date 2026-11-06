@@ -52,7 +52,7 @@ export const MESSAGES_KR: Record<string, string> = {
   "auth.apple": "Apple로 계속하기",
   "auth.iphoneVaultTitle": "아이폰 앱을 이미 쓰나요?",
   "auth.iphoneVaultBody":
-    "폰에서 만든 금고를 그대로 엽니다. 새 계정을 만들 필요 없어요.",
+    "아이폰 앱 설정에서 Google을 추가한 뒤, 웹에서는 Google로 열면 같은 금고입니다. 웹에서 Apple 계정을 칠 필요 없어요.",
   "auth.openIphoneVault": "아이폰 금고 열기",
   "auth.appleConfirmTitle": "Apple 전에 한 가지만",
   "auth.appleConfirmBody":
@@ -83,6 +83,9 @@ export const MESSAGES_KR: Record<string, string> = {
   "continuity.gateEmailTitle": "아이폰에 이미 비밀번호가 있나요?",
   "continuity.gateEmailBody":
     "아이폰에서 Apple로 시작했다면 그 금고를 여세요. 이 이메일은 자동으로 그 계정에 붙어서, 폰과 웹이 같은 금고를 씁니다.",
+  "continuity.gateUseGoogleTitle": "Google로 같은 금고 열기",
+  "continuity.gateUseGoogleBody":
+    "아이폰 앱 설정에서 Google을 금고에 추가한 뒤, 여기로 돌아와 Google로 계속하세요. 웹에서 Apple 계정을 입력할 필요 없습니다.",
   "continuity.openWithGoogle": "Google로 열기",
   "continuity.openIphoneVault": "아이폰 금고 열기",
   "continuity.openIphoneVaultContinue": "Apple로 계속",
@@ -93,6 +96,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "continuity.attachTitle": "다음에 더 편하게",
   "continuity.attachBody":
     "방금 쓰던 로그인을 이 금고에 붙이면, 폰과 웹이 둘 다 같은 곳을 엽니다.",
+  "continuity.attachAppleOnIphoneBody":
+    "Apple은 아이폰 앱 설정에서 추가하세요. 웹에서 Apple 계정을 칠 필요가 없습니다.",
   "continuity.attachEmailTitle": "이메일 연결 마무리",
   "continuity.attachEmailBody":
     "{{email}}을(를) 이 금고에 연결하면 웹과 아이폰이 같은 비밀번호를 봅니다.",

@@ -9,7 +9,7 @@ import { AUTH_LAST_METHOD_CHANGED } from "../lib/authLastUsed";
 import { getUserSignInMethod, useAuth } from "../lib/auth";
 import { isAppError } from "../lib/errors";
 import { Eye, EyeOff, AppleIcon, GoogleIcon } from "./Icons";
-import { getNativePlatform } from "../lib/platform";
+import { getNativePlatform, isNativeApp } from "../lib/platform";
 
 type TFn = (key: string, vars?: Record<string, string | number>) => string;
 
@@ -220,7 +220,10 @@ export function AccountCredentialPanel({
     currentPw.trim().length > 0 && newPw.trim().length > 0;
   const emailFormReady = emailDraft.trim().length > 0;
 
-  const canLinkApple = !appleIdentityLinked && getNativePlatform() !== "android";
+  const canLinkApple =
+    !appleIdentityLinked &&
+    isNativeApp() &&
+    getNativePlatform() !== "android";
   const canLinkGoogle = !googleIdentityLinked;
 
   async function onLink(provider: "apple" | "google") {

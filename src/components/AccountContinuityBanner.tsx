@@ -23,7 +23,7 @@ import {
   readPendingEmailAttach,
   savePendingEmailAttach,
 } from "../lib/pendingEmailAttach";
-import { getNativePlatform } from "../lib/platform";
+import { getNativePlatform, isNativeApp } from "../lib/platform";
 import { isAppError } from "../lib/errors";
 
 /**
@@ -315,6 +315,10 @@ export function AccountContinuityBanner() {
     const onGoogleOnly =
       userHasGoogleIdentity(user) && !userHasAppleIdentity(user);
     const onEmailOnly = soleEmail;
+    /** Web never starts Apple OAuth (email/password on appleid.apple.com). */
+    const allowAppleOAuth = isNativeApp() && getNativePlatform() !== "android";
+    const needsIphoneGoogleBridge =
+      !allowAppleOAuth && (onEmailOnly || onGoogleOnly);
 
     return (
       <div
@@ -329,22 +333,26 @@ export function AccountContinuityBanner() {
               id="continuity-gate-title"
               className="font-sans text-lg font-semibold text-ink-900"
             >
-              {onEmailOnly
-                ? t("continuity.gateEmailTitle")
-                : showEmptyRelay
-                  ? t("continuity.gateWrongTitle")
-                  : t("continuity.gateEmptyTitle")}
+              {needsIphoneGoogleBridge
+                ? t("continuity.gateUseGoogleTitle")
+                : onEmailOnly
+                  ? t("continuity.gateEmailTitle")
+                  : showEmptyRelay
+                    ? t("continuity.gateWrongTitle")
+                    : t("continuity.gateEmptyTitle")}
             </h2>
           </div>
           <div className="px-5 py-4 text-sm text-ink-700 leading-relaxed space-y-3">
             <p>
-              {onEmailOnly
-                ? t("continuity.gateEmailBody")
-                : showEmptyRelay
-                  ? t("continuity.gateWrongBody")
-                  : t("continuity.gateEmptyBody")}
+              {needsIphoneGoogleBridge
+                ? t("continuity.gateUseGoogleBody")
+                : onEmailOnly
+                  ? t("continuity.gateEmailBody")
+                  : showEmptyRelay
+                    ? t("continuity.gateWrongBody")
+                    : t("continuity.gateEmptyBody")}
             </p>
-            {onEmailOnly && emailStep === "password" ? (
+            {allowAppleOAuth && onEmailOnly && emailStep === "password" ? (
               <div>
                 <label htmlFor="continuity-email-pw" className="label">
                   {t("continuity.emailPasswordLabel")}
@@ -366,12 +374,22 @@ export function AccountContinuityBanner() {
             {error ? <p className="text-red-600">{error}</p> : null}
           </div>
           <div className="px-5 py-3 border-t border-ink-100 flex flex-col gap-2">
-            {onEmailOnly ? (
+            {needsIphoneGoogleBridge ? (
+              <button
+                type="button"
+                className="btn-primary w-full"
+                disabled={busy}
+                onClick={() => void openOtherVault("google")}
+              >
+                {t("continuity.openWithGoogle")}
+              </button>
+            ) : null}
+            {allowAppleOAuth && onEmailOnly ? (
               emailStep === "ask" ? (
                 <button
                   type="button"
                   className="btn w-full border border-black bg-black text-white"
-                  disabled={busy || getNativePlatform() === "android"}
+                  disabled={busy}
                   onClick={() => {
                     setError(null);
                     setEmailStep("password");
@@ -390,11 +408,11 @@ export function AccountContinuityBanner() {
                 </button>
               )
             ) : null}
-            {onGoogleOnly ? (
+            {allowAppleOAuth && onGoogleOnly ? (
               <button
                 type="button"
                 className="btn w-full border border-black bg-black text-white"
-                disabled={busy || getNativePlatform() === "android"}
+                disabled={busy}
                 onClick={() => void openOtherVault("apple")}
               >
                 {t("continuity.openIphoneVault")}
@@ -430,6 +448,11 @@ export function AccountContinuityBanner() {
   }
 
   if (showOAuthAttach && abandoned) {
+    const attachIsApple = abandoned.provider === "apple";
+    const canAttachHere =
+      abandoned.provider === "google" ||
+      (attachIsApple && isNativeApp() && getNativePlatform() !== "android");
+
     return (
       <div
         className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/40"
@@ -443,20 +466,28 @@ export function AccountContinuityBanner() {
             </h2>
           </div>
           <div className="px-5 py-4 text-sm text-ink-700 space-y-2">
-            <p>{t("continuity.attachBody")}</p>
+            <p>
+              {canAttachHere
+                ? t("continuity.attachBody")
+                : t("continuity.attachAppleOnIphoneBody")}
+            </p>
             {error ? <p className="text-red-600">{error}</p> : null}
           </div>
           <div className="px-5 py-3 border-t border-ink-100 flex flex-col gap-2">
-            <button
-              type="button"
-              className="btn-primary w-full"
-              disabled={busy}
-              onClick={() => void onLink(abandoned.provider as "apple" | "google")}
-            >
-              {abandoned.provider === "google"
-                ? t("continuity.attachGoogle")
-                : t("continuity.attachApple")}
-            </button>
+            {canAttachHere ? (
+              <button
+                type="button"
+                className="btn-primary w-full"
+                disabled={busy}
+                onClick={() =>
+                  void onLink(abandoned.provider as "apple" | "google")
+                }
+              >
+                {abandoned.provider === "google"
+                  ? t("continuity.attachGoogle")
+                  : t("continuity.attachApple")}
+              </button>
+            ) : null}
             <button
               type="button"
               className="btn-secondary w-full"
@@ -507,7 +538,8 @@ export function AccountContinuityBanner() {
     );
   }
 
-  const canLinkApple = missing.needApple && getNativePlatform() !== "android";
+  const canLinkApple =
+    missing.needApple && isNativeApp() && getNativePlatform() !== "android";
   return (
     <div
       className="rounded-lg border border-ink-200 bg-ink-50 text-ink-800 px-4 py-3 space-y-3 text-sm leading-snug"
