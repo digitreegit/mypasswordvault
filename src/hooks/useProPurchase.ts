@@ -4,6 +4,7 @@ import {
   getStoreBridgeFailureDetail,
   getStoreBridgeStatus,
   initNativeStoreBridge,
+  reclaimOwnedStorePurchasesIfAny,
   subscribeStoreBridgeStatus,
   subscribeStoreProDisplayPrice,
   type StoreBridgeStatus,
@@ -30,8 +31,12 @@ export function useProPurchase(t: TFn) {
   useEffect(() => {
     if (!storeBilling) return;
     void initNativeStoreBridge();
-    const unsubBridge = subscribeStoreBridgeStatus(setBridgeStatus);
+    const unsubBridge = subscribeStoreBridgeStatus((status) => {
+      setBridgeStatus(status);
+      if (status === "ready") reclaimOwnedStorePurchasesIfAny();
+    });
     const unsubPrice = subscribeStoreProDisplayPrice(setStoreProPrice);
+    reclaimOwnedStorePurchasesIfAny();
     return () => {
       unsubBridge();
       unsubPrice();

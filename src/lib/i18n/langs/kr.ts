@@ -326,6 +326,8 @@ export const MESSAGES_KR: Record<string, string> = {
   "errors.storeBridgeMissingAndroid":
     "Google Play 결제를 사용할 수 없습니다. Play Console에 PRO 상품을 등록하고, 내부 테스트에 빌드를 올린 뒤 Play 테스트 링크로 설치했는지 확인하세요.",
   "errors.storeVerifyFailed": "스토어 구매를 확인하지 못했습니다. 다시 시도하거나 문의하세요.",
+  "errors.storeVerifyFailedRetryRestore":
+    "결제는 됐지만 아직 확인하지 못했습니다. 아래 '구매 복원'을 눌러 주세요. 확인되면 PRO가 바로 열립니다.",
   "errors.storeDevOnly": "개발용 스토어 부여는 개발 빌드에서만 사용할 수 있습니다.",
   "errors.storePurchaseCancelled": "구매가 취소되었습니다.",
   "errors.storePurchasePending":

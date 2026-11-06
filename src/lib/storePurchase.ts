@@ -54,7 +54,15 @@ export async function purchaseProViaStore(): Promise<void> {
 
   await withStoreSheet(async () => {
     const payload = await bridge.purchase(STORE_PRO_PRODUCT_ID);
-    await verifyStorePurchaseOnServer({ ...payload, restore: false });
+    try {
+      await verifyStorePurchaseOnServer({ ...payload, restore: false });
+    } catch (e: unknown) {
+      // Leave the store transaction unfinished so launch / Restore can reclaim it.
+      if (e instanceof AppError && e.code === "errors.storeVerifyFailed") {
+        throw new AppError("errors.storeVerifyFailedRetryRestore", e.detail);
+      }
+      throw e;
+    }
     await finishTransaction(payload);
   });
   notifyProGranted();
@@ -118,12 +126,64 @@ function notifyProGranted(): void {
   if (typeof window !== "undefined") window.dispatchEvent(new Event(STORE_PRO_GRANTED_EVENT));
 }
 
+const VERIFY_ATTEMPTS = 3;
+const VERIFY_RETRY_MS = [800, 2000];
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function isRetryableVerifyDetail(detail: string): boolean {
+  const d = detail.toLowerCase();
+  return (
+    d.includes("failed to fetch") ||
+    d.includes("network") ||
+    d.includes("timeout") ||
+    d.includes("503") ||
+    d.includes("502") ||
+    d.includes("504") ||
+    d.includes("429") ||
+    d.includes("functions_relay_error") ||
+    d.includes("edge_function")
+  );
+}
+
 async function verifyStorePurchaseOnServer(
   payload: StorePurchasePayload & { restore?: boolean },
 ): Promise<void> {
   const sb = getSupabase();
   if (!sb) throw new AppError("errors.supabaseNotConfigured");
 
+  let lastError: unknown;
+  for (let attempt = 0; attempt < VERIFY_ATTEMPTS; attempt++) {
+    try {
+      await invokeVerifyStorePurchase(sb, payload);
+      return;
+    } catch (e: unknown) {
+      lastError = e;
+      const detail =
+        e instanceof AppError && e.detail
+          ? String(e.detail)
+          : e instanceof Error
+            ? e.message
+            : String(e ?? "");
+      const fatal =
+        e instanceof AppError &&
+        (e.code === "errors.storePurchaseOtherAccount" ||
+          e.code === "errors.storePurchaseRefunded");
+      if (fatal || attempt === VERIFY_ATTEMPTS - 1 || !isRetryableVerifyDetail(detail)) {
+        throw e;
+      }
+      await sleep(VERIFY_RETRY_MS[attempt] ?? 2000);
+    }
+  }
+  throw lastError;
+}
+
+async function invokeVerifyStorePurchase(
+  sb: NonNullable<ReturnType<typeof getSupabase>>,
+  payload: StorePurchasePayload & { restore?: boolean },
+): Promise<void> {
   const { data, error } = await sb.functions.invoke("verify-store-purchase", {
     body: {
       platform: payload.platform,

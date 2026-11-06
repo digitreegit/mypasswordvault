@@ -131,6 +131,30 @@ function attachBridge() {
   bridgeFailureDetail = null;
   setBridgeStatus("ready");
   syncProDisplayPrice();
+  reclaimOwnedProTransaction();
+}
+
+/** If Play/App Store already owns PRO but the app never finished server verify, reclaim it. */
+function reclaimOwnedProTransaction(): void {
+  if (!store.owned(STORE_PRO_PRODUCT_ID) && !findOwnedTransaction(STORE_PRO_PRODUCT_ID)) {
+    return;
+  }
+  const transaction = findOwnedTransaction(STORE_PRO_PRODUCT_ID);
+  if (!transaction) return;
+  let payload: StorePurchasePayload;
+  try {
+    payload = payloadFromTransaction(transaction, STORE_PRO_PRODUCT_ID);
+  } catch (e: unknown) {
+    console.warn("store reclaim skipped; missing verification data", e);
+    return;
+  }
+  void verifyDeliveredStoreTransaction(payload);
+}
+
+/** Call after sign-in / when opening Plan — bridge may have been ready before a session existed. */
+export function reclaimOwnedStorePurchasesIfAny(): void {
+  if (bridgeStatus !== "ready") return;
+  reclaimOwnedProTransaction();
 }
 
 function tryMarkReady(): void {
@@ -354,6 +378,24 @@ async function restoreProduct(
   return payloadFromTransaction(transaction, productId);
 }
 
+const STORE_STEP_TIMEOUT_MS = 15_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, detail: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error(detail)), ms);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        window.clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 async function waitForCapacitorBridge(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   if (document.readyState === "complete") return;
@@ -399,7 +441,13 @@ export async function initNativeStoreBridge(options?: {
 
     registerStoreHandlers(platform);
 
-    const initResult = await store.initialize([platform]);
+    // The Play Billing plugin silently drops requests when its service reconnect fails,
+    // so initialize/update can hang forever; time out to "failed" so a tap can retry.
+    const initResult = await withTimeout(
+      store.initialize([platform]),
+      STORE_STEP_TIMEOUT_MS,
+      "initialize_timeout",
+    );
     const initError = Array.isArray(initResult) ? initResult[0] : initResult;
     if (initError) {
       bridgeFailureDetail = formatStoreError(initError);
@@ -412,7 +460,7 @@ export async function initNativeStoreBridge(options?: {
     // Load product catalog only. Do NOT restorePurchases() here — on iOS that
     // refreshes the App Store receipt and prompts every user for Apple ID sign-in.
     // Restore runs only when the user taps "Restore purchases" in pricing UI.
-    await store.update();
+    await withTimeout(store.update(), STORE_STEP_TIMEOUT_MS, "update_timeout");
     tryMarkReady();
 
     if (window.__mpwStoreBridge) return;

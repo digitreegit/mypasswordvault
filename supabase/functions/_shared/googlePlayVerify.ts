@@ -1,6 +1,13 @@
 export type GoogleVerifyResult =
   /** `uncharged` marks license-tester and promo-code purchases, which Google never charges. */
-  | { ok: true; transactionId: string; uncharged: boolean; regionCode: string | null }
+  | {
+      ok: true;
+      transactionId: string;
+      uncharged: boolean;
+      regionCode: string | null;
+      /** 0 = yet to acknowledge, 1 = acknowledged */
+      acknowledgementState: number | null;
+    }
   | { ok: false; transactionId: string; error: string };
 
 type ServiceAccount = {
@@ -195,5 +202,59 @@ export async function verifyGooglePurchase(
     transactionId,
     uncharged: purchase.purchaseType === 0 || purchase.purchaseType === 1,
     regionCode: /^[A-Z]{2}$/.test(region) ? region : null,
+    acknowledgementState:
+      typeof purchase.acknowledgementState === "number"
+        ? purchase.acknowledgementState
+        : null,
   };
+}
+
+/**
+ * Tell Google the purchase was fulfilled so Play will not auto-refund after ~3 days.
+ * Safe to call when already acknowledged. Does not throw — callers treat failure as non-fatal
+ * after PRO has already been granted.
+ */
+export async function acknowledgeGooglePurchase(
+  purchaseToken: string,
+  productId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const token = purchaseToken.trim();
+  const pid = productId.trim();
+  if (!token) return { ok: false, error: "missing_purchase_token" };
+  if (!pid) return { ok: false, error: "missing_product_id" };
+
+  const packageName =
+    Deno.env.get("GOOGLE_PLAY_PACKAGE_NAME")?.trim() ??
+    "com.skyface.mypasswordvault";
+  const saJson = Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON")?.trim();
+  const sa = saJson ? parseServiceAccount(saJson) : null;
+  if (!sa) return { ok: false, error: "google_not_configured" };
+
+  const accessToken = await getGoogleAccessToken(sa);
+  if (!accessToken) return { ok: false, error: "google_auth_failed" };
+
+  // Skip if already acknowledged (avoids noisy 400s from Play).
+  const current = await fetchProductPurchase(accessToken, packageName, pid, token);
+  if (current?.acknowledgementState === 1) return { ok: true };
+
+  const url =
+    `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${encodeURIComponent(packageName)}/purchases/products/${encodeURIComponent(pid)}/tokens/${encodeURIComponent(token)}:acknowledge`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: "{}",
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    // Already acknowledged races still return success for the caller.
+    if (res.status === 400 && /already.?acknowledged/i.test(text)) {
+      return { ok: true };
+    }
+    console.error("Google Play acknowledge failed", res.status, text);
+    return { ok: false, error: `google_acknowledge_failed:${res.status}` };
+  }
+  return { ok: true };
 }

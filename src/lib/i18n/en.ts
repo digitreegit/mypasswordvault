@@ -332,6 +332,8 @@ export const MESSAGES_EN: Record<string, string> = {
   "errors.storeBridgeMissingAndroid":
     "Google Play billing is not ready. Create product com.skyface.mypasswordvault.pro_lifetime in Play Console, upload to Internal testing, and install from Play (not Android Studio Run alone).",
   "errors.storeVerifyFailed": "Could not verify your store purchase. Try again or contact support.",
+  "errors.storeVerifyFailedRetryRestore":
+    "Payment went through, but we could not confirm it yet. Tap Restore purchases below — PRO will unlock once confirmation succeeds.",
   "errors.storeDevOnly": "Dev store grant is only available in development builds.",
   "errors.storePurchaseCancelled": "Purchase was cancelled.",
   "errors.storePurchasePending":

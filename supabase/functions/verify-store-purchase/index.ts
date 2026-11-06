@@ -6,7 +6,10 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.8";
 import { grantLicense } from "../_shared/grantEntitlement.ts";
 import { verifyApplePurchase } from "../_shared/appleStoreVerify.ts";
-import { verifyGooglePurchase } from "../_shared/googlePlayVerify.ts";
+import {
+  acknowledgeGooglePurchase,
+  verifyGooglePurchase,
+} from "../_shared/googlePlayVerify.ts";
 
 const cors: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -111,6 +114,7 @@ Deno.serve(async (req) => {
   let relatedTransactionIds: string[] = [];
   let amountCents: number | null = null;
   let purchaseCountry: string | null = null;
+  let googleNeedsAck = false;
 
   if (devBypass && verificationData === "dev_ok") {
     verifiedTransactionId =
@@ -135,6 +139,7 @@ Deno.serve(async (req) => {
     verifiedTransactionId = r.transactionId;
     if (r.uncharged) amountCents = 0;
     purchaseCountry = r.regionCode;
+    googleNeedsAck = r.acknowledgementState !== 1;
   }
 
   if (!verifiedTransactionId) {
@@ -163,6 +168,13 @@ Deno.serve(async (req) => {
 
   const existing = owners?.find((row) => row.user_id === user.id);
   if (existing?.licensed) {
+    // Fulfill Play even on restore / already-licensed so unacked purchases are not refunded.
+    if (platform === "android" && googleNeedsAck && verificationData) {
+      const ack = await acknowledgeGooglePurchase(verificationData, productId);
+      if (!ack.ok) {
+        console.error("verify-store-purchase google ack (already licensed)", ack.error);
+      }
+    }
     return json({
       licensed: true,
       purchase_platform: platform,
@@ -188,6 +200,15 @@ Deno.serve(async (req) => {
       { error: "db_error" },
       500,
     );
+  }
+
+  // Grant first, then acknowledge: a failed ack must not undo PRO, and Play refunds
+  // unacknowledged purchases after ~3 days if we never reach this.
+  if (platform === "android" && googleNeedsAck && verificationData) {
+    const ack = await acknowledgeGooglePurchase(verificationData, productId);
+    if (!ack.ok) {
+      console.error("verify-store-purchase google ack after grant", ack.error);
+    }
   }
 
   return json({
