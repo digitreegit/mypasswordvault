@@ -270,7 +270,7 @@ psql --single-transaction --variable ON_ERROR_STOP=1 \
 - [x] Resend API 키 교체 (2026-11-05, 디버깅 중 `docker compose config` 출력에 노출)
   - 새 키 `mpv-selfhost-functions`: Sending access, `mypasswordvault.app` 도메인만. 클립보드 → ssh로 `functions.env`에만 저장
   - 새 키로 발송 Delivered 확인 후 이전 키 `mypasswordvault-v3` 삭제
-  - `My Password Vault` 키(Full access)는 클라우드 Supabase용으로 남김 → 10단계에서 삭제
+  - `My Password Vault` 키(Full access)는 클라우드 Supabase용으로 남김 → 10단계에서 삭제 완료 (2026-11-07)
   - 교훈: `docker compose config`는 비밀값을 그대로 출력함. 변수 이름 확인은 `awk`로 값 없이
 - [x] 메일 hook 시크릿 교체 (같은 출력에 노출): 서버에서 새로 생성해 `.env`·`functions.env` 동시 교체, `/recover` 호출로 "Hook ran successfully" 확인
 - [ ] 서버 로그에 401/500 급증 없는지
@@ -311,12 +311,12 @@ ssh mpv-vps "sudo bash -c 'set -a; . /etc/mpv-backup/r2.env; set +a; export RCLO
 
 ## 10. 비용 정리 (반드시 마지막)
 
-- [ ] Supabase 커스텀 도메인 애드온 끄기
-- [ ] Skyface 조직을 Free로 다운그레이드 (클라우드 프로젝트는 한동안 읽기용 백업으로 남겨 두고, 이후 삭제)
-- [ ] Vercel의 Mypasswordvault 프로젝트 삭제 (도메인 연결 해제 확인 후)
-- [ ] Resend `My Password Vault` 키(Full access, 클라우드용) 삭제
+- [x] Supabase 커스텀 도메인 애드온 끄기 (커스텀 도메인 삭제 후 Free 다운그레이드로 애드온 제거, 2026-11-07)
+- [x] Skyface 조직을 Free로 다운그레이드 (클라우드 프로젝트는 한동안 읽기용 백업으로 남겨 두고, 이후 삭제) — 2026-11-07
+- [x] Vercel의 Mypasswordvault 프로젝트 삭제 (도메인 `mypasswordvault.app` 연결 해제 확인 후) — 2026-11-07
+- [x] Resend `My Password Vault` 키(Full access, 클라우드용) 삭제 — 2026-11-07 (`mpv-selfhost-functions` 유지)
 
-**10단계를 먼저 하면 앱 로그인과 싱크가 즉시 끊김.**
+**10단계를 먼저 하면 앱 로그인과 싱크가 즉시 끊김.** (컷오버·헬스 확인 후 진행 완료)
 
 ---
 
