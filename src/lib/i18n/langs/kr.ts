@@ -53,11 +53,11 @@ export const MESSAGES_KR: Record<string, string> = {
   "auth.passkey": "패스키로 계속하기",
   "auth.iphoneVaultTitle": "아이폰 앱을 이미 쓰나요?",
   "auth.iphoneVaultBody":
-    "아이폰 앱 설정에서 Google을 추가한 뒤, 웹에서는 Google로 열면 같은 금고입니다. 웹에서 Apple 계정을 칠 필요 없어요.",
+    "여기서 Google 또는 이메일로 로그인한 뒤, 아이폰과 같은 마스터 비밀번호를 입력하세요. 한 번 확인하면 그 금고가 열립니다. 웹에서 Apple 계정을 칠 필요 없어요.",
   "auth.openIphoneVault": "아이폰 금고 열기",
   "auth.appleConfirmTitle": "Apple 전에 한 가지만",
   "auth.appleConfirmBody":
-    "이미 웹에서 Google로 비밀번호를 저장했다면 여기도 Google을 쓰세요. 한곳에 모입니다. Apple로 새로 시작해도 되고, 나중에 Google을 한 번만 붙이면 됩니다.",
+    "이미 웹에서 Google로 비밀번호를 저장했다면 여기도 Google을 쓰세요. 한곳에 모입니다. Apple로 새로 시작해도 되고, 나중에 웹에서 같은 마스터 비밀번호로 Google/이메일을 이 금고에 붙일 수 있습니다.",
   "auth.appleConfirmPreferGoogle": "Google로 열기 (권장)",
   "auth.appleConfirmContinue": "Apple로 계속",
   "auth.lastUsed": "최근 사용",
@@ -83,16 +83,16 @@ export const MESSAGES_KR: Record<string, string> = {
   "continuity.linkAppleDone": "이제 Apple로도 이 금고를 열 수 있어요.",
   "continuity.gateWrongTitle": "비어 있는 새 금고로 보여요",
   "continuity.gateWrongBody":
-    "비밀번호는 Google 쪽에 있을 가능성이 큽니다. 그 금고를 여세요. 이후에 Apple은 한 번만 누르면 붙습니다.",
+    "비밀번호는 Google 쪽에 있을 가능성이 큽니다. 그 금고를 여세요. iOS도 쓰려면 아이폰 설정에서 Apple을 붙이면 됩니다.",
   "continuity.gateEmptyTitle": "처음 쓰는 금고인가요?",
   "continuity.gateEmptyBody":
     "다른 기기에 이미 비밀번호를 저장했다면, 새로 만들지 말고 그 금고를 여세요.",
   "continuity.gateEmailTitle": "아이폰에 이미 비밀번호가 있나요?",
   "continuity.gateEmailBody":
-    "아이폰에서 Apple로 시작했다면 그 금고를 여세요. 이 이메일은 자동으로 그 계정에 붙어서, 폰과 웹이 같은 금고를 씁니다.",
+    "아이폰에서 Apple로 시작했다면 여기서 같은 마스터 비밀번호를 쓰세요. 이 로그인이 그 금고에 붙어 Web과 아이폰이 같아집니다.",
   "continuity.gateUseGoogleTitle": "Google로 같은 금고 열기",
   "continuity.gateUseGoogleBody":
-    "아이폰 앱 설정에서 Google을 금고에 추가한 뒤, 여기로 돌아와 Google로 계속하세요. 웹에서 Apple 계정을 입력할 필요 없습니다.",
+    "아이폰과 같은 마스터 비밀번호로 여기서 Google을 계속하세요. 한 번 확인하면 그 금고가 열립니다. 웹에서 Apple 계정을 칠 필요 없습니다.",
   "continuity.openWithGoogle": "Google로 열기",
   "continuity.openIphoneVault": "아이폰 금고 열기",
   "continuity.openIphoneVaultContinue": "Apple로 계속",
@@ -104,10 +104,10 @@ export const MESSAGES_KR: Record<string, string> = {
   "continuity.attachBody":
     "방금 쓰던 로그인을 이 금고에 붙이면, 폰과 웹이 둘 다 같은 곳을 엽니다.",
   "continuity.attachAppleOnIphoneBody":
-    "Apple은 아이폰 앱 설정에서 추가하세요. 웹에서 Apple 계정을 칠 필요가 없습니다.",
+    "iOS를 준비됨으로 두려면 아이폰 앱 설정에서 Apple을 추가하세요. 웹에서 Apple 계정을 칠 필요는 없습니다.",
   "continuity.attachEmailTitle": "이메일 연결 마무리",
   "continuity.attachEmailBody":
-    "{{email}}을(를) 이 금고에 연결하면 웹과 아이폰이 같은 비밀번호를 봅니다.",
+    "{{email}}을(를) 이 금고에 연결하면 Web과 아이폰이 같은 비밀번호를 봅니다.",
   "continuity.attachEmail": "이메일 붙이기",
   "continuity.attachGoogle": "Google 붙이기",
   "continuity.attachApple": "Apple 붙이기",
@@ -115,10 +115,10 @@ export const MESSAGES_KR: Record<string, string> = {
     "이제 이메일로도 이 금고를 열 수 있어요. 폰과 웹이 같습니다.",
   "continuity.webReadyTitle": "컴퓨터에서도 쓰려면",
   "continuity.webReadyBody":
-    "Google을 한 번만 붙이세요. 웹에서도 같은 비밀번호가 열립니다.",
+    "웹에서 Google 또는 이메일로 로그인한 뒤 같은 마스터 비밀번호를 쓰세요. 그 로그인이 이 금고에 붙으면 Web·Android가 준비됨으로 표시됩니다.",
   "continuity.oneMoreTitle": "다른 기기에서도 이 금고 열기",
   "continuity.oneMoreBody":
-    "한 번만 누르면 다른 로그인이 같은 금고에 붙습니다. 나중에 해도 됩니다.",
+    "한 번만 누르면 다른 로그인이 붙어 Web·Android·iOS가 같은 금고를 엽니다. 나중에 해도 됩니다.",
   "continuity.startFresh": "새로 시작할게요",
   "continuity.later": "나중에",
   "continuity.errOtherHasData":
@@ -194,7 +194,7 @@ export const MESSAGES_KR: Record<string, string> = {
     "패스키 기기를 잃었을 때는 마스터 비밀번호 + 백업 인증 앱(TOTP) 또는 일회용 복구 코드로 잠금 해제할 수 있습니다. 복구 코드는 설정 시 한 번만 표시되니 안전한 곳에 보관하세요.",
   "auth.faqIosSyncQ": "iOS 앱과 웹 금고를 어떻게 동기화하나요?",
   "auth.faqIosSyncA":
-    "클라우드 동기화는 기기가 아니라 <strong>로그인 계정</strong>(<code>user_id</code>)에 묶입니다. <strong>설정</strong>에서 같은 계정에 Google과 Apple을 모두 연결하는 것이 가장 확실합니다. 아이폰에서 Apple(Hide My Email 포함)로 시작했다면 웹에서도 <strong>Apple로 계속하기</strong>로 같은 금고를 연 뒤 설정에서 <strong>Google 추가</strong>하세요. 웹에서 Google로 시작했다면 iOS에서도 Google로 로그인한 뒤 설정에서 <strong>Apple 추가</strong>하세요. Hide My Email만으로는 Google 이메일과 절대 맞지 않아 연결이 필요합니다. Share My Email은 Apple이 실제 주소를 줄 때 도움이 됩니다.",
+    "클라우드 동기화는 기기가 아니라 <strong>로그인 계정</strong>에 묶입니다. 설정에서는 <strong>Web</strong>, <strong>Android</strong>, <strong>iOS</strong> 준비 여부로 표시됩니다. <strong>아이폰에서 Apple로 시작한 경우</strong>(Hide My Email도 괜찮음): 웹에서 Google 또는 이메일로 로그인한 뒤 <strong>같은 마스터 비밀번호</strong>를 입력하고, 아이폰 금고를 이미 쓰는지 확인하면 웹 로그인이 기존 금고에 붙습니다. 아이폰에서는 계속 Apple로 열 수 있고 Hide My Email은 바뀌지 않습니다. 웹에서는 Apple 로그인을 쓰지 않습니다. <strong>웹에서 Google로 시작한 경우</strong>: 아이폰에서도 같은 Google로 열거나, Apple로 연 뒤 설정에서 Apple을 붙여 iOS를 준비됨으로 두세요. 모든 기기에서 같은 마스터 비밀번호를 쓰면 Web·Android·iOS가 하나의 금고를 씁니다.",
   "auth.faqPricingQ": "유료인가요, 무료인가요?",
   "auth.faqPricingA":
     "비밀번호 항목은 무료로 최대 25개까지 저장할 수 있습니다. $4.99를 한 번만 결제하면 이 계정에서 항목 수 제한 없이 계속 쓸 수 있습니다. 앱에서 __PRICING_LINK__를 열어 결제할 수 있습니다.",
@@ -519,7 +519,7 @@ export const MESSAGES_KR: Record<string, string> = {
 
   "settings.syncTitle": "기기·백업",
   "settings.syncHint":
-    "로그인한 동안 이 앱은 데이터베이스에 암호화된 사본을 둡니다(서버는 내용을 읽을 수 없습니다). 새 브라우저나 휴대폰에서는 같은 계정으로 로그인하면 금고가 자동으로 받아지고, 예전과 같은 마스터 비밀번호와 인증 앱 6자리 또는 복구 코드로 잠금 해제하세요.",
+    "로그인한 동안 이 앱은 데이터베이스에 암호화된 사본을 둡니다(서버는 내용을 읽을 수 없습니다). 새 브라우저나 휴대폰에서 Web·Android·iOS가 이 금고에 준비됨으로 보이도록 로그인한 뒤, 금고가 자동으로 받아지면 예전과 같은 마스터 비밀번호와 인증 앱 6자리 또는 복구 코드로 잠금 해제하세요.",
   "settings.fileBackupAdvanced": "오프라인 JSON 파일 (고급)",
   "settings.fileBackupAdvancedHint":
     "선택 사항입니다. 이 앱에서 보낸 .json만 가져오세요. 데이터는 동일하게 암호화되어 있으며, 마스터 비밀번호·6자리 코드는 그 파일을 만든 당시의 금고와 같아야 합니다.",

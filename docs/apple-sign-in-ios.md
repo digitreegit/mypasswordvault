@@ -82,8 +82,8 @@ npm run cap:sync
 
 ## Manual verification matrix
 
-- **S2 happy:** iOS Apple Hide My Email → accept Google sheet → web Google = same vault.
-- **S2 passkey:** iOS Apple → skip Google → accept account passkey → web passkey = same vault.
+- **S2 happy:** iOS Apple Hide My Email → web Google/email + same master password → confirm → same vault.
+- **S2 decline:** same password but “start fresh” → blocked with choose another master password.
 - **S1:** Web Google with entries → iOS Apple empty → claim + link → Apple again = same entries.
 - **Negative:** Two users both with vault data → claim refuses deletion.
 - **Regression:** Web must not show Apple OAuth / Apple ID email field.

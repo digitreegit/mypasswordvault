@@ -51,11 +51,11 @@ export const MESSAGES_EN: Record<string, string> = {
   "auth.passkey": "Continue with passkey",
   "auth.iphoneVaultTitle": "Already using the iPhone app?",
   "auth.iphoneVaultBody":
-    "On iPhone, add Google in Settings, then open this site with Google. Same vault—no Apple ID typing on the web.",
+    "Sign in here with Google or email, then enter the same master password you use on iPhone. We'll ask once, then open that vault—no Apple ID typing on the web.",
   "auth.openIphoneVault": "Open my iPhone vault",
   "auth.appleConfirmTitle": "One tip before Apple",
   "auth.appleConfirmBody":
-    "If you already saved passwords on the web with Google, use Google here so everything stays in one place. Apple is fine for a new start—we'll help you add Google later in one tap.",
+    "If you already saved passwords on the web with Google, use Google here so everything stays in one place. Apple is fine for a new start—on the website later, the same master password can attach Google or email to this vault.",
   "auth.appleConfirmPreferGoogle": "Use Google (recommended)",
   "auth.appleConfirmContinue": "Continue with Apple",
   "auth.lastUsed": "LAST USED",
@@ -81,16 +81,16 @@ export const MESSAGES_EN: Record<string, string> = {
   "continuity.linkAppleDone": "Apple can open this vault now.",
   "continuity.gateWrongTitle": "This looks like a new empty vault",
   "continuity.gateWrongBody":
-    "Your passwords are probably under Google. Open that vault—we'll attach Apple afterward in one tap.",
+    "Your passwords are probably under Google. Open that vault—then add Apple on iPhone in Settings if you want iOS ready too.",
   "continuity.gateEmptyTitle": "Is this your first vault?",
   "continuity.gateEmptyBody":
     "If you already saved passwords on another device, open that vault instead of starting over.",
   "continuity.gateEmailTitle": "Already have passwords on iPhone?",
   "continuity.gateEmailBody":
-    "If you started with Apple on iPhone, open that vault. We'll move this email onto it automatically so everything stays in one place.",
+    "If you started with Apple on iPhone, use the same master password here. We'll attach this login to that vault so Web and iPhone stay in sync.",
   "continuity.gateUseGoogleTitle": "Use Google to open the same vault",
   "continuity.gateUseGoogleBody":
-    "On the iPhone app, open Settings and add Google to your vault. Then come back here and continue with Google—no Apple Account typing on the web.",
+    "Continue with Google here using the same master password as on iPhone. We'll confirm once, then open that vault—no Apple Account typing on the web.",
   "continuity.openWithGoogle": "Open with Google",
   "continuity.openIphoneVault": "Open my iPhone vault",
   "continuity.openIphoneVaultContinue": "Continue with Apple",
@@ -102,20 +102,20 @@ export const MESSAGES_EN: Record<string, string> = {
   "continuity.attachBody":
     "Attach the login you just left so phone and web both open this vault.",
   "continuity.attachAppleOnIphoneBody":
-    "Add Apple from the iPhone app Settings so you never type your Apple Account on the web.",
+    "Add Apple from the iPhone app Settings so iOS stays ready—you never type your Apple Account on the web.",
   "continuity.attachEmailTitle": "Finish attaching your email",
   "continuity.attachEmailBody":
-    "Connect {{email}} to this vault so the website and iPhone stay in sync.",
+    "Connect {{email}} to this vault so Web and iPhone stay in sync.",
   "continuity.attachEmail": "Attach email",
   "continuity.attachGoogle": "Attach Google",
   "continuity.attachApple": "Attach Apple",
   "continuity.linkEmailDone": "Email can open this vault now. Same passwords on phone and web.",
   "continuity.webReadyTitle": "Use this vault on a computer too",
   "continuity.webReadyBody":
-    "Attach Google once. Then the website opens the same passwords—no second vault.",
+    "On the website, sign in with Google or email and use the same master password. Web and Android show as ready once that login is on this vault.",
   "continuity.oneMoreTitle": "Open this vault on your other devices",
   "continuity.oneMoreBody":
-    "One tap attaches another login to the same vault. You can skip and do it later.",
+    "One tap attaches another login so Web, Android, and iOS can open the same vault. You can skip and do it later.",
   "continuity.startFresh": "I'm starting new",
   "continuity.later": "Later",
   "continuity.errOtherHasData":
@@ -193,7 +193,7 @@ export const MESSAGES_EN: Record<string, string> = {
     "If you lose your passkey device, use backup sign-in: your master password plus either a code from your authenticator app (TOTP backup) or a one-time recovery code you saved during setup. Each recovery code works once. You can also restore from your account and re-register a passkey after verifying your master password.",
   "auth.faqIosSyncQ": "How do I sync the iOS app with my web vault?",
   "auth.faqIosSyncA":
-    "Cloud sync is tied to your <strong>sign-in account</strong> (<code>user_id</code>), not your device. Prefer one account with both Google and Apple linked in <strong>Settings</strong>. If you start on iPhone with Apple (including Hide My Email), open the web with <strong>Continue with Apple</strong>, then <strong>Add Google</strong> in Settings. If you start on the web with Google, sign in with Google on iOS and <strong>Add Apple</strong> in Settings. Hide My Email alone never matches a Google email—linking is required. Share My Email can still help when Apple returns your real address.",
+    "Cloud sync follows your <strong>sign-in account</strong>, not the device. In Settings, readiness is shown as <strong>Web</strong>, <strong>Android</strong>, and <strong>iOS</strong>. <strong>Started on iPhone with Apple</strong> (Hide My Email is fine): on the website, continue with Google or email, enter the <strong>same master password</strong>, and confirm you already use the iPhone vault. That attaches the web login to your existing vault. Apple Sign-In on iPhone still works; Hide My Email is not changed. The website does not use Sign in with Apple. <strong>Started on the web with Google</strong>: on iPhone, continue with the same Google account, or use Apple and add it in Settings so iOS stays ready. Use the same master password on every device for one vault across Web, Android, and iOS.",
   "auth.faqPricingQ": "Is this free or paid?",
   "auth.faqPricingA":
     "You can save up to 25 password entries for free. A one-time $4.99 purchase unlocks unlimited entries on your account forever. Open __PRICING_LINK__ from the app for checkout.",
@@ -527,7 +527,7 @@ export const MESSAGES_EN: Record<string, string> = {
 
   "settings.syncTitle": "Devices & backup",
   "settings.syncHint":
-    "While you are signed in, this app keeps an encrypted copy in your database (the server cannot read it). On a new browser or phone, sign in with the same account — your vault downloads automatically — then unlock with the same master password and authenticator or recovery code as before.",
+    "While you are signed in, this app keeps an encrypted copy in your database (the server cannot read it). On a new browser or phone, sign in so Web, Android, or iOS shows ready for this vault — your vault downloads automatically — then unlock with the same master password and authenticator or recovery code as before.",
   "settings.fileBackupAdvanced": "Offline JSON file (advanced)",
   "settings.fileBackupAdvancedHint":
     "Optional export/import. Only use a .json file you exported yourself here; it is the same encrypted data. Master password and 6-digit codes still match the vault when that file was made.",
