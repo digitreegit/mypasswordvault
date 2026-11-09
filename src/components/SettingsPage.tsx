@@ -25,7 +25,6 @@ import { PricingDrawer } from "./PricingDrawer";
 import { downloadCsvFile, downloadJsonFile } from "../lib/vaultBackup";
 import { isAppError } from "../lib/errors";
 import { SecuritySettingsPanel } from "./SecuritySettingsPanel";
-import { HelpFaqItem } from "./HelpFaqItem";
 import {
   nativeFixedHeaderClass,
   nativeMainScrollClass,
@@ -545,15 +544,6 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     return (
       <div className="space-y-4">
         <p className="settings-sync-hint text-ink-900 leading-snug">{t("settings.syncHint")}</p>
-        <div className="card p-5 sm:p-6 space-y-3">
-          <h3 className="settings-card-title text-sm font-semibold text-ink-800">
-            {t("auth.faqTitle")}
-          </h3>
-          <HelpFaqItem
-            question={t("auth.faqIosSyncQ")}
-            answerHtml={t("auth.faqIosSyncA")}
-          />
-        </div>
         <div className="card p-5 sm:p-6 space-y-3">
           <h3 className="settings-card-title text-sm font-semibold text-ink-800">
             {t("settings.spreadsheetBackup")}
