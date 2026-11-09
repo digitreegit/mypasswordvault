@@ -90,7 +90,6 @@ import {
   reconcileCloudVault,
 } from "./cloudVault";
 import { markCloudSyncPending } from "./cloudSyncPending";
-import { registerVaultContinuity } from "./vaultContinuity";
 import {
   CHECKOUT_COMPLETE_MESSAGE,
   clearCheckoutPending,
@@ -185,8 +184,8 @@ interface VaultContextValue {
   importBackup: (jsonText: string) => Promise<void>;
   /** Plaintext CSV for spreadsheet apps (Excel, Sheets). Vault must be unlocked. */
   exportSpreadsheet: () => Promise<string>;
-  /** Replace all entries from a spreadsheet CSV; stays unlocked. Returns imported row count. */
-  importSpreadsheet: (csvText: string) => Promise<number>;
+  /** Replace all entries from a spreadsheet CSV; stays unlocked. */
+  importSpreadsheet: (csvText: string) => Promise<void>;
 
   upsertEntry: (
     partial: Partial<DecryptedEntry> & { id?: string }
@@ -1725,7 +1724,6 @@ export function VaultProvider({
 
       if (!needSecondFactor) {
         await finishUnlock(activeMeta, dataKey, totpSecret, dataKeyBytes);
-        void registerVaultContinuity(masterPassword);
         return;
       }
       if (!secondFactor || mode !== "totp") {
@@ -1735,7 +1733,6 @@ export function VaultProvider({
         throw new AppError("errors.wrongTotp");
       }
       await finishUnlock(activeMeta, dataKey, totpSecret, dataKeyBytes);
-      void registerVaultContinuity(masterPassword);
     },
     [finishUnlock, flushCloudPush]
   );
@@ -1969,7 +1966,7 @@ export function VaultProvider({
   }, [entries, meta?.categories]);
 
   const importSpreadsheet = useCallback(
-    async (csvText: string): Promise<number> => {
+    async (csvText: string) => {
       const session = sessionRef.current;
       if (!session) throw new AppError("errors.locked");
       const rows = parseSpreadsheetCsv(csvText);
@@ -2049,7 +2046,6 @@ export function VaultProvider({
       setEntries(nextEntries);
       lastActivityRef.current = Date.now();
       scheduleCloudPush();
-      return nextEntries.length;
     },
     [entries, meta?.categories, scheduleCloudPush, runMetaWrite],
   );

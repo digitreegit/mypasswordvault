@@ -310,23 +310,9 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
     setBusy(true);
     setBackupToast(null);
     try {
-      const imported = await importSpreadsheet(spreadsheetImportDraft);
+      await importSpreadsheet(spreadsheetImportDraft);
       setSpreadsheetImportDraft(null);
-      const limit = freeEntryLimit;
-      if (!licensed && !isAdmin && Number.isFinite(limit)) {
-        const remaining = Math.max(0, limit - imported);
-        setBackupToast(
-          t("settings.spreadsheetImportDoneCounted", {
-            count: imported,
-            remaining,
-            limit,
-          }),
-        );
-      } else {
-        setBackupToast(
-          t("settings.spreadsheetImportDoneCountedPro", { count: imported }),
-        );
-      }
+      setBackupToast(t("settings.spreadsheetImportDone"));
     } catch (e: unknown) {
       setBackupToast(
         isAppError(e) ? t(e.code) : (e as Error)?.message ?? t("setup.errGeneric")
@@ -550,9 +536,6 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
           </h3>
           <p className="settings-card-hint text-xs text-ink-600 leading-snug">
             {t("settings.spreadsheetBackupHint")}
-          </p>
-          <p className="settings-card-hint text-xs text-ink-600 leading-snug">
-            {t("settings.spreadsheetImportFormatsHint")}
           </p>
           {!vaultUnlocked ? (
             <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 leading-snug">

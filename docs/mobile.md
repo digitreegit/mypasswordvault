@@ -117,5 +117,4 @@ Same email → same `user_id` → same vault + license on all devices after sync
 - `src/lib/platform.ts`, `src/lib/storePurchase.ts`, `src/hooks/useProPurchase.ts`
 - `docs/billing-stripe.md` (web)
 - `docs/ios-app-store.md` (TestFlight)
-- Product funnel A–D: `docs/product-phases.md`
-- System Autofill (Phase C scaffold): `docs/autofill.md`
+- System Autofill scaffold: `docs/autofill.md`

@@ -46,9 +46,6 @@ import { UserMenuDropdown } from "./UserMenuDropdown";
 import { VaultListProgressAnchor } from "./ListProgressRing";
 import { isAppError } from "../lib/errors";
 import { useAuth } from "../lib/auth";
-import { AccountContinuityBanner } from "./AccountContinuityBanner";
-import { PasskeyOfferBanner } from "./PasskeyOfferBanner";
-import { BackupSecurityBanner } from "./BackupSecurityBanner";
 import {
   nativeFixedHeaderClass,
   nativeMainScrollClass,
@@ -1238,11 +1235,6 @@ export function VaultScreen() {
 
       <main className={nativeMainScrollClass("pb-3 sm:pb-6")}>
         <div className={`${VAULT_PAGE} pt-3 pb-5 sm:pt-4 sm:pb-6`}>
-        <div className="mb-3 space-y-2">
-          <AccountContinuityBanner />
-          <PasskeyOfferBanner />
-          <BackupSecurityBanner />
-        </div>
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4 mb-1">
           <div className="vault-mobile-search-wrap relative w-full md:hidden input-with-icon">
             <MagnifyingGlassIcon

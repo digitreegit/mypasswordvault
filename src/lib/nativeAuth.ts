@@ -74,43 +74,4 @@ export async function signInWithAppleNative(): Promise<void> {
   await Browser.open({ url: data.url });
 }
 
-/**
- * Attach Sign in with Apple to the currently signed-in user.
- * Requires GoTrue GOTRUE_SECURITY_MANUAL_LINKING_ENABLED=true.
- */
-export async function linkAppleIdentityNative(): Promise<void> {
-  const supabase = getSupabase();
-  if (!supabase) throw new Error("Supabase not configured");
-
-  const { data, error } = await supabase.auth.linkIdentity({
-    provider: "apple",
-    options: {
-      redirectTo: NATIVE_AUTH_REDIRECT,
-      skipBrowserRedirect: true,
-      scopes: "name email",
-    },
-  });
-  if (error) throw error;
-  if (!data?.url) throw new Error("No OAuth URL returned");
-  await Browser.open({ url: data.url });
-}
-
-/** Attach Google to the currently signed-in user (native). */
-export async function linkGoogleIdentityNative(): Promise<void> {
-  const supabase = getSupabase();
-  if (!supabase) throw new Error("Supabase not configured");
-
-  const { data, error } = await supabase.auth.linkIdentity({
-    provider: "google",
-    options: {
-      redirectTo: NATIVE_AUTH_REDIRECT,
-      skipBrowserRedirect: true,
-      queryParams: { prompt: "select_account" },
-    },
-  });
-  if (error) throw error;
-  if (!data?.url) throw new Error("No OAuth URL returned");
-  await Browser.open({ url: data.url });
-}
-
 export { isNativeApp };

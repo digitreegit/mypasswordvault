@@ -50,7 +50,7 @@ export const FAQ_SCHEMA_ENTRIES = [
   {
     question: "How do I sync the iOS app with my web vault?",
     answer:
-      "Cloud sync follows your sign-in account, not the device. Settings shows Web, Android, and iOS readiness. Started on iPhone with Apple (Hide My Email is fine): on the website, continue with Google or email, enter the same master password, and confirm you already use the iPhone vault. That attaches the web login to your existing vault. Apple Sign-In on iPhone still works; Hide My Email is not changed. The website does not use Sign in with Apple. Started on the web with Google: on iPhone use the same Google account, or Apple plus Add Apple in Settings. Use the same master password on every device for one vault across Web, Android, and iOS.",
+      "Cloud sync is tied to your sign-in account, not your device. On iOS, if you use Sign in with Apple and want the same vault as on the web, you must choose Share My Email when Apple asks—not Hide My Email. Hide My Email creates a private relay address and a separate account that will not match a web vault signed in with Google or your normal email. Easiest if you already use the web: tap Continue with Google on iOS with the same email. If you prefer Apple on iOS, pick Share My Email so your real address matches your web login.",
   },
   {
     question: "Is this free or paid?",

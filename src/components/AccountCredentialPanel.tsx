@@ -9,7 +9,6 @@ import { AUTH_LAST_METHOD_CHANGED } from "../lib/authLastUsed";
 import { getUserSignInMethod, useAuth } from "../lib/auth";
 import { isAppError } from "../lib/errors";
 import { Eye, EyeOff, AppleIcon, GoogleIcon } from "./Icons";
-import { getNativePlatform, isNativeApp } from "../lib/platform";
 
 type TFn = (key: string, vars?: Record<string, string | number>) => string;
 
@@ -114,19 +113,8 @@ export function AccountCredentialPanel({
   t: TFn;
   onMessage: (msg: string | null) => void;
 }) {
-  const {
-    signInWithEmail,
-    updatePassword,
-    updateEmail,
-    linkAppleIdentity,
-    linkGoogleIdentity,
-    appleIdentityLinked,
-    googleIdentityLinked,
-    emailIdentityLinked,
-  } = useAuth();
+  const { signInWithEmail, updatePassword, updateEmail } = useAuth();
   const [, bumpAuthMethod] = useState(0);
-  const [linkBusy, setLinkBusy] = useState(false);
-  const [linkError, setLinkError] = useState<string | null>(null);
 
   useEffect(() => {
     const onChange = () => bumpAuthMethod((n) => n + 1);
@@ -220,39 +208,6 @@ export function AccountCredentialPanel({
     currentPw.trim().length > 0 && newPw.trim().length > 0;
   const emailFormReady = emailDraft.trim().length > 0;
 
-  const canLinkApple =
-    !appleIdentityLinked &&
-    isNativeApp() &&
-    getNativePlatform() !== "android";
-  const canLinkGoogle = !googleIdentityLinked;
-
-  // Platform access (not provider names): which clients can open this vault.
-  const webReady = googleIdentityLinked || emailIdentityLinked;
-  const androidReady = googleIdentityLinked || emailIdentityLinked;
-  const iosReady =
-    appleIdentityLinked || googleIdentityLinked || emailIdentityLinked;
-
-  async function onLink(provider: "apple" | "google") {
-    setLinkError(null);
-    setLinkBusy(true);
-    try {
-      if (provider === "apple") await linkAppleIdentity();
-      else await linkGoogleIdentity();
-      bumpAuthMethod((n) => n + 1);
-      onMessage(
-        provider === "apple"
-          ? t("continuity.linkAppleDone")
-          : t("continuity.linkGoogleDone"),
-      );
-    } catch (err: unknown) {
-      setLinkError(
-        isAppError(err) ? t(err.code) : (err as Error)?.message ?? t("auth.errGeneric"),
-      );
-    } finally {
-      setLinkBusy(false);
-    }
-  }
-
   return (
     <>
       <div className="rounded-lg border border-ink-200 bg-white px-4 py-3.5 sm:px-5 sm:py-4">
@@ -296,61 +251,6 @@ export function AccountCredentialPanel({
                 <PencilSquareIcon className="h-4 w-4 text-ink-600" aria-hidden />
               </button>
             </div>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="rounded-lg border border-ink-200 bg-white px-4 py-3.5 sm:px-5 sm:py-4 space-y-3">
-        <div>
-          <p className="text-sm font-semibold text-ink-900">
-            {t("continuity.linkedMethodsTitle")}
-          </p>
-          <p className="text-xs text-ink-500 leading-snug mt-1">
-            {t("continuity.linkedMethodsHint")}
-          </p>
-        </div>
-        <ul className="text-sm text-ink-700 space-y-1">
-          <li>
-            {webReady
-              ? t("continuity.statusWebReady")
-              : t("continuity.statusWebMissing")}
-          </li>
-          <li>
-            {androidReady
-              ? t("continuity.statusAndroidReady")
-              : t("continuity.statusAndroidMissing")}
-          </li>
-          <li>
-            {iosReady
-              ? t("continuity.statusIosReady")
-              : t("continuity.statusIosMissing")}
-          </li>
-        </ul>
-        {linkError ? (
-          <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
-            {linkError}
-          </p>
-        ) : null}
-        <div className="flex flex-col sm:flex-row gap-2">
-          {canLinkGoogle ? (
-            <button
-              type="button"
-              className="btn-secondary text-sm"
-              disabled={linkBusy}
-              onClick={() => void onLink("google")}
-            >
-              {t("continuity.linkGoogle")}
-            </button>
-          ) : null}
-          {canLinkApple ? (
-            <button
-              type="button"
-              className="btn-secondary text-sm"
-              disabled={linkBusy}
-              onClick={() => void onLink("apple")}
-            >
-              {t("continuity.linkApple")}
-            </button>
           ) : null}
         </div>
       </div>

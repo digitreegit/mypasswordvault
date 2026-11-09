@@ -26,29 +26,7 @@ function escapeCsvField(value: string): string {
   return value;
 }
 
-/** Excel (EU) often exports `;` — pick delimiter from the header row. */
-function sniffDelimiter(headerLine: string): "," | ";" {
-  let commas = 0;
-  let semis = 0;
-  let inQuotes = false;
-  for (let i = 0; i < headerLine.length; i++) {
-    const ch = headerLine[i];
-    if (ch === '"') {
-      if (inQuotes && headerLine[i + 1] === '"') {
-        i++;
-        continue;
-      }
-      inQuotes = !inQuotes;
-      continue;
-    }
-    if (inQuotes) continue;
-    if (ch === ",") commas++;
-    else if (ch === ";") semis++;
-  }
-  return semis > commas ? ";" : ",";
-}
-
-function parseCsvLine(line: string, delimiter: "," | ";" = ","): string[] {
+function parseCsvLine(line: string): string[] {
   const fields: string[] = [];
   let cur = "";
   let inQuotes = false;
@@ -71,7 +49,7 @@ function parseCsvLine(line: string, delimiter: "," | ";" = ","): string[] {
       inQuotes = true;
       continue;
     }
-    if (ch === delimiter) {
+    if (ch === ",") {
       fields.push(cur);
       cur = "";
       continue;
@@ -124,61 +102,13 @@ function normalizeHeader(h: string): string {
   return h.trim().toLowerCase().replace(/\s+/g, "");
 }
 
-/**
- * Headers from our export plus common Chrome / Safari / Bitwarden / 1Password CSVs.
- * normalizeHeader lowercases and strips spaces — keep spaced and underscored forms.
- */
 const HEADER_ALIASES: Record<keyof SpreadsheetRow, string[]> = {
-  category: ["category", "folder", "group", "vault", "tags"],
-  site: [
-    "site",
-    "title",
-    "name",
-    "service",
-    "account",
-    "item",
-    "loginname",
-    "login_name",
-  ],
-  username: [
-    "username",
-    "user",
-    "login",
-    "email",
-    "login_username",
-    "loginusername",
-    "usernamevalue",
-  ],
-  password: [
-    "password",
-    "pass",
-    "secret",
-    "login_password",
-    "loginpassword",
-    "passwd",
-  ],
-  url: [
-    "url",
-    "website",
-    "link",
-    "uri",
-    "login_uri",
-    "loginuri",
-    "web",
-    "urls",
-    "websiteurl",
-  ],
-  memo: [
-    "memo",
-    "notes",
-    "note",
-    "comment",
-    "otpauth",
-    "login_totp",
-    "logintotp",
-    "totp",
-    "onetimepassword",
-  ],
+  category: ["category", "folder", "group"],
+  site: ["site", "title", "name", "service"],
+  username: ["username", "user", "login", "email"],
+  password: ["password", "pass", "secret"],
+  url: ["url", "website", "link", "uri"],
+  memo: ["memo", "notes", "note", "comment"],
 };
 
 function mapHeaders(headers: string[]): Partial<Record<keyof SpreadsheetRow, number>> {
@@ -223,8 +153,7 @@ export function parseSpreadsheetCsv(text: string): SpreadsheetRow[] {
   const lines = splitCsvRows(raw);
   if (lines.length < 2) throw new AppError("errors.invalidSpreadsheet");
 
-  const delimiter = sniffDelimiter(lines[0]!);
-  const headerFields = parseCsvLine(lines[0]!, delimiter);
+  const headerFields = parseCsvLine(lines[0]!);
   const col = mapHeaders(headerFields);
   if (col.site == null && col.username == null && col.password == null) {
     throw new AppError("errors.invalidSpreadsheet");
@@ -234,7 +163,7 @@ export function parseSpreadsheetCsv(text: string): SpreadsheetRow[] {
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i]!;
     if (!line.trim()) continue;
-    const fields = parseCsvLine(line, delimiter);
+    const fields = parseCsvLine(line);
     const get = (key: keyof SpreadsheetRow) => {
       const idx = col[key];
       return idx == null ? "" : (fields[idx] ?? "").trim();

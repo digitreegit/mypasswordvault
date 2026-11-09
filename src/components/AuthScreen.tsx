@@ -19,10 +19,6 @@ import {
 } from "../lib/i18n/locale";
 import { LOCALE_CHANGED, notifyLocaleChanged } from "../lib/appLocale";
 import { isNativeApp, getNativePlatform } from "../lib/platform";
-import {
-  isAccountPasskeySupported,
-  startAccountPasskeyConditionalUI,
-} from "../lib/authPasskey";
 import { requestPasswordResetEmail } from "../lib/passwordReset";
 import {
   getSupabase,
@@ -158,7 +154,6 @@ export function AuthScreen({
     passwordRecoveryPending,
     signInWithGoogle,
     signInWithApple,
-    signInWithAccountPasskey,
     signInWithEmail,
     signUpWithEmail,
     updatePassword,
@@ -257,20 +252,17 @@ export function AuthScreen({
             ? t("auth.subtitle")
             : undefined;
 
-  /** Native iOS only — web Apple OAuth forces Apple ID email/password and fails most users. */
-  const showAppleSignIn = isNativeApp() && getNativePlatform() !== "android";
-  const [appleConfirmOpen, setAppleConfirmOpen] = useState(false);
+  const showAppleSignIn = getNativePlatform() === "ios";
 
   function clearMessages() {
     setError(null);
     setInfo(null);
   }
 
-  async function runAppleSignIn() {
+  async function onApple() {
     if (!configured) return;
     clearMessages();
     setBusy(true);
-    setAppleConfirmOpen(false);
     try {
       await signInWithApple();
     } catch (e: unknown) {
@@ -279,35 +271,6 @@ export function AuthScreen({
       setBusy(false);
     }
   }
-
-  function onApple() {
-    if (!configured) return;
-    setAppleConfirmOpen(true);
-  }
-
-  async function onAccountPasskey() {
-    if (!configured) return;
-    clearMessages();
-    setBusy(true);
-    try {
-      await signInWithAccountPasskey();
-      setLastUsedRevision((n) => n + 1);
-    } catch (e: unknown) {
-      setError(mapAuthError(locale, e, t));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  // Web: Conditional UI so a synced account passkey can sign in without typing email.
-  useEffect(() => {
-    if (isNativeApp() || view !== "signin" || !configured) return;
-    const ac = startAccountPasskeyConditionalUI(
-      () => setLastUsedRevision((n) => n + 1),
-      (e) => console.warn("passkey conditional UI", e),
-    );
-    return () => ac?.abort();
-  }, [configured, view]);
 
   async function onGoogle() {
     if (!configured) return;
@@ -528,25 +491,6 @@ export function AuthScreen({
               </button>
             </div>
 
-            {!isNativeApp() &&
-            view === "signin" &&
-            isAccountPasskeySupported() ? (
-              <div className="relative pt-2">
-                {lastUsed === "passkey" && (
-                  <LastUsedBadge label={t("auth.lastUsed")} />
-                )}
-                <button
-                  type="button"
-                  className="btn-secondary w-full justify-center border-ink-200 bg-white shadow-sm hover:bg-ink-50"
-                  onClick={() => void onAccountPasskey()}
-                  disabled={busy}
-                >
-                  {t("auth.passkey")}
-                </button>
-              </div>
-            ) : null}
-
-            {/* Native iOS only (App Store 4.8). Web never starts Apple OAuth. */}
             {showAppleSignIn ? (
               <div className="relative pt-2">
                 {view === "signin" && lastUsed === "apple" && (
@@ -555,7 +499,7 @@ export function AuthScreen({
                 <button
                   type="button"
                   className="auth-apple-btn btn w-full justify-center border border-black bg-black text-white shadow-sm hover:bg-neutral-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:opacity-60"
-                  onClick={() => onApple()}
+                  onClick={() => void onApple()}
                   disabled={busy}
                 >
                   <span className="flex items-center justify-center gap-2">
@@ -689,69 +633,19 @@ export function AuthScreen({
   );
 
   return (
-    <>
-      <AuthScreenLayout header={authHeader} remeasureKey={view}>
-        <div className="space-y-5">
-          {!isNativeApp() ? authHeader : null}
-          {isNativeApp() ? (
-            <AuthPageIntro
-              title={pageTitle}
-              subtitle={pageSubtitle}
-              titleClassName="text-2xl font-bold text-ink-900 tracking-tight"
-            />
-          ) : null}
-          {authForms}
-        </div>
-      </AuthScreenLayout>
-      {appleConfirmOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40">
-          <div
-            className="card w-full max-w-md shadow-lg overflow-hidden"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="apple-confirm-title"
-          >
-            <div className="px-5 py-4 border-b border-ink-200">
-              <h2
-                id="apple-confirm-title"
-                className="font-sans text-lg font-semibold text-ink-900"
-              >
-                {t("auth.appleConfirmTitle")}
-              </h2>
-            </div>
-            <div className="px-5 py-4 text-sm text-ink-700 leading-relaxed space-y-2">
-              <p>{t("auth.appleConfirmBody")}</p>
-            </div>
-            <div className="px-5 py-3 border-t border-ink-100 flex flex-col gap-2">
-              <button
-                type="button"
-                className="btn-primary w-full"
-                disabled={busy}
-                onClick={() => void onGoogle()}
-              >
-                {t("auth.appleConfirmPreferGoogle")}
-              </button>
-              <button
-                type="button"
-                className="btn-secondary w-full"
-                disabled={busy}
-                onClick={() => void runAppleSignIn()}
-              >
-                {t("auth.appleConfirmContinue")}
-              </button>
-              <button
-                type="button"
-                className="btn-secondary w-full"
-                disabled={busy}
-                onClick={() => setAppleConfirmOpen(false)}
-              >
-                {t("common.cancel")}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-    </>
+    <AuthScreenLayout header={authHeader} remeasureKey={view}>
+      <div className="space-y-5">
+        {!isNativeApp() ? authHeader : null}
+        {isNativeApp() ? (
+          <AuthPageIntro
+            title={pageTitle}
+            subtitle={pageSubtitle}
+            titleClassName="text-2xl font-bold text-ink-900 tracking-tight"
+          />
+        ) : null}
+        {authForms}
+      </div>
+    </AuthScreenLayout>
   );
 }
 
