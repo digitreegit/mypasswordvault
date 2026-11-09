@@ -90,6 +90,7 @@ import {
   reconcileCloudVault,
 } from "./cloudVault";
 import { markCloudSyncPending } from "./cloudSyncPending";
+import { registerVaultContinuity } from "./vaultContinuity";
 import {
   CHECKOUT_COMPLETE_MESSAGE,
   clearCheckoutPending,
@@ -1724,6 +1725,7 @@ export function VaultProvider({
 
       if (!needSecondFactor) {
         await finishUnlock(activeMeta, dataKey, totpSecret, dataKeyBytes);
+        void registerVaultContinuity(masterPassword);
         return;
       }
       if (!secondFactor || mode !== "totp") {
@@ -1733,6 +1735,7 @@ export function VaultProvider({
         throw new AppError("errors.wrongTotp");
       }
       await finishUnlock(activeMeta, dataKey, totpSecret, dataKeyBytes);
+      void registerVaultContinuity(masterPassword);
     },
     [finishUnlock, flushCloudPush]
   );

@@ -25,10 +25,8 @@ Fundamental product work. Autofill (C) is the long lever; A/B/D make the funnel 
 ## Phase D — Hide My Email / cross-login vault split
 
 - Canonical `user_id` with vault data; `linkIdentity` + `claim-auth-identity` (empty duplicates only)
-- **Silent bridges (no instructional “do X then Y”):**
-  - iOS after Apple: one-shot system Google link sheet (`silentGoogleLink`)
-  - Account passkey (`auth_passkeys` + `auth-passkey-register` / `auth-passkey-login`) for web reopen without knowing Hide My Email
-- Web never starts Apple OAuth; web Auth = Google + Continue with passkey / Conditional UI
+- **Silent merge:** same master password → `vault-continuity` binds proof to vault owner; empty web Google/email absorb into that owner (no “add Google?” sheet after Apple)
+- Account passkey optional for web reopen; web never starts Apple OAuth
 - Native iOS keeps Continue with Apple; Settings “Add Apple” is iOS-only
 
 ## Do not (for now)

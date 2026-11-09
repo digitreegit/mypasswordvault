@@ -2,11 +2,11 @@
 
 Vault data is keyed by Supabase **`user_id`**, not email. Apple **Hide My Email** never reveals the real address, so email auto-merge cannot unify Apple and Google. This project keeps **one canonical user** (the one with the vault) and **links** other providers with `linkIdentity`. Empty duplicate Auth users can be deleted by the `claim-auth-identity` Edge Function so linking can succeed.
 
-Users must not be taught “type your Apple Account on the web” or “go to Settings and add Google.” Continuity is silent:
+Users must not be taught “type your Apple Account on the web” or “add Google after Apple.” Continuity is silent:
 
-1. **iOS** — after Apple Sign-In, one system Google account sheet (`maybeSilentLinkGoogleAfterApple`).
-2. **Account passkey** — after vault setup on iOS, register a discoverable WebAuthn credential for login (`auth_passkeys`). Web uses Continue with passkey / Conditional UI.
-3. **Claim** — empty mistaken Auth users can still be deleted when linking.
+1. **Master-password continuity** — after the vault exists, a PBKDF2 proof of the master password is registered (`vault_continuity`). On web, an empty Google/email account that sets up with the **same** master password is absorbed into that vault owner (identities moved, empty Auth user deleted, session switched).
+2. **Claim** — empty mistaken Auth users can still be deleted when linking.
+3. **Account passkey** (optional) — web Continue with passkey when registered.
 
 ## Product rules
 
@@ -21,17 +21,16 @@ Users must not be taught “type your Apple Account on the web” or “go to Se
 |--------|----------|
 | Auth (iOS) | Google + Continue with Apple (confirm sheet prefers Google if a web vault already exists). |
 | Auth (web) | Google + Continue with passkey (Conditional UI when available). **No** Apple OAuth. |
-| Setup (iOS) | One-shot silent Google link after Apple; one-shot account passkey registration after master password. |
+| Setup | Master password → register continuity proof (or absorb if same PW as existing vault). No Google sheet after Apple. |
 | Settings → Account | Linked methods + **Add Google**; **Add Apple** is iOS-only. |
 
 ## Client / server code
 
 - OAuth / link: `src/lib/auth.tsx`, `src/lib/nativeAuth.ts`
-- Silent Google: `src/lib/silentGoogleLink.ts`
-- Account passkey client: `src/lib/authPasskey.ts`
+- Continuity: `src/lib/vaultContinuity.ts` → `supabase/functions/vault-continuity/` + `vault_continuity` migration
 - Empty-orphan helpers: `src/lib/appleRelayAccount.ts`, `src/lib/abandonedAuthUser.ts`
 - Claim API: `src/lib/claimAuthIdentity.ts` → `supabase/functions/claim-auth-identity/`
-- Account passkey API: `supabase/functions/auth-passkey-register/`, `auth-passkey-login/`, migration `auth_passkeys`
+- Account passkey (optional): `src/lib/authPasskey.ts`, `auth-passkey-register` / `auth-passkey-login`
 
 ## Flows
 
@@ -43,10 +42,9 @@ Users must not be taught “type your Apple Account on the web” or “go to Se
 
 ### S2 — iOS Apple relay vault first → later web (primary)
 
-1. Apple Sign-In → setup opens → **silent Google link** (system sheet once; cancel OK).
-2. Master password → empty vault → **account passkey** registration (Face ID once; cancel OK).
-3. On web: **Continue with Google** (same `user_id` if Google was linked) **or Continue with passkey** (iCloud-synced / Conditional UI). Never ask for Apple ID email/password.
-4. Empty mistaken web Google/email signup can still be claimed when linking onto the canonical user.
+1. Apple Sign-In → master password → vault (continuity proof registered on finalize / unlock).
+2. Web: Continue with Google (new empty Auth user) → enter **the same master password** at setup → server absorbs into the iPhone vault owner → Google now opens that vault. No Apple ID typing, no “add Google?” prompt after Apple.
+3. If passwords differ, vaults stay separate (no silent merge of two non-empty vaults).
 
 ## One-time setup (dashboards)
 
@@ -67,7 +65,7 @@ Users must not be taught “type your Apple Account on the web” or “go to Se
 
 ### 3. Deploy functions + migration
 
-Apply `supabase/migrations/20261107120000_auth_passkeys.sql` on the VPS Postgres, then sync Edge Functions (`claim-auth-identity`, `auth-passkey-register`, `auth-passkey-login`, `_shared`).
+Apply `supabase/migrations/20261107130000_vault_continuity.sql` on the VPS Postgres, then sync Edge Functions (`vault-continuity`, `claim-auth-identity`, `_shared`).
 
 ```bash
 tar -C supabase -czf /tmp/mpv-functions.tgz functions

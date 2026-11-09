@@ -37,9 +37,23 @@ function buildVerifyLink(
   const u = new URL(`${base}/auth/v1/verify`);
   u.searchParams.set("token", tokenHash);
   u.searchParams.set("type", actionType);
-  if (redirectTo) u.searchParams.set("redirect_to", redirectTo);
+  if (redirectTo) u.searchParams.set("redirect_to", webSafeRedirect(redirectTo, actionType));
   return u.toString();
 }
+
+/**
+ * Emails opened on a computer can't follow the app's custom scheme and leave a blank tab.
+ * Route app redirects through a web page that hands the code back to the app on phones.
+ * The page must stay under GOTRUE_URI_ALLOW_LIST (`https://mypasswordvault.app/app/**`).
+ */
+function webSafeRedirect(redirectTo: string, actionType: string): string {
+  if (/^https?:\/\//i.test(redirectTo)) return redirectTo;
+  const u = new URL(APP_CONTINUE_URL);
+  u.searchParams.set("type", actionType);
+  return u.toString();
+}
+
+const APP_CONTINUE_URL = "https://mypasswordvault.app/app/continue";
 
 const SUBJECTS: Record<string, string> = {
   signup: `Confirm your ${BRAND_NAME} account`,
@@ -159,7 +173,8 @@ Deno.serve(async (req) => {
   const resendKey = Deno.env.get("RESEND_API_KEY");
   const resendFrom = Deno.env.get("RESEND_FROM")?.trim() || DEFAULT_RESEND_FROM;
   const hookSecretRaw = Deno.env.get("SEND_EMAIL_HOOK_SECRET");
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  // Self-hosted SUPABASE_URL is the internal gateway; links in emails need the public origin.
+  const supabaseUrl = Deno.env.get("SUPABASE_PUBLIC_URL")?.trim() || Deno.env.get("SUPABASE_URL");
 
   if (!resendKey || !hookSecretRaw || !supabaseUrl) {
     console.error(
