@@ -1,8 +1,9 @@
 /**
- * Master-password vault continuity (silent merge).
+ * Master-password vault continuity (confirm-then-map).
  *
  * Body:
  *  { action: "register", proof } — bind proof → this user (must have vault data)
+ *  { action: "check", proof }    — empty caller + matching proof → match:true (no moves)
  *  { action: "absorb", proof }   — empty caller + matching proof → move logins onto
  *                                  vault owner, delete empty Auth user, return session
  */
@@ -21,11 +22,21 @@ const cors: Record<string, string> = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const PRIVATE_RELAY =
+  /@(privaterelay\.appleid\.com|icloud\.com)$/i;
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...cors, "Content-Type": "application/json" },
   });
+}
+
+function isDisplayEmailCandidate(email: string | undefined | null): boolean {
+  const e = (email ?? "").trim().toLowerCase();
+  if (!e || !e.includes("@")) return false;
+  if (PRIVATE_RELAY.test(e)) return false;
+  return true;
 }
 
 async function userHasVaultBackup(
@@ -50,6 +61,34 @@ async function scrubPublicRowsForUser(
   await admin.from("user_entitlements").delete().eq("user_id", userId);
   await admin.from("vault_continuity").delete().eq("user_id", userId);
   await admin.from("auth_passkeys").delete().eq("user_id", userId);
+}
+
+/**
+ * Resolve canonical user for an empty caller + proof, or null if no match.
+ */
+async function findAbsorbTarget(
+  admin: ReturnType<typeof adminClient>,
+  callerId: string,
+  proofHash: string,
+): Promise<{ canonicalId: string } | { match: false; reason?: string }> {
+  const emptyOk = await isEmptyClaimableAccount(admin, callerId);
+  if (!emptyOk) {
+    return { match: false, reason: "caller_not_empty" };
+  }
+
+  const { data: row } = await admin
+    .from("vault_continuity")
+    .select("user_id")
+    .eq("proof_hash", proofHash)
+    .maybeSingle();
+  if (!row?.user_id || row.user_id === callerId) {
+    return { match: false };
+  }
+  const canonicalId = row.user_id as string;
+  if (!(await userHasVaultBackup(admin, canonicalId))) {
+    return { match: false, reason: "canonical_no_vault" };
+  }
+  return { canonicalId };
 }
 
 Deno.serve(async (req) => {
@@ -121,30 +160,41 @@ Deno.serve(async (req) => {
     return json({ ok: true });
   }
 
-  if (body.action === "absorb") {
-    const emptyOk = await isEmptyClaimableAccount(admin, caller.id);
-    if (!emptyOk) {
-      return json({ ok: true, absorbed: false, reason: "caller_not_empty" });
+  if (body.action === "check") {
+    const target = await findAbsorbTarget(admin, caller.id, proofHash);
+    if (!("canonicalId" in target)) {
+      return json({
+        ok: true,
+        match: false,
+        reason: "reason" in target ? target.reason : undefined,
+      });
     }
+    return json({
+      ok: true,
+      match: true,
+      canonicalUserId: target.canonicalId,
+    });
+  }
 
-    const { data: row } = await admin
-      .from("vault_continuity")
-      .select("user_id")
-      .eq("proof_hash", proofHash)
-      .maybeSingle();
-    if (!row?.user_id || row.user_id === caller.id) {
-      return json({ ok: true, absorbed: false });
+  if (body.action === "absorb") {
+    const target = await findAbsorbTarget(admin, caller.id, proofHash);
+    if (!("canonicalId" in target)) {
+      return json({
+        ok: true,
+        absorbed: false,
+        reason: "reason" in target ? target.reason : undefined,
+      });
     }
-    const canonicalId = row.user_id as string;
-    if (!(await userHasVaultBackup(admin, canonicalId))) {
-      return json({ ok: true, absorbed: false, reason: "canonical_no_vault" });
-    }
+    const canonicalId = target.canonicalId;
 
     const { data: canonicalUser, error: canErr } =
       await admin.auth.admin.getUserById(canonicalId);
-    if (canErr || !canonicalUser.user?.email) {
+    if (canErr || !canonicalUser.user) {
       return json({ error: "canonical_missing" }, 500);
     }
+
+    const webEmail = caller.email?.trim() ?? "";
+    const preferDisplayEmail = isDisplayEmailCandidate(webEmail);
 
     await scrubPublicRowsForUser(admin, caller.id);
 
@@ -157,10 +207,31 @@ Deno.serve(async (req) => {
       return json({ error: "absorb_failed", detail: rpcErr.message }, 500);
     }
 
+    // After empty Auth user is gone, prefer normal web email as display primary.
+    // Apple identity stays; Hide My Email is not rewritten.
+    if (preferDisplayEmail) {
+      const { error: emailErr } = await admin.auth.admin.updateUserById(
+        canonicalId,
+        { email: webEmail, email_confirm: true },
+      );
+      if (emailErr) {
+        console.warn("vault-continuity display email", emailErr.message);
+      }
+    }
+
+    const { data: afterUser } = await admin.auth.admin.getUserById(canonicalId);
+    const sessionEmail =
+      afterUser?.user?.email ||
+      (preferDisplayEmail ? webEmail : null) ||
+      canonicalUser.user.email;
+    if (!sessionEmail) {
+      return json({ error: "session_mint_failed" }, 500);
+    }
+
     const { data: linkData, error: linkErr } =
       await admin.auth.admin.generateLink({
         type: "magiclink",
-        email: canonicalUser.user.email,
+        email: sessionEmail,
       });
     if (linkErr || !linkData?.properties?.hashed_token) {
       console.error("vault-continuity generateLink", linkErr);

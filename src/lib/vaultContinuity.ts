@@ -37,7 +37,7 @@ export async function deriveVaultContinuityProof(
 }
 
 async function invokeContinuity(
-  action: "register" | "absorb",
+  action: "register" | "check" | "absorb",
   proof: string,
 ): Promise<Record<string, unknown>> {
   const supabase = getSupabase();
@@ -47,6 +47,16 @@ async function invokeContinuity(
   });
   if (error) {
     console.warn("vault-continuity", action, error);
+    // Functions often put JSON body on context when status >= 400
+    const ctx = (error as { context?: Response }).context;
+    if (ctx) {
+      try {
+        const body = (await ctx.json()) as Record<string, unknown>;
+        return { ok: false, ...body, error: body.error ?? error.message };
+      } catch {
+        /* fall through */
+      }
+    }
     return { ok: false, error: error.message };
   }
   return (data ?? {}) as Record<string, unknown>;
@@ -55,13 +65,32 @@ async function invokeContinuity(
 /** After vault exists + cloud backup: bind this master password to user_id. */
 export async function registerVaultContinuity(
   masterPassword: string,
-): Promise<boolean> {
+): Promise<{ ok: boolean; proofTaken?: boolean }> {
   try {
     const proof = await deriveVaultContinuityProof(masterPassword);
     const res = await invokeContinuity("register", proof);
-    return res.ok === true;
+    if (res.ok === true) return { ok: true };
+    if (res.error === "proof_taken") return { ok: false, proofTaken: true };
+    return { ok: false };
   } catch (e) {
     console.warn("registerVaultContinuity", e);
+    return { ok: false };
+  }
+}
+
+/**
+ * Probe only: empty Auth user + master password matches an existing vault.
+ * Does not move identities.
+ */
+export async function checkVaultContinuityMatch(
+  masterPassword: string,
+): Promise<boolean> {
+  try {
+    const proof = await deriveVaultContinuityProof(masterPassword);
+    const res = await invokeContinuity("check", proof);
+    return res.ok === true && res.match === true;
+  } catch (e) {
+    console.warn("checkVaultContinuityMatch", e);
     return false;
   }
 }

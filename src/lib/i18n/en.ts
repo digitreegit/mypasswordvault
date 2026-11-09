@@ -312,6 +312,15 @@ export const MESSAGES_EN: Record<string, string> = {
   "setup.errMin": "Master password must be at least 10 characters.",
   "setup.errMismatch": "Passwords do not match.",
   "setup.errGeneric": "Something went wrong.",
+  "setup.continuityConfirmTitle": "Already use the iPhone app?",
+  "setup.continuityConfirmBody":
+    "This master password matches a vault that already has passwords. Open that vault here and attach this Google or email login to it. Apple Sign-In on iPhone still works—nothing about Hide My Email is changed.",
+  "setup.continuityConfirmYes": "Yes, open my existing vault",
+  "setup.continuityConfirmNo": "No, start a new vault",
+  "setup.errContinuityProofTaken":
+    "That master password already belongs to another vault. Choose a different master password to start fresh.",
+  "setup.errContinuityAbsorbFailed":
+    "Could not open the existing vault with this login. Try again, or start a new vault with a different master password.",
 
   "lock.title": "Vault Locked",
   "lock.subtitle": "Unlock with your passkey, or use a backup method below.",

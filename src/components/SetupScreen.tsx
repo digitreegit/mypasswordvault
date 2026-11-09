@@ -24,6 +24,7 @@ import type { PasskeyMethodId, PasskeyMethodOption } from "../lib/passkeyMethods
 import { AccountContinuityBanner } from "./AccountContinuityBanner";
 import {
   absorbVaultContinuityIfMatch,
+  checkVaultContinuityMatch,
   registerVaultContinuity,
 } from "../lib/vaultContinuity";
 
@@ -212,6 +213,8 @@ export function SetupScreen() {
   const [totpCopyDone, setTotpCopyDone] = useState(false);
   const [recoveryCopyDone, setRecoveryCopyDone] = useState(false);
   const [recoveryDownloadDone, setRecoveryDownloadDone] = useState(false);
+  /** Same master password as an existing vault — confirm before mapping. */
+  const [continuityConfirmOpen, setContinuityConfirmOpen] = useState(false);
 
   const brandHomeHref = isNativeApp() ? undefined : "/";
 
@@ -265,6 +268,18 @@ export function SetupScreen() {
     }
   }, [stage, t]);
 
+  /** Create a fresh vault; block if this master password already maps elsewhere. */
+  async function createFreshVaultWithPassword() {
+    await setup(pw, autoLock);
+    await skipBackupTotpEnrollment();
+    await finalizeEnrollment();
+    const reg = await registerVaultContinuity(pw);
+    if (reg.proofTaken) {
+      setError(t("setup.errContinuityProofTaken"));
+      return;
+    }
+  }
+
   /** Phase A: master password only → empty vault. Passkey/TOTP later. */
   async function handlePasswordNext() {
     setError(null);
@@ -278,16 +293,44 @@ export function SetupScreen() {
     }
     setBusy(true);
     try {
-      // Same master password as an existing vault (e.g. iPhone Apple) → absorb silently.
+      const match = await checkVaultContinuityMatch(pw);
+      if (match) {
+        setContinuityConfirmOpen(true);
+        return;
+      }
+      await createFreshVaultWithPassword();
+    } catch (e: unknown) {
+      setError(formatSetupError(e, t));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleContinuityConfirmYes() {
+    setError(null);
+    setBusy(true);
+    try {
       const absorbed = await absorbVaultContinuityIfMatch(pw);
       if (absorbed.absorbed) {
         window.location.reload();
         return;
       }
-      await setup(pw, autoLock);
-      await skipBackupTotpEnrollment();
-      await finalizeEnrollment();
-      await registerVaultContinuity(pw);
+      setContinuityConfirmOpen(false);
+      setError(t("setup.errContinuityAbsorbFailed"));
+    } catch (e: unknown) {
+      setContinuityConfirmOpen(false);
+      setError(formatSetupError(e, t));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleContinuityConfirmNo() {
+    setContinuityConfirmOpen(false);
+    setError(null);
+    setBusy(true);
+    try {
+      await createFreshVaultWithPassword();
     } catch (e: unknown) {
       setError(formatSetupError(e, t));
     } finally {
@@ -745,6 +788,51 @@ export function SetupScreen() {
     <PasskeyHelpModal t={t} onClose={() => setPasskeyHelpOpen(false)} />
   ) : null;
 
+  const continuityConfirm = continuityConfirmOpen ? (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40">
+      <div
+        className="w-full max-w-md rounded-xl bg-white shadow-xl border border-ink-100 p-5 space-y-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="continuity-confirm-title"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <h2
+            id="continuity-confirm-title"
+            className="font-sans text-lg font-semibold text-ink-900"
+          >
+            {t("setup.continuityConfirmTitle")}
+          </h2>
+          <ModalCloseButton
+            onClick={() => !busy && setContinuityConfirmOpen(false)}
+            ariaLabel={t("common.close")}
+          />
+        </div>
+        <p className="text-sm text-ink-600 leading-relaxed">
+          {t("setup.continuityConfirmBody")}
+        </p>
+        <div className="flex flex-col gap-2 sm:flex-row-reverse">
+          <button
+            type="button"
+            className="btn-primary w-full sm:w-auto"
+            disabled={busy}
+            onClick={() => void handleContinuityConfirmYes()}
+          >
+            {t("setup.continuityConfirmYes")}
+          </button>
+          <button
+            type="button"
+            className="btn w-full sm:w-auto"
+            disabled={busy}
+            onClick={() => void handleContinuityConfirmNo()}
+          >
+            {t("setup.continuityConfirmNo")}
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   if (isNativeApp()) {
     return (
       <>
@@ -752,6 +840,7 @@ export function SetupScreen() {
           {setupBody}
         </NativePinnedAppShell>
         {passkeyHelp}
+        {continuityConfirm}
       </>
     );
   }
@@ -763,6 +852,7 @@ export function SetupScreen() {
         {setupBody}
       </AppShell>
       {passkeyHelp}
+      {continuityConfirm}
     </>
   );
 }

@@ -4,7 +4,7 @@ Vault data is keyed by Supabase **`user_id`**, not email. Apple **Hide My Email*
 
 Users must not be taught “type your Apple Account on the web” or “add Google after Apple.” Continuity is silent:
 
-1. **Master-password continuity** — after the vault exists, a PBKDF2 proof of the master password is registered (`vault_continuity`). On web, an empty Google/email account that sets up with the **same** master password is absorbed into that vault owner (identities moved, empty Auth user deleted, session switched).
+1. **Master-password continuity** — after the vault exists, a PBKDF2 proof of the master password is registered (`vault_continuity`). On web, an empty Google/email account that sets up with the **same** master password is asked to confirm, then absorbed into that vault owner (identities moved, empty Auth user deleted, session switched; Apple Hide My Email unchanged).
 2. **Claim** — empty mistaken Auth users can still be deleted when linking.
 3. **Account passkey** (optional) — web Continue with passkey when registered.
 
@@ -43,8 +43,9 @@ Users must not be taught “type your Apple Account on the web” or “add Goog
 ### S2 — iOS Apple relay vault first → later web (primary)
 
 1. Apple Sign-In → master password → vault (continuity proof registered on finalize / unlock).
-2. Web: Continue with Google (new empty Auth user) → enter **the same master password** at setup → server absorbs into the iPhone vault owner → Google now opens that vault. No Apple ID typing, no “add Google?” prompt after Apple.
-3. If passwords differ, vaults stay separate (no silent merge of two non-empty vaults).
+2. Web: Continue with Google/email (new empty Auth user) → enter **the same master password** at setup → confirm “Already use the iPhone app?” → **Yes** absorbs: Google/email identity maps onto the iPhone vault owner (Hide My Email string unchanged). Session switches; same vault items appear.
+3. Afterward: Apple still opens the vault on iPhone; Google/email also opens the same vault with the same master password.
+4. If the user declines and starts fresh with a password already bound elsewhere, setup blocks with “choose a different master password.” Different passwords keep separate vaults.
 
 ## One-time setup (dashboards)
 

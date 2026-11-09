@@ -309,6 +309,15 @@ export const MESSAGES_KR: Record<string, string> = {
   "setup.errMin": "마스터 비밀번호는 10자 이상으로 설정하세요.",
   "setup.errMismatch": "두 비밀번호가 일치하지 않습니다.",
   "setup.errGeneric": "오류가 발생했습니다.",
+  "setup.continuityConfirmTitle": "아이폰 앱을 이미 쓰고 계신가요?",
+  "setup.continuityConfirmBody":
+    "이 마스터 비밀번호와 맞는 금고가 이미 있습니다. 그 금고를 여기서 열고, 지금 로그인한 Google/이메일을 붙입니다. 아이폰에서는 계속 Apple로도 열 수 있고, Hide My Email 주소는 바꾸지 않습니다.",
+  "setup.continuityConfirmYes": "네, 기존 금고 열기",
+  "setup.continuityConfirmNo": "아니요, 새 금고 만들기",
+  "setup.errContinuityProofTaken":
+    "이 마스터 비밀번호는 이미 다른 금고에 쓰입니다. 새로 시작하려면 다른 마스터 비밀번호를 정하세요.",
+  "setup.errContinuityAbsorbFailed":
+    "기존 금고를 이 로그인으로 열지 못했습니다. 다시 시도하거나, 다른 마스터 비밀번호로 새 금고를 만드세요.",
   "lock.title": "잠긴 Vault",
   "lock.subtitle": "패스키로 잠금 해제하거나, 아래 백업 방법을 사용하세요.",
   "lock.subtitlePassword": "마스터 비밀번호를 입력해 잠금을 해제하세요.",
