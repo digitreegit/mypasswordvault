@@ -62,7 +62,13 @@ export const MESSAGES_EN: Record<string, string> = {
 
   "continuity.linkedMethodsTitle": "Ways to open this vault",
   "continuity.linkedMethodsHint":
-    "Phone and computer can both open the same vault when Google and Apple are attached here.",
+    "Shows which devices can open this vault. Add Google for Web and Android; Apple unlocks iPhone as well.",
+  "continuity.statusWebReady": "Web ready",
+  "continuity.statusWebMissing": "Web not added yet",
+  "continuity.statusAndroidReady": "Android ready",
+  "continuity.statusAndroidMissing": "Android not added yet",
+  "continuity.statusIosReady": "iOS ready",
+  "continuity.statusIosMissing": "iOS not added yet",
   "continuity.statusGoogleLinked": "Google ready",
   "continuity.statusGoogleMissing": "Google not added yet",
   "continuity.statusAppleLinked": "Apple ready",

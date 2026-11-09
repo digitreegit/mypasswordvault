@@ -226,6 +226,12 @@ export function AccountCredentialPanel({
     getNativePlatform() !== "android";
   const canLinkGoogle = !googleIdentityLinked;
 
+  // Platform access (not provider names): which clients can open this vault.
+  const webReady = googleIdentityLinked || emailIdentityLinked;
+  const androidReady = googleIdentityLinked || emailIdentityLinked;
+  const iosReady =
+    appleIdentityLinked || googleIdentityLinked || emailIdentityLinked;
+
   async function onLink(provider: "apple" | "google") {
     setLinkError(null);
     setLinkBusy(true);
@@ -305,19 +311,19 @@ export function AccountCredentialPanel({
         </div>
         <ul className="text-sm text-ink-700 space-y-1">
           <li>
-            {googleIdentityLinked
-              ? t("continuity.statusGoogleLinked")
-              : t("continuity.statusGoogleMissing")}
+            {webReady
+              ? t("continuity.statusWebReady")
+              : t("continuity.statusWebMissing")}
           </li>
           <li>
-            {appleIdentityLinked
-              ? t("continuity.statusAppleLinked")
-              : t("continuity.statusAppleMissing")}
+            {androidReady
+              ? t("continuity.statusAndroidReady")
+              : t("continuity.statusAndroidMissing")}
           </li>
           <li>
-            {emailIdentityLinked
-              ? t("continuity.statusEmailLinked")
-              : t("continuity.statusEmailMissing")}
+            {iosReady
+              ? t("continuity.statusIosReady")
+              : t("continuity.statusIosMissing")}
           </li>
         </ul>
         {linkError ? (

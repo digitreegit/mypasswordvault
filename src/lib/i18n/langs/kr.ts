@@ -64,7 +64,13 @@ export const MESSAGES_KR: Record<string, string> = {
 
   "continuity.linkedMethodsTitle": "이 금고를 여는 방법",
   "continuity.linkedMethodsHint":
-    "Google과 Apple을 여기에 붙여 두면 폰과 컴퓨터가 같은 금고를 엽니다.",
+    "이 금고를 열 수 있는 기기입니다. Web·Android는 Google(또는 이메일), iPhone은 Apple도 추가하면 됩니다.",
+  "continuity.statusWebReady": "Web 준비됨",
+  "continuity.statusWebMissing": "Web 아직 없음",
+  "continuity.statusAndroidReady": "Android 준비됨",
+  "continuity.statusAndroidMissing": "Android 아직 없음",
+  "continuity.statusIosReady": "iOS 준비됨",
+  "continuity.statusIosMissing": "iOS 아직 없음",
   "continuity.statusGoogleLinked": "Google 준비됨",
   "continuity.statusGoogleMissing": "Google 아직 없음",
   "continuity.statusAppleLinked": "Apple 준비됨",
