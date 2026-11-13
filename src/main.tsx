@@ -26,8 +26,6 @@ import { initNativeKeyboard } from "./lib/initNativeKeyboard";
 import {
   captureMarketingAttributionFromUrl,
 } from "./lib/marketingAttribution";
-import { redirectWebToLandingAfterSignIn } from "./lib/webPostSignIn";
-import { isPasswordRecoveryPending } from "./lib/passwordRecoveryPending";
 
 initNativeScrollFocus();
 
@@ -59,28 +57,12 @@ if (redirectVercelPreviewToCanonical()) {
   // WebAuthn rejects IP rpIds — use localhost in dev.
 } else if (redirectCheckoutReturnToApp()) {
   // Stripe return landed on marketing root — move to /app/ before mounting.
-} else
-  void ensureOAuthSessionFromUrl()
-    .then((completed) => {
-      // Web OAuth / magic-link sign-in → marketing header (My Vault + account menu).
-      if (
-        completed &&
-        !isPasswordRecoveryPending() &&
-        redirectWebToLandingAfterSignIn()
-      ) {
-        return;
-      }
-      ReactDOM.createRoot(document.getElementById("root")!).render(
-        <React.StrictMode>
-          <App />
-        </React.StrictMode>
-      );
-    })
-    .catch((e) => {
-      console.error("ensureOAuthSessionFromUrl", e);
-      ReactDOM.createRoot(document.getElementById("root")!).render(
-        <React.StrictMode>
-          <App />
-        </React.StrictMode>
-      );
-    });
+} else void ensureOAuthSessionFromUrl()
+  .catch((e) => console.error("ensureOAuthSessionFromUrl", e))
+  .finally(() => {
+    ReactDOM.createRoot(document.getElementById("root")!).render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+  });
