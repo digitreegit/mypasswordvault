@@ -25,6 +25,7 @@ import {
   getSupabaseAuthHostname,
   isDefaultSupabaseProjectHost,
 } from "../lib/supabaseClient";
+import { redirectWebToLandingAfterSignIn } from "../lib/webPostSignIn";
 import { ScreenHeader } from "./ScreenHeader";
 import { AppShell } from "./AppShell";
 import { NativePinnedAppShell } from "./NativePinnedAppShell";
@@ -294,12 +295,14 @@ export function AuthScreen({
       if (view === "signin") {
         await signInWithEmail(email, password);
         refreshLastUsed();
+        if (redirectWebToLandingAfterSignIn()) return;
       } else if (view === "signup") {
         await signUpWithEmail(email, password);
         const supabase = getSupabase();
         const { data } = await supabase!.auth.getSession();
         if (data.session) {
           refreshLastUsed();
+          if (redirectWebToLandingAfterSignIn()) return;
         } else {
           setInfo(t("auth.checkEmailConfirm"));
           setView("signin");

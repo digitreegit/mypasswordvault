@@ -6,6 +6,7 @@
   var root = document.getElementById("landing-auth-root");
   var sessionEmail = null;
   var supabaseClient = null;
+  var docListenersBound = false;
 
   function appPath(path) {
     var base = "";
@@ -18,6 +19,14 @@
       });
     }
     return href;
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   }
 
   function applyAuthI18n() {
@@ -60,6 +69,7 @@
   }
 
   function closeMenu(menu, btn) {
+    if (!menu || !btn) return;
     menu.hidden = true;
     btn.setAttribute("aria-expanded", "false");
   }
@@ -78,12 +88,22 @@
       btn.setAttribute("aria-expanded", open ? "true" : "false");
     });
 
-    document.addEventListener("click", function (e) {
-      if (!wrap.contains(e.target)) closeMenu(menu, btn);
-    });
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") closeMenu(menu, btn);
-    });
+    if (!docListenersBound) {
+      docListenersBound = true;
+      document.addEventListener("click", function (e) {
+        var currentWrap = root && root.querySelector(".landing-user-menu");
+        var currentMenu = root && root.querySelector(".landing-user-dropdown");
+        var currentBtn = root && root.querySelector(".landing-user-menu-btn");
+        if (!currentWrap || !currentMenu || !currentBtn) return;
+        if (!currentWrap.contains(e.target)) closeMenu(currentMenu, currentBtn);
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape") return;
+        var currentMenu = root && root.querySelector(".landing-user-dropdown");
+        var currentBtn = root && root.querySelector(".landing-user-menu-btn");
+        closeMenu(currentMenu, currentBtn);
+      });
+    }
 
     if (logout) {
       logout.addEventListener("click", function () {
@@ -97,7 +117,16 @@
 
   function renderSignedIn(email) {
     if (!root) return;
-    sessionEmail = email || "";
+    var nextEmail = email || "";
+    // Avoid wiping an open dropdown on token refresh / duplicate events.
+    if (
+      sessionEmail === nextEmail &&
+      root.querySelector(".landing-user-menu")
+    ) {
+      return;
+    }
+    sessionEmail = nextEmail;
+    var safeEmail = escapeHtml(sessionEmail);
     root.innerHTML =
       '<div class="landing-signed-in-actions">' +
       '<a class="btn btn-primary landing-nav-link" href="' +
@@ -109,6 +138,12 @@
       userIconSvg() +
       "</button>" +
       '<div class="landing-user-dropdown" role="menu" hidden>' +
+      (safeEmail
+        ? '<p class="landing-user-dropdown-email" role="presentation">' +
+          safeEmail +
+          "</p>" +
+          '<div class="landing-user-dropdown-divider" role="separator"></div>'
+        : "") +
       '<a role="menuitem" class="landing-user-dropdown-item" href="' +
       appPath("/app/#/settings") +
       '" data-i18n="navSettings"></a>' +
@@ -126,9 +161,12 @@
     bindSignedInMenu(wrap, btn, menu, logout);
   }
 
-  function refreshView() {
-    if (sessionEmail) renderSignedIn(sessionEmail);
-    else renderSignIn();
+  function applySession(session) {
+    if (session && session.user) {
+      renderSignedIn(session.user.email || session.user.id);
+    } else {
+      renderSignIn();
+    }
   }
 
   function init() {
@@ -158,38 +196,12 @@
     });
     window.__mpvLandingSupabase = supabaseClient;
 
-    function shouldSkipLandingToApp() {
-      // Home only — keep marketing pages (pricing, faq, …) browsable while signed in.
-      var path = location.pathname || "/";
-      if (path !== "/" && path !== "/index.html") return false;
-      if (/[?&]stay=1(?:&|$)/.test(location.search || "")) return false;
-      return true;
-    }
-
-    function goAppIfSignedIn(session) {
-      if (!session || !session.user) return false;
-      if (!shouldSkipLandingToApp()) return false;
-      location.replace(appPath("/app/"));
-      return true;
-    }
-
     supabaseClient.auth.getSession().then(function (res) {
-      var session = res.data && res.data.session;
-      if (goAppIfSignedIn(session)) return;
-      if (session && session.user) {
-        renderSignedIn(session.user.email || session.user.id);
-      } else {
-        renderSignIn();
-      }
+      applySession(res.data && res.data.session);
     });
 
     supabaseClient.auth.onAuthStateChange(function (_event, session) {
-      if (goAppIfSignedIn(session)) return;
-      if (session && session.user) {
-        renderSignedIn(session.user.email || session.user.id);
-      } else {
-        renderSignIn();
-      }
+      applySession(session);
     });
   }
 

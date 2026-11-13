@@ -191,8 +191,10 @@ async function completeAuthTokensFromUrl(): Promise<boolean> {
   return false;
 }
 
-export async function ensureOAuthSessionFromUrl(): Promise<void> {
-  if (!isSupabaseConfigured || typeof window === "undefined") return;
+/** @returns true when a fresh auth callback was completed (sign-in or recovery). */
+export async function ensureOAuthSessionFromUrl(): Promise<boolean> {
+  if (!isSupabaseConfigured || typeof window === "undefined") return false;
   const completedOAuth = await completeOAuthFromUrl();
-  if (!completedOAuth) await completeAuthTokensFromUrl();
+  if (completedOAuth) return true;
+  return completeAuthTokensFromUrl();
 }
