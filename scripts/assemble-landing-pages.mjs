@@ -266,7 +266,7 @@ ${storeBadges}      <footer>
     <script src="./landing-nav.js"></script>
     <script src="./landing-legal-i18n.js"></script>
     <script src="./landing-lang.js"></script>
-    <script src="./landing-auth.js"></script>
+    <script src="./landing-auth.js?v=20261124a"></script>
   </body>
 </html>
 `;

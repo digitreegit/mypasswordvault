@@ -1,6 +1,6 @@
 /* Minimal PWA service worker — cache shell for offline open of /app/. */
-const CACHE = "mpv-shell-v1";
-const PRECACHE = ["/app/", "/favicon.png", "/manifest.webmanifest"];
+const CACHE = "mpv-shell-v2";
+const PRECACHE = ["/", "/app/", "/favicon.png", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
